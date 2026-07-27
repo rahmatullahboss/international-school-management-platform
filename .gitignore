@@ -1,0 +1,35 @@
+# Local workspace tooling and connectors
+codexpro/
+.mcp.json
+.ai-bridge/
+
+# Local worktrees
+.worktrees/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+.dev.vars
+.wrangler/
+
+# Dependencies and builds
+node_modules/
+dist/
+build/
+coverage/
+.playwright/
+test-results/
+
+# Logs and caches
+*.log
+.cache/
+.turbo/
+.DS_Store
+
+# Local databases and temporary files
+*.sqlite
+*.sqlite3
+*.db
+.tmp/
+tmp/
