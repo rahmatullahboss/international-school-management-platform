@@ -1,0 +1,84 @@
+name: INTEG-01 Wave 1 Neon Gate
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Integration Neon gate operation
+        required: true
+        default: full
+        type: choice
+        options:
+          - verify
+          - apply
+          - replay-database
+          - full
+
+permissions:
+  contents: read
+
+concurrency:
+  group: integ-01-wave-1-neon-gate
+  cancel-in-progress: false
+
+jobs:
+  wave-1-neon-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+      NEON_PROJECT_ID: lingering-brook-52999532
+      NEON_BRANCH_ID: br-shiny-silence-axznuy37
+      NEON_DATABASE_NAME: neondb
+      NEON_ROLE_NAME: neondb_owner
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Require Neon API credential
+        run: |
+          if [[ -z "$NEON_API_KEY" ]]; then
+            echo "NEON_API_KEY repository secret is required" >&2
+            exit 1
+          fi
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+
+      - name: Resolve exact integration branch connection
+        run: |
+          response=$(curl --fail --silent --show-error \
+            --header "Authorization: Bearer $NEON_API_KEY" \
+            --get "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/connection_uri" \
+            --data-urlencode "branch_id=$NEON_BRANCH_ID" \
+            --data-urlencode "database_name=$NEON_DATABASE_NAME" \
+            --data-urlencode "role_name=$NEON_ROLE_NAME" \
+            --data-urlencode "pooled=false")
+          database_url=$(python3 -c 'import json, sys; print(json.load(sys.stdin).get("uri", ""))' <<<"$response")
+          if [[ -z "$database_url" ]]; then
+            echo "Neon API response did not contain a connection URI" >&2
+            exit 1
+          fi
+          echo "::add-mask::$database_url"
+          echo "DATABASE_URL=$database_url" >> "$GITHUB_ENV"
+          echo "NEON_EXPECTED_BRANCH_ID=$NEON_BRANCH_ID" >> "$GITHUB_ENV"
+
+      - name: Verify branch identity
+        run: |
+          project=$(psql "$DATABASE_URL" -X --no-psqlrc -Atc "SELECT current_setting('neon.project_id', true)")
+          branch=$(psql "$DATABASE_URL" -X --no-psqlrc -Atc "SELECT current_setting('neon.branch_id', true)")
+          [[ "$project" == "$NEON_PROJECT_ID" ]]
+          [[ "$branch" == "$NEON_BRANCH_ID" ]]
+
+      - name: Apply canonical Wave 1 migrations
+        if: inputs.operation == 'apply' || inputs.operation == 'full'
+        run: ./scripts/integ-01-neon-gate.sh apply
+
+      - name: Verify canonical Wave 1 database
+        if: inputs.operation == 'verify'
+        run: ./scripts/integ-01-neon-gate.sh verify
+
+      - name: Replay canonical Wave 1 database
+        if: inputs.operation == 'replay-database' || inputs.operation == 'full'
+        run: ./scripts/integ-01-neon-gate.sh replay-database
