@@ -35,7 +35,7 @@ Current readiness: `GATE-FOUNDATION-READY` is passed. `SIS-01`, `FIN-01` and `IN
 | `FND-01` | 0 | complete; gate passed | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | freeze reviewed foundation SHA | pending gate-evidence commit | none |
 | `SIS-01` | 1 | ready to start | reviewed foundation SHA | module contract | none | none |
 | `FIN-01` | 1 | ready to start | reviewed foundation SHA | finance contract | none | none |
-| `INT-01` | 1 | in progress | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | import/export foundation | `c98c27716f87a94f60a55de97644f4811ae00c1d` | none |
+| `INT-01` | 1 | in progress | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | migration studio | `f252c8ca4e7d2378514dba457edc91e372e45bce` | none |
 | `ACAD-01` | 2 | blocked | reviewed Wave 1 integration SHA | academic structure | none | `GATE-WAVE-1-INTEGRATED` |
 | `OPS-01` | 2 | blocked | reviewed Wave 1 integration SHA | HR/staff | none | `GATE-WAVE-1-INTEGRATED` |
 | `CARE-01` | 2 | blocked | reviewed Wave 1 integration SHA | security contract | none | threat-model and Wave 1 gates |
@@ -231,6 +231,21 @@ Changed owned paths: `packages/modules/integrations/**`; `tests/integrations/int
 Focused checks and results: integration runtime tests 8/8 PASS; migration contract test 1/1 PASS; full Vitest 51/51 PASS with 1 secret-gated Neon test skipped; architecture boundary PASS; root/module TypeScript PASS; ESLint PASS; build PASS; execution artefact validation PASS; static OpenAPI artefact equals runtime contract
 Gate outcome: milestone 2 application, API, security, replay and schema contracts passed; live Neon migration application evidence remains pending because `DATABASE_URL`, `NEON_API_KEY` and Neon MCP were unavailable in this resumed execution shell
 Exact next milestone: 3 — secure CSV/XLSX import/export, mapping, staging, dry-run, row errors, domain-command execution and reconciliation
+Dirty/uncommitted state: tracker evidence only
+Production mutation performed: no
+
+Date/time: 2026-07-28T09:35:00+06:00
+Stream: INT-01
+Milestone completed: 3 — secure import/export foundation
+Git branch: `module/international-integrations`
+Worktree: `.worktrees/int-01-integrations`
+Neon branch: `agent/int-01-integrations` (`br-super-truth-axp0urxi`)
+Starting base: `70f3fe9`
+Checkpoint SHA: `f252c8ca4e7d2378514dba457edc91e372e45bce`
+Changed owned paths: integration CSV/XLSX adapters, mapping/staging engine, import/export migration, focused tests and module documentation
+Focused checks and results: import/export behavior 6/6 PASS; migration contract 1/1 PASS; full Vitest 58/58 PASS with 1 secret-gated Neon test skipped; root/module TypeScript PASS; ESLint PASS; architecture boundary PASS; build PASS; execution artefact validation PASS
+Gate outcome: milestone 3 passed; file limits, formula neutralisation, dry-run, row errors, idempotent domain-command execution and reconciliation are implemented
+Exact next milestone: 4 — migration studio project/version model, repeatable source templates, checksums and cutover evidence
 Dirty/uncommitted state: tracker evidence only
 Production mutation performed: no
 
