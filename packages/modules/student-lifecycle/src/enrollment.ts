@@ -233,7 +233,26 @@ export class EnrollmentRegistry {
     }
     const retryKey = `${input.tenantId}:${input.idempotencyKey}`;
     const replayId = this.#enrollmentIdempotency.get(retryKey);
-    if (replayId) return { value: this.getEnrollment(input.tenantId, replayId), events: [] };
+    if (replayId) {
+      const replay = this.#requireEnrollment(input.tenantId, replayId);
+      if (
+        replay.studentProfileId !== input.studentProfileId ||
+        replay.campusId !== input.campusId ||
+        replay.programId !== input.programId ||
+        replay.academicYearId !== input.academicYearId ||
+        replay.gradeLevelId !== input.gradeLevelId ||
+        replay.effectiveFrom !== input.effectiveFrom ||
+        replay.effectiveTo !== input.effectiveTo ||
+        replay.sourceApplicationId !== input.sourceApplicationId ||
+        replay.status !== (input.status ?? 'active')
+      ) {
+        throw new EnrollmentDomainError(
+          'SIS_ENROLLMENT_IDEMPOTENCY_CONFLICT',
+          'Enrollment idempotency key is already bound to another request',
+        );
+      }
+      return { value: cloneEnrollment(replay), events: [] };
+    }
 
     const conflict = [...this.#enrollments.values()].find(
       (enrollment) =>
@@ -358,6 +377,22 @@ export class EnrollmentRegistry {
           'SIS_TRANSFER_REPLAY_MISSING',
           'Transfer replay was missing',
         );
+      const source = this.#requireEnrollment(input.tenantId, input.sourceEnrollmentId);
+      const destination = this.#requireEnrollment(input.tenantId, replay.destinationEnrollmentId);
+      if (
+        replay.sourceEnrollmentId !== input.sourceEnrollmentId ||
+        replay.destinationCampusId !== input.destinationCampusId ||
+        replay.destinationProgramId !== (input.destinationProgramId ?? source.programId) ||
+        destination.academicYearId !== (input.destinationAcademicYearId ?? source.academicYearId) ||
+        destination.gradeLevelId !== (input.destinationGradeLevelId ?? source.gradeLevelId) ||
+        replay.transferDate !== input.transferDate ||
+        replay.reasonCode !== input.reasonCode
+      ) {
+        throw new EnrollmentDomainError(
+          'SIS_TRANSFER_IDEMPOTENCY_CONFLICT',
+          'Transfer idempotency key is already bound to another request',
+        );
+      }
       return { value: { ...replay }, events: [] };
     }
     const source = this.#requireEnrollment(input.tenantId, input.sourceEnrollmentId);

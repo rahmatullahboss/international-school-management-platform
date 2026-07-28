@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
+import {
+  sisApplicationServiceContract,
+  sisPermissions,
+} from '../../packages/modules/admissions/src/application-service.js';
 import { admissionsApiContract } from '../../packages/modules/admissions/src/contracts.js';
 import { peopleApiContract } from '../../packages/modules/people/src/contracts.js';
 import { studentLifecycleApiContract } from '../../packages/modules/student-lifecycle/src/contracts.js';
@@ -41,5 +45,25 @@ describe('SIS contract v1', () => {
     expect(admissionsApiContract.commands).toContain('AcceptOffer');
     expect(studentLifecycleApiContract.commands).toContain('TransferEnrollment');
     expect(studentLifecycleApiContract.commands).toContain('WithdrawEnrollment');
+  });
+
+  it('publishes one permission-aware application-service boundary', () => {
+    expect(sisApplicationServiceContract.version).toBe('v1');
+    expect(new Set(sisPermissions).size).toBe(sisPermissions.length);
+    expect(sisPermissions).toEqual(
+      expect.arrayContaining([
+        'sis.people.manage',
+        'sis.admissions.review',
+        'sis.admissions.convert',
+        'sis.enrollment.manage',
+        'sis.family.contract.sign',
+      ]),
+    );
+    expect(sisApplicationServiceContract.boundaries).toEqual({
+      tenantScoped: true,
+      permissionChecked: true,
+      authenticatedActorDerived: true,
+      registriesPrivate: true,
+    });
   });
 });

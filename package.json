@@ -13,7 +13,7 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build --workspaces --if-present",
+    "build": "tsc -b --force && npm run build --workspace=@school/platform-api && npm run build --workspace=@school/platform-web",
     "check:boundaries": "node scripts/check-architecture-boundaries.mjs",
     "clean": "npm run clean --workspaces --if-present",
     "dev": "npm run dev --workspace=@school/platform-api",

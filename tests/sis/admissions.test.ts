@@ -149,6 +149,74 @@ describe('AdmissionsRegistry', () => {
     ).toThrow('Required checklist is incomplete');
   });
 
+  it('keeps issued offers and contracts immutable across retries', () => {
+    const registry = new AdmissionsRegistry();
+    const application = startApplication(registry);
+    registry.submitApplication({
+      tenantId: tenantA,
+      applicationId: application.applicationId,
+      correlationId: 'submit-immutable-offer',
+    });
+    registry.recordDecision({
+      tenantId: tenantA,
+      applicationId: application.applicationId,
+      decision: 'admit',
+      reasonCode: 'meets-criteria',
+      decidedByAccountId: crypto.randomUUID(),
+      correlationId: 'decision-immutable-offer',
+    });
+    const offerInput = {
+      tenantId: tenantA,
+      applicationId: application.applicationId,
+      programId: '81000000-0000-4000-8000-000000000001',
+      campusId: '80000000-0000-4000-8000-000000000001',
+      academicYearId: '82000000-0000-4000-8000-000000000001',
+      gradeLevelId: '83000000-0000-4000-8000-000000000001',
+      expiresAt: '2099-01-01T00:00:00.000Z',
+    } as const;
+    const offer = registry.issueOffer(offerInput);
+    expect(registry.issueOffer(offerInput).offerId).toBe(offer.offerId);
+    expect(() =>
+      registry.issueOffer({
+        ...offerInput,
+        campusId: '80000000-0000-4000-8000-000000000002',
+      }),
+    ).toThrow('Existing offer does not match the reissue request');
+
+    const contractInput = {
+      tenantId: tenantA,
+      applicationId: application.applicationId,
+      templateVersion: 'v1',
+      documentId: '90000000-0000-4000-8000-000000000001',
+    } as const;
+    const contract = registry.issueContract(contractInput);
+    expect(registry.issueContract(contractInput).contractId).toBe(contract.contractId);
+    expect(() =>
+      registry.issueContract({
+        ...contractInput,
+        documentId: '90000000-0000-4000-8000-000000000002',
+      }),
+    ).toThrow('Existing contract does not match the reissue request');
+    const signerAccountId = crypto.randomUUID();
+    const signed = registry.signContract({
+      tenantId: tenantA,
+      applicationId: application.applicationId,
+      signedByAccountId: signerAccountId,
+    });
+    expect(registry.issueContract(contractInput)).toMatchObject({
+      contractId: contract.contractId,
+      status: 'signed',
+      signedByAccountId: signerAccountId,
+    });
+    expect(
+      registry.signContract({
+        tenantId: tenantA,
+        applicationId: application.applicationId,
+        signedByAccountId: crypto.randomUUID(),
+      }),
+    ).toEqual(signed);
+  });
+
   it('converts one accepted offer exactly once across retries', () => {
     const registry = new AdmissionsRegistry();
     const applicationId = acceptApplication(registry);
@@ -177,6 +245,36 @@ describe('AdmissionsRegistry', () => {
     expect(replay.events).toHaveLength(0);
     expect(registry.getApplication(tenantA, applicationId).status).toBe('converted');
     expect(registry.admissionsFunnel(tenantA).converted).toBe(1);
+  });
+
+  it('rejects a conversion idempotency key reused for another application', () => {
+    const registry = new AdmissionsRegistry();
+    const firstApplicationId = acceptApplication(registry);
+    const secondApplicationId = acceptApplication(registry);
+    registry.convertApplicant({
+      tenantId: tenantA,
+      applicationId: firstApplicationId,
+      idempotencyKey: 'shared-conversion-key',
+      studentProfileId: crypto.randomUUID(),
+      enrollmentId: crypto.randomUUID(),
+      fieldMapping: {},
+      convertedByAccountId: crypto.randomUUID(),
+      correlationId: 'convert-first',
+    });
+
+    expect(() =>
+      registry.convertApplicant({
+        tenantId: tenantA,
+        applicationId: secondApplicationId,
+        idempotencyKey: 'shared-conversion-key',
+        studentProfileId: crypto.randomUUID(),
+        enrollmentId: crypto.randomUUID(),
+        fieldMapping: {},
+        convertedByAccountId: crypto.randomUUID(),
+        correlationId: 'convert-second',
+      }),
+    ).toThrow('Conversion idempotency key is already bound to another application');
+    expect(registry.getApplication(tenantA, secondApplicationId).status).toBe('accepted');
   });
 
   it('limits guardian status views and tenant lookups', () => {

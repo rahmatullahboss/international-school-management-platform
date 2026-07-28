@@ -149,6 +149,7 @@ function cloneIssue(issue: DataQualityIssue): DataQualityIssue {
 export class ImportPipeline {
   readonly #batches = new Map<string, ImportBatch>();
   readonly #batchByIdempotency = new Map<string, string>();
+  readonly #batchFingerprintByIdempotency = new Map<string, string>();
   readonly #appliedRows = new Map<string, string>();
   readonly #issues = new Map<string, DataQualityIssue>();
 
@@ -161,8 +162,22 @@ export class ImportPipeline {
     dryRun?: boolean;
   }): ImportBatch {
     const retryKey = `${input.tenantId}:${input.idempotencyKey}`;
+    const requestFingerprint = checksum({
+      entity: input.entity,
+      dryRun: input.dryRun ?? false,
+      mappings: input.mappings,
+      rows: input.rows,
+    });
     const existingId = this.#batchByIdempotency.get(retryKey);
-    if (existingId) return this.getBatch(input.tenantId, existingId);
+    if (existingId) {
+      if (this.#batchFingerprintByIdempotency.get(retryKey) !== requestFingerprint) {
+        throw new ImportDomainError(
+          'SIS_IMPORT_IDEMPOTENCY_CONFLICT',
+          'Import idempotency key is already bound to another request',
+        );
+      }
+      return this.getBatch(input.tenantId, existingId);
+    }
     if (input.mappings.length === 0) {
       throw new ImportDomainError(
         'SIS_IMPORT_MAPPING_REQUIRED',
@@ -245,6 +260,7 @@ export class ImportPipeline {
     };
     this.#batches.set(batch.importBatchId, batch);
     this.#batchByIdempotency.set(retryKey, batch.importBatchId);
+    this.#batchFingerprintByIdempotency.set(retryKey, requestFingerprint);
     this.#createIssuesForInvalidRows(batch);
     return this.#cloneBatch(batch);
   }
