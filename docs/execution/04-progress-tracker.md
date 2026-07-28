@@ -39,7 +39,7 @@ Current readiness: `INTEG-01` is active from exact current `main` SHA `042b75990
 | `FIN-01` | 1 | complete; integrated by `INTEG-01` | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | complete | reviewed head `5f9e1692a8fc19fc2e9789a338d028918acdeaf6`; integration merge `da3d561` | none |
 | `INT-01` | 1 | complete; gate passed; integration in progress | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | serial integration verification | reviewed head `bfa95a4a42025213fa7c2090a587ef5304924da7`; module gate evidence `ae88d8e` | none |
 | `ACAD-01` | 2 | blocked | reviewed Wave 1 integration SHA | academic structure | none | `GATE-WAVE-1-INTEGRATED` |
-| `OPS-01` | 2 | in progress | `8cc8ee1562ade672b14c1c44af935fe7e2307976` | activities and trips | hostel/cafeteria `9dc0bfd` | none; root `PRODUCT.md`/`DESIGN.md` absent from reviewed history |
+| `OPS-01` | 2 | in progress | `8cc8ee1562ade672b14c1c44af935fe7e2307976` | API, admin UI and hardening | activities/trips `2e1d830` | none; root `PRODUCT.md`/`DESIGN.md` absent from reviewed history |
 | `CARE-01` | 2 | blocked | reviewed Wave 1 integration SHA | security contract | none | threat-model and Wave 1 gates |
 | `EXP-01` | 3 | blocked | reviewed Wave 2 integration SHA | persona shells | none | `GATE-WAVE-2-INTEGRATED` |
 | `INTEG-01` | gated serial | Wave 1 integration in progress | `042b75990f9cd819239c584a370687042393f6a7` | integrate reviewed `INT-01` | FIN merge checkpoint `da3d561` | none |
@@ -590,6 +590,25 @@ Integration boundary: opaque SIS/CARE/inventory references only; pay-per-meal ch
 Neon result: schema replay deferred until isolated foundation/Wave 1 composition; production/main untouched
 Production mutation performed: no
 Exact next milestone: clubs, activities, events/trips, capacity/waitlist, consent, risk, attendance, incidents and finance source records
+Dirty/uncommitted state: tracker checkpoint evidence only
+
+### Checkpoint 7 — Activities and trips
+
+Date/time: 2026-07-29T00:24:00+06:00
+Stream: OPS-01
+Milestone completed: activities and trips
+Git branch: `module/school-operations`
+Worktree: `.worktrees/ops-01-operations`
+Neon branch: `agent/ops-01-operations` (`br-polished-voice-ax2fsdfg`)
+Starting base: `8cc8ee1562ade672b14c1c44af935fe7e2307976`
+Checkpoint SHA: `2e1d830`
+Changed owned paths: `packages/modules/activities-trips/**`, activities/trips operation tests and module documentation; package workspace metadata only
+Delivered: activity catalogue and fee source records, capacity-controlled enrolments with fair waitlist promotion, trip plans, hazard-level risk assessment with AAL2 separation of duties, guardian consent, consent-gated trip capacity/waitlist, idempotent attendance, incidents, trip readiness reports and FIN participant-charge/trip-payable source documents with audit/events and forced-RLS migration
+Focused checks and results: activities/trips domain and migration tests 11 PASS; combined OPS tests 67 PASS; TypeScript PASS; ESLint PASS; architecture boundaries PASS; npm audit 0 vulnerabilities
+Integration boundary: opaque SIS/CARE/FIN references only; `ActivitiesFinanceSourceDocument` v1.0 leaves posting, allocation and settlement to FIN
+Neon result: schema replay deferred until isolated foundation/Wave 1 composition; production/main untouched
+Production mutation performed: no
+Exact next milestone: typed APIs, operations admin UI, permissions/events/report contract hardening, migration replay and unified verification
 Dirty/uncommitted state: tracker checkpoint evidence only
 
 ## CARE-01 evidence
