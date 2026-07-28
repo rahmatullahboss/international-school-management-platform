@@ -1,0 +1,139 @@
+{
+  "program": "international-school-platform-v1",
+  "gate": "GATE-WAVE-1-INTEGRATED",
+  "orderingRule": "foundation, then reviewed Wave 1 streams in serial integration order: SIS-01, FIN-01, INT-01",
+  "migrations": [
+    {
+      "order": 1,
+      "id": "202607280001_FND-01_foundation",
+      "stream": "FND-01",
+      "path": "infra/database/migrations/202607280001_FND-01_foundation.sql"
+    },
+    {
+      "order": 2,
+      "id": "202607280002_FND-01_tenancy",
+      "stream": "FND-01",
+      "path": "infra/database/migrations/202607280002_FND-01_tenancy.sql"
+    },
+    {
+      "order": 3,
+      "id": "202607280003_FND-01_identity_policy",
+      "stream": "FND-01",
+      "path": "infra/database/migrations/202607280003_FND-01_identity_policy.sql"
+    },
+    {
+      "order": 4,
+      "id": "202607280004_FND-01_transactional_primitives",
+      "stream": "FND-01",
+      "path": "infra/database/migrations/202607280004_FND-01_transactional_primitives.sql"
+    },
+    {
+      "order": 5,
+      "id": "202607280005_FND-01_shared_services",
+      "stream": "FND-01",
+      "path": "infra/database/migrations/202607280005_FND-01_shared_services.sql"
+    },
+    {
+      "order": 6,
+      "id": "202607280101_SIS-01_people",
+      "stream": "SIS-01",
+      "path": "packages/modules/people/migrations/202607280101_SIS-01_people.sql"
+    },
+    {
+      "order": 7,
+      "id": "202607280102_SIS-01_profiles",
+      "stream": "SIS-01",
+      "path": "packages/modules/student-lifecycle/migrations/202607280102_SIS-01_profiles.sql"
+    },
+    {
+      "order": 8,
+      "id": "202607280103_SIS-01_admissions",
+      "stream": "SIS-01",
+      "path": "packages/modules/admissions/migrations/202607280103_SIS-01_admissions.sql"
+    },
+    {
+      "order": 9,
+      "id": "202607280104_SIS-01_enrollment",
+      "stream": "SIS-01",
+      "path": "packages/modules/student-lifecycle/migrations/202607280104_SIS-01_enrollment.sql"
+    },
+    {
+      "order": 10,
+      "id": "202607280105_SIS-01_operations",
+      "stream": "SIS-01",
+      "path": "packages/modules/people/migrations/202607280105_SIS-01_operations.sql"
+    },
+    {
+      "order": 11,
+      "id": "202607280106_SIS-01_contract_signer",
+      "stream": "SIS-01",
+      "path": "packages/modules/admissions/migrations/202607280106_SIS-01_contract_signer.sql"
+    },
+    {
+      "order": 12,
+      "id": "202607280101_FIN-01_ledger",
+      "stream": "FIN-01",
+      "path": "packages/modules/ledger/migrations/202607280101_FIN-01_ledger.sql"
+    },
+    {
+      "order": 13,
+      "id": "202607280102_FIN-01_billing",
+      "stream": "FIN-01",
+      "path": "packages/modules/billing/migrations/202607280102_FIN-01_billing.sql"
+    },
+    {
+      "order": 14,
+      "id": "202607280103_FIN-01_payments",
+      "stream": "FIN-01",
+      "path": "packages/modules/billing/migrations/202607280103_FIN-01_payments.sql"
+    },
+    {
+      "order": 15,
+      "id": "202607280104_FIN-01_reporting",
+      "stream": "FIN-01",
+      "path": "packages/modules/billing/migrations/202607280104_FIN-01_reporting.sql"
+    },
+    {
+      "order": 16,
+      "id": "202607280101_INT-01_country_pack_engine",
+      "stream": "INT-01",
+      "path": "packages/modules/country-packs/migrations/202607280101_INT-01_country_pack_engine.sql"
+    },
+    {
+      "order": 17,
+      "id": "202607280102_INT-01_integration_runtime",
+      "stream": "INT-01",
+      "path": "packages/modules/integrations/migrations/202607280102_INT-01_integration_runtime.sql"
+    },
+    {
+      "order": 18,
+      "id": "202607280103_INT-01_import_export",
+      "stream": "INT-01",
+      "path": "packages/modules/integrations/migrations/202607280103_INT-01_import_export.sql"
+    },
+    {
+      "order": 19,
+      "id": "202607280104_INT-01_migration_studio",
+      "stream": "INT-01",
+      "path": "packages/modules/migration-studio/migrations/202607280104_INT-01_migration_studio.sql"
+    },
+    {
+      "order": 20,
+      "id": "202607280105_INT-01_oneroster_profile",
+      "stream": "INT-01",
+      "path": "packages/modules/integrations/migrations/202607280105_INT-01_oneroster_profile.sql"
+    },
+    {
+      "order": 21,
+      "id": "202607280106_INT-01_lti_sso_scim",
+      "stream": "INT-01",
+      "path": "packages/modules/integrations/migrations/202607280106_INT-01_lti_sso_scim.sql"
+    },
+    {
+      "order": 22,
+      "id": "202607280107_INT-01_connector_governance",
+      "stream": "INT-01",
+      "path": "packages/modules/integrations/migrations/202607280107_INT-01_connector_governance.sql"
+    }
+  ]
+}

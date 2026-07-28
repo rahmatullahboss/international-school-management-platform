@@ -1,0 +1,19 @@
+{
+  "name": "@school/billing",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b"
+  },
+  "dependencies": {
+    "@school/database": "0.1.0",
+    "@school/platform": "0.1.0",
+    "@school/policy": "0.1.0",
+    "@school/shared-services": "0.1.0"
+  }
+}

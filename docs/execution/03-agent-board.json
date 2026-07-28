@@ -44,7 +44,8 @@
     "integration": "accept only reviewed checkpoint/final SHAs recorded in the progress tracker"
   },
   "reviewed_bases": {
-    "foundation": "55114f55a375d3d79dba7ea21f984b789b5dbca1"
+    "foundation": "55114f55a375d3d79dba7ea21f984b789b5dbca1",
+    "wave_1": "8cc8ee1562ade672b14c1c44af935fe7e2307976"
   },
   "reviewed_stream_shas": {
     "wave_1": {
@@ -52,7 +53,8 @@
       "FIN-01": "5f9e1692a8fc19fc2e9789a338d028918acdeaf6",
       "INT-01": "bfa95a4a42025213fa7c2090a587ef5304924da7"
     },
-    "wave_1_integration_base": "9b9605aff93901eb1ad9e5b4d9ad9d6517d04aba"
+    "wave_1_integration_base": "042b75990f9cd819239c584a370687042393f6a7",
+    "wave_1_integration": "8cc8ee1562ade672b14c1c44af935fe7e2307976"
   },
   "streams": [
     {
@@ -107,7 +109,7 @@
       "id": "FIN-01",
       "name": "Billing and Accounting",
       "wave": 1,
-      "status": "complete_reviewed",
+      "status": "complete_and_integrated",
       "branch": "module/finance-ledger",
       "worktree": ".worktrees/fin-01-finance",
       "neon_branch": "agent/fin-01-finance",
@@ -139,7 +141,7 @@
       "id": "INT-01",
       "name": "Internationalization and Integration Platform",
       "wave": 1,
-      "status": "complete_reviewed",
+      "status": "complete_and_integrated",
       "branch": "module/international-integrations",
       "worktree": ".worktrees/int-01-integrations",
       "neon_branch": "agent/int-01-integrations",
@@ -171,7 +173,7 @@
       "id": "ACAD-01",
       "name": "Academics Attendance and Records",
       "wave": 2,
-      "status": "blocked_by_wave_1",
+      "status": "ready_to_start",
       "branch": "module/academics-attendance-records",
       "worktree": ".worktrees/acad-01-academics",
       "neon_branch": "agent/acad-01-academics",
@@ -209,7 +211,7 @@
       "id": "OPS-01",
       "name": "School Operations ERP",
       "wave": 2,
-      "status": "blocked_by_wave_1",
+      "status": "ready_to_start",
       "branch": "module/school-operations",
       "worktree": ".worktrees/ops-01-operations",
       "neon_branch": "agent/ops-01-operations",
@@ -250,7 +252,7 @@
       "id": "CARE-01",
       "name": "Health Wellbeing and Safeguarding",
       "wave": 2,
-      "status": "blocked_by_wave_1_and_threat_model",
+      "status": "blocked_by_threat_model",
       "branch": "module/student-support",
       "worktree": ".worktrees/care-01-student-support",
       "neon_branch": "agent/care-01-student-support",
@@ -325,7 +327,7 @@
       "id": "INTEG-01",
       "name": "Serial Integration and Release Verification",
       "wave": "continuous-gated",
-      "status": "ready_for_wave_1_integration",
+      "status": "wave_1_gate_passed",
       "branch": "integration/international-school-platform-v1",
       "worktree": ".worktrees/integ-01-release",
       "neon_branch": "integration/international-school-platform-v1",
