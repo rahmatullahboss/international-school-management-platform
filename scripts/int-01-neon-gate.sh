@@ -48,6 +48,21 @@ migration_exists() {
   "${psql_base[@]}" -Atc "SELECT count(*) FROM platform.schema_migration WHERE migration_id = '$id'" | grep -qx '1'
 }
 
+print_connection_identity() {
+  local endpoint_id
+  endpoint_id=$(python3 - "$DATABASE_URL" <<'PY'
+import sys
+from urllib.parse import urlsplit
+host = urlsplit(sys.argv[1]).hostname or ''
+print(host.split('.')[0] if host else 'unknown')
+PY
+)
+  echo "endpoint_id=$endpoint_id"
+  "${psql_base[@]}" -Atc "SELECT 'database=' || current_database(), 'role=' || current_user"
+  "${psql_base[@]}" -Atc "SELECT name || '=' || setting FROM pg_settings WHERE name LIKE 'neon.%' ORDER BY name" || true
+  "${psql_base[@]}" -Atc "SELECT 'neon.branch_id=' || COALESCE(current_setting('neon.branch_id', true), ''), 'neon.project_id=' || COALESCE(current_setting('neon.project_id', true), '')" || true
+}
+
 require_agent_branch_baseline() {
   local schema_exists
   schema_exists=$("${psql_base[@]}" -Atc "SELECT to_regclass('platform.schema_migration') IS NOT NULL")
@@ -237,6 +252,8 @@ PY
   DATABASE_URL="$replay_url" bash "$0" apply
   echo "fresh database replay passed"
 }
+
+print_connection_identity
 
 if [[ "$mode" == "replay-database" ]]; then
   require_agent_branch_baseline
