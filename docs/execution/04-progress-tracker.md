@@ -575,6 +575,27 @@ Exact next milestone: 7 — full repository verification, migration composition 
 Dirty/uncommitted state: tracker evidence only
 Production mutation performed: no
 
+### Milestone 7 — verification, recovery and release handoff
+
+Date/time: 2026-07-29T00:39:35+06:00
+Stream: ACAD-01
+Milestone completed: 7 — ordered migration manifest, observability/readiness, isolated Neon replay, forced-RLS/immutability/recovery probes, root verification, operational runbook, release handoff and integration PR
+Git branch/worktree: `module/academics-attendance-records` / `.worktrees/acad-01-academics`
+Neon branch: `agent/acad-01-academics` (`br-gentle-waterfall-axcl7l8z`) in project `lingering-brook-52999532`; PostgreSQL 17.10; no production endpoint used
+Starting base: `8cc8ee1562ade672b14c1c44af935fe7e2307976`
+Checkpoint SHA: `baa62b906194deea2cafc3eb43e388c980e78d0b`
+Pull request: #7 — https://github.com/rahmatullahboss/international-school-management-platform/pull/7 targeting `integration/international-school-platform-v1`
+Database evidence: exact reviewed-base SQL migrations extracted from the reviewed SHA and replayed before ACAD migrations in one `ON_ERROR_STOP` transaction; second full replay retained the same ledger count and exactly 5 ACAD rows; 5 schemas and 53 ACAD tables verified; all 53 tables have RLS enabled, forced RLS and `tenant_policy`; required publication/finalisation/lock/transcript immutability triggers verified
+Recovery evidence: rollback-only `app_runtime` probe confirmed tenant A could not see tenant B, an unrelated tenant saw zero rows, published academic-version mutation was rejected, and a post-rollback owner query found zero `ACAD-PROBE-%` rows
+Focused/module checks: ACAD Vitest 42/42 PASS; module/admin TypeScript PASS; standalone teacher strict TypeScript PASS; focused ESLint/Prettier PASS; Impeccable detector 0 findings; npm production dependency audit PASS with 0 vulnerabilities; ACAD static hygiene/private-schema dependency checks PASS
+Root checks: `format:check` PASS; `lint` PASS; `typecheck` PASS; `test` PASS; `build` PASS; `verify:boundaries` PASS; `verify:artifacts` PASS
+Known coordinator-owned blocker: root `verify:migrations` and `verify:rollbacks` fail before verification because reviewed base `package.json` references missing `scripts/verify-migrations.mjs`; ACAD did not recreate shared tooling outside ownership and supplies module manifest, assertion-only schema verifier, rollback-only probe and live Neon evidence
+Documentation: contracts, timetable, attendance, gradebook, records, application/UI, Impeccable evidence, operations, runbook, migration evidence and release handoff complete
+Gate outcome: ACAD implementation and module-owned verification complete; `GATE-ACAD-COMPLETE` is READY FOR INTEGRATION REVIEW but global migration/rollback gate remains BLOCKED solely on restoration of coordinator-owned root verifier
+Exact integration next step: restore the shared migration verifier, replay reviewed-base + ACAD on a fresh equivalent Neon branch, run all root gates, review PR #7 and merge through the integration stream; do not deploy from the module branch
+Dirty/uncommitted state: tracker evidence only
+Production mutation performed: no
+
 ## OPS-01 evidence
 
 No execution evidence recorded.
