@@ -1,0 +1,79 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "International School Integration API",
+    "version": "1.0.0",
+    "description": "Tenant-scoped integration administration, external identifier and replay operations."
+  },
+  "servers": [
+    {
+      "url": "/api",
+      "description": "Current deployment"
+    }
+  ],
+  "tags": [
+    { "name": "Connections" },
+    { "name": "External identifiers" },
+    { "name": "Webhook deliveries" }
+  ],
+  "paths": {
+    "/v1/integrations/connections/{connectionId}/health": {
+      "get": {
+        "operationId": "getIntegrationConnectionHealth",
+        "tags": ["Connections"],
+        "security": [{ "IntegrationKey": ["connection.health.read"] }],
+        "parameters": [
+          {
+            "name": "connectionId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Current connection health" },
+          "404": { "description": "Connection not found" }
+        }
+      }
+    },
+    "/v1/integrations/external-identifiers": {
+      "get": {
+        "operationId": "resolveExternalIdentifier",
+        "tags": ["External identifiers"],
+        "security": [{ "IntegrationKey": ["external-id.read"] }],
+        "responses": {
+          "200": { "description": "Resolved identifier" }
+        }
+      }
+    },
+    "/v1/integrations/webhook-deliveries/{deliveryId}/replay": {
+      "post": {
+        "operationId": "replayWebhookDelivery",
+        "tags": ["Webhook deliveries"],
+        "security": [{ "IntegrationKey": ["webhook.replay"] }],
+        "parameters": [
+          {
+            "name": "deliveryId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "202": { "description": "Replay scheduled" },
+          "409": { "description": "Delivery is not replayable" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "IntegrationKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Integration-Key",
+        "description": "Tenant-scoped, rotatable machine credential."
+      }
+    }
+  }
+}

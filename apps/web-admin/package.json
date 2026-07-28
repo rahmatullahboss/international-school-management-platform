@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     "./sis": "./src/features/sis/index.ts",
-    "./finance": "./src/features/finance/index.tsx"
+    "./finance": "./src/features/finance/index.tsx",
+    "./features/integrations": "./src/features/integrations/integration-admin.tsx"
   },
   "scripts": {
     "build": "tsc -b",
@@ -13,9 +14,11 @@
   },
   "dependencies": {
     "@school/finance": "*",
-    "react": "^19.0.0"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@types/react": "^19.0.0"
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0"
   }
 }

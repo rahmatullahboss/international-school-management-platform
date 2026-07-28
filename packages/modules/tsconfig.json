@@ -14,5 +14,8 @@
     "billing/src/**/*.ts",
     "ledger/src/**/*.ts"
   ],
-  "references": [{ "path": "../events" }, { "path": "../policy" }]
+  "references": [
+    { "path": "../events/tsconfig.json" },
+    { "path": "../policy/tsconfig.json" }
+  ]
 }

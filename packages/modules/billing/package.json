@@ -11,9 +11,9 @@
     "typecheck": "tsc -b"
   },
   "dependencies": {
-    "@school/database": "workspace:*",
-    "@school/platform": "workspace:*",
-    "@school/policy": "workspace:*",
-    "@school/shared-services": "workspace:*"
+    "@school/database": "0.1.0",
+    "@school/platform": "0.1.0",
+    "@school/policy": "0.1.0",
+    "@school/shared-services": "0.1.0"
   }
 }
