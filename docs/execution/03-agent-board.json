@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "program_id": "international-school-platform-v1",
-  "updated_at": "2026-07-28",
+  "updated_at": "2026-07-29",
   "execution_mode": "whole-module-agent-ownership",
   "microtask_agents_allowed": false,
   "agent_delegation_allowed": false,
@@ -252,7 +252,7 @@
       "id": "CARE-01",
       "name": "Health Wellbeing and Safeguarding",
       "wave": 2,
-      "status": "blocked_by_threat_model",
+      "status": "ready_to_start",
       "branch": "module/student-support",
       "worktree": ".worktrees/care-01-student-support",
       "neon_branch": "agent/care-01-student-support",
