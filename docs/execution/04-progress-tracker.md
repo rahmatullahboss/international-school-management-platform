@@ -2,7 +2,7 @@
 
 **Program:** `international-school-platform-v1`
 **Updated:** 2026-07-28
-**Current repository state:** `INTEG-01` is executing Wave 1 serial integration from `042b75990f9cd819239c584a370687042393f6a7`. `SIS-01` is present from `main`; reviewed `FIN-01` SHA `5f9e1692a8fc19fc2e9789a338d028918acdeaf6` is integrated at merge checkpoint `da3d561`; reviewed `INT-01` SHA `bfa95a4a42025213fa7c2090a587ef5304924da7` is being integrated after its `GATE-INT-COMPLETE` evidence passed.
+**Current repository state:** `GATE-WAVE-1-INTEGRATED` passed. Reviewed `SIS-01`, `FIN-01` and `INT-01` are serially integrated from exact base `042b75990f9cd819239c584a370687042393f6a7`; reviewed Wave 1 integration SHA is `8cc8ee1562ade672b14c1c44af935fe7e2307976`.
 
 ## Gate status
 
@@ -12,7 +12,7 @@
 | `GATE-FOUNDATION-READY` | passed | Milestones 1–8 implemented; owner review approved; Neon SQL/RLS proof passed; secret-backed `npm run test:neon` passed 1/1 on 2026-07-28 |
 | `GATE-REVIEWED-SHAS-AVAILABLE` | passed | `SIS-01` `5e2499018282d8296abfe093b5dd95b231829379`; `FIN-01` `5f9e1692a8fc19fc2e9789a338d028918acdeaf6`; `INT-01` `bfa95a4a42025213fa7c2090a587ef5304924da7` |
 | `GATE-INT-COMPLETE` | passed | Seven milestones complete; agent-branch apply `30345998526`, logical replay `30346762735` and fresh Neon branch replay `30347294967` passed |
-| `GATE-WAVE-1-INTEGRATED` | blocked | `SIS-01`, `FIN-01`, `INT-01` reviewed and serially integrated |
+| `GATE-WAVE-1-INTEGRATED` | passed | Reviewed integration SHA `8cc8ee1562ade672b14c1c44af935fe7e2307976`; CI `30362743336`; integration Neon apply/recovery run `30362743167`; 22 migrations, 139/139 tenant-owned tables protected, finance invariants and six browser journeys passed |
 | `GATE-STUDENT-SUPPORT-THREAT-MODEL` | blocked | Wave 1 integrated plus approved student-support threat model |
 | `GATE-WAVE-2-INTEGRATED` | blocked | `ACAD-01`, `OPS-01`, `CARE-01` reviewed and integrated |
 | `GATE-PILOT-READY` | blocked | `EXP-01` integrated and final system/recovery verification passed |
@@ -28,7 +28,7 @@ Owner decision recorded on 2026-07-28:
 - the foundation/program coordinator maintains shared documentation, gate state, contract-change decisions and this tracker without writing concurrently inside module-owned paths;
 - `INTEG-01` reviews and integrates module SHAs serially after they are recorded here.
 
-Current readiness: `INTEG-01` is active from exact current `main` SHA `042b75990f9cd819239c584a370687042393f6a7`; FIN integration is verified and reviewed INT integration is in progress.
+Current readiness: Wave 2 may use exact reviewed Wave 1 integration SHA `8cc8ee1562ade672b14c1c44af935fe7e2307976`. `ACAD-01` and `OPS-01` are ready; `CARE-01` remains blocked only by its required threat-model gate.
 
 ## Stream tracker
 
@@ -37,12 +37,12 @@ Current readiness: `INTEG-01` is active from exact current `main` SHA `042b75990
 | `FND-01` | 0 | complete; gate passed | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | Wave 1 released | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | none |
 | `SIS-01` | 1 | complete; integrated to `main` | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | complete | reviewed head `5e2499018282d8296abfe093b5dd95b231829379`; main merge `9b9605aff93901eb1ad9e5b4d9ad9d6517d04aba` | none |
 | `FIN-01` | 1 | complete; integrated by `INTEG-01` | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | complete | reviewed head `5f9e1692a8fc19fc2e9789a338d028918acdeaf6`; integration merge `da3d561` | none |
-| `INT-01` | 1 | complete; gate passed; integration in progress | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | serial integration verification | reviewed head `bfa95a4a42025213fa7c2090a587ef5304924da7`; module gate evidence `ae88d8e` | none |
-| `ACAD-01` | 2 | blocked | reviewed Wave 1 integration SHA | academic structure | none | `GATE-WAVE-1-INTEGRATED` |
-| `OPS-01` | 2 | blocked | reviewed Wave 1 integration SHA | HR/staff | none | `GATE-WAVE-1-INTEGRATED` |
-| `CARE-01` | 2 | blocked | reviewed Wave 1 integration SHA | security contract | none | threat-model and Wave 1 gates |
+| `INT-01` | 1 | complete; integrated by `INTEG-01` | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | complete | reviewed head `bfa95a4a42025213fa7c2090a587ef5304924da7`; integration merge `0822462` | none |
+| `ACAD-01` | 2 | ready to start | `8cc8ee1562ade672b14c1c44af935fe7e2307976` | academic structure | none | none |
+| `OPS-01` | 2 | ready to start | `8cc8ee1562ade672b14c1c44af935fe7e2307976` | HR/staff | none | none |
+| `CARE-01` | 2 | blocked | `8cc8ee1562ade672b14c1c44af935fe7e2307976` | security contract | none | `GATE-STUDENT-SUPPORT-THREAT-MODEL` |
 | `EXP-01` | 3 | blocked | reviewed Wave 2 integration SHA | persona shells | none | `GATE-WAVE-2-INTEGRATED` |
-| `INTEG-01` | gated serial | Wave 1 integration in progress | `042b75990f9cd819239c584a370687042393f6a7` | integrate reviewed `INT-01` | FIN merge checkpoint `da3d561` | none |
+| `INTEG-01` | gated serial | Wave 1 gate passed | `042b75990f9cd819239c584a370687042393f6a7` | release Wave 2 from reviewed integration SHA | `8cc8ee1562ade672b14c1c44af935fe7e2307976` | none |
 
 ## Required checkpoint evidence format
 
@@ -507,6 +507,49 @@ Conflict resolution: SIS exports and app surfaces retained; FIN root/ledger expo
 Gate outcome: FIN checkpoint passed; `GATE-WAVE-1-INTEGRATED` remains blocked pending reviewed INT-01 integration, migration composition and cross-module verification
 Exact next milestone: integrate reviewed INT-01 SHA `bfa95a4a42025213fa7c2090a587ef5304924da7`
 Dirty/uncommitted state: tracker/agent-board checkpoint evidence only
+Production mutation performed: no
+
+### Wave 1 checkpoint 2 — INT-01 integrated and shared contracts composed
+
+Date/time: 2026-07-28T19:09:00+06:00
+Stream: INTEG-01
+Milestone completed: Wave 1 serial integration — reviewed INT-01 accepted
+Git branch: `integration/international-school-platform-v1`
+Worktree: `.worktrees/integ-01-release`
+Neon branch: `integration/international-school-platform-v1` (`br-shiny-silence-axznuy37`)
+Starting base: `042b75990f9cd819239c584a370687042393f6a7`
+Accepted module SHA: INT-01 `bfa95a4a42025213fa7c2090a587ef5304924da7`
+Checkpoint SHA: `0822462`
+Changed integration paths: shared workspace/package manifests; root and app TypeScript references; package lock; admin integration surface; nested module discovery; combined platform/SIS/finance/integration browser scripts; tracker conflict reconciliation
+Focused checks and results: typecheck PASS; 251 tests PASS with one secret-backed Neon test skipped; full `npm run verify` PASS; platform/SIS/finance/integration browser suites PASS 6/6
+Conflict resolution: SIS and FIN package exports, admin/family surfaces and reviewed behavior were retained while INT country-pack, integration, migration-studio, admin UI, CI and evidence were added; no frozen contract was redesigned
+Gate outcome: INT integration checkpoint passed; final migration composition, integration Neon replay and recovery verification remained
+Exact next milestone: execute canonical Wave 1 database/recovery and system verification
+Dirty/uncommitted state: none after checkpoint commit
+Production mutation performed: no
+
+### Wave 1 checkpoint 3 — `GATE-WAVE-1-INTEGRATED` passed
+
+Date/time: 2026-07-28T19:24:32+06:00
+Stream: INTEG-01
+Milestone completed: Wave 1 integration, database/recovery verification, system verification and release evidence
+Git branch: `integration/international-school-platform-v1`
+Worktree: `.worktrees/integ-01-release`
+Neon branch: `integration/international-school-platform-v1` (`br-shiny-silence-axznuy37`), parent `main` (`br-cool-wildflower-axsot8l1`)
+Starting base: `042b75990f9cd819239c584a370687042393f6a7`
+Accepted reviewed module SHAs: SIS-01 `5e2499018282d8296abfe093b5dd95b231829379`; FIN-01 `5f9e1692a8fc19fc2e9789a338d028918acdeaf6`; INT-01 `bfa95a4a42025213fa7c2090a587ef5304924da7`
+Reviewed Wave 1 integration SHA: `8cc8ee1562ade672b14c1c44af935fe7e2307976`
+Integration checkpoints: FIN merge `da3d561`; INT merge `0822462`; migration/journey gate `5d5f017`; branch-scoped Neon gate `e380ad5`; RLS verifier correction `8cc8ee1`
+Database and recovery evidence: canonical manifest contains 22 migrations in Foundation 5 → SIS 6 → FIN 4 → INT 7 order; integration Neon apply/recovery run `30362743167` PASS; rerun skipped already-applied migrations safely; disposable fresh-database replay PASS; live branch identity independently verified; 139/139 tenant-owned tables have forced RLS and `app_runtime` policies with zero failures
+Finance evidence: journal posting function present; posted-entry and posted-line immutability triggers present; no unbalanced posted journals; reconciliation and trial-balance journeys PASS
+Cross-module evidence: applicant → reviewed offer/contract → enrollment conversion → family billing account → invoice → settled payment → allocation → receivable reconciliation → safe CSV export journey PASS
+System evidence: local full `npm run verify` PASS with 254 tests passed and one secret-backed Neon test skipped; browser suites PASS 6/6; GitHub CI run `30362743336` PASS including clean install, fresh PostgreSQL SIS replay, live Neon serverless driver, audit, licence, provenance, browser and artifact validation
+Security/tenant outcome: no unresolved tenant-isolation, authorization, secret-handling or migration failure
+Known non-blocking risk: GitHub reports Node.js 20 deprecation for `actions/checkout@v4` and `actions/setup-node@v4`, while runners forced those actions onto Node.js 24; execution passed and this should be upgraded during routine CI maintenance
+Safe cleanup outcome: no existing Git branch, worktree or Neon branch was deleted; all active module and integration resources were retained
+Gate outcome: `GATE-WAVE-1-INTEGRATED` PASS; Wave 2 reviewed base is `8cc8ee1562ade672b14c1c44af935fe7e2307976`
+Exact next milestone: start `ACAD-01` and `OPS-01` from the reviewed Wave 1 integration SHA; complete the required threat model before `CARE-01`
+Dirty/uncommitted state: release evidence and board/tracker update only
 Production mutation performed: no
 
 ## Resume rule
