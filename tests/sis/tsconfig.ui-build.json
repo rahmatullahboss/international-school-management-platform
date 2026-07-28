@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "rootDir": "../..",
+    "outDir": "../../.tmp/sis-browser-ui",
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "tsBuildInfoFile": "../../.tmp/sis-browser-ui.tsbuildinfo"
+  },
+  "include": [
+    "../../apps/web-admin/src/features/sis/**/*.tsx",
+    "../../apps/web-family/src/features/admissions/**/*.tsx"
+  ]
+}

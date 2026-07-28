@@ -1,0 +1,19 @@
+{
+  "name": "@school/sis",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./people": "./people/src/index.ts",
+    "./admissions": "./admissions/src/index.ts",
+    "./student-lifecycle": "./student-lifecycle/src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b"
+  },
+  "dependencies": {
+    "@school/events": "0.1.0",
+    "@school/policy": "0.1.0"
+  }
+}

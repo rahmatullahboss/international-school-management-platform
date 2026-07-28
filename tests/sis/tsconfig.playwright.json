@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "types": ["node", "@playwright/test"]
+  },
+  "include": [
+    "./sis-browser.spec.tsx",
+    "../../apps/web-admin/src/features/sis/**/*.tsx",
+    "../../apps/web-family/src/features/admissions/**/*.tsx"
+  ]
+}

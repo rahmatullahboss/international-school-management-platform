@@ -33,7 +33,7 @@ Current readiness: `GATE-FOUNDATION-READY` is passed. `SIS-01`, `FIN-01` and `IN
 | Stream | Wave | Status | Base | Current/next milestone | Final/last checkpoint | Blocking condition |
 |---|---:|---|---|---|---|---|
 | `FND-01` | 0 | complete; gate passed | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | Wave 1 released | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | none |
-| `SIS-01` | 1 | ready to start | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | module contract | none | none |
+| `SIS-01` | 1 | complete | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | complete | `c5cd5cb1bd30001433d03cbe23e6b54c7de5e5ff` | none |
 | `FIN-01` | 1 | ready to start | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | finance contract | none | none |
 | `INT-01` | 1 | ready to start | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | country-pack engine | none | none |
 | `ACAD-01` | 2 | blocked | reviewed Wave 1 integration SHA | academic structure | none | `GATE-WAVE-1-INTEGRATED` |
@@ -184,7 +184,127 @@ Production mutation performed: no
 
 ## SIS-01 evidence
 
-No execution evidence recorded.
+### Milestone 1 — module contract
+
+Date/time: 2026-07-28T08:36:00+06:00
+Stream: SIS-01
+Milestone completed: 1 — approved requirements and versioned schema/event/API contract
+Git branch: `module/core-sis-admissions`
+Worktree: `.worktrees/sis-01-core-sis`
+Neon branch: `agent/sis-01-core-sis` (`br-ancient-sunset-axuhcmof`), parent `main` (`br-cool-wildflower-axsot8l1`)
+Starting base: `55114f55a375d3d79dba7ea21f984b789b5dbca1`
+Checkpoint SHA: `3eadcdc95439065853042caa753778572ccd45bf`
+Changed owned paths: `packages/modules/{people,admissions,student-lifecycle}` contract surfaces; `tests/sis/contracts.test.ts`; `docs/modules/sis/contracts.md`; compatible workspace lock registration
+Focused checks and results: SIS contract tests 3/3 PASS; `@school/sis` TypeScript build PASS; dependency install audit 0 vulnerabilities
+Gate outcome: milestone 1 passed; frozen foundation contracts unchanged
+Exact next milestone: 2 — people, households, guardian authority, consent, duplicate detection and merge
+Dirty/uncommitted state: tracker evidence update only
+Production mutation performed: no
+
+### Milestone 2 — people, households and guardian authority
+
+Date/time: 2026-07-28T08:45:00+06:00
+Stream: SIS-01
+Milestone completed: 2 — people, names, identifiers, contacts, addresses, households, relationships, guardian/emergency/pickup authority, consent, duplicate detection and merge
+Git branch: `module/core-sis-admissions`
+Worktree: `.worktrees/sis-01-core-sis`
+Neon branch: `agent/sis-01-core-sis` (`br-ancient-sunset-axuhcmof`), parent `main` (`br-cool-wildflower-axsot8l1`)
+Starting base: `55114f55a375d3d79dba7ea21f984b789b5dbca1`
+Checkpoint SHA: `b6410678d0b27a905f6e71eb78a33794ce798af9`
+Changed owned paths: `packages/modules/people/**`; `tests/sis/people-*.test.ts`; `docs/modules/sis/people.md`
+Focused checks and results: people domain/migration tests 6/6 PASS; `@school/sis` TypeScript build PASS; foundation migrations 1–5 replayed on SIS Neon child; people migration applied; RLS no-context count 0; Tenant A/B each saw 1 own row and 0 foreign rows
+Gate outcome: milestone 2 passed; synthetic data only; parent/production branches unchanged
+Exact next milestone: 3 — student/staff profiles, statuses, identifiers, documents and lifecycle access effects
+Dirty/uncommitted state: tracker/module documentation update only
+Production mutation performed: no
+
+### Milestone 3 — student and staff profiles
+
+Date/time: 2026-07-28T08:52:00+06:00
+Stream: SIS-01
+Milestone completed: 3 — student/staff profiles, effective statuses, identifiers, documents and lifecycle access effects
+Git branch: `module/core-sis-admissions`
+Worktree: `.worktrees/sis-01-core-sis`
+Neon branch: `agent/sis-01-core-sis` (`br-ancient-sunset-axuhcmof`)
+Starting base: `55114f55a375d3d79dba7ea21f984b789b5dbca1`
+Checkpoint SHA: `8fc3fc0c49dc353b09ab98eed7c1321cb71454c9`
+Changed owned paths: `packages/modules/student-lifecycle/{src/profiles.ts,migrations/202607280102_SIS-01_profiles.sql}`; `tests/sis/profiles.test.ts`; `docs/modules/sis/profiles.md`
+Focused checks and results: profile domain tests 4/4 PASS; `@school/sis` build PASS; profile migration applied on SIS Neon; RLS no-context count 0; Tenant A visible 1 and foreign 0
+Gate outcome: milestone 3 passed; parent/production branches unchanged
+Exact next milestone: 4 — enquiries, applications, forms, reviews, interviews, decisions, offers, contracts, deposit references and conversion
+Dirty/uncommitted state: tracker/module documentation update only
+Production mutation performed: no
+
+### Milestone 4 — admissions workflow
+
+Date/time: 2026-07-28T08:59:00+06:00
+Stream: SIS-01
+Milestone completed: 4 — enquiries, immutable forms/responses, checklist/documents, reviews, interviews, decisions, offers, contracts, payment references and replay-safe conversion
+Git branch: `module/core-sis-admissions`
+Worktree: `.worktrees/sis-01-core-sis`
+Neon branch: `agent/sis-01-core-sis` (`br-ancient-sunset-axuhcmof`)
+Starting base: `55114f55a375d3d79dba7ea21f984b789b5dbca1`
+Checkpoint SHA: `9a18b809559b945bc506b6a9cb26a38e03ce0b3d`
+Changed owned paths: `packages/modules/admissions/**`; `tests/sis/admissions.test.ts`; `docs/modules/sis/admissions.md`
+Focused checks and results: admissions tests 4/4 PASS; `@school/sis` build PASS; 18-table admissions migration applied; RLS no-context 0 and Tenant A foreign 0; submitted-response database mutation rejected
+Gate outcome: milestone 4 passed; payment data remains opaque finance reference; parent/production branches unchanged
+Exact next milestone: 5 — enrollment, transfer, withdrawal, promotion, re-enrollment, previous school and alumni transition
+Dirty/uncommitted state: tracker/module documentation update only
+Production mutation performed: no
+
+### Milestone 5 — enrollment lifecycle
+
+Date/time: 2026-07-28T09:06:00+06:00
+Stream: SIS-01
+Milestone completed: 5 — enrollment, status history, transfer, withdrawal, promotion, re-enrollment, prior school, placement/admission history and alumni transition
+Git branch: `module/core-sis-admissions`
+Worktree: `.worktrees/sis-01-core-sis`
+Neon branch: `agent/sis-01-core-sis` (`br-ancient-sunset-axuhcmof`)
+Starting base: `55114f55a375d3d79dba7ea21f984b789b5dbca1`
+Checkpoint SHA: `8a8c0f5e17e49d6ca198cf1875aeca98079128a9`
+Changed owned paths: `packages/modules/student-lifecycle/{src/enrollment.ts,migrations/202607280104_SIS-01_enrollment.sql}`; `tests/sis/enrollment.test.ts`; `docs/modules/sis/enrollment.md`
+Focused checks and results: enrollment tests 4/4 PASS; `@school/sis` build PASS; ten-table lifecycle migration applied; RLS no-context 0 and Tenant A foreign 0; placement identity rewrite rejected
+Gate outcome: milestone 5 passed; historical periods retained; parent/production branches unchanged
+Exact next milestone: 6 — admin/family UI, import/export, reconciliation, reports and data-quality queues
+Dirty/uncommitted state: tracker/module documentation update only
+Production mutation performed: no
+
+### Milestone 6 — imports, reports and user workflows
+
+Date/time: 2026-07-28T09:18:00+06:00
+Stream: SIS-01
+Milestone completed: 6 — validated imports, privacy-aware exports, data-quality queues, reconciliation, immutable report snapshots and admin/family UI
+Git branch: `module/core-sis-admissions`
+Worktree: `.worktrees/sis-01-core-sis`
+Neon branch: `agent/sis-01-core-sis` (`br-ancient-sunset-axuhcmof`)
+Starting base: `55114f55a375d3d79dba7ea21f984b789b5dbca1`
+Checkpoint SHA: `0e828f84863a2e1111e6ad4d26ad22d0188aa4d4`
+Changed owned paths: `packages/modules/people/{src/imports.ts,migrations/202607280105_SIS-01_operations.sql}`; `packages/modules/student-lifecycle/src/reporting.ts`; `apps/web-admin/src/features/sis/**`; `apps/web-family/src/features/admissions/**`; `tests/sis/{imports-reports,operations-migration,ui}.test.*`; SIS module docs
+Focused checks and results: milestone tests 11/11 PASS; `@school/sis` build PASS; 5,000-row import staging PASS under 5 seconds; seven-table operations migration applied; import/report RLS no-context 0 and Tenant A foreign 0; report snapshot mutation rejected
+Gate outcome: milestone 6 passed; family UI excludes confidential review/restriction content; parent/production branches unchanged
+Exact next milestone: 7 — full verification, browser tests, migration replay, runbook and completion evidence
+Dirty/uncommitted state: tracker evidence update only
+Production mutation performed: no
+
+### Milestone 7 — verification and completion
+
+Date/time: 2026-07-28T09:35:00+06:00
+Stream: SIS-01
+Milestone completed: 7 — full verification, Chromium browser flows, fresh migration replay, runbook and completion evidence
+Git branch: `module/core-sis-admissions`
+Worktree: `.worktrees/sis-01-core-sis`
+Primary Neon branch: `agent/sis-01-core-sis` (`br-ancient-sunset-axuhcmof`)
+Replay Neon branch: `agent/sis-01-core-sis-replay` (`br-aged-flower-axspjezr`)
+Starting base: `55114f55a375d3d79dba7ea21f984b789b5dbca1`
+Final implementation SHA: `c5cd5cb1bd30001433d03cbe23e6b54c7de5e5ff`
+Changed owned paths: SIS domain/application-service packages; signer migration `202607280106`; typed admin/family feature workspaces; `tests/sis/**`; CI integration gates; SIS contracts, runbook, verification report and completion checklist
+Verification results: repository `npm run verify` PASS; full local Vitest 78 PASS with the read-only Neon test mandatory in same-repository CI; deterministic clean build PASS; artifact validation PASS; Chromium browser flows 3/3 PASS including two SIS flows; V8 coverage 84.58% statements and 85.42% lines; dependency audit zero high-severity vulnerabilities; licence/provenance 342 packages PASS; 5,000-row import load test PASS
+Fresh migration replay: isolated Neon replay through SIS 105 remained valid; exact foundation 1–5 plus SIS 101–106 replay passed on a disposable PostgreSQL cluster with ledger 11 total/6 SIS, forced RLS 59/59, signer columns 2 and signer constraints 3
+Repository-wide composite note: review added a private, versioned permission-aware application service; authenticated actor derivation; verified guardian submission/signing authority; deterministic project-reference builds; fresh-database migration CI; and same-repository secret-backed read-only Neon CI. No waived repository quality gate remains
+Gate outcome: SIS-01 whole-module completion passed; no open SIS blocker; parent/production branches and data unchanged
+Exact next milestone: complete
+Dirty/uncommitted state: tracker/agent-board completion evidence only
+Production mutation performed: no
 
 ## FIN-01 evidence
 
