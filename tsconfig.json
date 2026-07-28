@@ -3,6 +3,7 @@
   "references": [
     { "path": "apps/platform-api" },
     { "path": "apps/platform-web" },
+    { "path": "packages/database" },
     { "path": "packages/platform" }
   ]
 }
