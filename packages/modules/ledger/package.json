@@ -1,0 +1,23 @@
+{
+  "name": "@school/ledger",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contracts": "./src/contracts/index.ts",
+    "./commands": "./src/commands/index.ts",
+    "./queries": "./src/queries/index.ts",
+    "./events": "./src/events/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b"
+  },
+  "dependencies": {
+    "@school/database": "workspace:*",
+    "@school/events": "workspace:*",
+    "@school/platform": "workspace:*",
+    "@school/policy": "workspace:*"
+  }
+}
