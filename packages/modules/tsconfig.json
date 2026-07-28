@@ -12,6 +12,7 @@
     "admissions/**/*.ts",
     "student-lifecycle/**/*.ts",
     "hr/src/**/*.ts",
+    "procurement/src/**/*.ts",
     "billing/src/**/*.ts",
     "ledger/src/**/*.ts"
   ],
