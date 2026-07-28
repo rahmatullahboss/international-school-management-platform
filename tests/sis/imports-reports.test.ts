@@ -40,8 +40,18 @@ describe('SIS imports and reporting', () => {
       tenantId: tenantA,
       entity: 'person',
       idempotencyKey: 'people-import-1',
-      mappings: [{ sourceColumn: 'ignored', targetField: 'ignored' }],
-      rows: [],
+      mappings: [
+        { sourceColumn: 'name', targetField: 'legalName', required: true, transform: 'trim' },
+        { sourceColumn: 'dob', targetField: 'dateOfBirth', required: true, transform: 'date-iso' },
+      ],
+      rows: [
+        {
+          rowNumber: 1,
+          sourceKey: 'legacy-1',
+          values: { name: ' Amina Rahman ', dob: '2015-05-10' },
+        },
+        { rowNumber: 2, sourceKey: 'legacy-2', values: { name: '', dob: 'not-a-date' } },
+      ],
     });
     let applyCount = 0;
     const applied = await pipeline.apply(tenantA, staged.importBatchId, (_entity, values) => {
@@ -62,6 +72,27 @@ describe('SIS imports and reporting', () => {
     expect(() => pipeline.getBatch(tenantB, staged.importBatchId)).toThrow(
       'Import batch was not found',
     );
+  });
+
+  it('rejects an import idempotency key reused with a different request', () => {
+    const pipeline = new ImportPipeline();
+    pipeline.stage({
+      tenantId: tenantA,
+      entity: 'person',
+      idempotencyKey: 'people-import-conflict',
+      mappings: [{ sourceColumn: 'name', targetField: 'legalName', transform: 'trim' }],
+      rows: [{ rowNumber: 1, sourceKey: 'legacy-1', values: { name: 'Amina' } }],
+    });
+
+    expect(() =>
+      pipeline.stage({
+        tenantId: tenantA,
+        entity: 'person',
+        idempotencyKey: 'people-import-conflict',
+        mappings: [{ sourceColumn: 'name', targetField: 'legalName', transform: 'uppercase' }],
+        rows: [{ rowNumber: 1, sourceKey: 'legacy-1', values: { name: 'Amina' } }],
+      }),
+    ).toThrow('Import idempotency key is already bound to another request');
   });
 
   it('supports dry-run validation without applying rows', async () => {

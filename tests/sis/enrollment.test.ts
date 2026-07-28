@@ -34,6 +34,20 @@ describe('EnrollmentRegistry', () => {
     expect(() =>
       registry.createEnrollment({
         tenantId: tenantA,
+        idempotencyKey: 'enrollment-1',
+        studentProfileId: first.value.studentProfileId,
+        campusId: '80000000-0000-4000-8000-000000000099',
+        programId: first.value.programId,
+        academicYearId: first.value.academicYearId,
+        gradeLevelId: first.value.gradeLevelId,
+        effectiveFrom: first.value.effectiveFrom,
+        sourceApplicationId: first.value.sourceApplicationId,
+        correlationId: 'idempotency-conflict',
+      }),
+    ).toThrow('Enrollment idempotency key is already bound to another request');
+    expect(() =>
+      registry.createEnrollment({
+        tenantId: tenantA,
         idempotencyKey: 'another-key',
         studentProfileId: first.value.studentProfileId,
         campusId: first.value.campusId,
@@ -75,6 +89,17 @@ describe('EnrollmentRegistry', () => {
     expect(transfer.events[0]?.eventType).toBe('sis.lifecycle.student-transferred.v1');
     expect(replay.value).toEqual(transfer.value);
     expect(replay.events).toHaveLength(0);
+    expect(() =>
+      registry.transferEnrollment({
+        tenantId: tenantA,
+        sourceEnrollmentId: source.enrollmentId,
+        idempotencyKey: 'transfer-1',
+        destinationCampusId: '80000000-0000-4000-8000-000000000098',
+        transferDate: '2022-01-01',
+        reasonCode: 'campus-move',
+        correlationId: 'transfer-conflict',
+      }),
+    ).toThrow('Transfer idempotency key is already bound to another request');
   });
 
   it('withdraws, re-enrolls and preserves both historical records', () => {

@@ -13,6 +13,7 @@
     "typecheck": "tsc -b"
   },
   "dependencies": {
-    "@school/events": "0.1.0"
+    "@school/events": "0.1.0",
+    "@school/policy": "0.1.0"
   }
 }

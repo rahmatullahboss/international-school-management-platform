@@ -15,6 +15,7 @@ This runbook covers the `people`, `admissions`, and `student_lifecycle` bounded 
    - `202607280103_SIS-01_admissions.sql`
    - `202607280104_SIS-01_enrollment.sql`
    - `202607280105_SIS-01_operations.sql`
+   - `202607280106_SIS-01_contract_signer.sql`
 5. Run migrations with `ON_ERROR_STOP` or an equivalent transactional failure policy.
 6. Do not load production data into preview or development branches. Use synthetic tenant-scoped records only.
 
@@ -22,7 +23,7 @@ This runbook covers the `people`, `admissions`, and `student_lifecycle` bounded 
 
 Run the following checks before allowing application traffic:
 
-- all five SIS migration IDs exist exactly once;
+- all six SIS migration IDs exist exactly once;
 - schemas `people`, `admissions`, and `student_lifecycle` exist;
 - all SIS base tables have both `relrowsecurity` and `relforcerowsecurity` enabled;
 - no rows are visible to `app_runtime` before `app.tenant_id` is set;

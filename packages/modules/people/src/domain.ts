@@ -148,6 +148,12 @@ export interface PeopleCommandResult<T> {
   events: readonly DomainEvent<unknown>[];
 }
 
+export interface SearchPeopleOptions {
+  query?: string;
+  includeMerged?: boolean;
+  limit?: number;
+}
+
 export class PeopleDomainError extends Error {
   constructor(
     readonly code: string,
@@ -268,6 +274,131 @@ export class PeopleDirectory {
     return clonePerson(this.#requirePerson(tenantId, personId));
   }
 
+  addPersonName(tenantId: string, personId: string, name: PersonNameInput): PersonRecord {
+    const person = this.#requirePerson(tenantId, personId);
+    if (!name.givenName.trim() || !name.familyName.trim()) {
+      throw new PeopleDomainError('SIS_PERSON_NAME_INVALID', 'Given and family names are required');
+    }
+    if (name.effectiveTo !== undefined && name.effectiveTo < name.effectiveFrom) {
+      throw new PeopleDomainError('SIS_EFFECTIVE_PERIOD_INVALID', 'Name period is invalid');
+    }
+    const duplicate = person.names.some(
+      (existing) =>
+        existing.usage === name.usage &&
+        normalized(existing.givenName) === normalized(name.givenName) &&
+        normalized(existing.familyName) === normalized(name.familyName) &&
+        existing.effectiveFrom === name.effectiveFrom,
+    );
+    if (!duplicate) {
+      person.names.push({ ...name, middleNames: [...(name.middleNames ?? [])] });
+      person.version += 1;
+      person.updatedAt = new Date().toISOString();
+      this.#audit.append({ tenantId, action: 'sis.people.person-name-added', subjectId: personId });
+    }
+    return clonePerson(person);
+  }
+
+  addIdentifier(
+    tenantId: string,
+    personId: string,
+    identifier: PersonIdentifierInput,
+  ): PersonRecord {
+    const person = this.#requirePerson(tenantId, personId);
+    if (!identifier.identifierType.trim() || !identifier.value.trim()) {
+      throw new PeopleDomainError(
+        'SIS_PERSON_IDENTIFIER_INVALID',
+        'Identifier type and value are required',
+      );
+    }
+    if (identifier.effectiveTo !== undefined && identifier.effectiveTo < identifier.effectiveFrom) {
+      throw new PeopleDomainError('SIS_EFFECTIVE_PERIOD_INVALID', 'Identifier period is invalid');
+    }
+    const identity = `${normalized(identifier.identifierType)}:${normalized(identifier.value)}`;
+    const conflicting = [...this.#people.values()].find(
+      (candidate) =>
+        candidate.tenantId === tenantId &&
+        candidate.personId !== personId &&
+        candidate.status !== 'merged' &&
+        candidate.identifiers.some(
+          (existing) =>
+            `${normalized(existing.identifierType)}:${normalized(existing.value)}` === identity,
+        ),
+    );
+    if (conflicting) {
+      throw new PeopleDomainError(
+        'SIS_PERSON_IDENTIFIER_CONFLICT',
+        'Identifier is already assigned within the tenant',
+      );
+    }
+    if (
+      !person.identifiers.some(
+        (existing) =>
+          `${normalized(existing.identifierType)}:${normalized(existing.value)}` === identity,
+      )
+    ) {
+      person.identifiers.push({ ...identifier });
+      person.version += 1;
+      person.updatedAt = new Date().toISOString();
+      this.#audit.append({
+        tenantId,
+        action: 'sis.people.person-identifier-added',
+        subjectId: personId,
+      });
+    }
+    return clonePerson(person);
+  }
+
+  addContactPoint(tenantId: string, personId: string, contact: ContactPointInput): PersonRecord {
+    const person = this.#requirePerson(tenantId, personId);
+    if (!contact.value.trim()) {
+      throw new PeopleDomainError('SIS_CONTACT_VALUE_REQUIRED', 'Contact value is required');
+    }
+    const identity = `${contact.kind}:${normalized(contact.value)}`;
+    if (
+      !person.contacts.some(
+        (existing) => `${existing.kind}:${normalized(existing.value)}` === identity,
+      )
+    ) {
+      if (contact.primary) {
+        person.contacts = person.contacts.map((existing) =>
+          existing.kind === contact.kind ? { ...existing, primary: false } : existing,
+        );
+      }
+      person.contacts.push({ ...contact });
+      person.version += 1;
+      person.updatedAt = new Date().toISOString();
+      this.#audit.append({
+        tenantId,
+        action: 'sis.people.person-contact-added',
+        subjectId: personId,
+      });
+    }
+    return clonePerson(person);
+  }
+
+  searchPeople(tenantId: string, options: SearchPeopleOptions = {}): readonly PersonRecord[] {
+    const query = normalized(options.query ?? '');
+    const limit = Math.min(Math.max(options.limit ?? 50, 1), 100);
+    return [...this.#people.values()]
+      .filter((person) => person.tenantId === tenantId)
+      .filter((person) => options.includeMerged || person.status !== 'merged')
+      .filter((person) => {
+        if (!query) return true;
+        return (
+          normalized(displayName(person)).includes(query) ||
+          person.identifiers.some(
+            (identifier) =>
+              normalized(identifier.value).includes(query) ||
+              normalized(identifier.identifierType).includes(query),
+          ) ||
+          person.contacts.some((contact) => normalized(contact.value).includes(query))
+        );
+      })
+      .sort((left, right) => displayName(left).localeCompare(displayName(right)))
+      .slice(0, limit)
+      .map(clonePerson);
+  }
+
   createHousehold(
     tenantId: string,
     displayNameValue: string,
@@ -291,6 +422,14 @@ export class PeopleDirectory {
       subjectId: record.householdId,
     });
     return { ...record, members: [...record.members] };
+  }
+
+  getHousehold(tenantId: string, householdId: string): HouseholdRecord {
+    const household = this.#households.get(householdId);
+    if (!household || household.tenantId !== tenantId) {
+      throw new PeopleDomainError('SIS_HOUSEHOLD_NOT_FOUND', 'Household was not found');
+    }
+    return { ...household, members: household.members.map((member) => ({ ...member })) };
   }
 
   setGuardianAuthority(
@@ -376,6 +515,22 @@ export class PeopleDirectory {
         record.authorities.includes(authority) &&
         dateWithin(at, record.effectiveFrom, record.effectiveTo),
     );
+  }
+
+  listStudentGuardians(
+    tenantId: string,
+    studentPersonId: string,
+    at: string,
+  ): readonly GuardianAuthorityRecord[] {
+    this.#requirePerson(tenantId, studentPersonId);
+    return [...this.#authorities.values()]
+      .filter(
+        (record) =>
+          record.tenantId === tenantId &&
+          record.studentPersonId === studentPersonId &&
+          dateWithin(at, record.effectiveFrom, record.effectiveTo),
+      )
+      .map((record) => ({ ...record, authorities: [...record.authorities] }));
   }
 
   recordConsent(input: Omit<ConsentRecord, 'consentId' | 'version'>): ConsentRecord {

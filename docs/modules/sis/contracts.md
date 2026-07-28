@@ -20,13 +20,29 @@ SIS owns person and family master records, guardian authority, admissions workfl
 
 Consumers must not join internal SIS tables or depend on undocumented status fields. Cross-module consumers use these references, versioned APIs or events.
 
+## Application-service boundary
+
+`SisApplicationService` is the versioned `v1` module API used by SIS feature components and future integration adapters. It owns no application shell or persona navigation; those are composed by EXP-01. Internal registries are private so callers cannot bypass authorization.
+
+Every public operation receives a `SisRequestContext` containing tenant, authenticated principal, assurance level and correlation ID. The service derives reviewers, decision actors, converters and contract signers from that authenticated context rather than accepting spoofable actor IDs.
+
+Published permissions are:
+
+- `sis.people.read`, `sis.people.manage`, `sis.guardian.manage`;
+- `sis.admissions.read`, `sis.admissions.manage`, `sis.admissions.review`, `sis.admissions.convert`;
+- `sis.enrollment.read`, `sis.enrollment.manage`;
+- `sis.import.manage`, `sis.export.read`;
+- `sis.family.application.read`, `sis.family.contract.sign`.
+
+A submitting guardian requires current verified legal or education authority. A family contract signature additionally requires the authenticated person to be the submitting guardian and records both account and person signer evidence.
+
 ## API rules
 
-- Commands are tenant-scoped, authorization-checked and idempotent where retries can occur.
+- Commands are tenant-scoped, authorization-checked and idempotent where retries can occur; a reused key with a different payload is rejected.
 - Queries are bounded and return only permitted fields.
 - Submitted application responses are immutable; amendments create new versions.
 - Guardian views require a current verified authority with portal access.
-- Applicant conversion and offer acceptance are replay-safe.
+- Applicant conversion and offer acceptance are replay-safe; issued offers and contracts cannot be replaced by conflicting reissue requests.
 - Enrollment history is append-oriented; transfer, withdrawal, promotion and re-enrollment create explicit records.
 - Import batches and rows are tenant-scoped, validate before apply and replay by stable source key plus checksum.
 - Exports require an explicit purpose and field allowlist; restricted documents require separate authorization.

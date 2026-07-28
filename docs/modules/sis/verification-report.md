@@ -27,7 +27,9 @@ SIS-01 delivers the complete owned stream:
 - previous-school, admission and placement history;
 - import staging, validation, dry-run, row-level errors and replay protection;
 - privacy-aware exports, data-quality queues, reporting and reconciliation;
-- accessible admin and family admissions interfaces.
+- a versioned, tenant- and permission-scoped application service with private registries;
+- authenticated reviewer, decision, conversion and contract-signer evidence;
+- accessible admin and family admissions feature interfaces for EXP-01 composition.
 
 ## Automated validation
 
@@ -40,14 +42,17 @@ The following checks passed:
 - architecture boundaries;
 - root TypeScript project references, including typed `web-admin` and `web-family` workspaces;
 - all workspace builds, including `@school/sis`, `@school/web-admin` and `@school/web-family`;
-- full Vitest suite: 19 files and 65 tests PASS;
+- full local Vitest suite: 21 files and 78 tests PASS;
+- fresh PostgreSQL replay of foundation 1–5 and SIS 101–106;
 - execution artifact validation;
 - Playwright Chromium: one platform flow and two SIS flows PASS;
-- V8 coverage: 82.30% statements, 65.96% branches, 87.64% functions and 83.59% lines.
+- V8 coverage: 84.58% statements, 71.39% branches, 86.62% functions and 85.42% lines;
+- dependency audit: zero high-severity vulnerabilities;
+- licence and provenance validation: 342 packages PASS.
 
-One environment-dependent test, `tests/integration/neon-direct.test.ts`, remains conditional and is skipped when `DATABASE_URL` is not supplied. The same Neon connectivity, migration, RLS and immutability controls were verified directly on the isolated primary and fresh-replay Neon branches without storing credentials in the repository or test logs.
+`tests/integration/neon-direct.test.ts` remains conditional in local runs when `DATABASE_URL` is absent. CI requires the repository secret for same-repository branches and executes the read-only live Neon serverless-driver test explicitly, so the conditional local skip cannot silently replace the PR integration gate.
 
-The suite covers domain invariants, migration contracts, tenant-scope behaviour, immutable records, replay safety, import validation, privacy-safe rendering, reconciliation, workspace boundaries and a 5,000-row import staging load check.
+The suite covers domain invariants, migration contracts, tenant and permission scope, assurance step-up, authenticated actor derivation, guardian signing authority, immutable records, replay safety, direct profile/enrollment lifecycle commands, import validation, privacy-safe rendering, reconciliation, workspace boundaries and a 5,000-row import staging load check.
 
 ### Browser verification
 
@@ -78,20 +83,20 @@ Verified controls:
 - enrollment placement identity rewrite was rejected;
 - immutable report snapshot mutation was rejected.
 
-### Fresh replay branch
+### Fresh replay and review migration verification
 
-A new branch was created from Neon `main`, and migrations were replayed in exact order without existing SIS state.
+The isolated Neon replay branch was created from Neon `main`, and foundation migrations `202607280001` through `202607280005` plus SIS migrations `202607280101` through `202607280105` were replayed without existing SIS state. That replay produced 10 ledger entries, including 5 SIS entries, and verified forced RLS on all 59 SIS base tables.
 
-Replay result:
+The review hardening migration `202607280106_SIS-01_contract_signer` was then replayed together with the complete sequence on a new disposable PostgreSQL cluster. The exact tracked migration script verified:
 
-- migration ledger entries: 10;
-- SIS migration ledger entries: 5;
-- `people` base tables: 21;
-- `admissions` base tables: 18;
-- `student_lifecycle` base tables: 20;
-- SIS base tables with both enabled and forced RLS: 59 of 59.
+- migration ledger entries: 11;
+- SIS migration ledger entries: 6;
+- SIS base tables: 59;
+- SIS base tables with both enabled and forced RLS: 59 of 59;
+- contract signer columns: 2;
+- contract signer foreign-key/check constraints: 3.
 
-This proves the stream can be created from the reviewed foundation sequence without relying on hidden state from the primary SIS branch.
+CI repeats this fresh PostgreSQL replay for every pull request. It also executes a read-only live Neon serverless-driver query using the repository `DATABASE_URL` secret on same-repository branches. Migration `106` was not applied to a shared Neon branch during review because the available local environment did not expose a branch-scoped credential; no credential was printed or bypassed, and no production or shared database was mutated.
 
 ## Checkpoint commits
 
@@ -108,7 +113,10 @@ The final implementation and completion-evidence SHAs are recorded in the execut
 
 - All tenant-owned SIS tables force RLS for `app_runtime`.
 - Login accounts remain separate from person records.
-- Guardian access is effective-dated and capability-specific.
+- Guardian access is effective-dated and capability-specific; application submission and family contract signing require verified legal or education authority.
+- The versioned application service keeps registries private and checks tenant, permission and assurance on every public operation.
+- Reviewers, decision actors, converters and contract signers are derived from the authenticated request context rather than caller-supplied identities.
+- Signed enrollment contracts retain account signer evidence and optional person signer evidence.
 - Submitted responses, enrollment placement identity and report snapshots are immutable.
 - Finance data remains an opaque external reference; SIS does not own balances or ledger postings.
 - Invalid imports remain visible in data-quality queues.

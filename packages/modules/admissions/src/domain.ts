@@ -94,6 +94,8 @@ export interface EnrollmentContract {
   documentId: string;
   status: 'issued' | 'signed' | 'void';
   signedAt?: string;
+  signedByAccountId?: string;
+  signedByPersonId?: string;
 }
 
 export interface DepositReference {
@@ -152,6 +154,22 @@ interface MutableApplication extends Omit<
 export interface AdmissionsCommandResult<T> {
   value: T;
   events: readonly DomainEvent<unknown>[];
+}
+
+export interface ListApplicationsOptions {
+  status?: ApplicationStatus;
+  cycleId?: string;
+  applicantPersonId?: string;
+  limit?: number;
+}
+
+export interface ChecklistReconciliation {
+  applicationId: string;
+  required: number;
+  completed: number;
+  pendingRequirementKeys: readonly string[];
+  rejectedRequirementKeys: readonly string[];
+  complete: boolean;
 }
 
 export class AdmissionsDomainError extends Error {
@@ -599,7 +617,22 @@ export class AdmissionsRegistry {
         'Offer requires an admit decision',
       );
     }
-    if (application.offer) return { ...application.offer };
+    if (application.offer) {
+      const existing = application.offer;
+      if (
+        existing.programId !== input.programId ||
+        existing.campusId !== input.campusId ||
+        existing.academicYearId !== input.academicYearId ||
+        existing.gradeLevelId !== input.gradeLevelId ||
+        existing.expiresAt !== input.expiresAt
+      ) {
+        throw new AdmissionsDomainError(
+          'SIS_OFFER_REISSUE_CONFLICT',
+          'Existing offer does not match the reissue request',
+        );
+      }
+      return { ...existing };
+    }
     const offer: AdmissionOffer = {
       offerId: crypto.randomUUID(),
       programId: input.programId,
@@ -624,6 +657,19 @@ export class AdmissionsRegistry {
     const application = this.#requireApplication(input.tenantId, input.applicationId);
     if (!application.offer)
       throw new AdmissionsDomainError('SIS_CONTRACT_REQUIRES_OFFER', 'Contract requires an offer');
+    if (application.contract) {
+      const existing = application.contract;
+      if (
+        existing.templateVersion !== input.templateVersion ||
+        existing.documentId !== input.documentId
+      ) {
+        throw new AdmissionsDomainError(
+          'SIS_CONTRACT_REISSUE_CONFLICT',
+          'Existing contract does not match the reissue request',
+        );
+      }
+      return { ...existing };
+    }
     const contract: EnrollmentContract = {
       contractId: crypto.randomUUID(),
       templateVersion: input.templateVersion,
@@ -713,14 +759,56 @@ export class AdmissionsRegistry {
     };
   }
 
-  signContract(input: { tenantId: string; applicationId: string }): EnrollmentContract {
+  signContract(input: {
+    tenantId: string;
+    applicationId: string;
+    signedByAccountId: string;
+    signedByPersonId?: string;
+  }): EnrollmentContract {
     const application = this.#requireApplication(input.tenantId, input.applicationId);
     if (!application.contract)
       throw new AdmissionsDomainError('SIS_CONTRACT_NOT_FOUND', 'Contract was not found');
+    if (application.contract.status === 'signed') return { ...application.contract };
+    if (application.contract.status !== 'issued') {
+      throw new AdmissionsDomainError(
+        'SIS_CONTRACT_NOT_SIGNABLE',
+        'Only an issued contract can be signed',
+      );
+    }
     application.contract.status = 'signed';
     application.contract.signedAt = new Date().toISOString();
+    application.contract.signedByAccountId = input.signedByAccountId;
+    if (input.signedByPersonId !== undefined) {
+      application.contract.signedByPersonId = input.signedByPersonId;
+    }
     application.version += 1;
+    this.#audit.append({
+      tenantId: input.tenantId,
+      action: 'sis.admissions.contract-signed',
+      subjectId: application.contract.contractId,
+    });
     return { ...application.contract };
+  }
+
+  resolveApplicantConversionReplay(
+    tenantId: string,
+    applicationId: string,
+    idempotencyKey: string,
+  ): ApplicantConversion | undefined {
+    this.#requireApplication(tenantId, applicationId);
+    const scopedKey = `${tenantId}:${idempotencyKey}`;
+    const replay = this.#conversionByIdempotency.get(scopedKey);
+    if (replay && replay.applicationId !== applicationId) {
+      throw new AdmissionsDomainError(
+        'SIS_CONVERSION_IDEMPOTENCY_CONFLICT',
+        'Conversion idempotency key is already bound to another application',
+      );
+    }
+    if (replay) return { ...replay, fieldMapping: { ...replay.fieldMapping } };
+    const prior = this.#conversionByApplication.get(applicationId);
+    if (!prior) return undefined;
+    this.#conversionByIdempotency.set(scopedKey, prior);
+    return { ...prior, fieldMapping: { ...prior.fieldMapping } };
   }
 
   convertApplicant(input: {
@@ -734,15 +822,13 @@ export class AdmissionsRegistry {
     correlationId: string;
   }): AdmissionsCommandResult<ApplicantConversion> {
     const application = this.#requireApplication(input.tenantId, input.applicationId);
+    const replay = this.resolveApplicantConversionReplay(
+      input.tenantId,
+      input.applicationId,
+      input.idempotencyKey,
+    );
+    if (replay) return { value: replay, events: [] };
     const idempotencyKey = `${input.tenantId}:${input.idempotencyKey}`;
-    const replay = this.#conversionByIdempotency.get(idempotencyKey);
-    if (replay)
-      return { value: { ...replay, fieldMapping: { ...replay.fieldMapping } }, events: [] };
-    const prior = this.#conversionByApplication.get(application.applicationId);
-    if (prior) {
-      this.#conversionByIdempotency.set(idempotencyKey, prior);
-      return { value: { ...prior, fieldMapping: { ...prior.fieldMapping } }, events: [] };
-    }
     if (application.status !== 'accepted' || application.offer?.status !== 'accepted') {
       throw new AdmissionsDomainError(
         'SIS_APPLICATION_NOT_CONVERTIBLE',
@@ -791,6 +877,49 @@ export class AdmissionsRegistry {
 
   getApplication(tenantId: string, applicationId: string): Application {
     return cloneApplication(this.#requireApplication(tenantId, applicationId));
+  }
+
+  listApplications(
+    tenantId: string,
+    options: ListApplicationsOptions = {},
+  ): readonly Application[] {
+    const limit = Math.min(Math.max(options.limit ?? 50, 1), 100);
+    return [...this.#applications.values()]
+      .filter((application) => application.tenantId === tenantId)
+      .filter(
+        (application) => options.status === undefined || application.status === options.status,
+      )
+      .filter(
+        (application) => options.cycleId === undefined || application.cycleId === options.cycleId,
+      )
+      .filter(
+        (application) =>
+          options.applicantPersonId === undefined ||
+          application.applicantPersonId === options.applicantPersonId,
+      )
+      .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))
+      .slice(0, limit)
+      .map(cloneApplication);
+  }
+
+  getChecklistReconciliation(tenantId: string, applicationId: string): ChecklistReconciliation {
+    const application = this.#requireApplication(tenantId, applicationId);
+    const required = application.checklist.filter((item) => item.required);
+    const completed = required.filter((item) => ['verified', 'waived'].includes(item.status));
+    const pendingRequirementKeys = required
+      .filter((item) => !['verified', 'waived', 'rejected'].includes(item.status))
+      .map((item) => item.requirementKey);
+    const rejectedRequirementKeys = required
+      .filter((item) => item.status === 'rejected')
+      .map((item) => item.requirementKey);
+    return {
+      applicationId,
+      required: required.length,
+      completed: completed.length,
+      pendingRequirementKeys,
+      rejectedRequirementKeys,
+      complete: required.length === completed.length,
+    };
   }
 
   getGuardianApplicationStatus(
