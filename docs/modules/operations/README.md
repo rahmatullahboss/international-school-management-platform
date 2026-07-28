@@ -69,6 +69,18 @@ OPS-01 owns school operating workflows and their operational source records. It 
 - Guardian consent, idempotent attendance, incident reporting and trip readiness reports
 - Versioned participant-charge and trip-payable FIN source documents, audit/events and forced-RLS migration
 
+### API, admin UI and contract hardening
+
+- Typed operations summary/report/command routes with tenant, principal, campus, correlation and idempotency context
+- Permission-filtered application façade with wildcard grants, AAL2 enforcement and duplicate handler/provider protection
+- Exception-first operations command centre with source-labelled metrics, owned queues and module drill-down
+- Semantic landmarks, keyboard focus, responsive labelled tables, RTL logical CSS, reduced motion and forced-colour support
+- Escaped content and safe internal/fragment link policy including protocol-relative URL rejection
+- Central permission catalogue, requester/approver role bundles and high-risk step-up metadata
+- Versioned operations event-name/envelope validation applied to the shared event factory
+- Ordered seven-step OPS migration manifest with ownership and forced-RLS replay guards
+- Impeccable context, critique, audit, accessibility, responsive/RTL, hardening and polish evidence in `ui-impeccable-evidence.md`
+
 ## Public finance integration contract
 
 `FinancePayableSourceDocument` version `1.0` contains only the approved operational source facts required by FIN: tenant/legal entity/campus, supplier, PO and budget references, dates, minor-unit amounts, currency, approval evidence, correlation and idempotency keys. OPS receives only an opaque FIN document reference after submission.
@@ -84,11 +96,15 @@ No OPS migration references FIN-owned tables. This keeps the source-document bou
 - Transport focused tests: 9 passing
 - Hostel/cafeteria focused tests: 11 passing
 - Activities/trips focused tests: 11 passing
-- Combined OPS focused tests: 67 passing
-- TypeScript, ESLint and architecture boundaries: passing
-- Dependency audit: 0 vulnerabilities
-- Neon migration application: pending foundation/Wave 1 schema composition on the isolated OPS branch; prior attempts rolled back atomically and persisted no schema/data mutation
+- Previously executed combined OPS domain tests: 67 passing
+- Previously executed API/admin UI focused tests before the workspace runner became unavailable: 10 passing
+- Finalization guard tests added: API 6, application 4, admin UI 5, permissions 4, events 3 and migration manifest 3
+- Final OPS test inventory: 92 tests; the 25 finalization tests require one clean external run before `GATE-OPS-COMPLETE`
+- TypeScript, ESLint and architecture boundaries were passing before the final API/permission/event files; a clean rerun is still required
+- Dependency audit last verified at 0 vulnerabilities
+- GitHub repository has no PR-triggered workflow/status check configured for this branch
+- Neon migration application remains pending foundation/Wave 1 schema composition on the isolated OPS branch; prior attempts rolled back atomically and persisted no schema/data mutation
 
-## Next checkpoint
+## Exact next checkpoint
 
-Typed APIs, operations admin UI, permissions/event/report contract hardening and unified verification.
+Run `npm ci`, the 92 OPS tests, TypeScript, ESLint, architecture boundaries, deterministic build and migration replay on a workspace/CI runner. Resolve any failures, then record the final SHA and mark the module completion gate.
