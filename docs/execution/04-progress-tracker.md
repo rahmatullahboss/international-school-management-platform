@@ -34,7 +34,7 @@ Current readiness: `GATE-FOUNDATION-READY` is passed. `SIS-01`, `FIN-01` and `IN
 |---|---:|---|---|---|---|---|
 | `FND-01` | 0 | complete; gate passed | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | freeze reviewed foundation SHA | pending gate-evidence commit | none |
 | `SIS-01` | 1 | ready to start | reviewed foundation SHA | module contract | none | none |
-| `FIN-01` | 1 | in progress | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | ledger | `4b4371ad400d8e04244611184ae90a722d01e15d` | none |
+| `FIN-01` | 1 | in progress | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | billing | `9c60dea233b661d24a06300b2ddf910ee7e7545c` | none |
 | `INT-01` | 1 | ready to start | reviewed foundation SHA | country-pack engine | none | none |
 | `ACAD-01` | 2 | blocked | reviewed Wave 1 integration SHA | academic structure | none | `GATE-WAVE-1-INTEGRATED` |
 | `OPS-01` | 2 | blocked | reviewed Wave 1 integration SHA | HR/staff | none | `GATE-WAVE-1-INTEGRATED` |
@@ -199,6 +199,19 @@ Gate outcome: milestone 1 passed; money, rounding, numbering, opaque references,
 Exact next milestone: 2 — immutable double-entry ledger and module-owned SQL migration
 Dirty/uncommitted state: tracker and agent-board evidence only
 Production mutation performed: no
+
+Date/time: 2026-07-28T09:30:00+06:00
+Stream: FIN-01
+Milestone completed: 2 — immutable double-entry ledger
+Checkpoint SHA: `9c60dea233b661d24a06300b2ddf910ee7e7545c`
+Changed owned paths: `packages/modules/ledger/**`, `packages/modules/billing/src/contracts/**`, `tests/finance/**`
+Focused checks and results: finance Vitest 56/56 PASS; focused ESLint PASS; billing TypeScript PASS; ledger TypeScript PASS
+Neon replay: foundation migrations `202607280001` through `202607280005` plus `202607280101_FIN-01_ledger` applied on `agent/fin-01-finance` only
+Neon proof: balanced journal debit=credit=25000; duplicate post returned the same posted journal; posted mutation rejected with `FIN_POSTED_JOURNAL_IMMUTABLE`; tenant A visible books=1 and tenant B visible books=0; no-context visible books=0; forced-RLS ledger tables=7
+Gate outcome: milestone 2 passed; chart of accounts, periods, balanced idempotent posting, immutable posted journals, reversal, as-of balances, RLS and tenant isolation are executable
+Exact next milestone: 3 — billing accounts, fees, invoices, adjustments and receivables
+Dirty/uncommitted state: tracker and agent-board evidence only
+Production mutation performed: no; Neon main untouched
 
 ## INT-01 evidence
 
