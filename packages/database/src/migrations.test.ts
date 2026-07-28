@@ -8,6 +8,7 @@ describe('foundation migration plan', () => {
     expect(foundationMigrations.map((migration) => migration.id)).toEqual([
       '202607280001_FND-01_foundation',
       '202607280002_FND-01_tenancy',
+      '202607280003_FND-01_identity_policy',
     ]);
   });
 
@@ -31,6 +32,17 @@ describe('foundation migration plan', () => {
     expect(sql).toContain('CREATE TABLE IF NOT EXISTS tenancy.legal_entity');
     expect(sql).toContain('CREATE TABLE IF NOT EXISTS tenancy.campus');
     expect(sql).toContain('CREATE TABLE IF NOT EXISTS tenancy.entitlement');
+    expect(sql).toContain('ENABLE ROW LEVEL SECURITY');
+  });
+
+  it('models identity links, scoped roles and expiring privileged access', () => {
+    const sql = foundationMigrations[2]?.sql ?? '';
+    expect(sql).toContain('CREATE TABLE IF NOT EXISTS iam.account');
+    expect(sql).toContain('CREATE TABLE IF NOT EXISTS iam.person_link');
+    expect(sql).toContain('CREATE TABLE IF NOT EXISTS iam.role_permission');
+    expect(sql).toContain('required_assurance');
+    expect(sql).toContain('CREATE TABLE IF NOT EXISTS iam.privileged_access_grant');
+    expect(sql).toContain('expires_at');
     expect(sql).toContain('ENABLE ROW LEVEL SECURITY');
   });
 });
