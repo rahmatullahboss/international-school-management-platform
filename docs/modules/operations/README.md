@@ -53,6 +53,14 @@ OPS-01 owns school operating workflows and their operational source records. It 
 - Trip completion blocks on unreconciled riders and persists critical safeguarding exceptions
 - Capacity utilisation, inspection, trip and incident reports, audit/events and forced-RLS migration
 
+### Hostel and cafeteria
+
+- Hostel buildings, rooms and beds with date-effective, non-overlapping resident allocations
+- Checkout history, visitors, safeguarding/health/discipline/facility incidents and maintenance reporting
+- Cafeteria menu items linked through opaque inventory references with explicit allergen metadata
+- Date-effective meal plans, entitlement/daily-limit checks, allergen conflict prevention and idempotent service confirmation
+- Versioned pay-per-meal FIN charge source documents, occupancy/uptake reports, audit/events and forced-RLS migrations
+
 ## Public finance integration contract
 
 `FinancePayableSourceDocument` version `1.0` contains only the approved operational source facts required by FIN: tenant/legal entity/campus, supplier, PO and budget references, dates, minor-unit amounts, currency, approval evidence, correlation and idempotency keys. OPS receives only an opaque FIN document reference after submission.
@@ -66,11 +74,12 @@ No OPS migration references FIN-owned tables. This keeps the source-document bou
 - Inventory/assets focused tests: 10 passing
 - Library focused tests: 9 passing
 - Transport focused tests: 9 passing
-- Combined OPS focused tests: 45 passing
+- Hostel/cafeteria focused tests: 11 passing
+- Combined OPS focused tests: 56 passing
 - TypeScript, ESLint and architecture boundaries: passing
 - Dependency audit: 0 vulnerabilities
 - Neon migration application: pending foundation/Wave 1 schema composition on the isolated OPS branch; prior attempts rolled back atomically and persisted no schema/data mutation
 
 ## Next checkpoint
 
-Hostel occupancy/safeguarding and cafeteria menus, allergens, entitlements, orders and service confirmation.
+Activities, clubs and trips with capacity/waitlists, consent, risk, attendance, incidents and finance source records.

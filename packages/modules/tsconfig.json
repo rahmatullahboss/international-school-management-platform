@@ -16,6 +16,7 @@
     "inventory-assets/src/**/*.ts",
     "library/src/**/*.ts",
     "transport/src/**/*.ts",
+    "residential-catering/src/**/*.ts",
     "billing/src/**/*.ts",
     "ledger/src/**/*.ts"
   ],
