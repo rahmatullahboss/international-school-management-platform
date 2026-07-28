@@ -34,7 +34,7 @@ Current readiness: `GATE-FOUNDATION-READY` is passed. `SIS-01`, `FIN-01` and `IN
 |---|---:|---|---|---|---|---|
 | `FND-01` | 0 | complete; gate passed | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | freeze reviewed foundation SHA | pending gate-evidence commit | none |
 | `SIS-01` | 1 | ready to start | reviewed foundation SHA | module contract | none | none |
-| `FIN-01` | 1 | in progress | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | payments and reconciliation inputs | `4af9d6c51b9a826a7f1dfd1233f12c299d6d1b1f` | none |
+| `FIN-01` | 1 | in progress | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | reconciliation and reporting | `e1a9455ea722afc9c08276fab5e4463c617b252c` | none |
 | `INT-01` | 1 | ready to start | reviewed foundation SHA | country-pack engine | none | none |
 | `ACAD-01` | 2 | blocked | reviewed Wave 1 integration SHA | academic structure | none | `GATE-WAVE-1-INTEGRATED` |
 | `OPS-01` | 2 | blocked | reviewed Wave 1 integration SHA | HR/staff | none | `GATE-WAVE-1-INTEGRATED` |
@@ -223,6 +223,19 @@ Neon migration: `202607280102_FIN-01_billing` applied on `agent/fin-01-finance` 
 Neon proof: document numbering first/retry=`INV-000001`, next=`INV-000002`; posted invoice total/balance=25000; posted line mutation rejected; tenant A visible billing accounts=1 and tenant B=0; no-context visibility=0; forced-RLS billing tables=13
 Gate outcome: milestone 3 passed; billing accounts/responsibility, fee catalog/schedules/assignments, adjustments, invoices, instalments, tax, credit notes, statements and ledger trace are executable
 Exact next milestone: 4 — payments, allocations, refunds, cashier and reconciliation inputs
+Dirty/uncommitted state: tracker and agent-board evidence only
+Production mutation performed: no; Neon main untouched
+
+Date/time: 2026-07-28T09:55:00+06:00
+Stream: FIN-01
+Milestone completed: 4 — payments, allocations, refunds, cashier and reconciliation inputs
+Checkpoint SHA: `e1a9455ea722afc9c08276fab5e4463c617b252c`
+Changed owned paths: `packages/modules/billing/src/payment-service.ts`, `packages/modules/billing/migrations/202607280103_FIN-01_payments.sql`, `tests/finance/payments.test.ts`
+Focused checks and results: finance Vitest 73/73 PASS; focused ESLint PASS; billing TypeScript PASS; ledger TypeScript PASS
+Neon migration: `202607280103_FIN-01_payments` applied on `agent/fin-01-finance` only
+Neon proof: settled receipt amount/unapplied=25000; provider-event update rejected with `FIN_PROVIDER_EVENT_IMMUTABLE`; tenant A visible intents=1 and tenant B=0; no-context visibility=0; forced-RLS billing tables=21
+Gate outcome: milestone 4 passed; signed provider events, duplicate replay, receipts, unapplied cash, allocations/unallocations, bounded refunds, cashier sessions/deposits and bank statement matching are executable
+Exact next milestone: 5 — reconciliation, aging and financial reporting
 Dirty/uncommitted state: tracker and agent-board evidence only
 Production mutation performed: no; Neon main untouched
 
