@@ -37,6 +37,14 @@ OPS-01 owns school operating workflows and their operational source records. It 
 - Asset register, custody assignments, straight-line depreciation schedule and maintenance history
 - AAL2/separation-of-duties disposal approval, asset reporting, audit/events and forced-RLS migrations
 
+### Library
+
+- Bibliographic titles, physical copies and patrons linked by opaque SIS person references
+- Patron-type loan limits, policy-driven due dates and renewal controls
+- Ordered holds with priority enforcement and ready-copy workflow
+- Overdue, damaged and lost-copy fine source documents exported through a versioned FIN boundary
+- Circulation/overdue/collection reports, audit/events and forced-RLS migration
+
 ## Public finance integration contract
 
 `FinancePayableSourceDocument` version `1.0` contains only the approved operational source facts required by FIN: tenant/legal entity/campus, supplier, PO and budget references, dates, minor-unit amounts, currency, approval evidence, correlation and idempotency keys. OPS receives only an opaque FIN document reference after submission.
@@ -48,11 +56,12 @@ No OPS migration references FIN-owned tables. This keeps the source-document bou
 - HR focused tests: 8 passing
 - Procurement focused tests: 9 passing
 - Inventory/assets focused tests: 10 passing
-- Combined OPS focused tests: 27 passing
+- Library focused tests: 9 passing
+- Combined OPS focused tests: 36 passing
 - TypeScript, ESLint and architecture boundaries: passing
 - Dependency audit: 0 vulnerabilities
 - Neon migration application: pending foundation/Wave 1 schema composition on the isolated OPS branch; prior attempts rolled back atomically and persisted no schema/data mutation
 
 ## Next checkpoint
 
-Library cataloguing, circulation, holds, overdue/lost workflows and fine source records.
+Transport vehicles, routes, rider assignments, trip runs, safeguarding attendance and incidents.
