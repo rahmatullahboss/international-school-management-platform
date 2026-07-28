@@ -109,11 +109,17 @@ Events are additive within a version. Breaking payload changes require a new eve
 - Schema drift from unrelated branches is prohibited.
 - Before integration, the module’s migrations are replayed on a fresh branch from the integration parent; passing only on the long-lived agent branch is insufficient.
 
-## 10. UI ownership
+## 10. UI and design ownership
 
-Module agents own feature components under their declared feature path. `EXP-01` owns application composition, persona navigation and cross-module journeys but cannot rewrite domain rules inside UI code.
+All frontend work follows [`docs/design/`](../design/README.md) and uses the repository-local Impeccable skill.
 
-When `EXP-01` needs a new domain capability, it requests an API/read-model extension rather than reading module tables or reproducing business rules.
+`FND-01` owns `.agents/skills/impeccable/**`, `.codex/hooks.json`, `.github/skills/impeccable/**`, `.github/hooks/impeccable.json`, `PRODUCT.md`, `DESIGN.md`, `.impeccable/config.json`, shared design tokens/components, app shells and design-detector CI. Generated skill payloads are updated only through the official installer/update command.
+
+Module agents own feature components under their declared feature path and perform shaping, implementation, critique, audit, hardening and polish inside the same whole-module stream. They may not create microtask design agents or silently modify foundation-owned design contracts.
+
+`EXP-01` owns application composition, persona navigation and cross-module journeys but cannot rewrite domain rules inside UI code. When it needs a new domain capability, it requests an API/read-model extension rather than reading module tables or reproducing business rules.
+
+A UI-bearing checkpoint records the Impeccable version, `PRODUCT.md`/`DESIGN.md` SHAs, surface brief, critique/audit results, detector output, accessibility/browser checks, responsive/RTL/long-content evidence and final polish result.
 
 ## 11. Integration conflict policy
 

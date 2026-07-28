@@ -127,7 +127,17 @@ After foundation integration, module agents extend these contracts but do not re
 
 Implementation agents may use approved permissive dependencies and public standards. They must not copy GPL/AGPL/no-license school-platform source into the proprietary core or translate it line-by-line. Research-derived behavior must come through approved internal specifications under the [clean-room policy](06-open-source-clean-room-policy.md).
 
-## 10. Hard stops
+## 10. Design governance during implementation
+
+All frontend work uses the repository-local Impeccable skill and the contracts under [`docs/design/`](../design/README.md).
+
+- `FND-01` owns `PRODUCT.md`, `DESIGN.md`, shared tokens/components, Codex/GitHub skill payloads and detector hooks.
+- A module agent owns its module UI together with its database/domain/API work; design phases are not delegated to small agents.
+- UI-bearing checkpoints include shape/brief, critique, audit, detector, accessibility, responsive/RTL, hardening and polish evidence.
+- `EXP-01` composes cross-module experiences but does not move domain logic into presentation code.
+- `INTEG-01` rejects UI modules that lack the required design evidence.
+
+## 11. Hard stops
 
 A stream stops only when:
 
@@ -140,7 +150,7 @@ A stream stops only when:
 - context/tool limits approach after a safe checkpoint;
 - the entire stream completion boundary is reached.
 
-## 11. Context-limit resume
+## 12. Context-limit resume
 
 Before stopping for context limits, the agent must:
 
@@ -153,6 +163,6 @@ Before stopping for context limits, the agent must:
 
 A resumed agent continues from the first incomplete milestone and does not repeat completed work.
 
-## 12. Cleanup
+## 13. Cleanup
 
 Branches, worktrees and Neon branches are cleaned only after reviewed integration and reachability verification. Workers never delete their own execution resources. No force deletion is allowed.

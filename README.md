@@ -7,6 +7,7 @@ Public planning and implementation repository for an international, multi-tenant
 - [Documentation index](docs/README.md)
 - [Foundation one-shot agent prompt](docs/execution/FND-01-ONE-SHOT-PROMPT.md)
 - [Whole-module execution system](docs/execution/README.md)
+- [Impeccable design governance](docs/design/README.md)
 - [Product and architecture summary](docs/01-executive-summary.md)
 
 ## Architecture baseline

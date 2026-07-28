@@ -44,6 +44,7 @@ Starting base:
 Checkpoint SHA:
 Changed owned paths:
 Focused checks and results:
+UI/design evidence when applicable: Impeccable version, PRODUCT.md/DESIGN.md SHAs, surface brief, critique/audit, detector, accessibility, responsive/RTL, harden and polish
 Gate outcome:
 Exact next milestone:
 Dirty/uncommitted state:
