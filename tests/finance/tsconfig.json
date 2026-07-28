@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "types": ["node", "vite/client", "vitest/globals"]
+  },
+  "include": [
+    "../../packages/modules/billing/src/**/*.ts",
+    "../../packages/modules/ledger/src/**/*.ts",
+    "../../apps/web-admin/src/features/finance/**/*.tsx",
+    "../../apps/web-family/src/features/finance/**/*.tsx",
+    "./**/*.ts",
+    "./**/*.tsx"
+  ]
+}

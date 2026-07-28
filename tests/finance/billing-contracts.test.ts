@@ -23,11 +23,7 @@ import {
   type Money,
 } from '../../packages/modules/billing/src/index.js';
 
-import {
-  createId,
-  parseId,
-  isValidId,
-} from '../../packages/modules/billing/src/index.js';
+import { createId, parseId, isValidId } from '../../packages/modules/billing/src/index.js';
 
 import {
   createLegalEntityRef,
@@ -61,10 +57,7 @@ import {
   applyRounding,
 } from '../../packages/modules/billing/src/index.js';
 
-import {
-  isSourceDocument,
-  type SourceDocument,
-} from '../../packages/modules/billing/src/index.js';
+import { isSourceDocument, type SourceDocument } from '../../packages/modules/billing/src/index.js';
 
 describe('Money contracts', () => {
   describe('currencyCode', () => {
@@ -116,8 +109,8 @@ describe('Money contracts', () => {
   });
 
   describe('arithmetic', () => {
-    const usd100: Money = { amount: 10000, currency: 'USD' as CurrencyCode };
-    const usd50: Money = { amount: 5000, currency: 'USD' as CurrencyCode };
+    const usd100: Money = { amount: minorUnit(10000), currency: 'USD' as CurrencyCode };
+    const usd50: Money = { amount: minorUnit(5000), currency: 'USD' as CurrencyCode };
 
     it('adds same currency', () => {
       const result = moneyAdd(usd100, usd50);
@@ -131,7 +124,7 @@ describe('Money contracts', () => {
     });
 
     it('rejects adding different currencies', () => {
-      const eur: Money = { amount: 5000, currency: 'EUR' as CurrencyCode };
+      const eur: Money = { amount: minorUnit(5000), currency: 'EUR' as CurrencyCode };
       expect(() => moneyAdd(usd100, eur)).toThrow(MoneyCurrencyMismatchError);
     });
 
@@ -152,8 +145,8 @@ describe('Money contracts', () => {
 
   describe('comparison and predicates', () => {
     const zero = moneyZero('USD' as CurrencyCode);
-    const positive: Money = { amount: 100, currency: 'USD' as CurrencyCode };
-    const negative: Money = { amount: -100, currency: 'USD' as CurrencyCode };
+    const positive: Money = { amount: minorUnit(100), currency: 'USD' as CurrencyCode };
+    const negative: Money = { amount: minorUnit(-100), currency: 'USD' as CurrencyCode };
 
     it('moneyZero creates zero', () => {
       expect(zero.amount).toBe(0);
@@ -161,14 +154,14 @@ describe('Money contracts', () => {
     });
 
     it('moneyEquals same value', () => {
-      const a: Money = { amount: 100, currency: 'USD' as CurrencyCode };
-      const b: Money = { amount: 100, currency: 'USD' as CurrencyCode };
+      const a: Money = { amount: minorUnit(100), currency: 'USD' as CurrencyCode };
+      const b: Money = { amount: minorUnit(100), currency: 'USD' as CurrencyCode };
       expect(moneyEquals(a, b)).toBe(true);
     });
 
     it('moneyCompare ordering', () => {
-      const a: Money = { amount: 100, currency: 'USD' as CurrencyCode };
-      const b: Money = { amount: 200, currency: 'USD' as CurrencyCode };
+      const a: Money = { amount: minorUnit(100), currency: 'USD' as CurrencyCode };
+      const b: Money = { amount: minorUnit(200), currency: 'USD' as CurrencyCode };
       expect(moneyCompare(a, b)).toBe(-1);
       expect(moneyCompare(b, a)).toBe(1);
       expect(moneyCompare(a, a)).toBe(0);
@@ -191,23 +184,23 @@ describe('Money contracts', () => {
 
   describe('allocateMoney', () => {
     it('allocates proportionally', () => {
-      const total: Money = { amount: 100, currency: 'USD' as CurrencyCode };
+      const total: Money = { amount: minorUnit(100), currency: 'USD' as CurrencyCode };
       const shares = [1, 1, 1];
       const result = allocateMoney(total, shares);
       expect(result).toHaveLength(3);
-      expect(result[0].amount + result[1].amount + result[2].amount).toBe(100);
+      expect(result[0]!.amount + result[1]!.amount + result[2]!.amount).toBe(100);
     });
 
     it('handles last share as remainder', () => {
-      const total: Money = { amount: 100, currency: 'USD' as CurrencyCode };
+      const total: Money = { amount: minorUnit(100), currency: 'USD' as CurrencyCode };
       const shares = [1, 2];
       const result = allocateMoney(total, shares);
       expect(result).toHaveLength(2);
-      expect(result[0].amount + result[1].amount).toBe(100);
+      expect(result[0]!.amount + result[1]!.amount).toBe(100);
     });
 
     it('rejects empty shares', () => {
-      const total: Money = { amount: 100, currency: 'USD' as CurrencyCode };
+      const total: Money = { amount: minorUnit(100), currency: 'USD' as CurrencyCode };
       expect(allocateMoney(total, [])).toHaveLength(0);
     });
   });
@@ -324,7 +317,7 @@ describe('Approval contracts', () => {
   it('rejects invalid transition', () => {
     const approved = { ...baseRequest, state: 'approved' as ApprovalState };
     expect(() => transitionApproval(approved, 'approve', 'user-1')).toThrow(
-      'Cannot approve from state approved'
+      'Cannot approve from state approved',
     );
   });
 });
@@ -339,7 +332,7 @@ describe('Numbering contracts', () => {
         tenantId: 'tenant-1',
         date: new Date(),
       },
-      'idem-key-1'
+      'idem-key-1',
     );
     expect(allocation.formatted).toMatch(/^INV-\d{6}$/);
     expect(allocation.idempotencyKey).toBe('idem-key-1');
@@ -348,12 +341,7 @@ describe('Numbering contracts', () => {
   it('rejects unknown document type', () => {
     const policy = createDefaultInvoiceNumberingPolicy('tenant-1');
     expect(() =>
-      allocateSequenceNumber(
-        policy,
-        'unknown',
-        { tenantId: 'tenant-1', date: new Date() },
-        'key'
-      )
+      allocateSequenceNumber(policy, 'unknown', { tenantId: 'tenant-1', date: new Date() }, 'key'),
     ).toThrow('No numbering rule for document type');
   });
 });
