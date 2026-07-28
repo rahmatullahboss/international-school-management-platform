@@ -15,6 +15,7 @@
     "procurement/src/**/*.ts",
     "inventory-assets/src/**/*.ts",
     "library/src/**/*.ts",
+    "transport/src/**/*.ts",
     "billing/src/**/*.ts",
     "ledger/src/**/*.ts"
   ],

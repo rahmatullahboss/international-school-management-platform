@@ -45,6 +45,14 @@ OPS-01 owns school operating workflows and their operational source records. It 
 - Overdue, damaged and lost-copy fine source documents exported through a versioned FIN boundary
 - Circulation/overdue/collection reports, audit/events and forced-RLS migration
 
+### Transport
+
+- Fleet and licensed-driver registers with inspection and maintenance readiness
+- Ordered routes/stops and capacity-controlled rider assignments using opaque SIS references
+- Trip start/completion controls, boarding/alighting events and resource-conflict prevention
+- Trip completion blocks on unreconciled riders and persists critical safeguarding exceptions
+- Capacity utilisation, inspection, trip and incident reports, audit/events and forced-RLS migration
+
 ## Public finance integration contract
 
 `FinancePayableSourceDocument` version `1.0` contains only the approved operational source facts required by FIN: tenant/legal entity/campus, supplier, PO and budget references, dates, minor-unit amounts, currency, approval evidence, correlation and idempotency keys. OPS receives only an opaque FIN document reference after submission.
@@ -57,11 +65,12 @@ No OPS migration references FIN-owned tables. This keeps the source-document bou
 - Procurement focused tests: 9 passing
 - Inventory/assets focused tests: 10 passing
 - Library focused tests: 9 passing
-- Combined OPS focused tests: 36 passing
+- Transport focused tests: 9 passing
+- Combined OPS focused tests: 45 passing
 - TypeScript, ESLint and architecture boundaries: passing
 - Dependency audit: 0 vulnerabilities
 - Neon migration application: pending foundation/Wave 1 schema composition on the isolated OPS branch; prior attempts rolled back atomically and persisted no schema/data mutation
 
 ## Next checkpoint
 
-Transport vehicles, routes, rider assignments, trip runs, safeguarding attendance and incidents.
+Hostel occupancy/safeguarding and cafeteria menus, allergens, entitlements, orders and service confirmation.
