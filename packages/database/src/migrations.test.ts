@@ -7,6 +7,7 @@ describe('foundation migration plan', () => {
     expect(() => validateMigrationPlan(foundationMigrations)).not.toThrow();
     expect(foundationMigrations.map((migration) => migration.id)).toEqual([
       '202607280001_FND-01_foundation',
+      '202607280002_FND-01_tenancy',
     ]);
   });
 
@@ -20,5 +21,16 @@ describe('foundation migration plan', () => {
     expect(sql).toContain('ENABLE ROW LEVEL SECURITY');
     expect(sql).toContain("current_setting('app.tenant_id', true)");
     expect(sql).toContain('CREATE ROLE app_runtime NOLOGIN');
+  });
+
+  it('models regional tenant routing and tenant-owned organization records', () => {
+    const sql = foundationMigrations[1]?.sql ?? '';
+    expect(sql).toContain('CREATE TABLE IF NOT EXISTS platform.tenant');
+    expect(sql).toContain('home_region');
+    expect(sql).toContain('deployment_profile');
+    expect(sql).toContain('CREATE TABLE IF NOT EXISTS tenancy.legal_entity');
+    expect(sql).toContain('CREATE TABLE IF NOT EXISTS tenancy.campus');
+    expect(sql).toContain('CREATE TABLE IF NOT EXISTS tenancy.entitlement');
+    expect(sql).toContain('ENABLE ROW LEVEL SECURITY');
   });
 });

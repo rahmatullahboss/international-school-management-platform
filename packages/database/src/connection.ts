@@ -8,10 +8,7 @@ export interface HttpDatabase {
 }
 
 interface HttpQueryFunction {
-  query(
-    statement: string,
-    parameters?: readonly unknown[],
-  ): Promise<Record<string, unknown>[]>;
+  query(statement: string, parameters?: readonly unknown[]): Promise<Record<string, unknown>[]>;
 }
 
 export type HttpQueryFactory = (connectionString: string) => HttpQueryFunction;
@@ -45,8 +42,7 @@ export function createHttpDatabase(
     query: async <Row extends Record<string, unknown>>(
       statement: string,
       parameters: readonly unknown[] = [],
-    ): Promise<Row[]> =>
-      sql.query(statement, parameters).then((rows) => rows as Row[]),
+    ): Promise<Row[]> => sql.query(statement, parameters).then((rows) => rows as Row[]),
   };
 }
 
