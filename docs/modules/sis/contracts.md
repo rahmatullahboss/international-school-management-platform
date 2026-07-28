@@ -28,6 +28,10 @@ Consumers must not join internal SIS tables or depend on undocumented status fie
 - Guardian views require a current verified authority with portal access.
 - Applicant conversion and offer acceptance are replay-safe.
 - Enrollment history is append-oriented; transfer, withdrawal, promotion and re-enrollment create explicit records.
+- Import batches and rows are tenant-scoped, validate before apply and replay by stable source key plus checksum.
+- Exports require an explicit purpose and field allowlist; restricted documents require separate authorization.
+- Report snapshots are immutable and retain parameters, generation time and accountable actor.
+- Reconciliation produces actionable issues rather than repairing or deleting records automatically.
 
 ## Event catalog
 
