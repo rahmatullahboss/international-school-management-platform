@@ -25,7 +25,7 @@ The long-lived agent database branch is `agent/int-01-integrations`. Foundation 
 
 - [Country-pack engine](./country-packs.md)
 - [Integration runtime](./integration-runtime.md)
-- Import/export foundation: pending milestone 3
+- [Import/export foundation](./import-export.md)
 - Migration studio: pending milestone 4
 - OneRoster profile: pending milestone 5
 - LTI and SSO profiles: pending milestone 6
