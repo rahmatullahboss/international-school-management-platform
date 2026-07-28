@@ -34,7 +34,7 @@ Current readiness: `GATE-FOUNDATION-READY` is passed. `SIS-01`, `FIN-01` and `IN
 |---|---:|---|---|---|---|---|
 | `FND-01` | 0 | complete; gate passed | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | freeze reviewed foundation SHA | pending gate-evidence commit | none |
 | `SIS-01` | 1 | ready to start | reviewed foundation SHA | module contract | none | none |
-| `FIN-01` | 1 | ready to start | reviewed foundation SHA | finance contract | none | none |
+| `FIN-01` | 1 | in progress | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | ledger | `4b4371ad400d8e04244611184ae90a722d01e15d` | none |
 | `INT-01` | 1 | ready to start | reviewed foundation SHA | country-pack engine | none | none |
 | `ACAD-01` | 2 | blocked | reviewed Wave 1 integration SHA | academic structure | none | `GATE-WAVE-1-INTEGRATED` |
 | `OPS-01` | 2 | blocked | reviewed Wave 1 integration SHA | HR/staff | none | `GATE-WAVE-1-INTEGRATED` |
@@ -185,7 +185,20 @@ No execution evidence recorded.
 
 ## FIN-01 evidence
 
-No execution evidence recorded.
+Date/time: 2026-07-28T09:06:00+06:00
+Stream: FIN-01
+Milestone completed: 1 — finance contract
+Git branch: `module/finance-ledger`
+Worktree: `.worktrees/fin-01-finance`
+Neon branch: `agent/fin-01-finance` (`br-broad-butterfly-ax8ywyqj`), parent `main` (`br-cool-wildflower-axsot8l1`)
+Starting base: `55114f55a375d3d79dba7ea21f984b789b5dbca1`
+Checkpoint SHA: `4b4371ad400d8e04244611184ae90a722d01e15d`
+Changed owned paths: `packages/modules/billing/**`, `packages/modules/ledger/**`, `tests/finance/contracts.test.ts`, `docs/modules/finance/**`
+Focused checks and results: contract Vitest 6/6 PASS; focused ESLint PASS; billing TypeScript PASS; ledger TypeScript PASS; clean `npm ci` PASS with 0 vulnerabilities
+Gate outcome: milestone 1 passed; money, rounding, numbering, opaque references, authorization/SoD, stable errors, event envelopes and journal/posting contracts are executable
+Exact next milestone: 2 — immutable double-entry ledger and module-owned SQL migration
+Dirty/uncommitted state: tracker and agent-board evidence only
+Production mutation performed: no
 
 ## INT-01 evidence
 
