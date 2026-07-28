@@ -9,6 +9,7 @@ describe('foundation migration plan', () => {
       '202607280001_FND-01_foundation',
       '202607280002_FND-01_tenancy',
       '202607280003_FND-01_identity_policy',
+      '202607280004_FND-01_transactional_primitives',
     ]);
   });
 
@@ -43,6 +44,16 @@ describe('foundation migration plan', () => {
     expect(sql).toContain('required_assurance');
     expect(sql).toContain('CREATE TABLE IF NOT EXISTS iam.privileged_access_grant');
     expect(sql).toContain('expires_at');
+    expect(sql).toContain('ENABLE ROW LEVEL SECURITY');
+  });
+
+  it('models outbox, idempotency and append-only audit storage', () => {
+    const sql = foundationMigrations[3]?.sql ?? '';
+    expect(sql).toContain('CREATE TABLE IF NOT EXISTS integration_core.outbox_event');
+    expect(sql).toContain('CREATE TABLE IF NOT EXISTS integration_core.idempotency_key');
+    expect(sql).toContain('CREATE TABLE IF NOT EXISTS audit.audit_event');
+    expect(sql).toContain('CREATE TABLE IF NOT EXISTS audit.data_access_event');
+    expect(sql).toContain('audit.prevent_mutation');
     expect(sql).toContain('ENABLE ROW LEVEL SECURITY');
   });
 });

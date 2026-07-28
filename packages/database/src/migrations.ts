@@ -242,6 +242,66 @@ VALUES ('202607280003_FND-01_identity_policy', 'FND-01', 'Identity links, scoped
 ON CONFLICT (migration_id) DO NOTHING;
 `;
 
+const transactionalPrimitivesSql = `
+CREATE TABLE IF NOT EXISTS integration_core.idempotency_key (
+  tenant_id uuid NOT NULL REFERENCES platform.tenant (tenant_id),
+  operation text NOT NULL,
+  idempotency_key text NOT NULL,
+  request_hash text NOT NULL,
+  response_status integer,
+  response_body jsonb,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  expires_at timestamptz NOT NULL,
+  PRIMARY KEY (tenant_id, operation, idempotency_key)
+);
+CREATE TABLE IF NOT EXISTS integration_core.outbox_event (
+  tenant_id uuid NOT NULL REFERENCES platform.tenant (tenant_id),
+  event_id uuid NOT NULL DEFAULT gen_random_uuid(),
+  event_type text NOT NULL,
+  schema_version integer NOT NULL,
+  aggregate_type text NOT NULL,
+  aggregate_id text NOT NULL,
+  aggregate_version bigint NOT NULL,
+  correlation_id text NOT NULL,
+  causation_id text,
+  payload jsonb NOT NULL,
+  occurred_at timestamptz NOT NULL,
+  published_at timestamptz,
+  PRIMARY KEY (tenant_id, event_id)
+);
+CREATE TABLE IF NOT EXISTS audit.audit_event (
+  tenant_id uuid NOT NULL REFERENCES platform.tenant (tenant_id),
+  audit_id uuid NOT NULL DEFAULT gen_random_uuid(),
+  action text NOT NULL,
+  subject_type text NOT NULL,
+  subject_id text NOT NULL,
+  correlation_id text NOT NULL,
+  metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
+  occurred_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (tenant_id, audit_id)
+);
+CREATE TABLE IF NOT EXISTS audit.data_access_event (
+  tenant_id uuid NOT NULL REFERENCES platform.tenant (tenant_id),
+  access_id uuid NOT NULL DEFAULT gen_random_uuid(),
+  data_class text NOT NULL,
+  subject_id text NOT NULL,
+  purpose text NOT NULL,
+  correlation_id text NOT NULL,
+  occurred_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (tenant_id, access_id)
+);
+CREATE OR REPLACE FUNCTION audit.prevent_mutation() RETURNS trigger LANGUAGE plpgsql AS $audit$
+BEGIN RAISE EXCEPTION 'audit records are append-only'; END
+$audit$;
+ALTER TABLE integration_core.idempotency_key ENABLE ROW LEVEL SECURITY;
+ALTER TABLE integration_core.outbox_event ENABLE ROW LEVEL SECURITY;
+ALTER TABLE audit.audit_event ENABLE ROW LEVEL SECURITY;
+ALTER TABLE audit.data_access_event ENABLE ROW LEVEL SECURITY;
+INSERT INTO platform.schema_migration (migration_id, stream_id, description)
+VALUES ('202607280004_FND-01_transactional_primitives', 'FND-01', 'Idempotency, outbox and append-only audit primitives')
+ON CONFLICT (migration_id) DO NOTHING;
+`;
+
 export const foundationMigrations: readonly DatabaseMigration[] = [
   {
     id: '202607280001_FND-01_foundation',
@@ -257,6 +317,11 @@ export const foundationMigrations: readonly DatabaseMigration[] = [
     id: '202607280003_FND-01_identity_policy',
     description: 'Identity links, scoped roles, permissions and privileged access',
     sql: identityPolicySql,
+  },
+  {
+    id: '202607280004_FND-01_transactional_primitives',
+    description: 'Idempotency, outbox and append-only audit primitives',
+    sql: transactionalPrimitivesSql,
   },
 ];
 
