@@ -33,7 +33,7 @@ Current readiness: `GATE-FOUNDATION-READY` is passed. `SIS-01`, `FIN-01` and `IN
 | Stream | Wave | Status | Base | Current/next milestone | Final/last checkpoint | Blocking condition |
 |---|---:|---|---|---|---|---|
 | `FND-01` | 0 | complete; gate passed | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | freeze reviewed foundation SHA | pending gate-evidence commit | none |
-| `SIS-01` | 1 | in progress | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | enrollment lifecycle | `9a18b809559b945bc506b6a9cb26a38e03ce0b3d` | none |
+| `SIS-01` | 1 | in progress | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | UI, imports and reports | `8a8c0f5e17e49d6ca198cf1875aeca98079128a9` | none |
 | `FIN-01` | 1 | ready to start | reviewed foundation SHA | finance contract | none | none |
 | `INT-01` | 1 | ready to start | reviewed foundation SHA | country-pack engine | none | none |
 | `ACAD-01` | 2 | blocked | reviewed Wave 1 integration SHA | academic structure | none | `GATE-WAVE-1-INTEGRATED` |
@@ -246,6 +246,23 @@ Changed owned paths: `packages/modules/admissions/**`; `tests/sis/admissions.tes
 Focused checks and results: admissions tests 4/4 PASS; `@school/sis` build PASS; 18-table admissions migration applied; RLS no-context 0 and Tenant A foreign 0; submitted-response database mutation rejected
 Gate outcome: milestone 4 passed; payment data remains opaque finance reference; parent/production branches unchanged
 Exact next milestone: 5 — enrollment, transfer, withdrawal, promotion, re-enrollment, previous school and alumni transition
+Dirty/uncommitted state: tracker/module documentation update only
+Production mutation performed: no
+
+### Milestone 5 — enrollment lifecycle
+
+Date/time: 2026-07-28T09:06:00+06:00
+Stream: SIS-01
+Milestone completed: 5 — enrollment, status history, transfer, withdrawal, promotion, re-enrollment, prior school, placement/admission history and alumni transition
+Git branch: `module/core-sis-admissions`
+Worktree: `.worktrees/sis-01-core-sis`
+Neon branch: `agent/sis-01-core-sis` (`br-ancient-sunset-axuhcmof`)
+Starting base: `55114f55a375d3d79dba7ea21f984b789b5dbca1`
+Checkpoint SHA: `8a8c0f5e17e49d6ca198cf1875aeca98079128a9`
+Changed owned paths: `packages/modules/student-lifecycle/{src/enrollment.ts,migrations/202607280104_SIS-01_enrollment.sql}`; `tests/sis/enrollment.test.ts`; `docs/modules/sis/enrollment.md`
+Focused checks and results: enrollment tests 4/4 PASS; `@school/sis` build PASS; ten-table lifecycle migration applied; RLS no-context 0 and Tenant A foreign 0; placement identity rewrite rejected
+Gate outcome: milestone 5 passed; historical periods retained; parent/production branches unchanged
+Exact next milestone: 6 — admin/family UI, import/export, reconciliation, reports and data-quality queues
 Dirty/uncommitted state: tracker/module documentation update only
 Production mutation performed: no
 
