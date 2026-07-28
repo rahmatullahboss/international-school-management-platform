@@ -2,7 +2,7 @@
 
 **Program:** `international-school-platform-v1`
 **Updated:** 2026-07-28
-**Current repository state:** `FND-01` milestones 1–8, owner review and the secret-backed direct Neon driver check have passed on `program/foundation-neon-platform`; `GATE-FOUNDATION-READY` is passed and Wave 1 is eligible to start from the reviewed foundation SHA.
+**Current repository state:** Wave 1 implementation is complete and reviewed. `SIS-01` is already integrated into `main`; `FIN-01` and `INT-01` are complete on their reviewed SHAs and require serial conflict resolution, migration composition and cross-module verification by `INTEG-01`.
 
 ## Gate status
 
@@ -10,6 +10,7 @@
 |---|---|---|
 | `GATE-DOCUMENTS-APPROVED` | passed | Owner authorized FND-01 execution; `python3 scripts/validate_execution_artifacts.py` passed on 2026-07-28 |
 | `GATE-FOUNDATION-READY` | passed | Milestones 1–8 implemented; owner review approved; Neon SQL/RLS proof passed; secret-backed `npm run test:neon` passed 1/1 on 2026-07-28 |
+| `GATE-REVIEWED-SHAS-AVAILABLE` | passed | `SIS-01` `5e2499018282d8296abfe093b5dd95b231829379`; `FIN-01` `5f9e1692a8fc19fc2e9789a338d028918acdeaf6`; `INT-01` `bfa95a4a42025213fa7c2090a587ef5304924da7` |
 | `GATE-WAVE-1-INTEGRATED` | blocked | `SIS-01`, `FIN-01`, `INT-01` reviewed and serially integrated |
 | `GATE-STUDENT-SUPPORT-THREAT-MODEL` | blocked | Wave 1 integrated plus approved student-support threat model |
 | `GATE-WAVE-2-INTEGRATED` | blocked | `ACAD-01`, `OPS-01`, `CARE-01` reviewed and integrated |
@@ -26,21 +27,21 @@ Owner decision recorded on 2026-07-28:
 - the foundation/program coordinator maintains shared documentation, gate state, contract-change decisions and this tracker without writing concurrently inside module-owned paths;
 - `INTEG-01` reviews and integrates module SHAs serially after they are recorded here.
 
-Current readiness: `GATE-FOUNDATION-READY` is passed. `SIS-01`, `FIN-01` and `INT-01` may now start as separate whole-module agents from the same exact reviewed foundation SHA.
+Current readiness: all three Wave 1 module streams are complete and their reviewed SHAs are frozen. `INTEG-01` may now start serial integration from current `main` SHA `9b9605aff93901eb1ad9e5b4d9ad9d6517d04aba`.
 
 ## Stream tracker
 
 | Stream | Wave | Status | Base | Current/next milestone | Final/last checkpoint | Blocking condition |
 |---|---:|---|---|---|---|---|
 | `FND-01` | 0 | complete; gate passed | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | Wave 1 released | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | none |
-| `SIS-01` | 1 | complete | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | complete | `c5cd5cb1bd30001433d03cbe23e6b54c7de5e5ff` | none |
-| `FIN-01` | 1 | ready to start | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | finance contract | none | none |
-| `INT-01` | 1 | ready to start | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | country-pack engine | none | none |
+| `SIS-01` | 1 | complete; integrated to `main` | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | complete | reviewed head `5e2499018282d8296abfe093b5dd95b231829379`; main merge `9b9605aff93901eb1ad9e5b4d9ad9d6517d04aba` | none |
+| `FIN-01` | 1 | complete; reviewed | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | serial integration | `5f9e1692a8fc19fc2e9789a338d028918acdeaf6` | conflicts with current `main`; resolve only in `INTEG-01` |
+| `INT-01` | 1 | complete; reviewed | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | serial integration | `bfa95a4a42025213fa7c2090a587ef5304924da7` | conflicts with current `main`; resolve only in `INTEG-01` |
 | `ACAD-01` | 2 | blocked | reviewed Wave 1 integration SHA | academic structure | none | `GATE-WAVE-1-INTEGRATED` |
 | `OPS-01` | 2 | blocked | reviewed Wave 1 integration SHA | HR/staff | none | `GATE-WAVE-1-INTEGRATED` |
 | `CARE-01` | 2 | blocked | reviewed Wave 1 integration SHA | security contract | none | threat-model and Wave 1 gates |
 | `EXP-01` | 3 | blocked | reviewed Wave 2 integration SHA | persona shells | none | `GATE-WAVE-2-INTEGRATED` |
-| `INTEG-01` | gated serial | blocked | reviewed stream SHAs | foundation integration | none | reviewed SHA set unavailable |
+| `INTEG-01` | gated serial | ready for Wave 1 | `9b9605aff93901eb1ad9e5b4d9ad9d6517d04aba` | Wave 1 serial integration | none | none |
 
 ## Required checkpoint evidence format
 
@@ -180,6 +181,15 @@ Gate outcome: `GATE-FOUNDATION-READY` passed
 Reviewed Wave 1 base: `55114f55a375d3d79dba7ea21f984b789b5dbca1`
 Exact next milestone: prepare and start `SIS-01`, `FIN-01` and `INT-01` as separate whole-module streams
 Dirty/uncommitted state: gate evidence and agent-board updates only
+Production mutation performed: no
+
+### Wave 1 reviewed-SHA freeze checkpoint
+
+Date/time: 2026-07-28T16:00:00+06:00
+Coordinator review: current `main` CI PASS at `9b9605aff93901eb1ad9e5b4d9ad9d6517d04aba`; `SIS-01` PR #2 merged with green CI; `FIN-01` head CI PASS and independent `npm run verify` PASS with 135 tests; `INT-01` head CI and Neon gate PASS and independent `npm run verify` PASS with 102 tests
+Reviewed stream SHAs: `SIS-01` `5e2499018282d8296abfe093b5dd95b231829379`; `FIN-01` `5f9e1692a8fc19fc2e9789a338d028918acdeaf6`; `INT-01` `bfa95a4a42025213fa7c2090a587ef5304924da7`
+Integration preview: `FIN-01` and `INT-01` both conflict with current `main` in shared workspace/package/tracker files; no module branch was rewritten, reset or merged during review
+Gate outcome: `GATE-REVIEWED-SHAS-AVAILABLE` passed; `INTEG-01` is ready for Wave 1 serial integration
 Production mutation performed: no
 
 ## SIS-01 evidence
