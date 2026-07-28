@@ -70,6 +70,13 @@ This catalog supports the market, architecture, privacy, standards and open-sour
 - **L03 — GNU LGPL:** [GNU Lesser General Public License v3](https://www.gnu.org/licenses/lgpl-3.0.html) — combined-work, modification and relinking/source conditions.
 - **L04 — GitHub licensing guidance:** [Licensing a repository](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/licensing-a-repository) — absence of a license leaves default copyright restrictions.
 
+## U — Design-agent and Impeccable sources
+
+- **U01 — Impeccable repository and README:** [pbakaus/impeccable](https://github.com/pbakaus/impeccable) — skill capabilities, command workflow, installation paths, detector, hooks and Apache-2.0 license.
+- **U02 — Impeccable skill source:** [Impeccable SKILL.md](https://github.com/pbakaus/impeccable/blob/main/.claude/skills/impeccable/SKILL.md) — product/design authority, modes, command routing and session workflow.
+- **U03 — Impeccable hook guidance:** [Impeccable hooks](https://github.com/pbakaus/impeccable/blob/main/skill/reference/hooks.md) — design-relevant edit hooks and detector behavior.
+- **U04 — GitHub agent skills:** [Adding agent skills for GitHub Copilot](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/add-skills) — repository-local `.github/skills`/`.agents/skills` structure and `SKILL.md` requirements.
+
 ## D — PostgreSQL data-platform sources
 
 - **D01 — Row-level security:** [PostgreSQL row security policies](https://www.postgresql.org/docs/current/ddl-rowsecurity.html) — row policies and default-deny behavior.

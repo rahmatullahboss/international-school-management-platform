@@ -1,0 +1,3 @@
+# Preserve upstream-generated Impeccable skill payloads byte-for-byte.
+.agents/skills/impeccable/** whitespace=-trailing-space,-blank-at-eof
+.github/skills/impeccable/** whitespace=-trailing-space,-blank-at-eof

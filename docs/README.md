@@ -24,6 +24,13 @@
 11. [Risks, decisions and product guardrails](11-risks-decisions-and-guardrails.md)
 12. [Research references](99-references.md)
 
+## Design governance
+
+- [Impeccable design governance](design/README.md)
+- [Product design input brief](design/01-product-design-input.md)
+- [UI delivery workflow](design/02-ui-delivery-workflow.md)
+- [Agent design contract](design/03-agent-design-contract.md)
+
 ## Multi-agent execution documents
 
 - [FND-01 foundation one-shot prompt](execution/FND-01-ONE-SHOT-PROMPT.md)
@@ -43,6 +50,7 @@
 - [ADR-003 — Hybrid pooled and dedicated multi-tenancy](adr/ADR-003-multitenancy.md)
 - [ADR-004 — Direct Neon Serverless PostgreSQL connectivity](adr/ADR-004-neon-serverless-direct.md)
 - [ADR-005 — Whole-module agent ownership](adr/ADR-005-whole-module-agent-ownership.md)
+- [ADR-006 — Impeccable design governance](adr/ADR-006-impeccable-design-governance.md)
 
 ## Core decisions already made
 
@@ -57,6 +65,7 @@
 - **Interoperability:** OpenAPI/webhooks plus OneRoster, LTI, Ed-Fi-oriented mappings, SSO and bulk import/export.
 - **Open source:** Direct source reuse requires exact license/commit review. GPL/AGPL/no-license school-platform code is reference-only for the proprietary core; permissive dependencies may be reused with notices and LGPL components require isolation/compliance review.
 - **Agent execution:** One agent owns one complete large module on one branch/worktree. Internal module milestones use checkpoint commits and automatic continuation, not separate agents.
+- **Design governance:** All frontend work uses the repository-local Impeccable skill. `FND-01` owns `PRODUCT.md`, `DESIGN.md`, shared tokens/components and design hooks; module agents run shape, critique, audit, harden and polish inside their whole-module stream.
 - **AI:** Not part of the transactional core. Any future AI feature must be optional, auditable and prohibited from training on school data by default.
 
 ## Documentation conventions

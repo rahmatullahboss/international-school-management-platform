@@ -1,0 +1,18 @@
+Third-Party Notices
+===================
+
+Impeccable
+----------
+
+Project: Impeccable
+Upstream: https://github.com/pbakaus/impeccable
+Author: Paul Bakaus and contributors
+Installed skill version: 4.0.2
+Installed CLI version: 3.4.0
+License: Apache License 2.0
+
+The repository-local files under `.agents/skills/impeccable/`, `.github/skills/impeccable/`, `.codex/hooks.json`, and `.github/hooks/impeccable.json` were generated or installed from the Impeccable project for use by Codex and GitHub Copilot.
+
+Impeccable builds on Anthropic's original frontend-design skill. See the upstream project's NOTICE and license materials for complete attribution and license text.
+
+This notice does not alter the license of the original International School Management Platform code and documentation. Third-party components remain governed by their respective licenses.

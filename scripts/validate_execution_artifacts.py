@@ -21,6 +21,16 @@ REQUIRED_FILES = [
     EXEC / "05-module-ownership-and-integration-contracts.md",
     EXEC / "06-open-source-clean-room-policy.md",
     EXEC / "artifact-contract.md",
+    ROOT / "docs" / "design" / "README.md",
+    ROOT / "docs" / "design" / "01-product-design-input.md",
+    ROOT / "docs" / "design" / "02-ui-delivery-workflow.md",
+    ROOT / "docs" / "design" / "03-agent-design-contract.md",
+    ROOT / "docs" / "adr" / "ADR-006-impeccable-design-governance.md",
+    ROOT / ".agents" / "skills" / "impeccable" / "SKILL.md",
+    ROOT / ".codex" / "hooks.json",
+    ROOT / ".github" / "skills" / "impeccable" / "SKILL.md",
+    ROOT / ".github" / "hooks" / "impeccable.json",
+    ROOT / "THIRD_PARTY_NOTICES",
     ROOT / "scripts" / "validate_execution_artifacts.py",
 ]
 
@@ -97,6 +107,18 @@ def main() -> int:
         fail(errors, "a Neon branch is required per stream")
     if database.get("production_data_in_agent_branches") is not False:
         fail(errors, "production data must be forbidden in agent branches")
+
+    design = board.get("design_baseline", {})
+    if design.get("skill") != "impeccable":
+        fail(errors, "design skill must be impeccable")
+    if design.get("skill_version") != "4.0.2":
+        fail(errors, "Impeccable skill version must be 4.0.2")
+    if set(design.get("providers", [])) != {"codex", "github"}:
+        fail(errors, "Impeccable providers must be codex and github")
+    if design.get("whole_module_agent_owns_ui") is not True:
+        fail(errors, "whole module agent must own UI work")
+    if design.get("microtask_design_agents_allowed") is not False:
+        fail(errors, "microtask design agents must be forbidden")
 
     streams = board.get("streams")
     if not isinstance(streams, list):
@@ -183,13 +205,19 @@ def main() -> int:
         "continue automatically",
         "no unauthorized production mutation",
         "GPL/AGPL/no-license",
+        "impeccable",
+        "critique",
+        "audit",
+        "harden",
+        "polish",
     ]
     for phrase in required_phrases:
         if phrase.lower() not in prompts.lower():
             fail(errors, f"full prompts missing required phrase: {phrase}")
 
     markdown_link = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
-    for path in EXEC.glob("*.md"):
+    markdown_paths = list(EXEC.glob("*.md")) + list((ROOT / "docs" / "design").glob("*.md"))
+    for path in markdown_paths:
         text = path.read_text(encoding="utf-8")
         for link in markdown_link.findall(text):
             if link.startswith(("http://", "https://", "#", "mailto:")):
