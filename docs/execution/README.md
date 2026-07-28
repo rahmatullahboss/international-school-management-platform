@@ -1,12 +1,14 @@
 # Whole-Module Multi-Agent Execution System
 
-**Status:** Planning baseline
+**Status:** Active execution policy
 **Date:** 2026-07-28
 **Operating rule:** one agent owns one complete large module; internal milestones are not separate agent assignments.
 
 ## 1. Purpose
 
 এই execution system-টি foundation শেষ হওয়ার পর বড় বড় module আলাদা branch, worktree এবং Neon database branch-এ নিরাপদভাবে parallel development করার জন্য। এটি microtask delegation plan নয়। প্রতিটি module agent end-to-end outcome-এর মালিক।
+
+Owner operating decision: separate agents are used only for complete module streams. Small tasks, fixes and internal milestones stay with the agent that owns the module. The coordinator keeps documentation, the machine-readable agent board and the progress tracker synchronized throughout execution.
 
 ## 2. Required artifacts
 
@@ -49,6 +51,8 @@ After `FND-01` is reviewed and integrated, these streams can start from the same
 - `SIS-01` — People, households, admissions and student lifecycle
 - `FIN-01` — Billing, payments, receivables and accounting ledger
 - `INT-01` — Country packs, integration platform, migration and interoperability
+
+These three streams are the first approved parallel set. They start only after `GATE-FOUNDATION-READY`, use the same exact reviewed foundation SHA, and each receives its own fixed Git branch/worktree and Neon branch. The parallel limit for the wave is three whole-module agents; no extra agents are created for their internal milestones.
 
 ### Wave 2 — Parallel operational domains
 

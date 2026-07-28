@@ -15,6 +15,19 @@
 | `GATE-WAVE-2-INTEGRATED` | blocked | `ACAD-01`, `OPS-01`, `CARE-01` reviewed and integrated |
 | `GATE-PILOT-READY` | blocked | `EXP-01` integrated and final system/recovery verification passed |
 
+## Multi-agent operating decision
+
+Owner decision recorded on 2026-07-28:
+
+- use separate agents only for complete end-to-end module streams;
+- do not create agents for small tasks, bugs, isolated screens, endpoints, migrations, tests or internal milestones;
+- after `GATE-FOUNDATION-READY`, start the Wave 1 streams `SIS-01`, `FIN-01` and `INT-01` in parallel from the same exact reviewed foundation SHA;
+- each stream must use its declared fixed Git branch/worktree and matching Neon branch;
+- the foundation/program coordinator maintains shared documentation, gate state, contract-change decisions and this tracker without writing concurrently inside module-owned paths;
+- `INTEG-01` reviews and integrates module SHAs serially after they are recorded here.
+
+Current readiness: the whole-module multi-agent policy is approved, but Wave 1 remains blocked until the existing foundation gate conditions are completed.
+
 ## Stream tracker
 
 | Stream | Wave | Status | Base | Current/next milestone | Final/last checkpoint | Blocking condition |

@@ -4,6 +4,14 @@
 
 A stream may create and modify only the paths assigned in `03-agent-board.json`, plus its own module documentation and tests. Ownership includes schema, domain, API and module-specific UI. It does not grant permission to rewrite shared platform contracts.
 
+### 1.1 Agent assignment size
+
+An agent is assigned only to a complete module stream listed in the agent board. Internal milestones, isolated defects, individual endpoints, pages, migrations, tests and documentation updates do not receive separate agents. They remain the responsibility of the owning module agent so domain context and accountability stay intact.
+
+The maximum normal parallelism is the number of independent streams in the currently approved wave, capped at three. All parallel streams must start from the same reviewed base and use unique Git branches, fixed worktrees and Neon branches.
+
+The program coordinator owns scheduling, gate decisions, reviewed-SHA records, shared-contract decisions and tracker consistency. It must not make concurrent semantic changes inside an active module's owned paths.
+
 ## 2. Foundation-owned shared paths
 
 `FND-01` owns and freezes:
@@ -144,3 +152,10 @@ A module completion report is valid only when:
 - audit/import/export/reporting/runbook behavior exists;
 - no unresolved unapproved contract change remains;
 - exact final SHA and Neon branch evidence are recorded.
+
+## 14. Documentation and tracker responsibility
+
+- Every module agent updates its module documentation and its section of `04-progress-tracker.md` after each meaningful checkpoint.
+- The coordinator updates gate status, reviewed base SHAs, active-stream status and integration readiness in both `03-agent-board.json` and `04-progress-tracker.md`.
+- A checkpoint is not considered complete until code, tests, migration evidence, documentation and tracker state agree.
+- The serial integration stream records accepted SHAs and does not infer completion from an unreviewed branch head.

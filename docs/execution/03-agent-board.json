@@ -5,6 +5,16 @@
   "execution_mode": "whole-module-agent-ownership",
   "microtask_agents_allowed": false,
   "agent_delegation_allowed": false,
+  "parallel_execution": {
+    "allowed": true,
+    "assignment_unit": "complete_module_stream",
+    "small_task_agents_allowed": false,
+    "max_concurrent_module_streams_per_wave": 3,
+    "first_parallel_set": ["SIS-01", "FIN-01", "INT-01"],
+    "requires_shared_reviewed_base": true,
+    "coordinator_writes_module_owned_paths": false,
+    "tracker_update_required_at_every_checkpoint": true
+  },
   "database_baseline": {
     "provider": "Neon Serverless PostgreSQL",
     "worker_driver": "@neondatabase/serverless",
@@ -24,7 +34,7 @@
       "id": "FND-01",
       "name": "Platform Foundation",
       "wave": 0,
-      "status": "ready_after_document_review",
+      "status": "implementation_complete_gate_review_pending",
       "branch": "program/foundation-neon-platform",
       "worktree": ".worktrees/fnd-01-foundation",
       "neon_branch": "agent/fnd-01-foundation",
