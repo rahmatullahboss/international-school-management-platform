@@ -15,6 +15,7 @@
     "scheduling/src/**/*.ts",
     "attendance/src/**/*.ts",
     "gradebook/src/**/*.ts",
+    "records/src/**/*.ts",
     "billing/src/**/*.ts",
     "ledger/src/**/*.ts"
   ],
