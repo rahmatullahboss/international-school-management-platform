@@ -19,7 +19,7 @@
 
 | Stream | Wave | Status | Base | Current/next milestone | Final/last checkpoint | Blocking condition |
 |---|---:|---|---|---|---|---|
-| `FND-01` | 0 | in progress | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | direct Neon data platform | `8d328d1cf04e8076bcf705a5198dc4eb8b449ada` | none |
+| `FND-01` | 0 | in progress | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | tenancy, organization and regional routing | `5f7b0d7b669b9ef5882a7dc7cbb883d6b71eaed6` | none |
 | `SIS-01` | 1 | blocked | reviewed foundation SHA | module contract | none | `GATE-FOUNDATION-READY` |
 | `FIN-01` | 1 | blocked | reviewed foundation SHA | finance contract | none | `GATE-FOUNDATION-READY` |
 | `INT-01` | 1 | blocked | reviewed foundation SHA | country-pack engine | none | `GATE-FOUNDATION-READY` |
@@ -66,6 +66,17 @@ Gate outcome: milestone 1 passed; `GATE-DOCUMENTS-APPROVED` passed; foundation g
 Exact next milestone: 2 — direct Neon data platform
 Dirty/uncommitted state: tracker evidence update only
 Production mutation performed: no
+
+### Milestone 2 — direct Neon data platform
+
+Date/time: 2026-07-28T06:15:00+06:00
+Checkpoint SHA: `5f7b0d7b669b9ef5882a7dc7cbb883d6b71eaed6`
+Neon project/branch: `lingering-brook-52999532` / `br-misty-frost-ax8ij4vw`
+PostgreSQL/compute: PostgreSQL 17.10; direct host and pooled host recorded for compute `ep-ancient-sun-axxxyb6c`
+Migration: `202607280001_FND-01_foundation`; schemas `platform`, `tenancy`, `iam`, `audit`, `workflow`, `integration_core`; approved `pgcrypto` and `citext`
+Focused checks and results: HTTP/WS adapter tests 5/5 PASS; full Vitest 8/8 PASS; typecheck PASS; ESLint PASS; build PASS; migration transaction applied on child branch; RLS no-context count 0; tenant A saw only tenant A; forbidden cross-tenant row count 0
+Gate outcome: milestone 2 passed; production/main branch unchanged
+Exact next milestone: 3 — tenancy, organization and regional routing
 
 ## SIS-01 evidence
 
