@@ -94,8 +94,9 @@ Executed after milestone 7:
   - all workspace builds: PASS
   - execution artefact validator: PASS
 - `npm run test:browser --workspace=@school/integrations`: 1/1 PASS
-- GitHub CI after the clean-checkout browser fix: PASS (`30329479311`, `30329744058`).
+- GitHub CI after the clean-checkout browser fix and final evidence push: PASS (`30329479311`, `30329744058`, `30330768874`).
 - Guarded Neon inspections: `30329744096` stopped because the generic secret was not foundation-ready; `30330061274` identified project `lingering-brook-52999532` and branch `br-cool-wildflower-axsot8l1`, then stopped before writes because it was Neon `main`.
+- Branch-specific Neon workflow `30330768882`: PASS as an explicit pending no-op because `INT01_DATABASE_URL` is not configured; no database connection or mutation was attempted.
 - Security checks include cross-tenant credential rejection, digest-only persistence, tenant-partitioned external IDs and metrics, webhook assertion tamper detection, LTI nonce/state replay, SAML assertion replay and unsafe SCIM patch rejection.
 - Performance checks link and resolve 10,000 external identifiers and enqueue/select 10,000 due webhook deliveries within the bounded local test budget.
 

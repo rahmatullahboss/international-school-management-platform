@@ -35,7 +35,7 @@ Current readiness: `GATE-FOUNDATION-READY` is passed. `SIS-01`, `FIN-01` and `IN
 | `FND-01` | 0 | complete; gate passed | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | freeze reviewed foundation SHA | pending gate-evidence commit | none |
 | `SIS-01` | 1 | ready to start | reviewed foundation SHA | module contract | none | none |
 | `FIN-01` | 1 | ready to start | reviewed foundation SHA | finance contract | none | none |
-| `INT-01` | 1 | implementation complete; live Neon replay pending | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | configure branch-specific `INT01_DATABASE_URL`, then inspect/apply/replay migrations 102–107 | `ad4ec0789b7760b26123afef39969d36fd538915` | generic `DATABASE_URL` is verified Neon `main`; agent-branch connection/API access unavailable |
+| `INT-01` | 1 | implementation complete; live Neon replay pending | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | configure branch-specific `INT01_DATABASE_URL`, then inspect/apply/replay migrations 102–107 | `70f31d36b946044e67af6703c9ee484ee48cf9d5` | generic `DATABASE_URL` is verified Neon `main`; agent-branch connection/API access unavailable |
 | `ACAD-01` | 2 | blocked | reviewed Wave 1 integration SHA | academic structure | none | `GATE-WAVE-1-INTEGRATED` |
 | `OPS-01` | 2 | blocked | reviewed Wave 1 integration SHA | HR/staff | none | `GATE-WAVE-1-INTEGRATED` |
 | `CARE-01` | 2 | blocked | reviewed Wave 1 integration SHA | security contract | none | threat-model and Wave 1 gates |
@@ -317,7 +317,7 @@ Worktree: `.worktrees/int-01-integrations`
 Expected Neon project/branch: `lingering-brook-52999532` / `agent/int-01-integrations` (`br-super-truth-axp0urxi`)
 Checkpoint SHA: `70f31d36b946044e67af6703c9ee484ee48cf9d5`
 Changed owned paths: CI-safe browser source model; guarded Neon gate workflow and script; completion/tracker evidence
-Focused checks and results: GitHub CI `30329479311` PASS after clean-checkout browser fix; GitHub CI `30329744058` PASS; guarded inspection `30329744096` stopped before writes because the generic secret lacked foundation state; guarded inspection `30330061274` proved the generic secret targets project `lingering-brook-52999532`, Neon `main` branch `br-cool-wildflower-axsot8l1`; local `npm run verify` PASS with 102/102 tests and one unconfigured Neon test skipped
+Focused checks and results: GitHub CI `30329479311`, `30329744058` and final `30330768874` PASS; guarded inspection `30329744096` stopped before writes because the generic secret lacked foundation state; guarded inspection `30330061274` proved the generic secret targets project `lingering-brook-52999532`, Neon `main` branch `br-cool-wildflower-axsot8l1`; branch-specific Neon workflow `30330768882` PASS as an explicit pending no-op because `INT01_DATABASE_URL` is not configured; local `npm run verify` PASS with 102/102 tests and one unconfigured Neon test skipped
 Gate outcome: no database mutation occurred; workflow now accepts only dedicated `INT01_DATABASE_URL` and rejects any project or branch other than `lingering-brook-52999532` / `br-super-truth-axp0urxi` before migration or replay
 Exact next milestone: configure `INT01_DATABASE_URL`, dispatch `inspect`, `apply` and logical `replay-database`, then obtain separate fresh-Neon-branch replay evidence through Neon API/MCP access; only after all pass may `GATE-INT-COMPLETE` be marked passed
 Dirty/uncommitted state: tracker and completion evidence only
