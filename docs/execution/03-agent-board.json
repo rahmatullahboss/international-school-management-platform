@@ -22,6 +22,16 @@
     "branch_per_stream": true,
     "production_data_in_agent_branches": false
   },
+  "design_baseline": {
+    "skill": "impeccable",
+    "skill_version": "4.0.2",
+    "providers": ["codex", "github"],
+    "product_authority": "PRODUCT.md",
+    "visual_authority": "DESIGN.md",
+    "whole_module_agent_owns_ui": true,
+    "microtask_design_agents_allowed": false,
+    "required_ui_evidence": ["shape-or-approved-brief", "critique", "audit", "detector", "accessibility", "responsive-rtl", "harden", "polish"]
+  },
   "base_rules": {
     "FND-01": "resolve latest reviewed origin/main in rahmatullahboss/international-school-management-platform, create or resume the fixed foundation branch/worktree and record the exact base SHA",
     "wave_1": "all streams use the same exact reviewed foundation SHA recorded by GATE-FOUNDATION-READY",
@@ -44,7 +54,7 @@
       "dependencies": [],
       "entry_gate": "GATE-DOCUMENTS-APPROVED",
       "full_prompt_section": "FND-01 — Platform Foundation",
-      "owned_paths": ["apps/platform/**", "packages/platform/**", "packages/database/**", "packages/policy/**", "packages/events/**", "packages/localization/**", "packages/ui/**", "infra/**", "scripts/**", ".github/**", "root configuration files"],
+      "owned_paths": ["apps/platform/**", "packages/platform/**", "packages/database/**", "packages/policy/**", "packages/events/**", "packages/localization/**", "packages/ui/**", "infra/**", "scripts/**", ".agents/skills/impeccable/**", ".codex/hooks.json", ".github/**", "docs/design/**", "PRODUCT.md", "DESIGN.md", ".impeccable/config.json", "root configuration files"],
       "milestones": ["repository-bootstrap", "neon-data-platform", "tenancy-routing", "identity-policy", "audit-outbox-idempotency", "localization-documents-workflows", "shared-experience-boundaries", "foundation-verification-freeze"],
       "completion_gate": "GATE-FOUNDATION-READY"
     },
