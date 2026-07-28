@@ -91,7 +91,7 @@ BEGIN
     FROM pg_class c
     JOIN pg_namespace n ON n.oid = c.relnamespace
     WHERE c.relkind = 'r'
-      AND n.nspname NOT IN ('pg_catalog', 'information_schema')
+      AND n.nspname NOT IN ('pg_catalog', 'information_schema', 'platform')
       AND EXISTS (
         SELECT 1 FROM pg_attribute a
         WHERE a.attrelid = c.oid AND a.attname = 'tenant_id' AND NOT a.attisdropped
