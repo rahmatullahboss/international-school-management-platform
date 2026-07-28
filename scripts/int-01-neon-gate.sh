@@ -3,7 +3,7 @@ set -euo pipefail
 
 mode="${1:-inspect}"
 case "$mode" in
-  inspect|apply|replay-database) ;;
+  inspect|apply|replay-database|replay-branch) ;;
   *)
     echo "Unsupported INT-01 Neon gate mode: $mode" >&2
     exit 2
@@ -11,9 +11,11 @@ case "$mode" in
 esac
 
 readonly EXPECTED_NEON_PROJECT_ID="lingering-brook-52999532"
-readonly EXPECTED_NEON_BRANCH_ID="br-super-truth-axp0urxi"
+readonly EXPECTED_NEON_BRANCH_ID="${NEON_EXPECTED_BRANCH_ID:-br-super-truth-axp0urxi}"
+readonly EXPECTED_NEON_PARENT_BRANCH_ID="br-cool-wildflower-axsot8l1"
 readonly EXPECTED_NEON_DATABASE_NAME="neondb"
 readonly EXPECTED_NEON_ROLE_NAME="neondb_owner"
+TEMP_NEON_BRANCH_ID=""
 
 resolve_database_url() {
   if [[ -n "${DATABASE_URL:-}" ]]; then
@@ -312,8 +314,129 @@ PY
   echo "fresh database replay passed"
 }
 
+resolve_neon_branch_url() {
+  local branch_id="$1"
+  local attempt response uri
+
+  for attempt in $(seq 1 20); do
+    if response=$(curl --fail --silent --show-error \
+      --header "Authorization: Bearer $NEON_API_KEY" \
+      --get "https://console.neon.tech/api/v2/projects/$EXPECTED_NEON_PROJECT_ID/connection_uri" \
+      --data-urlencode "branch_id=$branch_id" \
+      --data-urlencode "database_name=$EXPECTED_NEON_DATABASE_NAME" \
+      --data-urlencode "role_name=$EXPECTED_NEON_ROLE_NAME" \
+      --data-urlencode "pooled=false" 2>/dev/null); then
+      uri=$(python3 -c 'import json, sys; print(json.load(sys.stdin).get("uri", ""))' <<<"$response")
+      if [[ -n "$uri" ]]; then
+        printf '%s\n' "$uri"
+        return 0
+      fi
+    fi
+    echo "waiting for Neon connection URI: branch=$branch_id attempt=$attempt" >&2
+    sleep 3
+  done
+
+  echo "Neon API did not return a connection URI for branch $branch_id" >&2
+  return 1
+}
+
+delete_temp_neon_branch() {
+  if [[ -z "$TEMP_NEON_BRANCH_ID" ]]; then
+    return 0
+  fi
+
+  echo "delete temporary Neon branch: $TEMP_NEON_BRANCH_ID"
+  if ! curl --fail --silent --show-error \
+    --request DELETE \
+    --header "Authorization: Bearer $NEON_API_KEY" \
+    "https://console.neon.tech/api/v2/projects/$EXPECTED_NEON_PROJECT_ID/branches/$TEMP_NEON_BRANCH_ID?hard_delete=true" \
+    >/dev/null; then
+    curl --fail --silent --show-error \
+      --request DELETE \
+      --header "Authorization: Bearer $NEON_API_KEY" \
+      "https://console.neon.tech/api/v2/projects/$EXPECTED_NEON_PROJECT_ID/branches/$TEMP_NEON_BRANCH_ID" \
+      >/dev/null
+  fi
+  TEMP_NEON_BRANCH_ID=""
+}
+
+replay_in_fresh_branch() {
+  if [[ -z "${NEON_API_KEY:-}" ]]; then
+    echo "NEON_API_KEY is required for a fresh Neon branch replay" >&2
+    exit 1
+  fi
+
+  local branch_name="int-01-replay-${GITHUB_RUN_ID:-local}-${GITHUB_RUN_ATTEMPT:-1}"
+  local payload response created_parent_id branch_url ready attempt
+  payload=$(python3 - "$EXPECTED_NEON_PARENT_BRANCH_ID" "$branch_name" <<'PY'
+import json
+import sys
+print(json.dumps({
+    "endpoints": [{"type": "read_write"}],
+    "branch": {"parent_id": sys.argv[1], "name": sys.argv[2]},
+}))
+PY
+)
+
+  response=$(curl --fail --silent --show-error \
+    --request POST \
+    --header "Authorization: Bearer $NEON_API_KEY" \
+    --header "Content-Type: application/json" \
+    --data "$payload" \
+    "https://console.neon.tech/api/v2/projects/$EXPECTED_NEON_PROJECT_ID/branches")
+
+  IFS='|' read -r TEMP_NEON_BRANCH_ID created_parent_id < <(python3 -c 'import json, sys; branch=json.load(sys.stdin).get("branch", {}); print(branch.get("id", "") + "|" + branch.get("parent_id", ""))' <<<"$response")
+  unset response payload
+
+  if [[ -z "$TEMP_NEON_BRANCH_ID" ]]; then
+    echo "Neon API branch creation response did not contain branch.id" >&2
+    exit 1
+  fi
+  if [[ "$created_parent_id" != "$EXPECTED_NEON_PARENT_BRANCH_ID" ]]; then
+    echo "Temporary Neon branch has unexpected parent: $created_parent_id" >&2
+    delete_temp_neon_branch || true
+    exit 1
+  fi
+
+  echo "created temporary Neon branch: $TEMP_NEON_BRANCH_ID parent=$created_parent_id"
+  trap delete_temp_neon_branch EXIT
+
+  branch_url=$(resolve_neon_branch_url "$TEMP_NEON_BRANCH_ID")
+  if [[ -n "${GITHUB_ACTIONS:-}" ]]; then
+    echo "::add-mask::$branch_url"
+  fi
+
+  ready=false
+  for attempt in $(seq 1 20); do
+    if psql "$branch_url" -X --no-psqlrc -v ON_ERROR_STOP=1 -Atc 'SELECT 1' >/dev/null 2>&1; then
+      ready=true
+      break
+    fi
+    echo "waiting for temporary Neon compute: attempt=$attempt"
+    sleep 3
+  done
+  if [[ "$ready" != "true" ]]; then
+    echo "Temporary Neon branch did not become queryable" >&2
+    exit 1
+  fi
+
+  apply_migration_set "$branch_url" "${foundation_migrations[@]}"
+  apply_migration_set "$branch_url" "${int_migrations[@]}"
+  NEON_EXPECTED_BRANCH_ID="$TEMP_NEON_BRANCH_ID" DATABASE_URL="$branch_url" bash "$0" apply
+
+  echo "fresh Neon branch replay passed: branch=$TEMP_NEON_BRANCH_ID parent=$created_parent_id"
+  delete_temp_neon_branch
+  trap - EXIT
+}
+
 print_connection_identity
 require_agent_branch_identity
+
+if [[ "$mode" == "replay-branch" ]]; then
+  require_agent_branch_baseline
+  replay_in_fresh_branch
+  exit 0
+fi
 
 if [[ "$mode" == "replay-database" ]]; then
   require_agent_branch_baseline

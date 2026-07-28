@@ -15,6 +15,7 @@ on:
           - inspect
           - apply
           - replay-database
+          - replay-branch
 
 permissions:
   contents: read
