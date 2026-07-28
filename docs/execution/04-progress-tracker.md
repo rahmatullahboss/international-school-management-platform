@@ -2,14 +2,14 @@
 
 **Program:** `international-school-platform-v1`
 **Updated:** 2026-07-28
-**Current repository state:** `FND-01` is active on `program/foundation-neon-platform`; repository bootstrap is checkpointed and Neon branch `agent/fnd-01-foundation` is ready.
+**Current repository state:** `FND-01` milestones 1–8 are implemented on `program/foundation-neon-platform`; final owner review and a secret-backed direct Neon driver check remain before the foundation gate can pass.
 
 ## Gate status
 
 | Gate | Status | Evidence / required condition |
 |---|---|---|
 | `GATE-DOCUMENTS-APPROVED` | passed | Owner authorized FND-01 execution; `python3 scripts/validate_execution_artifacts.py` passed on 2026-07-28 |
-| `GATE-FOUNDATION-READY` | blocked | `FND-01` complete, reviewed HEAD recorded, foundation tests and Neon proof pass |
+| `GATE-FOUNDATION-READY` | blocked | Milestones 1–8 implemented and Neon SQL/RLS proof passed; requires owner review plus `npm run test:neon` in a secret-enabled non-production environment |
 | `GATE-WAVE-1-INTEGRATED` | blocked | `SIS-01`, `FIN-01`, `INT-01` reviewed and serially integrated |
 | `GATE-STUDENT-SUPPORT-THREAT-MODEL` | blocked | Wave 1 integrated plus approved student-support threat model |
 | `GATE-WAVE-2-INTEGRATED` | blocked | `ACAD-01`, `OPS-01`, `CARE-01` reviewed and integrated |
@@ -19,7 +19,7 @@
 
 | Stream | Wave | Status | Base | Current/next milestone | Final/last checkpoint | Blocking condition |
 |---|---:|---|---|---|---|---|
-| `FND-01` | 0 | in progress | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | verification, provenance and foundation freeze | `c0b78c66058d5e4161fa7c1decb1c4af249038d9` | none |
+| `FND-01` | 0 | implementation complete; gate review pending | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | owner review and secret-backed direct Neon driver evidence | `6cfa78ae0bb92e5f2ff99e243f3fc61f0b5b1b43` | `GATE-FOUNDATION-READY` |
 | `SIS-01` | 1 | blocked | reviewed foundation SHA | module contract | none | `GATE-FOUNDATION-READY` |
 | `FIN-01` | 1 | blocked | reviewed foundation SHA | finance contract | none | `GATE-FOUNDATION-READY` |
 | `INT-01` | 1 | blocked | reviewed foundation SHA | country-pack engine | none | `GATE-FOUNDATION-READY` |
@@ -122,6 +122,18 @@ Changed owned paths: `packages/ui`, platform module registry, responsive web she
 Focused checks and results: UI/module tests 3/3 PASS; full Vitest 32/32 PASS; architecture boundary validation PASS; `npm run verify` PASS; Chromium browser test 1/1 PASS; Worker/Vite/workspace builds PASS
 Gate outcome: milestone 7 passed; module ownership and accessible shell are executable
 Exact next milestone: 8 — verification, provenance and foundation freeze
+
+### Milestone 8 — verification, provenance and foundation freeze
+
+Date/time: 2026-07-28T07:13:00+06:00
+Checkpoint SHA: `6cfa78ae0bb92e5f2ff99e243f3fc61f0b5b1b43`
+Changed owned paths: licence policy/checker, deterministic dependency inventory and CycloneDX-style SBOM, third-party notices, recovery/migration runbook, optional direct-Neon integration test, CI audit/provenance/browser gates
+Focused checks and results: clean `npm ci` PASS with 0 vulnerabilities; `npm run verify` PASS; Vitest 32 passed and 1 secret-backed test skipped; Chromium 1/1 PASS; licence allowlist 342/342 PASS with no unknown licences; provenance regenerated twice with stable SHA-256 hashes (`c834af27...`, `5680b843...`, `bfee759c...`); execution artifact validator PASS
+Neon proof: PostgreSQL 17.10 on `agent/fnd-01-foundation` (`br-misty-frost-ax8ij4vw`); 5/5 migrations applied and replayed idempotently; migration ledger remained 5 distinct rows; 20 tenant-owned tables have RLS enabled and forced; 21 policies target `app_runtime`; role is non-login and non-`BYPASSRLS`; parent `main` application schema count remained 0
+Gate outcome: milestone 8 implementation passed; `GATE-FOUNDATION-READY` remains blocked only for owner review and live application-driver evidence because `DATABASE_URL` was not present; no credential was fetched or displayed
+Exact next milestone: owner review and run `npm run test:neon` using a managed secret scoped to a non-production Neon branch
+Dirty/uncommitted state: tracker evidence update only
+Production mutation performed: no
 
 ## SIS-01 evidence
 
