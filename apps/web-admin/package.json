@@ -6,7 +6,8 @@
   "exports": {
     "./sis": "./src/features/sis/index.ts",
     "./finance": "./src/features/finance/index.tsx",
-    "./features/integrations": "./src/features/integrations/integration-admin.tsx"
+    "./features/integrations": "./src/features/integrations/integration-admin.tsx",
+    "./operations": "./src/features/operations/operations-command-centre.ts"
   },
   "scripts": {
     "build": "tsc -b",

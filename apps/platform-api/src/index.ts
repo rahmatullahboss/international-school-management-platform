@@ -25,3 +25,6 @@ app.get('/health', (context) => {
 });
 
 export default app;
+
+export * from './operations-application.js';
+export * from './operations-routes.js';

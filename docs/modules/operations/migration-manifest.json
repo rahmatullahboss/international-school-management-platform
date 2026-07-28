@@ -1,0 +1,47 @@
+{
+  "stream": "OPS-01",
+  "orderedMigrations": [
+    {
+      "sequence": 201,
+      "migrationId": "202607280201_OPS-01_hr_staff",
+      "path": "packages/modules/hr/migrations/202607280201_OPS-01_hr_staff.sql",
+      "schemas": ["hr"]
+    },
+    {
+      "sequence": 202,
+      "migrationId": "202607280202_OPS-01_procurement_payables",
+      "path": "packages/modules/procurement/migrations/202607280202_OPS-01_procurement_payables.sql",
+      "schemas": ["procurement"]
+    },
+    {
+      "sequence": 203,
+      "migrationId": "202607280203_OPS-01_inventory_assets",
+      "path": "packages/modules/inventory-assets/migrations/202607280203_OPS-01_inventory_assets.sql",
+      "schemas": ["inventory", "asset"]
+    },
+    {
+      "sequence": 204,
+      "migrationId": "202607280204_OPS-01_library",
+      "path": "packages/modules/library/migrations/202607280204_OPS-01_library.sql",
+      "schemas": ["library"]
+    },
+    {
+      "sequence": 205,
+      "migrationId": "202607290205_OPS-01_transport",
+      "path": "packages/modules/transport/migrations/202607290205_OPS-01_transport.sql",
+      "schemas": ["transport"]
+    },
+    {
+      "sequence": 206,
+      "migrationId": "202607290206_OPS-01_hostel_cafeteria",
+      "path": "packages/modules/residential-catering/migrations/202607290206_OPS-01_hostel_cafeteria.sql",
+      "schemas": ["hostel", "cafeteria"]
+    },
+    {
+      "sequence": 207,
+      "migrationId": "202607290207_OPS-01_activities_trips",
+      "path": "packages/modules/activities-trips/migrations/202607290207_OPS-01_activities_trips.sql",
+      "schemas": ["activities"]
+    }
+  ]
+}

@@ -1,3 +1,5 @@
+import { assertOperationsEventContract } from './event-contract.js';
+
 export type OperationsAssuranceLevel = 'aal1' | 'aal2';
 
 export interface OperationsScope {
@@ -122,7 +124,7 @@ export function createOperationsEvent<Payload>(input: {
   readonly payload: Payload;
   readonly occurredAt?: string;
 }): OperationsDomainEvent<Payload> {
-  return Object.freeze({
+  const event: OperationsDomainEvent<Payload> = Object.freeze({
     eventId: crypto.randomUUID(),
     eventType: input.eventType,
     schemaVersion: 1,
@@ -137,6 +139,8 @@ export function createOperationsEvent<Payload>(input: {
     occurredAt: input.occurredAt ?? new Date().toISOString(),
     payload: input.payload,
   });
+  assertOperationsEventContract(event);
+  return event;
 }
 
 export function createOperationsAudit(input: {
