@@ -1,6 +1,9 @@
 name: INTEG-01 Wave 1 Neon Gate
 
 on:
+  push:
+    branches:
+      - integration/international-school-platform-v1
   workflow_dispatch:
     inputs:
       operation:
@@ -72,13 +75,13 @@ jobs:
           [[ "$branch" == "$NEON_BRANCH_ID" ]]
 
       - name: Apply canonical Wave 1 migrations
-        if: inputs.operation == 'apply' || inputs.operation == 'full'
+        if: github.event_name == 'push' || inputs.operation == 'apply' || inputs.operation == 'full'
         run: ./scripts/integ-01-neon-gate.sh apply
 
       - name: Verify canonical Wave 1 database
-        if: inputs.operation == 'verify'
+        if: github.event_name == 'workflow_dispatch' && inputs.operation == 'verify'
         run: ./scripts/integ-01-neon-gate.sh verify
 
       - name: Replay canonical Wave 1 database
-        if: inputs.operation == 'replay-database' || inputs.operation == 'full'
+        if: github.event_name == 'push' || inputs.operation == 'replay-database' || inputs.operation == 'full'
         run: ./scripts/integ-01-neon-gate.sh replay-database
