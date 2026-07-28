@@ -28,5 +28,5 @@ The long-lived agent database branch is `agent/int-01-integrations`. Foundation 
 - [Import/export foundation](./import-export.md)
 - [Migration studio](./migration-studio.md)
 - [OneRoster 1.2 supported profile](./oneroster.md)
-- LTI and SSO profiles: pending milestone 6
+- [LTI 1.3, SSO and SCIM foundation](./lti-sso-scim.md)
 - Administration, observability and final verification: pending milestone 7
