@@ -19,7 +19,7 @@
 
 | Stream | Wave | Status | Base | Current/next milestone | Final/last checkpoint | Blocking condition |
 |---|---:|---|---|---|---|---|
-| `FND-01` | 0 | in progress | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | shared transactional primitives | `3be61086375cc7f8d074a05262236125455ec2d7` | none |
+| `FND-01` | 0 | in progress | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | localization and shared workflow services | `b17e6eaf308017f363d61da142f8bb0ac1c30029` | none |
 | `SIS-01` | 1 | blocked | reviewed foundation SHA | module contract | none | `GATE-FOUNDATION-READY` |
 | `FIN-01` | 1 | blocked | reviewed foundation SHA | finance contract | none | `GATE-FOUNDATION-READY` |
 | `INT-01` | 1 | blocked | reviewed foundation SHA | country-pack engine | none | `GATE-FOUNDATION-READY` |
@@ -95,6 +95,15 @@ Migration: `202607280003_FND-01_identity_policy`; account/person links, tenant/c
 Focused checks and results: policy tests 4/4 PASS; focused policy/migration 8/8 PASS; full Vitest 18/18 PASS; typecheck PASS; ESLint PASS; build PASS; no-context person-link count 0; tenant A saw only tenant A; forbidden cross-tenant role count 0
 Gate outcome: milestone 4 passed; deny-by-default and step-up behavior executable; production/main branch unchanged
 Exact next milestone: 5 — shared transactional primitives
+
+### Milestone 5 — shared transactional primitives
+
+Date/time: 2026-07-28T06:37:00+06:00
+Checkpoint SHA: `b17e6eaf308017f363d61da142f8bb0ac1c30029`
+Migration: `202607280004_FND-01_transactional_primitives`; idempotency, versioned outbox, audit and data-access audit
+Focused checks and results: event tests 4/4 PASS; full Vitest 23/23 PASS; typecheck PASS; ESLint PASS; build PASS; duplicate idempotency rows 1; outbox rows 1; original response preserved; audit mutation rejected; no-context outbox count 0; forbidden cross-tenant outbox count 0
+Gate outcome: milestone 5 passed; append-only and duplicate-safe behavior executable; production/main branch unchanged
+Exact next milestone: 6 — localization and shared workflow services
 
 ## SIS-01 evidence
 
