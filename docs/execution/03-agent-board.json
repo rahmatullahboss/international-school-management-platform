@@ -34,7 +34,7 @@
       "id": "FND-01",
       "name": "Platform Foundation",
       "wave": 0,
-      "status": "implementation_complete_gate_review_pending",
+      "status": "implementation_complete_live_neon_check_pending",
       "branch": "program/foundation-neon-platform",
       "worktree": ".worktrees/fnd-01-foundation",
       "neon_branch": "agent/fnd-01-foundation",
