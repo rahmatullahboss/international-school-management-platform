@@ -61,6 +61,14 @@ OPS-01 owns school operating workflows and their operational source records. It 
 - Date-effective meal plans, entitlement/daily-limit checks, allergen conflict prevention and idempotent service confirmation
 - Versioned pay-per-meal FIN charge source documents, occupancy/uptake reports, audit/events and forced-RLS migrations
 
+### Activities and trips
+
+- Clubs/activities with capacity, fair waitlists, cancellation promotion and optional fee source records
+- Trip plans with opaque budget/medical references, capacity and consent-gated participant states
+- Hazard-level risk assessments with AAL2 and recorder/approver separation of duties
+- Guardian consent, idempotent attendance, incident reporting and trip readiness reports
+- Versioned participant-charge and trip-payable FIN source documents, audit/events and forced-RLS migration
+
 ## Public finance integration contract
 
 `FinancePayableSourceDocument` version `1.0` contains only the approved operational source facts required by FIN: tenant/legal entity/campus, supplier, PO and budget references, dates, minor-unit amounts, currency, approval evidence, correlation and idempotency keys. OPS receives only an opaque FIN document reference after submission.
@@ -75,11 +83,12 @@ No OPS migration references FIN-owned tables. This keeps the source-document bou
 - Library focused tests: 9 passing
 - Transport focused tests: 9 passing
 - Hostel/cafeteria focused tests: 11 passing
-- Combined OPS focused tests: 56 passing
+- Activities/trips focused tests: 11 passing
+- Combined OPS focused tests: 67 passing
 - TypeScript, ESLint and architecture boundaries: passing
 - Dependency audit: 0 vulnerabilities
 - Neon migration application: pending foundation/Wave 1 schema composition on the isolated OPS branch; prior attempts rolled back atomically and persisted no schema/data mutation
 
 ## Next checkpoint
 
-Activities, clubs and trips with capacity/waitlists, consent, risk, attendance, incidents and finance source records.
+Typed APIs, operations admin UI, permissions/event/report contract hardening and unified verification.

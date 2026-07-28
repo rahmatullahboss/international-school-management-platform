@@ -17,6 +17,7 @@
     "library/src/**/*.ts",
     "transport/src/**/*.ts",
     "residential-catering/src/**/*.ts",
+    "activities-trips/src/**/*.ts",
     "billing/src/**/*.ts",
     "ledger/src/**/*.ts"
   ],
