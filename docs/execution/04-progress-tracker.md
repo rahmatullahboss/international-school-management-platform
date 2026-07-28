@@ -33,7 +33,7 @@ Current readiness: `GATE-FOUNDATION-READY` is passed. `SIS-01`, `FIN-01` and `IN
 | Stream | Wave | Status | Base | Current/next milestone | Final/last checkpoint | Blocking condition |
 |---|---:|---|---|---|---|---|
 | `FND-01` | 0 | complete; gate passed | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | freeze reviewed foundation SHA | pending gate-evidence commit | none |
-| `SIS-01` | 1 | in progress | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | student/staff profiles | `b6410678d0b27a905f6e71eb78a33794ce798af9` | none |
+| `SIS-01` | 1 | in progress | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | admissions | `8fc3fc0c49dc353b09ab98eed7c1321cb71454c9` | none |
 | `FIN-01` | 1 | ready to start | reviewed foundation SHA | finance contract | none | none |
 | `INT-01` | 1 | ready to start | reviewed foundation SHA | country-pack engine | none | none |
 | `ACAD-01` | 2 | blocked | reviewed Wave 1 integration SHA | academic structure | none | `GATE-WAVE-1-INTEGRATED` |
@@ -212,6 +212,23 @@ Changed owned paths: `packages/modules/people/**`; `tests/sis/people-*.test.ts`;
 Focused checks and results: people domain/migration tests 6/6 PASS; `@school/sis` TypeScript build PASS; foundation migrations 1–5 replayed on SIS Neon child; people migration applied; RLS no-context count 0; Tenant A/B each saw 1 own row and 0 foreign rows
 Gate outcome: milestone 2 passed; synthetic data only; parent/production branches unchanged
 Exact next milestone: 3 — student/staff profiles, statuses, identifiers, documents and lifecycle access effects
+Dirty/uncommitted state: tracker/module documentation update only
+Production mutation performed: no
+
+### Milestone 3 — student and staff profiles
+
+Date/time: 2026-07-28T08:52:00+06:00
+Stream: SIS-01
+Milestone completed: 3 — student/staff profiles, effective statuses, identifiers, documents and lifecycle access effects
+Git branch: `module/core-sis-admissions`
+Worktree: `.worktrees/sis-01-core-sis`
+Neon branch: `agent/sis-01-core-sis` (`br-ancient-sunset-axuhcmof`)
+Starting base: `55114f55a375d3d79dba7ea21f984b789b5dbca1`
+Checkpoint SHA: `8fc3fc0c49dc353b09ab98eed7c1321cb71454c9`
+Changed owned paths: `packages/modules/student-lifecycle/{src/profiles.ts,migrations/202607280102_SIS-01_profiles.sql}`; `tests/sis/profiles.test.ts`; `docs/modules/sis/profiles.md`
+Focused checks and results: profile domain tests 4/4 PASS; `@school/sis` build PASS; profile migration applied on SIS Neon; RLS no-context count 0; Tenant A visible 1 and foreign 0
+Gate outcome: milestone 3 passed; parent/production branches unchanged
+Exact next milestone: 4 — enquiries, applications, forms, reviews, interviews, decisions, offers, contracts, deposit references and conversion
 Dirty/uncommitted state: tracker/module documentation update only
 Production mutation performed: no
 
