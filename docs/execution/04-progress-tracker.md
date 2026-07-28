@@ -474,7 +474,24 @@ Production mutation performed: no; the generic `DATABASE_URL`/Neon `main` databa
 
 ## ACAD-01 evidence
 
-No execution evidence recorded.
+### Milestone 1 — academic structure
+
+Date/time: 2026-07-28T23:35:09+06:00
+Stream: ACAD-01
+Milestone completed: 1 — academic years/terms, instructional calendars, bell schedules, curriculum/program/course versions, standards, class sections, staff assignments and rosters
+Git branch: `module/academics-attendance-records`
+Worktree: `.worktrees/acad-01-academics`
+Neon branch: `agent/acad-01-academics` (`br-gentle-waterfall-axcl7l8z`), connector-created parent `main` (`br-cool-wildflower-axsot8l1`); reviewed Wave 1 schema replay remains required before completion
+Starting base: `8cc8ee1562ade672b14c1c44af935fe7e2307976`
+Checkpoint SHA: `224ba1c2ec23e0861ac1f432b08d797d90640347`
+Changed owned paths: `packages/modules/academics/**`; `tests/academics/academic-structure.test.ts`; `docs/modules/academics/contracts.md`; compatible append-only TypeScript include registration
+Focused checks and results: dependency install/audit PASS with 0 vulnerabilities; module TypeScript project-reference build PASS; focused ESLint PASS; academic structure Vitest 5/5 PASS; migration contract asserts 13 tenant-owned tables, forced RLS, opaque SIS/INT references and published-version immutability
+Cross-module contract outcome: SIS student/staff/enrollment, tenancy campus and INT country-pack identifiers remain opaque references; no foreign key or write into another module schema; FIN not coupled
+UI/design evidence: not applicable to this backend/domain checkpoint; Impeccable 4.0.2 loaded; reviewed base does not contain foundation-owned `PRODUCT.md` or `DESIGN.md`, recorded in module contract without recreating them
+Gate outcome: milestone 1 passed; `GATE-ACAD-COMPLETE` remains blocked pending milestones 2–7 and reviewed-base Neon replay
+Exact next milestone: 2 — timetable versions, meetings, rooms, conflict detection, substitutions, publish/unpublish and student/teacher schedule views
+Dirty/uncommitted state: tracker evidence only
+Production mutation performed: no
 
 ## OPS-01 evidence
 
