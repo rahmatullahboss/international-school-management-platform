@@ -19,7 +19,7 @@
 
 | Stream | Wave | Status | Base | Current/next milestone | Final/last checkpoint | Blocking condition |
 |---|---:|---|---|---|---|---|
-| `FND-01` | 0 | in progress | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | identity, policy and privileged access | `ed5a5909d1446eec88e624c854dc53e352e4e551` | none |
+| `FND-01` | 0 | in progress | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | shared transactional primitives | `3be61086375cc7f8d074a05262236125455ec2d7` | none |
 | `SIS-01` | 1 | blocked | reviewed foundation SHA | module contract | none | `GATE-FOUNDATION-READY` |
 | `FIN-01` | 1 | blocked | reviewed foundation SHA | finance contract | none | `GATE-FOUNDATION-READY` |
 | `INT-01` | 1 | blocked | reviewed foundation SHA | country-pack engine | none | `GATE-FOUNDATION-READY` |
@@ -86,6 +86,15 @@ Migration: `202607280002_FND-01_tenancy`; tenant directory/domain, home-region/d
 Focused checks and results: tenancy/migration tests 7/7 PASS; full Vitest 13/13 PASS; typecheck PASS; ESLint PASS; build PASS; no-context campus count 0; tenant A saw only tenant A campus; forbidden cross-tenant entitlement count 0
 Gate outcome: milestone 3 passed; synthetic data only; production/main branch unchanged
 Exact next milestone: 4 — identity, policy and privileged access
+
+### Milestone 4 — identity, policy and privileged access
+
+Date/time: 2026-07-28T06:30:00+06:00
+Checkpoint SHA: `3be61086375cc7f8d074a05262236125455ec2d7`
+Migration: `202607280003_FND-01_identity_policy`; account/person links, tenant/campus roles, assurance requirements and expiring privileged grants
+Focused checks and results: policy tests 4/4 PASS; focused policy/migration 8/8 PASS; full Vitest 18/18 PASS; typecheck PASS; ESLint PASS; build PASS; no-context person-link count 0; tenant A saw only tenant A; forbidden cross-tenant role count 0
+Gate outcome: milestone 4 passed; deny-by-default and step-up behavior executable; production/main branch unchanged
+Exact next milestone: 5 — shared transactional primitives
 
 ## SIS-01 evidence
 
