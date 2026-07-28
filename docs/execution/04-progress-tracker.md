@@ -39,7 +39,7 @@ Current readiness: `INTEG-01` is active from exact current `main` SHA `042b75990
 | `FIN-01` | 1 | complete; integrated by `INTEG-01` | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | complete | reviewed head `5f9e1692a8fc19fc2e9789a338d028918acdeaf6`; integration merge `da3d561` | none |
 | `INT-01` | 1 | complete; gate passed; integration in progress | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | serial integration verification | reviewed head `bfa95a4a42025213fa7c2090a587ef5304924da7`; module gate evidence `ae88d8e` | none |
 | `ACAD-01` | 2 | blocked | reviewed Wave 1 integration SHA | academic structure | none | `GATE-WAVE-1-INTEGRATED` |
-| `OPS-01` | 2 | in progress | `8cc8ee1562ade672b14c1c44af935fe7e2307976` | inventory and assets | procurement/payables `feca93e` | none; root `PRODUCT.md`/`DESIGN.md` absent from reviewed history |
+| `OPS-01` | 2 | in progress | `8cc8ee1562ade672b14c1c44af935fe7e2307976` | library | inventory/assets `ac8d9d2` | none; root `PRODUCT.md`/`DESIGN.md` absent from reviewed history |
 | `CARE-01` | 2 | blocked | reviewed Wave 1 integration SHA | security contract | none | threat-model and Wave 1 gates |
 | `EXP-01` | 3 | blocked | reviewed Wave 2 integration SHA | persona shells | none | `GATE-WAVE-2-INTEGRATED` |
 | `INTEG-01` | gated serial | Wave 1 integration in progress | `042b75990f9cd819239c584a370687042393f6a7` | integrate reviewed `INT-01` | FIN merge checkpoint `da3d561` | none |
@@ -514,6 +514,25 @@ Integration boundary: no FIN-owned tables referenced; FIN receives `FinancePayab
 Neon result: no further schema mutation attempted pending isolated foundation/Wave 1 composition; production/main untouched
 Production mutation performed: no
 Exact next milestone: inventory, immutable stock movements, asset custody, maintenance and disposal
+Dirty/uncommitted state: tracker checkpoint evidence only
+
+### Checkpoint 3 — Inventory and assets
+
+Date/time: 2026-07-28T23:54:00+06:00
+Stream: OPS-01
+Milestone completed: inventory and assets
+Git branch: `module/school-operations`
+Worktree: `.worktrees/ops-01-operations`
+Neon branch: `agent/ops-01-operations` (`br-polished-voice-ax2fsdfg`)
+Starting base: `8cc8ee1562ade672b14c1c44af935fe7e2307976`
+Checkpoint SHA: `ac8d9d2`
+Changed owned paths: `packages/modules/inventory-assets/**`, inventory/assets operation tests and module documentation; package workspace metadata only
+Delivered: item catalogue and locations, append-only/idempotent stock movements, movement-derived balance and valuation, reservations, transfers, count variance approval/adjustment, asset register, custody, maintenance, depreciation and AAL2 disposal approval with separation of duties, reports, audit/events and forced-RLS migrations
+Focused checks and results: inventory/assets domain and migration tests 10 PASS; combined OPS tests 27 PASS; TypeScript PASS; ESLint PASS; architecture boundaries PASS; npm audit 0 vulnerabilities
+Integrity evidence: no mutable stock-balance table; duplicate source movement keys return the original ledger record; count differences produce a new adjustment movement
+Neon result: schema replay deferred until isolated foundation/Wave 1 composition; production/main untouched
+Production mutation performed: no
+Exact next milestone: library catalogue, copies, patrons, circulation, holds, overdue/lost workflow and fine source records
 Dirty/uncommitted state: tracker checkpoint evidence only
 
 ## CARE-01 evidence
