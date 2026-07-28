@@ -71,6 +71,16 @@ jobs:
           fi
           echo "NEON_API_KEY is not configured; live Neon gate remains pending."
 
+      - uses: actions/setup-node@v4
+        if: steps.neon.outputs.available == 'true' && steps.operation.outputs.mode != 'inspect'
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install workspace dependencies
+        if: steps.neon.outputs.available == 'true' && steps.operation.outputs.mode != 'inspect'
+        run: npm ci
+
       - name: Run INT-01 Neon gate
         if: steps.neon.outputs.available == 'true'
         run: bash scripts/int-01-neon-gate.sh "${{ steps.operation.outputs.mode }}"
