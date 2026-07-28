@@ -34,7 +34,7 @@ Current readiness: `GATE-FOUNDATION-READY` is passed. `SIS-01`, `FIN-01` and `IN
 |---|---:|---|---|---|---|---|
 | `FND-01` | 0 | complete; gate passed | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | freeze reviewed foundation SHA | pending gate-evidence commit | none |
 | `SIS-01` | 1 | ready to start | reviewed foundation SHA | module contract | none | none |
-| `FIN-01` | 1 | in progress | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | billing | `9c60dea233b661d24a06300b2ddf910ee7e7545c` | none |
+| `FIN-01` | 1 | in progress | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | payments and reconciliation inputs | `4af9d6c51b9a826a7f1dfd1233f12c299d6d1b1f` | none |
 | `INT-01` | 1 | ready to start | reviewed foundation SHA | country-pack engine | none | none |
 | `ACAD-01` | 2 | blocked | reviewed Wave 1 integration SHA | academic structure | none | `GATE-WAVE-1-INTEGRATED` |
 | `OPS-01` | 2 | blocked | reviewed Wave 1 integration SHA | HR/staff | none | `GATE-WAVE-1-INTEGRATED` |
@@ -210,6 +210,19 @@ Neon replay: foundation migrations `202607280001` through `202607280005` plus `2
 Neon proof: balanced journal debit=credit=25000; duplicate post returned the same posted journal; posted mutation rejected with `FIN_POSTED_JOURNAL_IMMUTABLE`; tenant A visible books=1 and tenant B visible books=0; no-context visible books=0; forced-RLS ledger tables=7
 Gate outcome: milestone 2 passed; chart of accounts, periods, balanced idempotent posting, immutable posted journals, reversal, as-of balances, RLS and tenant isolation are executable
 Exact next milestone: 3 — billing accounts, fees, invoices, adjustments and receivables
+Dirty/uncommitted state: tracker and agent-board evidence only
+Production mutation performed: no; Neon main untouched
+
+Date/time: 2026-07-28T09:39:00+06:00
+Stream: FIN-01
+Milestone completed: 3 — billing and receivables
+Checkpoint SHA: `4af9d6c51b9a826a7f1dfd1233f12c299d6d1b1f`
+Changed owned paths: `packages/modules/billing/**`, `tests/finance/billing.test.ts`
+Focused checks and results: billing Vitest 9/9 PASS; focused ESLint PASS; billing TypeScript PASS
+Neon migration: `202607280102_FIN-01_billing` applied on `agent/fin-01-finance` only
+Neon proof: document numbering first/retry=`INV-000001`, next=`INV-000002`; posted invoice total/balance=25000; posted line mutation rejected; tenant A visible billing accounts=1 and tenant B=0; no-context visibility=0; forced-RLS billing tables=13
+Gate outcome: milestone 3 passed; billing accounts/responsibility, fee catalog/schedules/assignments, adjustments, invoices, instalments, tax, credit notes, statements and ledger trace are executable
+Exact next milestone: 4 — payments, allocations, refunds, cashier and reconciliation inputs
 Dirty/uncommitted state: tracker and agent-board evidence only
 Production mutation performed: no; Neon main untouched
 
