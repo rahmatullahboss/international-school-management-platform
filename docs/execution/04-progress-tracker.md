@@ -35,7 +35,7 @@ Current readiness: `GATE-FOUNDATION-READY` is passed. `SIS-01`, `FIN-01` and `IN
 | `FND-01` | 0 | complete; gate passed | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | freeze reviewed foundation SHA | pending gate-evidence commit | none |
 | `SIS-01` | 1 | ready to start | reviewed foundation SHA | module contract | none | none |
 | `FIN-01` | 1 | ready to start | reviewed foundation SHA | finance contract | none | none |
-| `INT-01` | 1 | in progress | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | migration studio | `f252c8ca4e7d2378514dba457edc91e372e45bce` | none |
+| `INT-01` | 1 | in progress | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | OneRoster CSV profile | `16135cf986304e75a478eb8985fe1ddfff6f6ed4` | none |
 | `ACAD-01` | 2 | blocked | reviewed Wave 1 integration SHA | academic structure | none | `GATE-WAVE-1-INTEGRATED` |
 | `OPS-01` | 2 | blocked | reviewed Wave 1 integration SHA | HR/staff | none | `GATE-WAVE-1-INTEGRATED` |
 | `CARE-01` | 2 | blocked | reviewed Wave 1 integration SHA | security contract | none | threat-model and Wave 1 gates |
@@ -246,6 +246,21 @@ Changed owned paths: integration CSV/XLSX adapters, mapping/staging engine, impo
 Focused checks and results: import/export behavior 6/6 PASS; migration contract 1/1 PASS; full Vitest 58/58 PASS with 1 secret-gated Neon test skipped; root/module TypeScript PASS; ESLint PASS; architecture boundary PASS; build PASS; execution artefact validation PASS
 Gate outcome: milestone 3 passed; file limits, formula neutralisation, dry-run, row errors, idempotent domain-command execution and reconciliation are implemented
 Exact next milestone: 4 — migration studio project/version model, repeatable source templates, checksums and cutover evidence
+Dirty/uncommitted state: tracker evidence only
+Production mutation performed: no
+
+Date/time: 2026-07-28T09:42:18+06:00
+Stream: INT-01
+Milestone completed: 4 — migration studio
+Git branch: `module/international-integrations`
+Worktree: `.worktrees/int-01-integrations`
+Neon branch: `agent/int-01-integrations` (`br-super-truth-axp0urxi`)
+Starting base: `c2e3502`
+Checkpoint SHA: `16135cf986304e75a478eb8985fe1ddfff6f6ed4`
+Changed owned paths: `packages/modules/migration-studio/**`; migration-studio tests; package registration; integration module documentation
+Focused checks and results: migration-studio behavior 5/5 PASS; migration contract 1/1 PASS; full `npm run verify` PASS with 64/64 tests and 1 secret-gated Neon test skipped
+Gate outcome: milestone 4 passed; immutable templates, version checksums, file evidence, repeatable runs, reconciliation and cutover sign-off gates are implemented
+Exact next milestone: 5 — OneRoster CSV profile, contract tests and REST extension path
 Dirty/uncommitted state: tracker evidence only
 Production mutation performed: no
 
