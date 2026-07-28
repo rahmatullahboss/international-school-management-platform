@@ -1,0 +1,370 @@
+# Third-Party Notices
+
+Generated deterministically from `package-lock.json` by `npm run provenance:generate`.
+Package source distributions remain the authoritative location for full licence text and attribution.
+
+## Licence summary
+
+| Licence expression | Packages |
+|---|---:|
+| 0BSD | 1 |
+| Apache-2.0 | 38 |
+| Apache-2.0 AND LGPL-3.0-or-later | 3 |
+| Apache-2.0 AND LGPL-3.0-or-later AND MIT | 1 |
+| BlueOak-1.0.0 | 1 |
+| BSD-2-Clause | 6 |
+| BSD-3-Clause | 5 |
+| CC-BY-4.0 | 1 |
+| CC0-1.0 | 1 |
+| ISC | 12 |
+| LGPL-3.0-or-later | 10 |
+| MIT | 247 |
+| MIT OR Apache-2.0 | 4 |
+| MPL-2.0 | 12 |
+
+## Dependency inventory
+
+| Package | Version | Licence | Development only | Optional |
+|---|---|---|---:|---:|
+| @babel/code-frame | 7.29.7 | MIT | yes | no |
+| @babel/code-frame/node_modules/js-tokens | 4.0.0 | MIT | yes | no |
+| @babel/compat-data | 7.29.7 | MIT | yes | no |
+| @babel/core | 7.29.7 | MIT | yes | no |
+| @babel/core/node_modules/semver | 6.3.1 | ISC | yes | no |
+| @babel/generator | 7.29.7 | MIT | yes | no |
+| @babel/helper-compilation-targets | 7.29.7 | MIT | yes | no |
+| @babel/helper-compilation-targets/node_modules/semver | 6.3.1 | ISC | yes | no |
+| @babel/helper-globals | 7.29.7 | MIT | yes | no |
+| @babel/helper-module-imports | 7.29.7 | MIT | yes | no |
+| @babel/helper-module-transforms | 7.29.7 | MIT | yes | no |
+| @babel/helper-plugin-utils | 7.29.7 | MIT | yes | no |
+| @babel/helper-string-parser | 7.29.7 | MIT | yes | no |
+| @babel/helper-validator-identifier | 7.29.7 | MIT | yes | no |
+| @babel/helper-validator-option | 7.29.7 | MIT | yes | no |
+| @babel/helpers | 7.29.7 | MIT | yes | no |
+| @babel/parser | 7.29.7 | MIT | yes | no |
+| @babel/plugin-transform-react-jsx-self | 7.29.7 | MIT | yes | no |
+| @babel/plugin-transform-react-jsx-source | 7.29.7 | MIT | yes | no |
+| @babel/template | 7.29.7 | MIT | yes | no |
+| @babel/traverse | 7.29.7 | MIT | yes | no |
+| @babel/types | 7.29.7 | MIT | yes | no |
+| @bcoe/v8-coverage | 1.0.2 | MIT | yes | no |
+| @cloudflare/kv-asset-handler | 0.5.0 | MIT OR Apache-2.0 | yes | no |
+| @cloudflare/unenv-preset | 2.16.1 | MIT OR Apache-2.0 | yes | no |
+| @cloudflare/workerd-darwin-64 | 1.20260722.1 | Apache-2.0 | yes | yes |
+| @cloudflare/workerd-darwin-arm64 | 1.20260722.1 | Apache-2.0 | yes | yes |
+| @cloudflare/workerd-linux-64 | 1.20260722.1 | Apache-2.0 | yes | yes |
+| @cloudflare/workerd-linux-arm64 | 1.20260722.1 | Apache-2.0 | yes | yes |
+| @cloudflare/workerd-windows-64 | 1.20260722.1 | Apache-2.0 | yes | yes |
+| @cloudflare/workers-types | 5.20260727.1 | MIT OR Apache-2.0 | yes | no |
+| @cspotcode/source-map-support | 0.8.1 | MIT | yes | no |
+| @cspotcode/source-map-support/node_modules/@jridgewell/trace-mapping | 0.3.9 | MIT | yes | no |
+| @emnapi/core | 1.11.1 | MIT | yes | yes |
+| @emnapi/runtime | 1.11.1 | MIT | yes | yes |
+| @emnapi/wasi-threads | 1.2.2 | MIT | yes | yes |
+| @esbuild/aix-ppc64 | 0.28.1 | MIT | yes | yes |
+| @esbuild/android-arm | 0.28.1 | MIT | yes | yes |
+| @esbuild/android-arm64 | 0.28.1 | MIT | yes | yes |
+| @esbuild/android-x64 | 0.28.1 | MIT | yes | yes |
+| @esbuild/darwin-arm64 | 0.28.1 | MIT | yes | yes |
+| @esbuild/darwin-x64 | 0.28.1 | MIT | yes | yes |
+| @esbuild/freebsd-arm64 | 0.28.1 | MIT | yes | yes |
+| @esbuild/freebsd-x64 | 0.28.1 | MIT | yes | yes |
+| @esbuild/linux-arm | 0.28.1 | MIT | yes | yes |
+| @esbuild/linux-arm64 | 0.28.1 | MIT | yes | yes |
+| @esbuild/linux-ia32 | 0.28.1 | MIT | yes | yes |
+| @esbuild/linux-loong64 | 0.28.1 | MIT | yes | yes |
+| @esbuild/linux-mips64el | 0.28.1 | MIT | yes | yes |
+| @esbuild/linux-ppc64 | 0.28.1 | MIT | yes | yes |
+| @esbuild/linux-riscv64 | 0.28.1 | MIT | yes | yes |
+| @esbuild/linux-s390x | 0.28.1 | MIT | yes | yes |
+| @esbuild/linux-x64 | 0.28.1 | MIT | yes | yes |
+| @esbuild/netbsd-arm64 | 0.28.1 | MIT | yes | yes |
+| @esbuild/netbsd-x64 | 0.28.1 | MIT | yes | yes |
+| @esbuild/openbsd-arm64 | 0.28.1 | MIT | yes | yes |
+| @esbuild/openbsd-x64 | 0.28.1 | MIT | yes | yes |
+| @esbuild/openharmony-arm64 | 0.28.1 | MIT | yes | yes |
+| @esbuild/sunos-x64 | 0.28.1 | MIT | yes | yes |
+| @esbuild/win32-arm64 | 0.28.1 | MIT | yes | yes |
+| @esbuild/win32-ia32 | 0.28.1 | MIT | yes | yes |
+| @esbuild/win32-x64 | 0.28.1 | MIT | yes | yes |
+| @eslint-community/eslint-utils | 4.10.1 | MIT | yes | no |
+| @eslint-community/eslint-utils/node_modules/eslint-visitor-keys | 3.4.3 | Apache-2.0 | yes | no |
+| @eslint-community/regexpp | 4.12.2 | MIT | yes | no |
+| @eslint/config-array | 0.23.5 | Apache-2.0 | yes | no |
+| @eslint/config-helpers | 0.7.0 | Apache-2.0 | yes | no |
+| @eslint/core | 1.2.1 | Apache-2.0 | yes | no |
+| @eslint/js | 10.0.1 | MIT | yes | no |
+| @eslint/object-schema | 3.0.5 | Apache-2.0 | yes | no |
+| @eslint/plugin-kit | 0.7.2 | Apache-2.0 | yes | no |
+| @humanfs/core | 0.19.2 | Apache-2.0 | yes | no |
+| @humanfs/node | 0.16.8 | Apache-2.0 | yes | no |
+| @humanfs/types | 0.15.0 | Apache-2.0 | yes | no |
+| @humanwhocodes/module-importer | 1.0.1 | Apache-2.0 | yes | no |
+| @humanwhocodes/retry | 0.4.3 | Apache-2.0 | yes | no |
+| @img/colour | 1.1.0 | MIT | yes | no |
+| @img/sharp-darwin-arm64 | 0.35.2 | Apache-2.0 | yes | yes |
+| @img/sharp-darwin-x64 | 0.35.2 | Apache-2.0 | yes | yes |
+| @img/sharp-freebsd-wasm32 | 0.35.2 | Apache-2.0 | yes | yes |
+| @img/sharp-libvips-darwin-arm64 | 1.3.1 | LGPL-3.0-or-later | yes | yes |
+| @img/sharp-libvips-darwin-x64 | 1.3.1 | LGPL-3.0-or-later | yes | yes |
+| @img/sharp-libvips-linux-arm | 1.3.1 | LGPL-3.0-or-later | yes | yes |
+| @img/sharp-libvips-linux-arm64 | 1.3.1 | LGPL-3.0-or-later | yes | yes |
+| @img/sharp-libvips-linux-ppc64 | 1.3.1 | LGPL-3.0-or-later | yes | yes |
+| @img/sharp-libvips-linux-riscv64 | 1.3.1 | LGPL-3.0-or-later | yes | yes |
+| @img/sharp-libvips-linux-s390x | 1.3.1 | LGPL-3.0-or-later | yes | yes |
+| @img/sharp-libvips-linux-x64 | 1.3.1 | LGPL-3.0-or-later | yes | yes |
+| @img/sharp-libvips-linuxmusl-arm64 | 1.3.1 | LGPL-3.0-or-later | yes | yes |
+| @img/sharp-libvips-linuxmusl-x64 | 1.3.1 | LGPL-3.0-or-later | yes | yes |
+| @img/sharp-linux-arm | 0.35.2 | Apache-2.0 | yes | yes |
+| @img/sharp-linux-arm64 | 0.35.2 | Apache-2.0 | yes | yes |
+| @img/sharp-linux-ppc64 | 0.35.2 | Apache-2.0 | yes | yes |
+| @img/sharp-linux-riscv64 | 0.35.2 | Apache-2.0 | yes | yes |
+| @img/sharp-linux-s390x | 0.35.2 | Apache-2.0 | yes | yes |
+| @img/sharp-linux-x64 | 0.35.2 | Apache-2.0 | yes | yes |
+| @img/sharp-linuxmusl-arm64 | 0.35.2 | Apache-2.0 | yes | yes |
+| @img/sharp-linuxmusl-x64 | 0.35.2 | Apache-2.0 | yes | yes |
+| @img/sharp-wasm32 | 0.35.2 | Apache-2.0 AND LGPL-3.0-or-later AND MIT | yes | yes |
+| @img/sharp-webcontainers-wasm32 | 0.35.2 | Apache-2.0 | yes | yes |
+| @img/sharp-win32-arm64 | 0.35.2 | Apache-2.0 AND LGPL-3.0-or-later | yes | yes |
+| @img/sharp-win32-ia32 | 0.35.2 | Apache-2.0 AND LGPL-3.0-or-later | yes | yes |
+| @img/sharp-win32-x64 | 0.35.2 | Apache-2.0 AND LGPL-3.0-or-later | yes | yes |
+| @jridgewell/gen-mapping | 0.3.13 | MIT | yes | no |
+| @jridgewell/remapping | 2.3.5 | MIT | yes | no |
+| @jridgewell/resolve-uri | 3.1.2 | MIT | yes | no |
+| @jridgewell/sourcemap-codec | 1.5.5 | MIT | yes | no |
+| @jridgewell/trace-mapping | 0.3.31 | MIT | yes | no |
+| @napi-rs/wasm-runtime | 1.1.6 | MIT | yes | yes |
+| @neondatabase/serverless | 1.1.0 | MIT | no | no |
+| @oxc-project/types | 0.139.0 | MIT | yes | no |
+| @playwright/test | 1.62.0 | Apache-2.0 | yes | no |
+| @poppinss/colors | 4.1.6 | MIT | yes | no |
+| @poppinss/dumper | 0.6.5 | MIT | yes | no |
+| @poppinss/dumper/node_modules/supports-color | 10.2.2 | MIT | yes | no |
+| @poppinss/exception | 1.2.3 | MIT | yes | no |
+| @rolldown/binding-android-arm64 | 1.1.5 | MIT | yes | yes |
+| @rolldown/binding-darwin-arm64 | 1.1.5 | MIT | yes | yes |
+| @rolldown/binding-darwin-x64 | 1.1.5 | MIT | yes | yes |
+| @rolldown/binding-freebsd-x64 | 1.1.5 | MIT | yes | yes |
+| @rolldown/binding-linux-arm-gnueabihf | 1.1.5 | MIT | yes | yes |
+| @rolldown/binding-linux-arm64-gnu | 1.1.5 | MIT | yes | yes |
+| @rolldown/binding-linux-arm64-musl | 1.1.5 | MIT | yes | yes |
+| @rolldown/binding-linux-ppc64-gnu | 1.1.5 | MIT | yes | yes |
+| @rolldown/binding-linux-s390x-gnu | 1.1.5 | MIT | yes | yes |
+| @rolldown/binding-linux-x64-gnu | 1.1.5 | MIT | yes | yes |
+| @rolldown/binding-linux-x64-musl | 1.1.5 | MIT | yes | yes |
+| @rolldown/binding-openharmony-arm64 | 1.1.5 | MIT | yes | yes |
+| @rolldown/binding-wasm32-wasi | 1.1.5 | MIT | yes | yes |
+| @rolldown/binding-win32-arm64-msvc | 1.1.5 | MIT | yes | yes |
+| @rolldown/binding-win32-x64-msvc | 1.1.5 | MIT | yes | yes |
+| @rolldown/pluginutils | 1.0.0-rc.3 | MIT | yes | no |
+| @rollup/rollup-android-arm-eabi | 4.62.3 | MIT | yes | yes |
+| @rollup/rollup-android-arm64 | 4.62.3 | MIT | yes | yes |
+| @rollup/rollup-darwin-arm64 | 4.62.3 | MIT | yes | yes |
+| @rollup/rollup-darwin-x64 | 4.62.3 | MIT | yes | yes |
+| @rollup/rollup-freebsd-arm64 | 4.62.3 | MIT | yes | yes |
+| @rollup/rollup-freebsd-x64 | 4.62.3 | MIT | yes | yes |
+| @rollup/rollup-linux-arm-gnueabihf | 4.62.3 | MIT | yes | yes |
+| @rollup/rollup-linux-arm-musleabihf | 4.62.3 | MIT | yes | yes |
+| @rollup/rollup-linux-arm64-gnu | 4.62.3 | MIT | yes | yes |
+| @rollup/rollup-linux-arm64-musl | 4.62.3 | MIT | yes | yes |
+| @rollup/rollup-linux-loong64-gnu | 4.62.3 | MIT | yes | yes |
+| @rollup/rollup-linux-loong64-musl | 4.62.3 | MIT | yes | yes |
+| @rollup/rollup-linux-ppc64-gnu | 4.62.3 | MIT | yes | yes |
+| @rollup/rollup-linux-ppc64-musl | 4.62.3 | MIT | yes | yes |
+| @rollup/rollup-linux-riscv64-gnu | 4.62.3 | MIT | yes | yes |
+| @rollup/rollup-linux-riscv64-musl | 4.62.3 | MIT | yes | yes |
+| @rollup/rollup-linux-s390x-gnu | 4.62.3 | MIT | yes | yes |
+| @rollup/rollup-linux-x64-gnu | 4.62.3 | MIT | yes | yes |
+| @rollup/rollup-linux-x64-musl | 4.62.3 | MIT | yes | yes |
+| @rollup/rollup-openbsd-x64 | 4.62.3 | MIT | yes | yes |
+| @rollup/rollup-openharmony-arm64 | 4.62.3 | MIT | yes | yes |
+| @rollup/rollup-win32-arm64-msvc | 4.62.3 | MIT | yes | yes |
+| @rollup/rollup-win32-ia32-msvc | 4.62.3 | MIT | yes | yes |
+| @rollup/rollup-win32-x64-gnu | 4.62.3 | MIT | yes | yes |
+| @rollup/rollup-win32-x64-msvc | 4.62.3 | MIT | yes | yes |
+| @sindresorhus/is | 7.2.0 | MIT | yes | no |
+| @speed-highlight/core | 1.2.17 | CC0-1.0 | yes | no |
+| @standard-schema/spec | 1.1.0 | MIT | yes | no |
+| @tybys/wasm-util | 0.10.3 | MIT | yes | yes |
+| @types/babel__core | 7.20.5 | MIT | yes | no |
+| @types/babel__generator | 7.27.0 | MIT | yes | no |
+| @types/babel__template | 7.4.4 | MIT | yes | no |
+| @types/babel__traverse | 7.28.0 | MIT | yes | no |
+| @types/chai | 5.2.3 | MIT | yes | no |
+| @types/deep-eql | 4.0.2 | MIT | yes | no |
+| @types/esrecurse | 4.3.1 | MIT | yes | no |
+| @types/estree | 1.0.9 | MIT | yes | no |
+| @types/json-schema | 7.0.15 | MIT | yes | no |
+| @types/node | 26.1.2 | MIT | yes | no |
+| @types/react | 19.2.17 | MIT | yes | no |
+| @types/react-dom | 19.2.3 | MIT | yes | no |
+| @typescript-eslint/eslint-plugin | 8.65.0 | MIT | yes | no |
+| @typescript-eslint/eslint-plugin/node_modules/ignore | 7.0.6 | MIT | yes | no |
+| @typescript-eslint/parser | 8.65.0 | MIT | yes | no |
+| @typescript-eslint/project-service | 8.65.0 | MIT | yes | no |
+| @typescript-eslint/scope-manager | 8.65.0 | MIT | yes | no |
+| @typescript-eslint/tsconfig-utils | 8.65.0 | MIT | yes | no |
+| @typescript-eslint/type-utils | 8.65.0 | MIT | yes | no |
+| @typescript-eslint/types | 8.65.0 | MIT | yes | no |
+| @typescript-eslint/typescript-estree | 8.65.0 | MIT | yes | no |
+| @typescript-eslint/utils | 8.65.0 | MIT | yes | no |
+| @typescript-eslint/visitor-keys | 8.65.0 | MIT | yes | no |
+| @vitejs/plugin-react | 5.2.0 | MIT | yes | no |
+| @vitest/coverage-v8 | 4.1.10 | MIT | yes | no |
+| @vitest/expect | 4.1.10 | MIT | yes | no |
+| @vitest/mocker | 4.1.10 | MIT | yes | no |
+| @vitest/pretty-format | 4.1.10 | MIT | yes | no |
+| @vitest/runner | 4.1.10 | MIT | yes | no |
+| @vitest/snapshot | 4.1.10 | MIT | yes | no |
+| @vitest/spy | 4.1.10 | MIT | yes | no |
+| @vitest/utils | 4.1.10 | MIT | yes | no |
+| acorn | 8.17.0 | MIT | yes | no |
+| acorn-jsx | 5.3.2 | MIT | yes | no |
+| ajv | 6.15.0 | MIT | yes | no |
+| assertion-error | 2.0.1 | MIT | yes | no |
+| ast-v8-to-istanbul | 1.0.5 | MIT | yes | no |
+| balanced-match | 4.0.4 | MIT | yes | no |
+| baseline-browser-mapping | 2.11.5 | Apache-2.0 | yes | no |
+| blake3-wasm | 2.1.5 | MIT | yes | no |
+| brace-expansion | 5.0.8 | MIT | yes | no |
+| browserslist | 4.28.7 | MIT | yes | no |
+| caniuse-lite | 1.0.30001806 | CC-BY-4.0 | yes | no |
+| chai | 6.2.2 | MIT | yes | no |
+| convert-source-map | 2.0.0 | MIT | yes | no |
+| cookie | 1.1.1 | MIT | yes | no |
+| cross-spawn | 7.0.6 | MIT | yes | no |
+| csstype | 3.2.3 | MIT | yes | no |
+| debug | 4.4.3 | MIT | yes | no |
+| deep-is | 0.1.4 | MIT | yes | no |
+| detect-libc | 2.1.2 | Apache-2.0 | yes | no |
+| electron-to-chromium | 1.5.396 | ISC | yes | no |
+| error-stack-parser-es | 1.0.5 | MIT | yes | no |
+| es-module-lexer | 2.3.1 | MIT | yes | no |
+| esbuild | 0.28.1 | MIT | yes | no |
+| escalade | 3.2.0 | MIT | yes | no |
+| escape-string-regexp | 4.0.0 | MIT | yes | no |
+| eslint | 10.8.0 | MIT | yes | no |
+| eslint-scope | 9.1.2 | BSD-2-Clause | yes | no |
+| eslint-visitor-keys | 5.0.1 | Apache-2.0 | yes | no |
+| espree | 11.2.0 | BSD-2-Clause | yes | no |
+| esquery | 1.7.0 | BSD-3-Clause | yes | no |
+| esrecurse | 4.3.0 | BSD-2-Clause | yes | no |
+| estraverse | 5.3.0 | BSD-2-Clause | yes | no |
+| estree-walker | 3.0.3 | MIT | yes | no |
+| esutils | 2.0.3 | BSD-2-Clause | yes | no |
+| expect-type | 1.4.0 | Apache-2.0 | yes | no |
+| fast-deep-equal | 3.1.3 | MIT | yes | no |
+| fast-json-stable-stringify | 2.1.0 | MIT | yes | no |
+| fast-levenshtein | 2.0.6 | MIT | yes | no |
+| fdir | 6.5.0 | MIT | yes | no |
+| file-entry-cache | 8.0.0 | MIT | yes | no |
+| find-up | 5.0.0 | MIT | yes | no |
+| flat-cache | 4.0.1 | MIT | yes | no |
+| flatted | 3.4.3 | ISC | yes | no |
+| fsevents | 2.3.2 | MIT | yes | yes |
+| gensync | 1.0.0-beta.2 | MIT | yes | no |
+| glob-parent | 6.0.2 | ISC | yes | no |
+| has-flag | 4.0.0 | MIT | yes | no |
+| hono | 4.12.32 | MIT | no | no |
+| html-escaper | 2.0.2 | MIT | yes | no |
+| ignore | 5.3.2 | MIT | yes | no |
+| imurmurhash | 0.1.4 | MIT | yes | no |
+| is-extglob | 2.1.1 | MIT | yes | no |
+| is-glob | 4.0.3 | MIT | yes | no |
+| isexe | 2.0.0 | ISC | yes | no |
+| istanbul-lib-coverage | 3.2.2 | BSD-3-Clause | yes | no |
+| istanbul-lib-report | 3.0.1 | BSD-3-Clause | yes | no |
+| istanbul-reports | 3.2.0 | BSD-3-Clause | yes | no |
+| js-tokens | 10.0.0 | MIT | yes | no |
+| jsesc | 3.1.0 | MIT | yes | no |
+| json-buffer | 3.0.1 | MIT | yes | no |
+| json-schema-traverse | 0.4.1 | MIT | yes | no |
+| json-stable-stringify-without-jsonify | 1.0.1 | MIT | yes | no |
+| json5 | 2.2.3 | MIT | yes | no |
+| keyv | 4.5.4 | MIT | yes | no |
+| kleur | 4.1.5 | MIT | yes | no |
+| levn | 0.4.1 | MIT | yes | no |
+| lightningcss | 1.33.0 | MPL-2.0 | yes | no |
+| lightningcss-android-arm64 | 1.33.0 | MPL-2.0 | yes | yes |
+| lightningcss-darwin-arm64 | 1.33.0 | MPL-2.0 | yes | yes |
+| lightningcss-darwin-x64 | 1.33.0 | MPL-2.0 | yes | yes |
+| lightningcss-freebsd-x64 | 1.33.0 | MPL-2.0 | yes | yes |
+| lightningcss-linux-arm-gnueabihf | 1.33.0 | MPL-2.0 | yes | yes |
+| lightningcss-linux-arm64-gnu | 1.33.0 | MPL-2.0 | yes | yes |
+| lightningcss-linux-arm64-musl | 1.33.0 | MPL-2.0 | yes | yes |
+| lightningcss-linux-x64-gnu | 1.33.0 | MPL-2.0 | yes | yes |
+| lightningcss-linux-x64-musl | 1.33.0 | MPL-2.0 | yes | yes |
+| lightningcss-win32-arm64-msvc | 1.33.0 | MPL-2.0 | yes | yes |
+| lightningcss-win32-x64-msvc | 1.33.0 | MPL-2.0 | yes | yes |
+| locate-path | 6.0.0 | MIT | yes | no |
+| lru-cache | 5.1.1 | ISC | yes | no |
+| magic-string | 0.30.21 | MIT | yes | no |
+| magicast | 0.5.3 | MIT | yes | no |
+| make-dir | 4.0.0 | MIT | yes | no |
+| miniflare | 4.20260722.0 | MIT | yes | no |
+| minimatch | 10.2.6 | BlueOak-1.0.0 | yes | no |
+| ms | 2.1.3 | MIT | yes | no |
+| nanoid | 3.3.16 | MIT | yes | no |
+| natural-compare | 1.4.0 | MIT | yes | no |
+| node-releases | 2.0.51 | MIT | yes | no |
+| obug | 2.1.4 | MIT | yes | no |
+| optionator | 0.9.4 | MIT | yes | no |
+| p-limit | 3.1.0 | MIT | yes | no |
+| p-locate | 5.0.0 | MIT | yes | no |
+| path-exists | 4.0.0 | MIT | yes | no |
+| path-key | 3.1.1 | MIT | yes | no |
+| path-to-regexp | 6.3.0 | MIT | yes | no |
+| pathe | 2.0.3 | MIT | yes | no |
+| picocolors | 1.1.1 | ISC | yes | no |
+| picomatch | 4.0.5 | MIT | yes | no |
+| playwright | 1.62.0 | Apache-2.0 | yes | no |
+| playwright-core | 1.62.0 | Apache-2.0 | yes | no |
+| postcss | 8.5.23 | MIT | yes | no |
+| prelude-ls | 1.2.1 | MIT | yes | no |
+| prettier | 3.9.6 | MIT | yes | no |
+| punycode | 2.3.1 | MIT | yes | no |
+| react | 19.2.8 | MIT | no | no |
+| react-dom | 19.2.8 | MIT | no | no |
+| react-refresh | 0.18.0 | MIT | yes | no |
+| rolldown | 1.1.5 | MIT | yes | no |
+| rolldown/node_modules/@rolldown/pluginutils | 1.0.1 | MIT | yes | no |
+| rollup | 4.62.3 | MIT | yes | no |
+| scheduler | 0.27.0 | MIT | no | no |
+| semver | 7.8.5 | ISC | yes | no |
+| sharp | 0.35.2 | Apache-2.0 | yes | no |
+| shebang-command | 2.0.0 | MIT | yes | no |
+| shebang-regex | 3.0.0 | MIT | yes | no |
+| siginfo | 2.0.0 | ISC | yes | no |
+| source-map-js | 1.2.1 | BSD-3-Clause | yes | no |
+| stackback | 0.0.2 | MIT | yes | no |
+| std-env | 4.2.0 | MIT | yes | no |
+| supports-color | 7.2.0 | MIT | yes | no |
+| tinybench | 2.9.0 | MIT | yes | no |
+| tinyexec | 1.2.4 | MIT | yes | no |
+| tinyglobby | 0.2.17 | MIT | yes | no |
+| tinyrainbow | 3.1.0 | MIT | yes | no |
+| ts-api-utils | 2.5.0 | MIT | yes | no |
+| tslib | 2.8.1 | 0BSD | yes | yes |
+| type-check | 0.4.0 | MIT | yes | no |
+| typescript | 6.0.3 | Apache-2.0 | yes | no |
+| typescript-eslint | 8.65.0 | MIT | yes | no |
+| undici | 7.28.0 | MIT | yes | no |
+| undici-types | 8.3.0 | MIT | yes | no |
+| unenv | 2.0.0-rc.24 | MIT | yes | no |
+| update-browserslist-db | 1.2.3 | MIT | yes | no |
+| uri-js | 4.4.1 | BSD-2-Clause | yes | no |
+| vite | 8.1.5 | MIT | yes | no |
+| vite/node_modules/fsevents | 2.3.3 | MIT | yes | yes |
+| vitest | 4.1.10 | MIT | yes | no |
+| which | 2.0.2 | ISC | yes | no |
+| why-is-node-running | 2.3.0 | MIT | yes | no |
+| word-wrap | 1.2.5 | MIT | yes | no |
+| workerd | 1.20260722.1 | Apache-2.0 | yes | no |
+| wrangler | 4.114.0 | MIT OR Apache-2.0 | yes | no |
+| wrangler/node_modules/fsevents | 2.3.3 | MIT | yes | yes |
+| ws | 8.21.0 | MIT | yes | no |
+| yallist | 3.1.1 | ISC | yes | no |
+| yocto-queue | 0.1.0 | MIT | yes | no |
+| youch | 4.1.0-beta.10 | MIT | yes | no |
+| youch-core | 0.3.3 | MIT | yes | no |

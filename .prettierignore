@@ -6,4 +6,6 @@ playwright-report
 test-results
 package-lock.json
 docs/**
+artifacts/**
 README.md
+THIRD_PARTY_NOTICES.md
