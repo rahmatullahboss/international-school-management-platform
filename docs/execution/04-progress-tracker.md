@@ -35,7 +35,7 @@ Current readiness: `GATE-FOUNDATION-READY` is passed. `SIS-01`, `FIN-01` and `IN
 | `FND-01` | 0 | complete; gate passed | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | freeze reviewed foundation SHA | pending gate-evidence commit | none |
 | `SIS-01` | 1 | ready to start | reviewed foundation SHA | module contract | none | none |
 | `FIN-01` | 1 | ready to start | reviewed foundation SHA | finance contract | none | none |
-| `INT-01` | 1 | in progress | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | OneRoster CSV profile | `16135cf986304e75a478eb8985fe1ddfff6f6ed4` | none |
+| `INT-01` | 1 | in progress | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | LTI 1.3 and SSO adapters | `0bcca38a87f5069890abfedd353d5528fbf57c00` | none |
 | `ACAD-01` | 2 | blocked | reviewed Wave 1 integration SHA | academic structure | none | `GATE-WAVE-1-INTEGRATED` |
 | `OPS-01` | 2 | blocked | reviewed Wave 1 integration SHA | HR/staff | none | `GATE-WAVE-1-INTEGRATED` |
 | `CARE-01` | 2 | blocked | reviewed Wave 1 integration SHA | security contract | none | threat-model and Wave 1 gates |
@@ -261,6 +261,21 @@ Changed owned paths: `packages/modules/migration-studio/**`; migration-studio te
 Focused checks and results: migration-studio behavior 5/5 PASS; migration contract 1/1 PASS; full `npm run verify` PASS with 64/64 tests and 1 secret-gated Neon test skipped
 Gate outcome: milestone 4 passed; immutable templates, version checksums, file evidence, repeatable runs, reconciliation and cutover sign-off gates are implemented
 Exact next milestone: 5 — OneRoster CSV profile, contract tests and REST extension path
+Dirty/uncommitted state: tracker evidence only
+Production mutation performed: no
+
+Date/time: 2026-07-28T09:50:18+06:00
+Stream: INT-01
+Milestone completed: 5 — OneRoster 1.2 CSV supported profile
+Git branch: `module/international-integrations`
+Worktree: `.worktrees/int-01-integrations`
+Neon branch: `agent/int-01-integrations` (`br-super-truth-axp0urxi`)
+Starting base: `d3f6d51`
+Checkpoint SHA: `0bcca38a87f5069890abfedd353d5528fbf57c00`
+Changed owned paths: OneRoster profile artefact, CSV validator/exporter, domain-command mapping, REST cursor contract, exchange evidence migration, tests and docs
+Focused checks and results: OneRoster behavior 8/8 PASS; profile/schema contracts 2/2 PASS; full `npm run verify` PASS with 74/74 tests and 1 secret-gated Neon test skipped
+Gate outcome: milestone 5 passed as an explicit supported subset; no full certification or implemented REST-service claim is made
+Exact next milestone: 6 — LTI 1.3 registration/launch security, OIDC/SAML SSO and SCIM contract
 Dirty/uncommitted state: tracker evidence only
 Production mutation performed: no
 
