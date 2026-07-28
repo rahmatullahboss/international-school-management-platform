@@ -541,6 +541,22 @@ Exact next milestone: 5 — reporting periods/templates, report-card snapshots/a
 Dirty/uncommitted state: tracker evidence only
 Production mutation performed: no
 
+### Milestone 5 — report cards, credits/GPA and transcripts
+
+Date/time: 2026-07-28T23:55:42+06:00
+Stream: ACAD-01
+Milestone completed: 5 — reporting periods/templates, report-card snapshots/approval/publication, promotion/retention decisions, versioned credit/GPA calculations and immutable transcript issue/amend/reissue history
+Git branch/worktree: `module/academics-attendance-records` / `.worktrees/acad-01-academics`
+Neon branch: `agent/acad-01-academics` (`br-gentle-waterfall-axcl7l8z`)
+Starting base: `8cc8ee1562ade672b14c1c44af935fe7e2307976`
+Checkpoint SHA: `2e8464e95dec7d25841463c922d0ac0b07fa2b78`
+Changed owned paths: `packages/modules/records/**`; `tests/academics/records.test.ts`; `docs/modules/academics/records.md`; append-only TypeScript include registration
+Focused checks and results: focused ESLint PASS; module TypeScript project-reference build PASS; cumulative academic Vitest 25/25 PASS; closed-period/template validation, approval-separated publication, promotion evidence/decision, explainable credit/GPA snapshot, independent transcript amendment approval and immutable version history verified
+Gate outcome: milestone 5 passed; live reviewed-base migration replay remains pending final database gate
+Exact next milestone: 6 — permission-scoped application APIs, reports/import-export, admin/teacher academic UI and Impeccable accessibility/responsive/RTL hardening evidence
+Dirty/uncommitted state: tracker evidence only
+Production mutation performed: no
+
 ## OPS-01 evidence
 
 No execution evidence recorded.
