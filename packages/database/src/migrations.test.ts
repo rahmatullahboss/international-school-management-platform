@@ -10,6 +10,7 @@ describe('foundation migration plan', () => {
       '202607280002_FND-01_tenancy',
       '202607280003_FND-01_identity_policy',
       '202607280004_FND-01_transactional_primitives',
+      '202607280005_FND-01_shared_services',
     ]);
   });
 
@@ -54,6 +55,16 @@ describe('foundation migration plan', () => {
     expect(sql).toContain('CREATE TABLE IF NOT EXISTS audit.audit_event');
     expect(sql).toContain('CREATE TABLE IF NOT EXISTS audit.data_access_event');
     expect(sql).toContain('audit.prevent_mutation');
+    expect(sql).toContain('ENABLE ROW LEVEL SECURITY');
+  });
+
+  it('models versioned country packs, workflow, documents and notifications', () => {
+    const sql = foundationMigrations[4]?.sql ?? '';
+    expect(sql).toContain('CREATE TABLE IF NOT EXISTS platform.country_pack');
+    expect(sql).toContain('CREATE TABLE IF NOT EXISTS tenancy.country_pack_activation');
+    expect(sql).toContain('CREATE TABLE IF NOT EXISTS workflow.instance');
+    expect(sql).toContain('CREATE TABLE IF NOT EXISTS integration_core.document_object');
+    expect(sql).toContain('CREATE TABLE IF NOT EXISTS integration_core.notification_delivery');
     expect(sql).toContain('ENABLE ROW LEVEL SECURITY');
   });
 });

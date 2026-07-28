@@ -302,6 +302,61 @@ VALUES ('202607280004_FND-01_transactional_primitives', 'FND-01', 'Idempotency, 
 ON CONFLICT (migration_id) DO NOTHING;
 `;
 
+const sharedServicesSql = `
+CREATE TABLE IF NOT EXISTS platform.country_pack (
+  pack_key text NOT NULL,
+  version integer NOT NULL,
+  default_locale text NOT NULL,
+  supported_locales jsonb NOT NULL,
+  configuration jsonb NOT NULL DEFAULT '{}'::jsonb,
+  published_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (pack_key, version)
+);
+CREATE TABLE IF NOT EXISTS tenancy.country_pack_activation (
+  tenant_id uuid NOT NULL REFERENCES platform.tenant (tenant_id),
+  pack_key text NOT NULL,
+  version integer NOT NULL,
+  activated_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (tenant_id, pack_key)
+);
+CREATE TABLE IF NOT EXISTS workflow.instance (
+  tenant_id uuid NOT NULL,
+  instance_id uuid NOT NULL DEFAULT gen_random_uuid(),
+  workflow_key text NOT NULL,
+  workflow_version integer NOT NULL,
+  subject_type text NOT NULL,
+  subject_id text NOT NULL,
+  status text NOT NULL DEFAULT 'pending',
+  correlation_id text NOT NULL,
+  PRIMARY KEY (tenant_id, instance_id)
+);
+CREATE TABLE IF NOT EXISTS integration_core.document_object (
+  tenant_id uuid NOT NULL REFERENCES platform.tenant (tenant_id),
+  document_id uuid NOT NULL DEFAULT gen_random_uuid(),
+  object_key text NOT NULL,
+  content_type text NOT NULL,
+  scan_status text NOT NULL DEFAULT 'pending',
+  PRIMARY KEY (tenant_id, document_id)
+);
+CREATE TABLE IF NOT EXISTS integration_core.notification_delivery (
+  tenant_id uuid NOT NULL REFERENCES platform.tenant (tenant_id),
+  notification_key text NOT NULL,
+  recipient_id text NOT NULL,
+  channel text NOT NULL,
+  template_key text NOT NULL,
+  locale text NOT NULL,
+  status text NOT NULL DEFAULT 'pending',
+  PRIMARY KEY (tenant_id, notification_key)
+);
+ALTER TABLE tenancy.country_pack_activation ENABLE ROW LEVEL SECURITY;
+ALTER TABLE workflow.instance ENABLE ROW LEVEL SECURITY;
+ALTER TABLE integration_core.document_object ENABLE ROW LEVEL SECURITY;
+ALTER TABLE integration_core.notification_delivery ENABLE ROW LEVEL SECURITY;
+INSERT INTO platform.schema_migration (migration_id, stream_id, description)
+VALUES ('202607280005_FND-01_shared_services', 'FND-01', 'Country packs, workflows, documents and notification services')
+ON CONFLICT (migration_id) DO NOTHING;
+`;
+
 export const foundationMigrations: readonly DatabaseMigration[] = [
   {
     id: '202607280001_FND-01_foundation',
@@ -322,6 +377,11 @@ export const foundationMigrations: readonly DatabaseMigration[] = [
     id: '202607280004_FND-01_transactional_primitives',
     description: 'Idempotency, outbox and append-only audit primitives',
     sql: transactionalPrimitivesSql,
+  },
+  {
+    id: '202607280005_FND-01_shared_services',
+    description: 'Country packs, workflows, documents and notification services',
+    sql: sharedServicesSql,
   },
 ];
 
