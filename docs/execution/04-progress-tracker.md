@@ -32,7 +32,7 @@ Current readiness: the whole-module multi-agent policy is approved, but Wave 1 r
 
 | Stream | Wave | Status | Base | Current/next milestone | Final/last checkpoint | Blocking condition |
 |---|---:|---|---|---|---|---|
-| `FND-01` | 0 | implementation complete; gate review pending | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | owner review and secret-backed direct Neon driver evidence | `6cfa78ae0bb92e5f2ff99e243f3fc61f0b5b1b43` | `GATE-FOUNDATION-READY` |
+| `FND-01` | 0 | implementation complete; gate review pending | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | owner review and secret-backed direct Neon driver evidence | `7b70d9c6385786644fe3579450469d34b51cb190` | `GATE-FOUNDATION-READY` |
 | `SIS-01` | 1 | blocked | reviewed foundation SHA | module contract | none | `GATE-FOUNDATION-READY` |
 | `FIN-01` | 1 | blocked | reviewed foundation SHA | finance contract | none | `GATE-FOUNDATION-READY` |
 | `INT-01` | 1 | blocked | reviewed foundation SHA | country-pack engine | none | `GATE-FOUNDATION-READY` |
@@ -146,6 +146,17 @@ Neon proof: PostgreSQL 17.10 on `agent/fnd-01-foundation` (`br-misty-frost-ax8ij
 Gate outcome: milestone 8 implementation passed; `GATE-FOUNDATION-READY` remains blocked only for owner review and live application-driver evidence because `DATABASE_URL` was not present; no credential was fetched or displayed
 Exact next milestone: owner review and run `npm run test:neon` using a managed secret scoped to a non-production Neon branch
 Dirty/uncommitted state: tracker evidence update only
+Production mutation performed: no
+
+### Post-foundation execution-policy checkpoint
+
+Date/time: 2026-07-28T07:20:00+06:00
+Checkpoint SHA: `7b70d9c6385786644fe3579450469d34b51cb190`
+Decision: owner approved whole-module multi-agent execution; microtask/small-task agents remain prohibited
+Parallel plan: after `GATE-FOUNDATION-READY`, start `SIS-01`, `FIN-01` and `INT-01` as three independent whole-module streams from the same reviewed foundation SHA
+Coordinator rule: maintain shared documentation, agent board, gate state and contract decisions without concurrent writes inside module-owned paths
+Validation: `python3 scripts/validate_execution_artifacts.py` PASS with machine-readable parallel policy enforcement
+Gate outcome: policy approved; Wave 1 remains blocked until the existing foundation gate conditions are completed
 Production mutation performed: no
 
 ## SIS-01 evidence
