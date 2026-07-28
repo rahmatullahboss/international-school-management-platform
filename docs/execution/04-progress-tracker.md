@@ -2,13 +2,13 @@
 
 **Program:** `international-school-platform-v1`
 **Updated:** 2026-07-28
-**Current repository state:** public GitHub repository baseline on `main`; foundation implementation has not yet started.
+**Current repository state:** `FND-01` is active on `program/foundation-neon-platform`; repository bootstrap is checkpointed and Neon branch `agent/fnd-01-foundation` is ready.
 
 ## Gate status
 
 | Gate | Status | Evidence / required condition |
 |---|---|---|
-| `GATE-DOCUMENTS-APPROVED` | awaiting owner review | Research, architecture and execution documents exist and validation must pass |
+| `GATE-DOCUMENTS-APPROVED` | passed | Owner authorized FND-01 execution; `python3 scripts/validate_execution_artifacts.py` passed on 2026-07-28 |
 | `GATE-FOUNDATION-READY` | blocked | `FND-01` complete, reviewed HEAD recorded, foundation tests and Neon proof pass |
 | `GATE-WAVE-1-INTEGRATED` | blocked | `SIS-01`, `FIN-01`, `INT-01` reviewed and serially integrated |
 | `GATE-STUDENT-SUPPORT-THREAT-MODEL` | blocked | Wave 1 integrated plus approved student-support threat model |
@@ -19,7 +19,7 @@
 
 | Stream | Wave | Status | Base | Current/next milestone | Final/last checkpoint | Blocking condition |
 |---|---:|---|---|---|---|---|
-| `FND-01` | 0 | ready after document approval | latest reviewed `origin/main` SHA | repository and engineering bootstrap | none | `GATE-DOCUMENTS-APPROVED` |
+| `FND-01` | 0 | in progress | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | direct Neon data platform | `8d328d1cf04e8076bcf705a5198dc4eb8b449ada` | none |
 | `SIS-01` | 1 | blocked | reviewed foundation SHA | module contract | none | `GATE-FOUNDATION-READY` |
 | `FIN-01` | 1 | blocked | reviewed foundation SHA | finance contract | none | `GATE-FOUNDATION-READY` |
 | `INT-01` | 1 | blocked | reviewed foundation SHA | country-pack engine | none | `GATE-FOUNDATION-READY` |
@@ -52,7 +52,20 @@ Production mutation performed: no
 
 ## FND-01 evidence
 
-No execution evidence recorded.
+Date/time: 2026-07-28T06:06:00+06:00
+Stream: FND-01
+Milestone completed: 1 — repository and engineering bootstrap
+Git branch: `program/foundation-neon-platform`
+Worktree: `.worktrees/fnd-01-foundation`
+Neon branch: `agent/fnd-01-foundation` (`br-misty-frost-ax8ij4vw`), parent `main` (`br-cool-wildflower-axsot8l1`)
+Starting base: `4038081bc122c41d4a312bd75d01c784e3f4eee1`
+Checkpoint SHA: `8d328d1cf04e8076bcf705a5198dc4eb8b449ada`
+Changed owned paths: root npm/TypeScript/lint/format/test configuration; `.github/workflows/ci.yml`; `apps/platform-api`; `apps/platform-web`; `packages/platform`; `tests/browser`; contribution/security/environment conventions
+Focused checks and results: execution artifact validator PASS; focused Vitest 3/3 PASS; TypeScript project build PASS; ESLint PASS; Prettier check PASS; Wrangler dry-run build PASS; Vite production build PASS
+Gate outcome: milestone 1 passed; `GATE-DOCUMENTS-APPROVED` passed; foundation gate remains blocked pending milestones 2–8
+Exact next milestone: 2 — direct Neon data platform
+Dirty/uncommitted state: tracker evidence update only
+Production mutation performed: no
 
 ## SIS-01 evidence
 
