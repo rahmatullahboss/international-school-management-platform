@@ -3,11 +3,7 @@ import {
   type FinancePrincipal,
   type FinanceScope,
 } from './contracts/permissions.js';
-import {
-  minorUnit,
-  type CurrencyCode,
-  type MinorUnit,
-} from './contracts/money.js';
+import { minorUnit, type CurrencyCode, type MinorUnit } from './contracts/money.js';
 import type { LedgerService, PostedJournal } from '../../ledger/src/ledger-service.js';
 
 export type BillingAccountStatus = 'active' | 'suspended' | 'closed';
@@ -221,7 +217,11 @@ export interface CreateCreditNoteCommand {
   readonly invoiceId: string;
   readonly issueDate: string;
   readonly reason: string;
-  readonly lineCredits: readonly { invoiceLineId: string; amountMinor: number; taxMinor?: number }[];
+  readonly lineCredits: readonly {
+    invoiceLineId: string;
+    amountMinor: number;
+    taxMinor?: number;
+  }[];
   readonly createdBy: FinancePrincipal;
   readonly idempotencyKey: string;
 }
@@ -237,7 +237,8 @@ export interface PostCreditNoteCommand {
 const systemClock: BillingClock = { now: () => new Date() };
 
 function assertIdentifier(value: string, field: string): void {
-  if (value.trim().length === 0 || value.length > 200) throw new Error(`FIN_INVALID_IDENTIFIER:${field}`);
+  if (value.trim().length === 0 || value.length > 200)
+    throw new Error(`FIN_INVALID_IDENTIFIER:${field}`);
 }
 
 function assertDate(value: string, field: string): void {
@@ -286,7 +287,12 @@ export class BillingService {
   readonly #invoiceSequenceByEntity = new Map<string, number>();
   readonly #creditSequenceByEntity = new Map<string, number>();
 
-  constructor(scope: FinanceScope, ledger: LedgerService, ledgerConfig: BillingLedgerConfiguration, clock: BillingClock = systemClock) {
+  constructor(
+    scope: FinanceScope,
+    ledger: LedgerService,
+    ledgerConfig: BillingLedgerConfiguration,
+    clock: BillingClock = systemClock,
+  ) {
     assertIdentifier(scope.tenantId, 'tenantId');
     assertIdentifier(scope.legalEntityId ?? '', 'legalEntityId');
     assertIdentifier(ledgerConfig.bookId, 'bookId');
@@ -297,20 +303,29 @@ export class BillingService {
     this.#clock = clock;
   }
 
-  createBillingAccount(input: Omit<BillingAccount, 'createdAt'>, principal: FinancePrincipal): BillingAccount {
+  createBillingAccount(
+    input: Omit<BillingAccount, 'createdAt'>,
+    principal: FinancePrincipal,
+  ): BillingAccount {
     this.#assertScope(input.tenantId, input.legalEntityId);
     authorizeFinance(principal, 'billing.account.write', this.#scope);
     if (this.#accounts.has(input.id)) throw new Error('FIN_DUPLICATE_BILLING_ACCOUNT');
     if (input.responsibleParties.length === 0) throw new Error('FIN_RESPONSIBLE_PARTY_REQUIRED');
     const totalBasisPoints = input.responsibleParties.reduce((sum, party) => {
-      if (!Number.isInteger(party.responsibilityBasisPoints) || party.responsibilityBasisPoints <= 0) throw new Error('FIN_INVALID_RESPONSIBILITY');
+      if (
+        !Number.isInteger(party.responsibilityBasisPoints) ||
+        party.responsibilityBasisPoints <= 0
+      )
+        throw new Error('FIN_INVALID_RESPONSIBILITY');
       assertIdentifier(party.personRef, 'responsibleParty.personRef');
       return sum + party.responsibilityBasisPoints;
     }, 0);
     if (totalBasisPoints !== 10_000) throw new Error('FIN_RESPONSIBILITY_MUST_TOTAL_100_PERCENT');
     const account = Object.freeze({
       ...input,
-      responsibleParties: frozenArray(input.responsibleParties.map((party) => Object.freeze({ ...party }))),
+      responsibleParties: frozenArray(
+        input.responsibleParties.map((party) => Object.freeze({ ...party })),
+      ),
       createdAt: this.#clock.now().toISOString(),
     });
     this.#accounts.set(account.id, account);
@@ -320,10 +335,21 @@ export class BillingService {
   registerFeeItem(item: FeeItem, principal: FinancePrincipal): FeeItem {
     this.#assertScope(item.tenantId, item.legalEntityId);
     authorizeFinance(principal, 'billing.fee.write', this.#scope);
-    if (this.#fees.has(item.id) || [...this.#fees.values()].some((existing) => existing.code === item.code)) throw new Error('FIN_DUPLICATE_FEE');
-    if (item.amountMinor <= 0 || !Number.isSafeInteger(item.amountMinor)) throw new Error('FIN_INVALID_AMOUNT');
-    if (!Number.isInteger(item.taxBasisPoints) || item.taxBasisPoints < 0 || item.taxBasisPoints > 10_000) throw new Error('FIN_INVALID_TAX_RATE');
-    if (item.taxBasisPoints > 0 && item.taxAccountId === null) throw new Error('FIN_TAX_ACCOUNT_REQUIRED');
+    if (
+      this.#fees.has(item.id) ||
+      [...this.#fees.values()].some((existing) => existing.code === item.code)
+    )
+      throw new Error('FIN_DUPLICATE_FEE');
+    if (item.amountMinor <= 0 || !Number.isSafeInteger(item.amountMinor))
+      throw new Error('FIN_INVALID_AMOUNT');
+    if (
+      !Number.isInteger(item.taxBasisPoints) ||
+      item.taxBasisPoints < 0 ||
+      item.taxBasisPoints > 10_000
+    )
+      throw new Error('FIN_INVALID_TAX_RATE');
+    if (item.taxBasisPoints > 0 && item.taxAccountId === null)
+      throw new Error('FIN_TAX_ACCOUNT_REQUIRED');
     const stored = Object.freeze({ ...item, code: item.code.trim().toUpperCase() });
     this.#fees.set(stored.id, stored);
     return stored;
@@ -338,7 +364,8 @@ export class BillingService {
       assertDate(schedule.endsOn, 'endsOn');
       if (schedule.endsOn < schedule.startsOn) throw new Error('FIN_INVALID_DATE_RANGE');
     }
-    if (!Number.isInteger(schedule.dueDays) || schedule.dueDays < 0 || schedule.dueDays > 365) throw new Error('FIN_INVALID_DUE_DAYS');
+    if (!Number.isInteger(schedule.dueDays) || schedule.dueDays < 0 || schedule.dueDays > 365)
+      throw new Error('FIN_INVALID_DUE_DAYS');
     if (this.#schedules.has(schedule.id)) throw new Error('FIN_DUPLICATE_FEE_SCHEDULE');
     const stored = Object.freeze({ ...schedule });
     this.#schedules.set(stored.id, stored);
@@ -348,14 +375,19 @@ export class BillingService {
   assignFee(assignment: FeeAssignment, principal: FinancePrincipal): FeeAssignment {
     this.#assertScope(assignment.tenantId, assignment.legalEntityId);
     authorizeFinance(principal, 'billing.fee.write', this.#scope);
-    if (!this.#accounts.has(assignment.billingAccountId)) throw new Error('FIN_NOT_FOUND:billing-account');
-    if (!this.#schedules.has(assignment.feeScheduleId)) throw new Error('FIN_NOT_FOUND:fee-schedule');
-    if (!Number.isSafeInteger(assignment.quantity) || assignment.quantity <= 0) throw new Error('FIN_INVALID_QUANTITY');
+    if (!this.#accounts.has(assignment.billingAccountId))
+      throw new Error('FIN_NOT_FOUND:billing-account');
+    if (!this.#schedules.has(assignment.feeScheduleId))
+      throw new Error('FIN_NOT_FOUND:fee-schedule');
+    if (!Number.isSafeInteger(assignment.quantity) || assignment.quantity <= 0)
+      throw new Error('FIN_INVALID_QUANTITY');
     this.#validateAdjustments(assignment.adjustments);
     if (this.#assignments.has(assignment.id)) throw new Error('FIN_DUPLICATE_FEE_ASSIGNMENT');
     const stored = Object.freeze({
       ...assignment,
-      adjustments: frozenArray(assignment.adjustments.map((adjustment) => Object.freeze({ ...adjustment }))),
+      adjustments: frozenArray(
+        assignment.adjustments.map((adjustment) => Object.freeze({ ...adjustment })),
+      ),
     });
     this.#assignments.set(stored.id, stored);
     return stored;
@@ -373,13 +405,22 @@ export class BillingService {
     if (command.lines.length === 0) throw new Error('FIN_INVOICE_LINE_REQUIRED');
     assertIdentifier(command.idempotencyKey, 'idempotencyKey');
     const id = crypto.randomUUID();
-    const lines = command.lines.map((line, index) => this.#buildInvoiceLine(id, index + 1, account.currency, line));
+    const lines = command.lines.map((line, index) =>
+      this.#buildInvoiceLine(id, index + 1, account.currency, line),
+    );
     const subtotal = lines.reduce((sum, line) => sum + line.grossMinor, 0);
-    const adjustment = lines.reduce((sum, line) => sum + line.discountMinor + line.scholarshipMinor + line.waiverMinor, 0);
+    const adjustment = lines.reduce(
+      (sum, line) => sum + line.discountMinor + line.scholarshipMinor + line.waiverMinor,
+      0,
+    );
     const tax = lines.reduce((sum, line) => sum + line.taxMinor, 0);
     const total = lines.reduce((sum, line) => sum + line.totalMinor, 0);
     if (total <= 0) throw new Error('FIN_INVOICE_TOTAL_MUST_BE_POSITIVE');
-    const instalments = this.#buildInstalments(id, total, command.instalmentDueDates ?? [command.dueDate]);
+    const instalments = this.#buildInstalments(
+      id,
+      total,
+      command.instalmentDueDates ?? [command.dueDate],
+    );
     const invoice: Invoice = Object.freeze({
       id,
       tenantId: this.#scope.tenantId,
@@ -411,7 +452,12 @@ export class BillingService {
     return invoice;
   }
 
-  createInvoiceFromAssignment(assignmentId: string, issueDate: string, createdBy: FinancePrincipal, idempotencyKey: string): Invoice {
+  createInvoiceFromAssignment(
+    assignmentId: string,
+    issueDate: string,
+    createdBy: FinancePrincipal,
+    idempotencyKey: string,
+  ): Invoice {
     const assignment = this.#assignments.get(assignmentId);
     if (!assignment || !assignment.active) throw new Error('FIN_NOT_FOUND:fee-assignment');
     const schedule = this.#schedules.get(assignment.feeScheduleId)!;
@@ -419,11 +465,13 @@ export class BillingService {
       billingAccountId: assignment.billingAccountId,
       issueDate,
       dueDate: addDays(issueDate, schedule.dueDays),
-      lines: [{
-        feeItemId: schedule.feeItemId,
-        quantity: assignment.quantity,
-        adjustments: assignment.adjustments,
-      }],
+      lines: [
+        {
+          feeItemId: schedule.feeItemId,
+          quantity: assignment.quantity,
+          adjustments: assignment.adjustments,
+        },
+      ],
       createdBy,
       idempotencyKey,
     });
@@ -431,15 +479,26 @@ export class BillingService {
 
   postInvoice(command: PostInvoiceCommand): Invoice {
     const invoice = this.#requireInvoice(command.invoiceId);
-    if (invoice.status === 'posted' || invoice.status === 'partially-paid' || invoice.status === 'paid' || invoice.status === 'credited') return invoice;
+    if (
+      invoice.status === 'posted' ||
+      invoice.status === 'partially-paid' ||
+      invoice.status === 'paid' ||
+      invoice.status === 'credited'
+    )
+      return invoice;
     authorizeFinance(command.postedBy, 'billing.invoice.post', this.#scope);
-    if (invoice.createdBy === command.postedBy.principalId) throw new Error('FIN_SOD_VIOLATION:invoice-create-post');
+    if (invoice.createdBy === command.postedBy.principalId)
+      throw new Error('FIN_SOD_VIOLATION:invoice-create-post');
     if (invoice.status !== 'draft') throw new Error('FIN_INVALID_INVOICE_STATE');
     const creditLines = new Map<string, number>();
     const taxLines = new Map<string, number>();
     for (const line of invoice.lines) {
-      creditLines.set(line.incomeAccountId, (creditLines.get(line.incomeAccountId) ?? 0) + line.taxableMinor);
-      if (line.taxMinor > 0 && line.taxAccountId !== null) taxLines.set(line.taxAccountId, (taxLines.get(line.taxAccountId) ?? 0) + line.taxMinor);
+      creditLines.set(
+        line.incomeAccountId,
+        (creditLines.get(line.incomeAccountId) ?? 0) + line.taxableMinor,
+      );
+      if (line.taxMinor > 0 && line.taxAccountId !== null)
+        taxLines.set(line.taxAccountId, (taxLines.get(line.taxAccountId) ?? 0) + line.taxMinor);
     }
     const journal = this.#ledger.post({
       tenantId: invoice.tenantId,
@@ -455,9 +514,24 @@ export class BillingService {
       idempotencyKey: `invoice:${command.idempotencyKey}`,
       correlationId: command.correlationId,
       lines: [
-        { accountId: this.#ledgerConfig.receivableAccountId, side: 'debit', amountMinor: invoice.totalMinor, currency: invoice.currency },
-        ...[...creditLines.entries()].map(([accountId, amountMinor]) => ({ accountId, side: 'credit' as const, amountMinor, currency: invoice.currency })),
-        ...[...taxLines.entries()].map(([accountId, amountMinor]) => ({ accountId, side: 'credit' as const, amountMinor, currency: invoice.currency })),
+        {
+          accountId: this.#ledgerConfig.receivableAccountId,
+          side: 'debit',
+          amountMinor: invoice.totalMinor,
+          currency: invoice.currency,
+        },
+        ...[...creditLines.entries()].map(([accountId, amountMinor]) => ({
+          accountId,
+          side: 'credit' as const,
+          amountMinor,
+          currency: invoice.currency,
+        })),
+        ...[...taxLines.entries()].map(([accountId, amountMinor]) => ({
+          accountId,
+          side: 'credit' as const,
+          amountMinor,
+          currency: invoice.currency,
+        })),
       ],
     });
     const posted = Object.freeze({
@@ -485,11 +559,14 @@ export class BillingService {
     const existingId = this.#creditIdempotency.get(command.idempotencyKey);
     if (existingId) return this.#creditNotes.get(existingId)!;
     const invoice = this.#requireInvoice(command.invoiceId);
-    if (!['posted', 'partially-paid', 'paid', 'credited'].includes(invoice.status)) throw new Error('FIN_INVOICE_NOT_POSTED');
+    if (!['posted', 'partially-paid', 'paid', 'credited'].includes(invoice.status))
+      throw new Error('FIN_INVOICE_NOT_POSTED');
     assertDate(command.issueDate, 'issueDate');
     if (command.reason.trim().length < 5) throw new Error('FIN_CREDIT_REASON_REQUIRED');
     if (command.lineCredits.length === 0) throw new Error('FIN_CREDIT_LINE_REQUIRED');
-    const priorCredits = [...this.#creditNotes.values()].filter((credit) => credit.invoiceId === invoice.id && credit.status === 'posted');
+    const priorCredits = [...this.#creditNotes.values()].filter(
+      (credit) => credit.invoiceId === invoice.id && credit.status === 'posted',
+    );
     const creditedByLine = new Map<string, { net: number; tax: number }>();
     for (const credit of priorCredits) {
       for (const line of credit.lines) {
@@ -505,8 +582,18 @@ export class BillingService {
       if (!invoiceLine) throw new Error('FIN_NOT_FOUND:invoice-line');
       const prior = creditedByLine.get(invoiceLine.id) ?? { net: 0, tax: 0 };
       const taxMinor = requested.taxMinor ?? 0;
-      if (!Number.isSafeInteger(requested.amountMinor) || requested.amountMinor <= 0 || !Number.isSafeInteger(taxMinor) || taxMinor < 0) throw new Error('FIN_INVALID_AMOUNT');
-      if (prior.net + requested.amountMinor > invoiceLine.taxableMinor || prior.tax + taxMinor > invoiceLine.taxMinor) throw new Error('FIN_CREDIT_EXCEEDS_LINE');
+      if (
+        !Number.isSafeInteger(requested.amountMinor) ||
+        requested.amountMinor <= 0 ||
+        !Number.isSafeInteger(taxMinor) ||
+        taxMinor < 0
+      )
+        throw new Error('FIN_INVALID_AMOUNT');
+      if (
+        prior.net + requested.amountMinor > invoiceLine.taxableMinor ||
+        prior.tax + taxMinor > invoiceLine.taxMinor
+      )
+        throw new Error('FIN_CREDIT_EXCEEDS_LINE');
       return Object.freeze({
         id: crypto.randomUUID(),
         invoiceLineId: invoiceLine.id,
@@ -546,14 +633,19 @@ export class BillingService {
     const credit = this.#requireCredit(command.creditNoteId);
     if (credit.status === 'posted') return credit;
     authorizeFinance(command.postedBy, 'billing.credit-note.post', this.#scope);
-    if (credit.createdBy === command.postedBy.principalId) throw new Error('FIN_SOD_VIOLATION:credit-create-post');
+    if (credit.createdBy === command.postedBy.principalId)
+      throw new Error('FIN_SOD_VIOLATION:credit-create-post');
     if (credit.status !== 'draft') throw new Error('FIN_INVALID_CREDIT_STATE');
     const invoice = this.#requireInvoice(credit.invoiceId);
     const debitLines = new Map<string, number>();
     const taxLines = new Map<string, number>();
     for (const line of credit.lines) {
-      debitLines.set(line.incomeAccountId, (debitLines.get(line.incomeAccountId) ?? 0) + line.amountMinor);
-      if (line.taxMinor > 0 && line.taxAccountId !== null) taxLines.set(line.taxAccountId, (taxLines.get(line.taxAccountId) ?? 0) + line.taxMinor);
+      debitLines.set(
+        line.incomeAccountId,
+        (debitLines.get(line.incomeAccountId) ?? 0) + line.amountMinor,
+      );
+      if (line.taxMinor > 0 && line.taxAccountId !== null)
+        taxLines.set(line.taxAccountId, (taxLines.get(line.taxAccountId) ?? 0) + line.taxMinor);
     }
     const journal: PostedJournal = this.#ledger.post({
       tenantId: credit.tenantId,
@@ -569,9 +661,24 @@ export class BillingService {
       idempotencyKey: `credit-note:${command.idempotencyKey}`,
       correlationId: command.correlationId,
       lines: [
-        ...[...debitLines.entries()].map(([accountId, amountMinor]) => ({ accountId, side: 'debit' as const, amountMinor, currency: credit.currency })),
-        ...[...taxLines.entries()].map(([accountId, amountMinor]) => ({ accountId, side: 'debit' as const, amountMinor, currency: credit.currency })),
-        { accountId: this.#ledgerConfig.receivableAccountId, side: 'credit', amountMinor: credit.totalMinor, currency: credit.currency },
+        ...[...debitLines.entries()].map(([accountId, amountMinor]) => ({
+          accountId,
+          side: 'debit' as const,
+          amountMinor,
+          currency: credit.currency,
+        })),
+        ...[...taxLines.entries()].map(([accountId, amountMinor]) => ({
+          accountId,
+          side: 'debit' as const,
+          amountMinor,
+          currency: credit.currency,
+        })),
+        {
+          accountId: this.#ledgerConfig.receivableAccountId,
+          side: 'credit',
+          amountMinor: credit.totalMinor,
+          currency: credit.currency,
+        },
       ],
     });
     const posted = Object.freeze({
@@ -588,7 +695,7 @@ export class BillingService {
       ...invoice,
       creditedMinor: minorUnit(credited),
       balanceMinor: minorUnit(balance),
-      status: balance === 0 ? 'credited' as const : invoice.status,
+      status: balance === 0 ? ('credited' as const) : invoice.status,
     });
     this.#invoices.set(invoice.id, nextInvoice);
     return posted;
@@ -597,15 +704,21 @@ export class BillingService {
   applyAllocation(invoiceId: string, amountMinor: number, principal: FinancePrincipal): Invoice {
     const invoice = this.#requireInvoice(invoiceId);
     authorizeFinance(principal, 'billing.allocation.write', this.#scope);
-    if (!['posted', 'partially-paid'].includes(invoice.status)) throw new Error('FIN_INVALID_INVOICE_STATE');
-    if (!Number.isSafeInteger(amountMinor) || amountMinor <= 0 || amountMinor > invoice.balanceMinor) throw new Error('FIN_ALLOCATION_EXCEEDS_BALANCE');
+    if (!['posted', 'partially-paid'].includes(invoice.status))
+      throw new Error('FIN_INVALID_INVOICE_STATE');
+    if (
+      !Number.isSafeInteger(amountMinor) ||
+      amountMinor <= 0 ||
+      amountMinor > invoice.balanceMinor
+    )
+      throw new Error('FIN_ALLOCATION_EXCEEDS_BALANCE');
     const allocated = invoice.allocatedMinor + amountMinor;
     const balance = invoice.totalMinor - allocated - invoice.creditedMinor;
     const next = Object.freeze({
       ...invoice,
       allocatedMinor: minorUnit(allocated),
       balanceMinor: minorUnit(balance),
-      status: balance === 0 ? 'paid' as const : 'partially-paid' as const,
+      status: balance === 0 ? ('paid' as const) : ('partially-paid' as const),
       instalments: frozenArray(this.#allocateInstalments(invoice.instalments, amountMinor)),
     });
     this.#invoices.set(invoice.id, next);
@@ -615,14 +728,19 @@ export class BillingService {
   reverseAllocation(invoiceId: string, amountMinor: number, principal: FinancePrincipal): Invoice {
     const invoice = this.#requireInvoice(invoiceId);
     authorizeFinance(principal, 'billing.allocation.unallocate', this.#scope);
-    if (!Number.isSafeInteger(amountMinor) || amountMinor <= 0 || amountMinor > invoice.allocatedMinor) throw new Error('FIN_INVALID_UNALLOCATION');
+    if (
+      !Number.isSafeInteger(amountMinor) ||
+      amountMinor <= 0 ||
+      amountMinor > invoice.allocatedMinor
+    )
+      throw new Error('FIN_INVALID_UNALLOCATION');
     const allocated = invoice.allocatedMinor - amountMinor;
     const balance = invoice.totalMinor - allocated - invoice.creditedMinor;
     const next = Object.freeze({
       ...invoice,
       allocatedMinor: minorUnit(allocated),
       balanceMinor: minorUnit(balance),
-      status: allocated === 0 ? 'posted' as const : 'partially-paid' as const,
+      status: allocated === 0 ? ('posted' as const) : ('partially-paid' as const),
       instalments: frozenArray(this.#unallocateInstalments(invoice.instalments, amountMinor)),
     });
     this.#invoices.set(invoice.id, next);
@@ -632,19 +750,54 @@ export class BillingService {
   statement(billingAccountId: string, asOf: string): BillingStatement {
     const account = this.#requireAccount(billingAccountId);
     assertDate(asOf, 'asOf');
-    const documents: { date: string; type: 'invoice' | 'credit-note'; id: string; number: string; debit: number; credit: number }[] = [];
+    const documents: {
+      date: string;
+      type: 'invoice' | 'credit-note';
+      id: string;
+      number: string;
+      debit: number;
+      credit: number;
+    }[] = [];
     for (const invoice of this.#invoices.values()) {
-      if (invoice.billingAccountId === billingAccountId && invoice.issueDate <= asOf && invoice.status !== 'draft' && invoice.status !== 'voided') {
-        documents.push({ date: invoice.issueDate, type: 'invoice', id: invoice.id, number: invoice.invoiceNumber, debit: invoice.totalMinor, credit: 0 });
+      if (
+        invoice.billingAccountId === billingAccountId &&
+        invoice.issueDate <= asOf &&
+        invoice.status !== 'draft' &&
+        invoice.status !== 'voided'
+      ) {
+        documents.push({
+          date: invoice.issueDate,
+          type: 'invoice',
+          id: invoice.id,
+          number: invoice.invoiceNumber,
+          debit: invoice.totalMinor,
+          credit: 0,
+        });
       }
     }
     for (const credit of this.#creditNotes.values()) {
       const invoice = this.#invoices.get(credit.invoiceId)!;
-      if (invoice.billingAccountId === billingAccountId && credit.issueDate <= asOf && credit.status === 'posted') {
-        documents.push({ date: credit.issueDate, type: 'credit-note', id: credit.id, number: credit.creditNoteNumber, debit: 0, credit: credit.totalMinor });
+      if (
+        invoice.billingAccountId === billingAccountId &&
+        credit.issueDate <= asOf &&
+        credit.status === 'posted'
+      ) {
+        documents.push({
+          date: credit.issueDate,
+          type: 'credit-note',
+          id: credit.id,
+          number: credit.creditNoteNumber,
+          debit: 0,
+          credit: credit.totalMinor,
+        });
       }
     }
-    documents.sort((left, right) => left.date.localeCompare(right.date) || left.type.localeCompare(right.type) || left.number.localeCompare(right.number));
+    documents.sort(
+      (left, right) =>
+        left.date.localeCompare(right.date) ||
+        left.type.localeCompare(right.type) ||
+        left.number.localeCompare(right.number),
+    );
     let runningBalance = 0;
     const entries = documents.map((document): BillingStatementEntry => {
       runningBalance += document.debit - document.credit;
@@ -668,19 +821,39 @@ export class BillingService {
     });
   }
 
-  getInvoice(invoiceId: string): Invoice | undefined { return this.#invoices.get(invoiceId); }
-  getCreditNote(creditNoteId: string): CreditNote | undefined { return this.#creditNotes.get(creditNoteId); }
-  listInvoices(): readonly Invoice[] { return frozenArray([...this.#invoices.values()]); }
-  listCreditNotes(): readonly CreditNote[] { return frozenArray([...this.#creditNotes.values()]); }
-  listBillingAccounts(): readonly BillingAccount[] { return frozenArray([...this.#accounts.values()]); }
-  listFeeItems(): readonly FeeItem[] { return frozenArray([...this.#fees.values()]); }
-  listAssignments(): readonly FeeAssignment[] { return frozenArray([...this.#assignments.values()]); }
+  getInvoice(invoiceId: string): Invoice | undefined {
+    return this.#invoices.get(invoiceId);
+  }
+  getCreditNote(creditNoteId: string): CreditNote | undefined {
+    return this.#creditNotes.get(creditNoteId);
+  }
+  listInvoices(): readonly Invoice[] {
+    return frozenArray([...this.#invoices.values()]);
+  }
+  listCreditNotes(): readonly CreditNote[] {
+    return frozenArray([...this.#creditNotes.values()]);
+  }
+  listBillingAccounts(): readonly BillingAccount[] {
+    return frozenArray([...this.#accounts.values()]);
+  }
+  listFeeItems(): readonly FeeItem[] {
+    return frozenArray([...this.#fees.values()]);
+  }
+  listAssignments(): readonly FeeAssignment[] {
+    return frozenArray([...this.#assignments.values()]);
+  }
 
-  #buildInvoiceLine(invoiceId: string, lineNumber: number, currency: CurrencyCode, input: InvoiceLineInput): InvoiceLine {
+  #buildInvoiceLine(
+    invoiceId: string,
+    lineNumber: number,
+    currency: CurrencyCode,
+    input: InvoiceLineInput,
+  ): InvoiceLine {
     const fee = this.#fees.get(input.feeItemId);
     if (!fee || !fee.active) throw new Error('FIN_NOT_FOUND:fee');
     if (fee.currency !== currency) throw new Error('FIN_CURRENCY_MISMATCH');
-    if (!Number.isSafeInteger(input.quantity) || input.quantity <= 0) throw new Error('FIN_INVALID_QUANTITY');
+    if (!Number.isSafeInteger(input.quantity) || input.quantity <= 0)
+      throw new Error('FIN_INVALID_QUANTITY');
     const adjustments = input.adjustments ?? [];
     this.#validateAdjustments(adjustments);
     const gross = fee.amountMinor * input.quantity;
@@ -713,7 +886,11 @@ export class BillingService {
     });
   }
 
-  #buildInstalments(invoiceId: string, totalMinor: number, dueDates: readonly string[]): InvoiceInstalment[] {
+  #buildInstalments(
+    invoiceId: string,
+    totalMinor: number,
+    dueDates: readonly string[],
+  ): InvoiceInstalment[] {
     if (dueDates.length === 0) throw new Error('FIN_INSTALMENT_DUE_DATE_REQUIRED');
     const uniqueDates = [...new Set(dueDates)];
     if (uniqueDates.length !== dueDates.length) throw new Error('FIN_DUPLICATE_INSTALMENT_DATE');
@@ -735,30 +912,51 @@ export class BillingService {
     });
   }
 
-  #allocateInstalments(instalments: readonly InvoiceInstalment[], amount: number): InvoiceInstalment[] {
+  #allocateInstalments(
+    instalments: readonly InvoiceInstalment[],
+    amount: number,
+  ): InvoiceInstalment[] {
     let remaining = amount;
     return instalments.map((instalment) => {
       const available = instalment.amountMinor - instalment.allocatedMinor;
       const applied = Math.min(remaining, available);
       remaining -= applied;
-      return Object.freeze({ ...instalment, allocatedMinor: minorUnit(instalment.allocatedMinor + applied) });
+      return Object.freeze({
+        ...instalment,
+        allocatedMinor: minorUnit(instalment.allocatedMinor + applied),
+      });
     });
   }
 
-  #unallocateInstalments(instalments: readonly InvoiceInstalment[], amount: number): InvoiceInstalment[] {
+  #unallocateInstalments(
+    instalments: readonly InvoiceInstalment[],
+    amount: number,
+  ): InvoiceInstalment[] {
     let remaining = amount;
-    return [...instalments].reverse().map((instalment) => {
-      const removed = Math.min(remaining, instalment.allocatedMinor);
-      remaining -= removed;
-      return Object.freeze({ ...instalment, allocatedMinor: minorUnit(instalment.allocatedMinor - removed) });
-    }).reverse();
+    return [...instalments]
+      .reverse()
+      .map((instalment) => {
+        const removed = Math.min(remaining, instalment.allocatedMinor);
+        remaining -= removed;
+        return Object.freeze({
+          ...instalment,
+          allocatedMinor: minorUnit(instalment.allocatedMinor - removed),
+        });
+      })
+      .reverse();
   }
 
   #validateAdjustments(adjustments: readonly FeeAssignmentAdjustment[]): void {
     let total = 0;
     for (const adjustment of adjustments) {
-      if (!Number.isInteger(adjustment.basisPoints) || adjustment.basisPoints < 0 || adjustment.basisPoints > 10_000) throw new Error('FIN_INVALID_ADJUSTMENT_RATE');
-      if (adjustment.reason.trim().length < 3 || adjustment.approvedBy.trim().length === 0) throw new Error('FIN_ADJUSTMENT_APPROVAL_REQUIRED');
+      if (
+        !Number.isInteger(adjustment.basisPoints) ||
+        adjustment.basisPoints < 0 ||
+        adjustment.basisPoints > 10_000
+      )
+        throw new Error('FIN_INVALID_ADJUSTMENT_RATE');
+      if (adjustment.reason.trim().length < 3 || adjustment.approvedBy.trim().length === 0)
+        throw new Error('FIN_ADJUSTMENT_APPROVAL_REQUIRED');
       total += adjustment.basisPoints;
     }
     if (total > 10_000) throw new Error('FIN_ADJUSTMENT_EXCEEDS_100_PERCENT');
@@ -773,7 +971,8 @@ export class BillingService {
   }
 
   #assertScope(tenantId: string, legalEntityId: string): void {
-    if (tenantId !== this.#scope.tenantId || legalEntityId !== this.#scope.legalEntityId) throw new Error('FIN_SCOPE_MISMATCH');
+    if (tenantId !== this.#scope.tenantId || legalEntityId !== this.#scope.legalEntityId)
+      throw new Error('FIN_SCOPE_MISMATCH');
   }
 
   #requireAccount(id: string): BillingAccount {

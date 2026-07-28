@@ -2,7 +2,11 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 
 import type { BillingService, Invoice } from './billing-service.js';
 import { currencyCode, minorUnit, type CurrencyCode, type MinorUnit } from './contracts/money.js';
-import { authorizeFinance, type FinancePrincipal, type FinanceScope } from './contracts/permissions.js';
+import {
+  authorizeFinance,
+  type FinancePrincipal,
+  type FinanceScope,
+} from './contracts/permissions.js';
 import type { LedgerService } from '../../ledger/src/ledger-service.js';
 
 export type PaymentIntentStatus = 'pending' | 'authorized' | 'cancelled' | 'expired';
@@ -147,7 +151,9 @@ export interface BankStatementLine {
   readonly matchedAt: string | null;
 }
 
-export interface PaymentClock { now(): Date; }
+export interface PaymentClock {
+  now(): Date;
+}
 
 export interface PaymentLedgerConfiguration {
   readonly bookId: string;
@@ -160,14 +166,17 @@ export interface PaymentLedgerConfiguration {
 const systemClock: PaymentClock = { now: () => new Date() };
 
 function assertIdentifier(value: string, field: string): void {
-  if (value.trim().length === 0 || value.length > 300) throw new Error(`FIN_INVALID_IDENTIFIER:${field}`);
+  if (value.trim().length === 0 || value.length > 300)
+    throw new Error(`FIN_INVALID_IDENTIFIER:${field}`);
 }
 
 function assertDateTime(value: string, field: string): void {
   if (Number.isNaN(Date.parse(value))) throw new Error(`FIN_INVALID_DATETIME:${field}`);
 }
 
-function frozenArray<T>(values: readonly T[]): readonly T[] { return Object.freeze([...values]); }
+function frozenArray<T>(values: readonly T[]): readonly T[] {
+  return Object.freeze([...values]);
+}
 
 export class HmacTestPaymentProviderAdapter implements PaymentProviderAdapter {
   readonly provider: string;
@@ -187,30 +196,38 @@ export class HmacTestPaymentProviderAdapter implements PaymentProviderAdapter {
   verifyEvent(payload: string, signature: string): VerifiedProviderEvent {
     const expected = Buffer.from(this.sign(payload), 'hex');
     let actual: Buffer;
-    try { actual = Buffer.from(signature, 'hex'); } catch { throw new Error('FIN_PROVIDER_SIGNATURE_INVALID'); }
-    if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) throw new Error('FIN_PROVIDER_SIGNATURE_INVALID');
+    try {
+      actual = Buffer.from(signature, 'hex');
+    } catch {
+      throw new Error('FIN_PROVIDER_SIGNATURE_INVALID');
+    }
+    if (actual.length !== expected.length || !timingSafeEqual(actual, expected))
+      throw new Error('FIN_PROVIDER_SIGNATURE_INVALID');
     let parsed: unknown;
     try {
       parsed = JSON.parse(payload);
     } catch {
       throw new Error('FIN_PROVIDER_EVENT_INVALID');
     }
-    if (typeof parsed !== 'object' || parsed === null) throw new Error('FIN_PROVIDER_EVENT_INVALID');
+    if (typeof parsed !== 'object' || parsed === null)
+      throw new Error('FIN_PROVIDER_EVENT_INVALID');
     const event = parsed as Partial<VerifiedProviderEvent>;
     if (
-      typeof event.eventId !== 'string'
-      || !['payment.settled', 'payment.failed', 'payment.reversed'].includes(event.eventType ?? '')
-      || event.provider !== this.provider
-      || typeof event.providerPaymentId !== 'string'
-      || typeof event.paymentIntentId !== 'string'
-      || typeof event.amountMinor !== 'number'
-      || typeof event.currency !== 'string'
-      || typeof event.occurredAt !== 'string'
-      || typeof event.metadata !== 'object'
-      || event.metadata === null
-    ) throw new Error('FIN_PROVIDER_EVENT_INVALID');
+      typeof event.eventId !== 'string' ||
+      !['payment.settled', 'payment.failed', 'payment.reversed'].includes(event.eventType ?? '') ||
+      event.provider !== this.provider ||
+      typeof event.providerPaymentId !== 'string' ||
+      typeof event.paymentIntentId !== 'string' ||
+      typeof event.amountMinor !== 'number' ||
+      typeof event.currency !== 'string' ||
+      typeof event.occurredAt !== 'string' ||
+      typeof event.metadata !== 'object' ||
+      event.metadata === null
+    )
+      throw new Error('FIN_PROVIDER_EVENT_INVALID');
     assertDateTime(event.occurredAt, 'occurredAt');
-    if (!Number.isSafeInteger(event.amountMinor) || event.amountMinor <= 0) throw new Error('FIN_INVALID_AMOUNT');
+    if (!Number.isSafeInteger(event.amountMinor) || event.amountMinor <= 0)
+      throw new Error('FIN_INVALID_AMOUNT');
     return Object.freeze({
       eventId: event.eventId,
       eventType: event.eventType as VerifiedProviderEvent['eventType'],
@@ -282,10 +299,18 @@ export class PaymentService {
     authorizeFinance(input.createdBy, 'billing.payment.write', this.#scope);
     const existingId = this.#intentIdempotency.get(input.idempotencyKey);
     if (existingId) return this.#intents.get(existingId)!;
-    if (!Number.isSafeInteger(input.amountMinor) || input.amountMinor <= 0) throw new Error('FIN_INVALID_AMOUNT');
+    if (!Number.isSafeInteger(input.amountMinor) || input.amountMinor <= 0)
+      throw new Error('FIN_INVALID_AMOUNT');
     assertDateTime(input.expiresAt, 'expiresAt');
-    if (Date.parse(input.expiresAt) <= this.#clock.now().getTime()) throw new Error('FIN_PAYMENT_INTENT_EXPIRY_INVALID');
-    if (!this.#billing.listBillingAccounts().some((account) => account.id === input.billingAccountId && account.currency === input.currency)) {
+    if (Date.parse(input.expiresAt) <= this.#clock.now().getTime())
+      throw new Error('FIN_PAYMENT_INTENT_EXPIRY_INVALID');
+    if (
+      !this.#billing
+        .listBillingAccounts()
+        .some(
+          (account) => account.id === input.billingAccountId && account.currency === input.currency,
+        )
+    ) {
       throw new Error('FIN_NOT_FOUND:billing-account-or-currency');
     }
     const intent: PaymentIntent = Object.freeze({
@@ -308,7 +333,11 @@ export class PaymentService {
     return intent;
   }
 
-  bindProviderIntent(intentId: string, providerIntentId: string, principal: FinancePrincipal): PaymentIntent {
+  bindProviderIntent(
+    intentId: string,
+    providerIntentId: string,
+    principal: FinancePrincipal,
+  ): PaymentIntent {
     const intent = this.#requireIntent(intentId);
     authorizeFinance(principal, 'billing.payment.write', this.#scope);
     if (intent.status !== 'pending') throw new Error('FIN_INVALID_PAYMENT_INTENT_STATE');
@@ -332,14 +361,21 @@ export class PaymentService {
     const existingId = this.#paymentByProviderEvent.get(`${event.provider}:${event.eventId}`);
     if (existingId) return existingId === 'ignored' ? null : this.#payments.get(existingId)!;
     const intent = this.#requireIntent(event.paymentIntentId);
-    if (intent.provider !== event.provider || intent.providerIntentId === null) throw new Error('FIN_PROVIDER_INTENT_MISMATCH');
-    if (event.amountMinor !== intent.amountMinor || currencyCode(event.currency) !== intent.currency) throw new Error('FIN_PROVIDER_AMOUNT_MISMATCH');
+    if (intent.provider !== event.provider || intent.providerIntentId === null)
+      throw new Error('FIN_PROVIDER_INTENT_MISMATCH');
+    if (
+      event.amountMinor !== intent.amountMinor ||
+      currencyCode(event.currency) !== intent.currency
+    )
+      throw new Error('FIN_PROVIDER_AMOUNT_MISMATCH');
     if (event.eventType === 'payment.failed') {
       this.#paymentByProviderEvent.set(`${event.provider}:${event.eventId}`, 'ignored');
       return null;
     }
     if (event.eventType === 'payment.reversed') {
-      const paymentId = this.#paymentByProviderReference.get(`${event.provider}:${event.providerPaymentId}`);
+      const paymentId = this.#paymentByProviderReference.get(
+        `${event.provider}:${event.providerPaymentId}`,
+      );
       if (!paymentId) throw new Error('FIN_NOT_FOUND:payment');
       const reversed = this.reversePayment(
         paymentId,
@@ -352,7 +388,8 @@ export class PaymentService {
       this.#paymentByProviderEvent.set(`${event.provider}:${event.eventId}`, reversed.id);
       return reversed;
     }
-    if (this.#paymentByProviderReference.has(`${event.provider}:${event.providerPaymentId}`)) throw new Error('FIN_DUPLICATE_PROVIDER_PAYMENT');
+    if (this.#paymentByProviderReference.has(`${event.provider}:${event.providerPaymentId}`))
+      throw new Error('FIN_DUPLICATE_PROVIDER_PAYMENT');
     if (input.cashierSessionId !== undefined) {
       const session = this.#requireSession(input.cashierSessionId);
       if (session.status !== 'open') throw new Error('FIN_CASHIER_SESSION_CLOSED');
@@ -372,8 +409,18 @@ export class PaymentService {
       idempotencyKey: `payment:${event.provider}:${event.eventId}`,
       correlationId: input.correlationId,
       lines: [
-        { accountId: this.#config.cashAccountId, side: 'debit', amountMinor: event.amountMinor, currency: intent.currency },
-        { accountId: this.#config.unappliedCashAccountId, side: 'credit', amountMinor: event.amountMinor, currency: intent.currency },
+        {
+          accountId: this.#config.cashAccountId,
+          side: 'debit',
+          amountMinor: event.amountMinor,
+          currency: intent.currency,
+        },
+        {
+          accountId: this.#config.unappliedCashAccountId,
+          side: 'credit',
+          amountMinor: event.amountMinor,
+          currency: intent.currency,
+        },
       ],
     });
     const payment: PaymentRecord = Object.freeze({
@@ -399,8 +446,12 @@ export class PaymentService {
     });
     this.#payments.set(payment.id, payment);
     this.#paymentByProviderEvent.set(`${event.provider}:${event.eventId}`, payment.id);
-    this.#paymentByProviderReference.set(`${event.provider}:${event.providerPaymentId}`, payment.id);
-    if (input.cashierSessionId !== undefined) this.#incrementSessionExpectedCash(input.cashierSessionId, payment.amountMinor);
+    this.#paymentByProviderReference.set(
+      `${event.provider}:${event.providerPaymentId}`,
+      payment.id,
+    );
+    if (input.cashierSessionId !== undefined)
+      this.#incrementSessionExpectedCash(input.cashierSessionId, payment.amountMinor);
     return payment;
   }
 
@@ -418,8 +469,17 @@ export class PaymentService {
     if (existingId) return this.#allocations.get(existingId)!;
     const payment = this.#requirePayment(input.paymentId);
     const invoice = this.#requireInvoice(input.invoiceId);
-    if (payment.billingAccountId !== invoice.billingAccountId || payment.currency !== invoice.currency) throw new Error('FIN_ALLOCATION_SCOPE_MISMATCH');
-    if (!Number.isSafeInteger(input.amountMinor) || input.amountMinor <= 0 || input.amountMinor > payment.unappliedMinor || input.amountMinor > invoice.balanceMinor) {
+    if (
+      payment.billingAccountId !== invoice.billingAccountId ||
+      payment.currency !== invoice.currency
+    )
+      throw new Error('FIN_ALLOCATION_SCOPE_MISMATCH');
+    if (
+      !Number.isSafeInteger(input.amountMinor) ||
+      input.amountMinor <= 0 ||
+      input.amountMinor > payment.unappliedMinor ||
+      input.amountMinor > invoice.balanceMinor
+    ) {
       throw new Error('FIN_ALLOCATION_EXCEEDS_AVAILABLE');
     }
     const journal = this.#ledger.post({
@@ -432,12 +492,25 @@ export class PaymentService {
       sourceDocumentType: 'payment-allocation',
       sourceDocumentId: `${payment.id}:${invoice.id}`,
       createdBy: input.principal.principalId,
-      postedBy: this.#asSystemPoster(input.principal, `allocation-poster:${input.principal.principalId}`),
+      postedBy: this.#asSystemPoster(
+        input.principal,
+        `allocation-poster:${input.principal.principalId}`,
+      ),
       idempotencyKey: `allocation:${input.idempotencyKey}`,
       correlationId: input.correlationId,
       lines: [
-        { accountId: this.#config.unappliedCashAccountId, side: 'debit', amountMinor: input.amountMinor, currency: payment.currency },
-        { accountId: this.#config.receivableAccountId, side: 'credit', amountMinor: input.amountMinor, currency: payment.currency },
+        {
+          accountId: this.#config.unappliedCashAccountId,
+          side: 'debit',
+          amountMinor: input.amountMinor,
+          currency: payment.currency,
+        },
+        {
+          accountId: this.#config.receivableAccountId,
+          side: 'credit',
+          amountMinor: input.amountMinor,
+          currency: payment.currency,
+        },
       ],
     });
     this.#billing.applyAllocation(invoice.id, input.amountMinor, input.principal);
@@ -457,11 +530,14 @@ export class PaymentService {
     });
     this.#allocations.set(allocation.id, allocation);
     this.#allocationIdempotency.set(input.idempotencyKey, allocation.id);
-    this.#payments.set(payment.id, Object.freeze({
-      ...payment,
-      allocatedMinor: minorUnit(payment.allocatedMinor + input.amountMinor),
-      unappliedMinor: minorUnit(payment.unappliedMinor - input.amountMinor),
-    }));
+    this.#payments.set(
+      payment.id,
+      Object.freeze({
+        ...payment,
+        allocatedMinor: minorUnit(payment.allocatedMinor + input.amountMinor),
+        unappliedMinor: minorUnit(payment.unappliedMinor - input.amountMinor),
+      }),
+    );
     return allocation;
   }
 
@@ -478,7 +554,8 @@ export class PaymentService {
     const allocation = this.#requireAllocation(input.allocationId);
     if (allocation.reversedAt !== null) return allocation;
     if (input.reason.trim().length < 8) throw new Error('FIN_UNALLOCATION_REASON_REQUIRED');
-    if (input.amountMinor !== allocation.amountMinor) throw new Error('FIN_PARTIAL_UNALLOCATION_NOT_SUPPORTED');
+    if (input.amountMinor !== allocation.amountMinor)
+      throw new Error('FIN_PARTIAL_UNALLOCATION_NOT_SUPPORTED');
     const payment = this.#requirePayment(allocation.paymentId);
     const invoice = this.#requireInvoice(allocation.invoiceId);
     const journal = this.#ledger.post({
@@ -491,12 +568,25 @@ export class PaymentService {
       sourceDocumentType: 'allocation-reversal',
       sourceDocumentId: allocation.id,
       createdBy: input.principal.principalId,
-      postedBy: this.#asSystemPoster(input.principal, `unallocation-poster:${input.principal.principalId}`),
+      postedBy: this.#asSystemPoster(
+        input.principal,
+        `unallocation-poster:${input.principal.principalId}`,
+      ),
       idempotencyKey: `unallocation:${input.idempotencyKey}`,
       correlationId: input.correlationId,
       lines: [
-        { accountId: this.#config.receivableAccountId, side: 'debit', amountMinor: allocation.amountMinor, currency: payment.currency },
-        { accountId: this.#config.unappliedCashAccountId, side: 'credit', amountMinor: allocation.amountMinor, currency: payment.currency },
+        {
+          accountId: this.#config.receivableAccountId,
+          side: 'debit',
+          amountMinor: allocation.amountMinor,
+          currency: payment.currency,
+        },
+        {
+          accountId: this.#config.unappliedCashAccountId,
+          side: 'credit',
+          amountMinor: allocation.amountMinor,
+          currency: payment.currency,
+        },
       ],
     });
     this.#billing.reverseAllocation(invoice.id, allocation.amountMinor, input.principal);
@@ -508,11 +598,14 @@ export class PaymentService {
       reversalJournalEntryId: journal.id,
     });
     this.#allocations.set(reversed.id, reversed);
-    this.#payments.set(payment.id, Object.freeze({
-      ...payment,
-      allocatedMinor: minorUnit(payment.allocatedMinor - allocation.amountMinor),
-      unappliedMinor: minorUnit(payment.unappliedMinor + allocation.amountMinor),
-    }));
+    this.#payments.set(
+      payment.id,
+      Object.freeze({
+        ...payment,
+        allocatedMinor: minorUnit(payment.allocatedMinor - allocation.amountMinor),
+        unappliedMinor: minorUnit(payment.unappliedMinor + allocation.amountMinor),
+      }),
+    );
     return reversed;
   }
 
@@ -528,7 +621,12 @@ export class PaymentService {
     if (existingId) return this.#refunds.get(existingId)!;
     const payment = this.#requirePayment(input.paymentId);
     const refundable = payment.amountMinor - payment.refundedMinor;
-    if (!Number.isSafeInteger(input.amountMinor) || input.amountMinor <= 0 || input.amountMinor > refundable) throw new Error('FIN_REFUND_EXCEEDS_AVAILABLE');
+    if (
+      !Number.isSafeInteger(input.amountMinor) ||
+      input.amountMinor <= 0 ||
+      input.amountMinor > refundable
+    )
+      throw new Error('FIN_REFUND_EXCEEDS_AVAILABLE');
     if (input.reason.trim().length < 8) throw new Error('FIN_REFUND_REASON_REQUIRED');
     const refund: RefundRecord = Object.freeze({
       id: crypto.randomUUID(),
@@ -561,9 +659,14 @@ export class PaymentService {
     if (refund.status === 'settled') return refund;
     authorizeFinance(input.approvedBy, 'billing.refund.approve', this.#scope);
     const payment = this.#requirePayment(refund.paymentId);
-    if (refund.requestedBy === input.approvedBy.principalId || payment.verifiedBy === input.approvedBy.principalId) throw new Error('FIN_SOD_VIOLATION:refund');
+    if (
+      refund.requestedBy === input.approvedBy.principalId ||
+      payment.verifiedBy === input.approvedBy.principalId
+    )
+      throw new Error('FIN_SOD_VIOLATION:refund');
     if (refund.status !== 'pending-approval') throw new Error('FIN_INVALID_REFUND_STATE');
-    if (refund.amountMinor > payment.unappliedMinor) throw new Error('FIN_REFUND_REQUIRES_UNALLOCATION');
+    if (refund.amountMinor > payment.unappliedMinor)
+      throw new Error('FIN_REFUND_REQUIRES_UNALLOCATION');
     const journal = this.#ledger.post({
       tenantId: payment.tenantId,
       legalEntityId: payment.legalEntityId,
@@ -578,8 +681,18 @@ export class PaymentService {
       idempotencyKey: `refund:${refund.idempotencyKey}`,
       correlationId: input.correlationId,
       lines: [
-        { accountId: this.#config.unappliedCashAccountId, side: 'debit', amountMinor: refund.amountMinor, currency: payment.currency },
-        { accountId: this.#config.cashAccountId, side: 'credit', amountMinor: refund.amountMinor, currency: payment.currency },
+        {
+          accountId: this.#config.unappliedCashAccountId,
+          side: 'debit',
+          amountMinor: refund.amountMinor,
+          currency: payment.currency,
+        },
+        {
+          accountId: this.#config.cashAccountId,
+          side: 'credit',
+          amountMinor: refund.amountMinor,
+          currency: payment.currency,
+        },
       ],
     });
     const settled = Object.freeze({
@@ -592,21 +705,33 @@ export class PaymentService {
     });
     this.#refunds.set(settled.id, settled);
     const refunded = payment.refundedMinor + refund.amountMinor;
-    const status: PaymentStatus = refunded === payment.amountMinor ? 'refunded' : 'partially-refunded';
-    this.#payments.set(payment.id, Object.freeze({
-      ...payment,
-      status,
-      refundedMinor: minorUnit(refunded),
-      unappliedMinor: minorUnit(payment.unappliedMinor - refund.amountMinor),
-    }));
+    const status: PaymentStatus =
+      refunded === payment.amountMinor ? 'refunded' : 'partially-refunded';
+    this.#payments.set(
+      payment.id,
+      Object.freeze({
+        ...payment,
+        status,
+        refundedMinor: minorUnit(refunded),
+        unappliedMinor: minorUnit(payment.unappliedMinor - refund.amountMinor),
+      }),
+    );
     return settled;
   }
 
-  reversePayment(paymentId: string, principal: FinancePrincipal, periodId: string, reason: string, idempotencyKey: string, correlationId: string): PaymentRecord {
+  reversePayment(
+    paymentId: string,
+    principal: FinancePrincipal,
+    periodId: string,
+    reason: string,
+    idempotencyKey: string,
+    correlationId: string,
+  ): PaymentRecord {
     const payment = this.#requirePayment(paymentId);
     authorizeFinance(principal, 'billing.payment.verify', this.#scope);
     if (payment.status === 'reversed') return payment;
-    if (payment.allocatedMinor > 0 || payment.refundedMinor > 0) throw new Error('FIN_PAYMENT_REVERSAL_REQUIRES_CLEAR_BALANCE');
+    if (payment.allocatedMinor > 0 || payment.refundedMinor > 0)
+      throw new Error('FIN_PAYMENT_REVERSAL_REQUIRES_CLEAR_BALANCE');
     if (reason.trim().length < 8) throw new Error('FIN_REVERSAL_REASON_REQUIRED');
     this.#ledger.post({
       tenantId: payment.tenantId,
@@ -622,11 +747,25 @@ export class PaymentService {
       idempotencyKey,
       correlationId,
       lines: [
-        { accountId: this.#config.unappliedCashAccountId, side: 'debit', amountMinor: payment.unappliedMinor, currency: payment.currency },
-        { accountId: this.#config.cashAccountId, side: 'credit', amountMinor: payment.unappliedMinor, currency: payment.currency },
+        {
+          accountId: this.#config.unappliedCashAccountId,
+          side: 'debit',
+          amountMinor: payment.unappliedMinor,
+          currency: payment.currency,
+        },
+        {
+          accountId: this.#config.cashAccountId,
+          side: 'credit',
+          amountMinor: payment.unappliedMinor,
+          currency: payment.currency,
+        },
       ],
     });
-    const reversed = Object.freeze({ ...payment, status: 'reversed' as const, unappliedMinor: minorUnit(0) });
+    const reversed = Object.freeze({
+      ...payment,
+      status: 'reversed' as const,
+      unappliedMinor: minorUnit(0),
+    });
     this.#payments.set(payment.id, reversed);
     return reversed;
   }
@@ -638,8 +777,14 @@ export class PaymentService {
     openedBy: FinancePrincipal;
   }): CashierSession {
     authorizeFinance(input.openedBy, 'cashier.session.open', this.#scope);
-    if (!Number.isSafeInteger(input.openingFloatMinor) || input.openingFloatMinor < 0) throw new Error('FIN_INVALID_AMOUNT');
-    if ([...this.#cashierSessions.values()].some((session) => session.cashierId === input.cashierId && session.status === 'open')) throw new Error('FIN_CASHIER_SESSION_ALREADY_OPEN');
+    if (!Number.isSafeInteger(input.openingFloatMinor) || input.openingFloatMinor < 0)
+      throw new Error('FIN_INVALID_AMOUNT');
+    if (
+      [...this.#cashierSessions.values()].some(
+        (session) => session.cashierId === input.cashierId && session.status === 'open',
+      )
+    )
+      throw new Error('FIN_CASHIER_SESSION_ALREADY_OPEN');
     const session: CashierSession = Object.freeze({
       id: crypto.randomUUID(),
       tenantId: this.#scope.tenantId,
@@ -661,11 +806,16 @@ export class PaymentService {
     return session;
   }
 
-  closeCashierSession(input: { sessionId: string; countedCashMinor: number; closedBy: FinancePrincipal }): CashierSession {
+  closeCashierSession(input: {
+    sessionId: string;
+    countedCashMinor: number;
+    closedBy: FinancePrincipal;
+  }): CashierSession {
     const session = this.#requireSession(input.sessionId);
     authorizeFinance(input.closedBy, 'cashier.session.close', this.#scope);
     if (session.status !== 'open') throw new Error('FIN_INVALID_CASHIER_SESSION_STATE');
-    if (!Number.isSafeInteger(input.countedCashMinor) || input.countedCashMinor < 0) throw new Error('FIN_INVALID_AMOUNT');
+    if (!Number.isSafeInteger(input.countedCashMinor) || input.countedCashMinor < 0)
+      throw new Error('FIN_INVALID_AMOUNT');
     const closed = Object.freeze({
       ...session,
       status: 'closed' as const,
@@ -680,7 +830,12 @@ export class PaymentService {
 
   prepareCashierDeposit(sessionId: string, preparedBy: FinancePrincipal): CashierDeposit {
     const session = this.#requireSession(sessionId);
-    if (session.status !== 'closed' || session.countedCashMinor === null || session.depositId !== null) throw new Error('FIN_INVALID_CASHIER_SESSION_STATE');
+    if (
+      session.status !== 'closed' ||
+      session.countedCashMinor === null ||
+      session.depositId !== null
+    )
+      throw new Error('FIN_INVALID_CASHIER_SESSION_STATE');
     authorizeFinance(preparedBy, 'cashier.session.close', this.#scope);
     const deposit: CashierDeposit = Object.freeze({
       id: crypto.randomUUID(),
@@ -707,7 +862,8 @@ export class PaymentService {
     const deposit = this.#requireDeposit(input.depositId);
     if (deposit.approvedAt !== null) return deposit;
     authorizeFinance(input.approvedBy, 'cashier.deposit.approve', this.#scope);
-    if (deposit.preparedBy === input.approvedBy.principalId) throw new Error('FIN_SOD_VIOLATION:cashier-deposit');
+    if (deposit.preparedBy === input.approvedBy.principalId)
+      throw new Error('FIN_SOD_VIOLATION:cashier-deposit');
     const session = this.#requireSession(deposit.sessionId);
     const journal = this.#ledger.post({
       tenantId: session.tenantId,
@@ -723,8 +879,18 @@ export class PaymentService {
       idempotencyKey: `cashier-deposit:${deposit.id}`,
       correlationId: input.correlationId,
       lines: [
-        { accountId: this.#config.bankDepositAccountId, side: 'debit', amountMinor: deposit.amountMinor, currency: deposit.currency },
-        { accountId: this.#config.cashAccountId, side: 'credit', amountMinor: deposit.amountMinor, currency: deposit.currency },
+        {
+          accountId: this.#config.bankDepositAccountId,
+          side: 'debit',
+          amountMinor: deposit.amountMinor,
+          currency: deposit.currency,
+        },
+        {
+          accountId: this.#config.cashAccountId,
+          side: 'credit',
+          amountMinor: deposit.amountMinor,
+          currency: deposit.currency,
+        },
       ],
     });
     const approved = Object.freeze({
@@ -734,7 +900,10 @@ export class PaymentService {
       journalEntryId: journal.id,
     });
     this.#deposits.set(approved.id, approved);
-    this.#cashierSessions.set(session.id, Object.freeze({ ...session, status: 'deposited' as const }));
+    this.#cashierSessions.set(
+      session.id,
+      Object.freeze({ ...session, status: 'deposited' as const }),
+    );
     return approved;
   }
 
@@ -742,7 +911,13 @@ export class PaymentService {
     bankAccountRef: string;
     statementRef: string;
     currency: CurrencyCode;
-    lines: readonly { lineNumber: number; bookingDate: string; amountMinor: number; description: string; externalReference?: string }[];
+    lines: readonly {
+      lineNumber: number;
+      bookingDate: string;
+      amountMinor: number;
+      description: string;
+      externalReference?: string;
+    }[];
     principal: FinancePrincipal;
   }): readonly BankStatementLine[] {
     authorizeFinance(input.principal, 'ledger.reconciliation.write', this.#scope);
@@ -750,13 +925,24 @@ export class PaymentService {
     assertIdentifier(input.statementRef, 'statementRef');
     const imported: BankStatementLine[] = [];
     for (const line of input.lines) {
-      if (!Number.isInteger(line.lineNumber) || line.lineNumber <= 0 || !Number.isSafeInteger(line.amountMinor) || line.amountMinor === 0) throw new Error('FIN_INVALID_BANK_LINE');
+      if (
+        !Number.isInteger(line.lineNumber) ||
+        line.lineNumber <= 0 ||
+        !Number.isSafeInteger(line.amountMinor) ||
+        line.amountMinor === 0
+      )
+        throw new Error('FIN_INVALID_BANK_LINE');
       assertDateTime(`${line.bookingDate}T00:00:00.000Z`, 'bookingDate');
       const hash = createHmac('sha256', `${this.#scope.tenantId}:${this.#scope.legalEntityId}`)
-        .update(`${input.bankAccountRef}|${input.statementRef}|${line.lineNumber}|${line.bookingDate}|${line.amountMinor}|${line.description}|${line.externalReference ?? ''}`)
+        .update(
+          `${input.bankAccountRef}|${input.statementRef}|${line.lineNumber}|${line.bookingDate}|${line.amountMinor}|${line.description}|${line.externalReference ?? ''}`,
+        )
         .digest('hex');
       const existingId = this.#statementImportHashes.get(hash);
-      if (existingId) { imported.push(this.#statementLines.get(existingId)!); continue; }
+      if (existingId) {
+        imported.push(this.#statementLines.get(existingId)!);
+        continue;
+      }
       const record: BankStatementLine = Object.freeze({
         id: crypto.randomUUID(),
         tenantId: this.#scope.tenantId,
@@ -787,7 +973,8 @@ export class PaymentService {
     const line = this.#statementLines.get(lineId);
     if (!line) throw new Error('FIN_NOT_FOUND:bank-statement-line');
     const payment = this.#requirePayment(paymentId);
-    if (line.currency !== payment.currency || Math.abs(line.amountMinor) !== payment.amountMinor) throw new Error('FIN_RECONCILIATION_AMOUNT_MISMATCH');
+    if (line.currency !== payment.currency || Math.abs(line.amountMinor) !== payment.amountMinor)
+      throw new Error('FIN_RECONCILIATION_AMOUNT_MISMATCH');
     if (line.status !== 'unmatched') throw new Error('FIN_BANK_LINE_ALREADY_MATCHED');
     const matched = Object.freeze({
       ...line,
@@ -800,7 +987,10 @@ export class PaymentService {
     return matched;
   }
 
-  completeReconciliation(lineIds: readonly string[], principal: FinancePrincipal): readonly BankStatementLine[] {
+  completeReconciliation(
+    lineIds: readonly string[],
+    principal: FinancePrincipal,
+  ): readonly BankStatementLine[] {
     authorizeFinance(principal, 'ledger.reconciliation.approve', this.#scope);
     const lines = lineIds.map((id) => {
       const line = this.#statementLines.get(id);
@@ -812,19 +1002,37 @@ export class PaymentService {
     return frozenArray(lines);
   }
 
-  getPayment(id: string): PaymentRecord | undefined { return this.#payments.get(id); }
-  getAllocation(id: string): PaymentAllocation | undefined { return this.#allocations.get(id); }
-  getRefund(id: string): RefundRecord | undefined { return this.#refunds.get(id); }
-  listPayments(): readonly PaymentRecord[] { return frozenArray([...this.#payments.values()]); }
-  listAllocations(): readonly PaymentAllocation[] { return frozenArray([...this.#allocations.values()]); }
-  listRefunds(): readonly RefundRecord[] { return frozenArray([...this.#refunds.values()]); }
-  listCashierSessions(): readonly CashierSession[] { return frozenArray([...this.#cashierSessions.values()]); }
-  listBankStatementLines(): readonly BankStatementLine[] { return frozenArray([...this.#statementLines.values()]); }
+  getPayment(id: string): PaymentRecord | undefined {
+    return this.#payments.get(id);
+  }
+  getAllocation(id: string): PaymentAllocation | undefined {
+    return this.#allocations.get(id);
+  }
+  getRefund(id: string): RefundRecord | undefined {
+    return this.#refunds.get(id);
+  }
+  listPayments(): readonly PaymentRecord[] {
+    return frozenArray([...this.#payments.values()]);
+  }
+  listAllocations(): readonly PaymentAllocation[] {
+    return frozenArray([...this.#allocations.values()]);
+  }
+  listRefunds(): readonly RefundRecord[] {
+    return frozenArray([...this.#refunds.values()]);
+  }
+  listCashierSessions(): readonly CashierSession[] {
+    return frozenArray([...this.#cashierSessions.values()]);
+  }
+  listBankStatementLines(): readonly BankStatementLine[] {
+    return frozenArray([...this.#statementLines.values()]);
+  }
 
   #asSystemPoster(principal: FinancePrincipal, principalId: string): FinancePrincipal {
     return Object.freeze({
       principalId,
-      permissions: frozenArray([...new Set([...principal.permissions, 'ledger.journal.post' as const])]),
+      permissions: frozenArray([
+        ...new Set([...principal.permissions, 'ledger.journal.post' as const]),
+      ]),
       assurance: principal.assurance === 'aal1' ? 'aal2' : principal.assurance,
       scope: principal.scope,
     });
@@ -832,31 +1040,57 @@ export class PaymentService {
 
   #incrementSessionExpectedCash(sessionId: string, amount: number): void {
     const session = this.#requireSession(sessionId);
-    this.#cashierSessions.set(session.id, Object.freeze({ ...session, expectedCashMinor: minorUnit(session.expectedCashMinor + amount) }));
+    this.#cashierSessions.set(
+      session.id,
+      Object.freeze({
+        ...session,
+        expectedCashMinor: minorUnit(session.expectedCashMinor + amount),
+      }),
+    );
   }
 
-  #nextReceiptNumber(): string { this.#receiptSequence += 1; return `RCT-${String(this.#receiptSequence).padStart(6, '0')}`; }
-  #nextRefundNumber(): string { this.#refundSequence += 1; return `RF-${String(this.#refundSequence).padStart(6, '0')}`; }
+  #nextReceiptNumber(): string {
+    this.#receiptSequence += 1;
+    return `RCT-${String(this.#receiptSequence).padStart(6, '0')}`;
+  }
+  #nextRefundNumber(): string {
+    this.#refundSequence += 1;
+    return `RF-${String(this.#refundSequence).padStart(6, '0')}`;
+  }
 
   #requireIntent(id: string): PaymentIntent {
-    const value = this.#intents.get(id); if (!value) throw new Error('FIN_NOT_FOUND:payment-intent'); return value;
+    const value = this.#intents.get(id);
+    if (!value) throw new Error('FIN_NOT_FOUND:payment-intent');
+    return value;
   }
   #requirePayment(id: string): PaymentRecord {
-    const value = this.#payments.get(id); if (!value) throw new Error('FIN_NOT_FOUND:payment'); return value;
+    const value = this.#payments.get(id);
+    if (!value) throw new Error('FIN_NOT_FOUND:payment');
+    return value;
   }
   #requireAllocation(id: string): PaymentAllocation {
-    const value = this.#allocations.get(id); if (!value) throw new Error('FIN_NOT_FOUND:allocation'); return value;
+    const value = this.#allocations.get(id);
+    if (!value) throw new Error('FIN_NOT_FOUND:allocation');
+    return value;
   }
   #requireRefund(id: string): RefundRecord {
-    const value = this.#refunds.get(id); if (!value) throw new Error('FIN_NOT_FOUND:refund'); return value;
+    const value = this.#refunds.get(id);
+    if (!value) throw new Error('FIN_NOT_FOUND:refund');
+    return value;
   }
   #requireSession(id: string): CashierSession {
-    const value = this.#cashierSessions.get(id); if (!value) throw new Error('FIN_NOT_FOUND:cashier-session'); return value;
+    const value = this.#cashierSessions.get(id);
+    if (!value) throw new Error('FIN_NOT_FOUND:cashier-session');
+    return value;
   }
   #requireDeposit(id: string): CashierDeposit {
-    const value = this.#deposits.get(id); if (!value) throw new Error('FIN_NOT_FOUND:cashier-deposit'); return value;
+    const value = this.#deposits.get(id);
+    if (!value) throw new Error('FIN_NOT_FOUND:cashier-deposit');
+    return value;
   }
   #requireInvoice(id: string): Invoice {
-    const value = this.#billing.getInvoice(id); if (!value) throw new Error('FIN_NOT_FOUND:invoice'); return value;
+    const value = this.#billing.getInvoice(id);
+    if (!value) throw new Error('FIN_NOT_FOUND:invoice');
+    return value;
   }
 }

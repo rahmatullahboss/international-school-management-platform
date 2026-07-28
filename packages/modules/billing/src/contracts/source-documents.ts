@@ -1,6 +1,13 @@
 import type { CurrencyCode, MinorUnit } from './money.js';
 
-export type SourceDocumentType = 'fee-assignment' | 'invoice' | 'credit-note' | 'payment' | 'refund' | 'cashier-deposit' | 'manual-journal';
+export type SourceDocumentType =
+  | 'fee-assignment'
+  | 'invoice'
+  | 'credit-note'
+  | 'payment'
+  | 'refund'
+  | 'cashier-deposit'
+  | 'manual-journal';
 export type SourceDocumentState = 'draft' | 'pending-approval' | 'posted' | 'voided' | 'reversed';
 
 export interface SourceDocumentRef {
@@ -35,20 +42,31 @@ export interface SourceDocument {
 export function isSourceDocument(value: unknown): value is SourceDocument {
   if (typeof value !== 'object' || value === null) return false;
   const candidate = value as Partial<SourceDocument>;
-  return typeof candidate.id === 'string'
-    && typeof candidate.type === 'string'
-    && typeof candidate.tenantId === 'string'
-    && typeof candidate.legalEntityId === 'string'
-    && typeof candidate.reference === 'string'
-    && candidate.issuedAt instanceof Date
-    && typeof candidate.metadata === 'object'
-    && candidate.metadata !== null;
+  return (
+    typeof candidate.id === 'string' &&
+    typeof candidate.type === 'string' &&
+    typeof candidate.tenantId === 'string' &&
+    typeof candidate.legalEntityId === 'string' &&
+    typeof candidate.reference === 'string' &&
+    candidate.issuedAt instanceof Date &&
+    typeof candidate.metadata === 'object' &&
+    candidate.metadata !== null
+  );
 }
 
 export type FinanceErrorCode =
-  | 'FIN_FORBIDDEN' | 'FIN_SCOPE_MISMATCH' | 'FIN_STEP_UP_REQUIRED' | 'FIN_SOD_VIOLATION'
-  | 'FIN_CURRENCY_MISMATCH' | 'FIN_INVALID_AMOUNT' | 'FIN_UNBALANCED_JOURNAL' | 'FIN_PERIOD_CLOSED'
-  | 'FIN_DUPLICATE_COMMAND' | 'FIN_INVALID_STATE' | 'FIN_REFUND_EXCEEDS_AVAILABLE' | 'FIN_NOT_FOUND';
+  | 'FIN_FORBIDDEN'
+  | 'FIN_SCOPE_MISMATCH'
+  | 'FIN_STEP_UP_REQUIRED'
+  | 'FIN_SOD_VIOLATION'
+  | 'FIN_CURRENCY_MISMATCH'
+  | 'FIN_INVALID_AMOUNT'
+  | 'FIN_UNBALANCED_JOURNAL'
+  | 'FIN_PERIOD_CLOSED'
+  | 'FIN_DUPLICATE_COMMAND'
+  | 'FIN_INVALID_STATE'
+  | 'FIN_REFUND_EXCEEDS_AVAILABLE'
+  | 'FIN_NOT_FOUND';
 
 export interface FinanceError {
   readonly code: FinanceErrorCode;
@@ -58,15 +76,29 @@ export interface FinanceError {
 }
 
 export function isFinanceError(value: unknown): value is FinanceError {
-  return typeof value === 'object' && value !== null && 'code' in value && 'message' in value && 'retryable' in value;
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'code' in value &&
+    'message' in value &&
+    'retryable' in value
+  );
 }
 
 export type FinanceEventName =
-  | 'finance.invoice.posted.v1' | 'finance.credit-note.posted.v1' | 'finance.payment.received.v1'
-  | 'finance.payment.allocated.v1' | 'finance.refund.approved.v1' | 'finance.journal.posted.v1'
-  | 'finance.journal.reversed.v1' | 'finance.fiscal-period.closed.v1' | 'finance.bank-reconciliation.completed.v1';
+  | 'finance.invoice.posted.v1'
+  | 'finance.credit-note.posted.v1'
+  | 'finance.payment.received.v1'
+  | 'finance.payment.allocated.v1'
+  | 'finance.refund.approved.v1'
+  | 'finance.journal.posted.v1'
+  | 'finance.journal.reversed.v1'
+  | 'finance.fiscal-period.closed.v1'
+  | 'finance.bank-reconciliation.completed.v1';
 
-export interface EventEnvelope<TPayload extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>> {
+export interface EventEnvelope<
+  TPayload extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>,
+> {
   readonly eventId: string;
   readonly eventName: FinanceEventName;
   readonly eventVersion: 1;

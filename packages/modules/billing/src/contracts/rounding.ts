@@ -12,7 +12,8 @@ export interface DecimalPrecision {
 }
 
 export function createRoundingPolicy(mode: RoundingMode, precision: number): RoundingPolicy {
-  if (!Number.isInteger(precision) || precision < 0 || precision > 10) throw new Error('Precision must be between 0 and 10 and use an integer value');
+  if (!Number.isInteger(precision) || precision < 0 || precision > 10)
+    throw new Error('Precision must be between 0 and 10 and use an integer value');
   return Object.freeze({ mode, precision });
 }
 
@@ -35,14 +36,27 @@ export function applyRounding(value: number, policy: RoundingPolicy): number {
   const scaled = value * factor;
   let rounded: number;
   switch (policy.mode) {
-    case 'half-even': rounded = roundHalf(scaled, 'even'); break;
-    case 'half-up': rounded = roundHalf(scaled, 'up'); break;
-    case 'half-down': rounded = roundHalf(scaled, 'down'); break;
-    case 'floor': rounded = Math.floor(scaled); break;
-    case 'ceiling': rounded = Math.ceil(scaled); break;
-    case 'truncate': rounded = Math.trunc(scaled); break;
+    case 'half-even':
+      rounded = roundHalf(scaled, 'even');
+      break;
+    case 'half-up':
+      rounded = roundHalf(scaled, 'up');
+      break;
+    case 'half-down':
+      rounded = roundHalf(scaled, 'down');
+      break;
+    case 'floor':
+      rounded = Math.floor(scaled);
+      break;
+    case 'ceiling':
+      rounded = Math.ceil(scaled);
+      break;
+    case 'truncate':
+      rounded = Math.trunc(scaled);
+      break;
   }
-  return rounded / factor;
+  const result = rounded / factor;
+  return Object.is(result, -0) ? 0 : result;
 }
 
 export function getCurrencyRoundingPolicy(currency: string): RoundingPolicy {

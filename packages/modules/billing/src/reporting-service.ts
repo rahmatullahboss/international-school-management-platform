@@ -1,7 +1,16 @@
 import type { BillingService, CreditNote, Invoice } from './billing-service.js';
-import type { PaymentAllocation, PaymentRecord, PaymentService, RefundRecord } from './payment-service.js';
+import type {
+  PaymentAllocation,
+  PaymentRecord,
+  PaymentService,
+  RefundRecord,
+} from './payment-service.js';
 import type { CurrencyCode } from './contracts/money.js';
-import { authorizeFinance, type FinancePrincipal, type FinanceScope } from './contracts/permissions.js';
+import {
+  authorizeFinance,
+  type FinancePrincipal,
+  type FinanceScope,
+} from './contracts/permissions.js';
 import type {
   AccountBalance,
   LedgerAccountRecord,
@@ -122,7 +131,12 @@ export interface IncomeStatementReport {
   readonly incomeMinor: number;
   readonly expenseMinor: number;
   readonly netIncomeMinor: number;
-  readonly accounts: readonly { accountId: string; accountCode: string; accountName: string; amountMinor: number }[];
+  readonly accounts: readonly {
+    accountId: string;
+    accountCode: string;
+    accountName: string;
+    amountMinor: number;
+  }[];
 }
 
 export interface BalanceSheetReport {
@@ -150,7 +164,8 @@ export interface FiscalPeriodSummary {
 }
 
 export interface DashboardMetric {
-  readonly id: 'outstanding-receivables' | 'overdue-receivables' | 'unapplied-cash' | 'pending-refunds';
+  readonly id:
+    'outstanding-receivables' | 'overdue-receivables' | 'unapplied-cash' | 'pending-refunds';
   readonly label: string;
   readonly valueMinor: number;
   readonly definition: string;
@@ -186,26 +201,34 @@ function frozenArray<T>(values: readonly T[]): readonly T[] {
 }
 
 function isAtOrBefore(value: string | null, cutoff: number): boolean {
-  return value !== null && Date.parse(value.length === 10 ? `${value}T00:00:00.000Z` : value) <= cutoff;
+  return (
+    value !== null && Date.parse(value.length === 10 ? `${value}T00:00:00.000Z` : value) <= cutoff
+  );
 }
 
 function activeAllocationAsOf(allocation: PaymentAllocation, cutoff: number): boolean {
-  return Date.parse(allocation.allocatedAt) <= cutoff
-    && (allocation.reversedAt === null || Date.parse(allocation.reversedAt) > cutoff);
+  return (
+    Date.parse(allocation.allocatedAt) <= cutoff &&
+    (allocation.reversedAt === null || Date.parse(allocation.reversedAt) > cutoff)
+  );
 }
 
 function postedInvoiceAsOf(invoice: Invoice, cutoff: number): boolean {
-  return invoice.postedAt !== null
-    && Date.parse(invoice.postedAt) <= cutoff
-    && startOfDay(invoice.issueDate) <= cutoff
-    && invoice.status !== 'voided';
+  return (
+    invoice.postedAt !== null &&
+    Date.parse(invoice.postedAt) <= cutoff &&
+    startOfDay(invoice.issueDate) <= cutoff &&
+    invoice.status !== 'voided'
+  );
 }
 
 function postedCreditAsOf(credit: CreditNote, cutoff: number): boolean {
-  return credit.status === 'posted'
-    && credit.postedAt !== null
-    && Date.parse(credit.postedAt) <= cutoff
-    && startOfDay(credit.issueDate) <= cutoff;
+  return (
+    credit.status === 'posted' &&
+    credit.postedAt !== null &&
+    Date.parse(credit.postedAt) <= cutoff &&
+    startOfDay(credit.issueDate) <= cutoff
+  );
 }
 
 function paymentAsOf(payment: PaymentRecord, cutoff: number): boolean {
@@ -230,10 +253,16 @@ export class FinanceReportingService {
     ledger: LedgerService,
     config: FinanceReportingConfiguration,
   ) {
-    if (scope.tenantId.trim().length === 0 || (scope.legalEntityId ?? '').trim().length === 0) throw new Error('FIN_SCOPE_REQUIRED');
-    if (config.receivableAccountId.trim().length === 0 || config.unappliedCashAccountId.trim().length === 0) throw new Error('FIN_REPORT_CONTROL_ACCOUNT_REQUIRED');
+    if (scope.tenantId.trim().length === 0 || (scope.legalEntityId ?? '').trim().length === 0)
+      throw new Error('FIN_SCOPE_REQUIRED');
+    if (
+      config.receivableAccountId.trim().length === 0 ||
+      config.unappliedCashAccountId.trim().length === 0
+    )
+      throw new Error('FIN_REPORT_CONTROL_ACCOUNT_REQUIRED');
     const maxRows = config.maxRows ?? 1_000;
-    if (!Number.isInteger(maxRows) || maxRows < 1 || maxRows > 10_000) throw new Error('FIN_INVALID_REPORT_LIMIT');
+    if (!Number.isInteger(maxRows) || maxRows < 1 || maxRows > 10_000)
+      throw new Error('FIN_INVALID_REPORT_LIMIT');
     this.#scope = Object.freeze({ ...scope });
     this.#billing = billing;
     this.#payments = payments;
@@ -241,7 +270,10 @@ export class FinanceReportingService {
     this.#config = Object.freeze({ ...config, maxRows });
   }
 
-  receivableReconciliation(asOf: string, principal: FinancePrincipal): ReceivableReconciliationReport {
+  receivableReconciliation(
+    asOf: string,
+    principal: FinancePrincipal,
+  ): ReceivableReconciliationReport {
     this.#authorize(principal);
     const cutoff = endOfDay(asOf);
     const outstanding = this.#invoiceOutstandingAsOf(cutoff);
@@ -264,11 +296,15 @@ export class FinanceReportingService {
     const cutoff = endOfDay(asOf);
     const allocations = this.#payments.listAllocations();
     const refunds = this.#payments.listRefunds();
-    const rows = this.#payments.listPayments()
+    const rows = this.#payments
+      .listPayments()
       .filter((payment) => paymentAsOf(payment, cutoff))
       .map((payment) => {
         const allocated = allocations
-          .filter((allocation) => allocation.paymentId === payment.id && activeAllocationAsOf(allocation, cutoff))
+          .filter(
+            (allocation) =>
+              allocation.paymentId === payment.id && activeAllocationAsOf(allocation, cutoff),
+          )
           .reduce((sum, allocation) => sum + allocation.amountMinor, 0);
         const refunded = refunds
           .filter((refund) => refund.paymentId === payment.id && settledRefundAsOf(refund, cutoff))
@@ -282,7 +318,11 @@ export class FinanceReportingService {
         });
       })
       .filter((row) => row.unappliedMinor > 0)
-      .sort((left, right) => left.receivedAt.localeCompare(right.receivedAt) || left.receiptNumber.localeCompare(right.receiptNumber));
+      .sort(
+        (left, right) =>
+          left.receivedAt.localeCompare(right.receivedAt) ||
+          left.receiptNumber.localeCompare(right.receiptNumber),
+      );
     const subledgerMinor = rows.reduce((sum, row) => sum + row.unappliedMinor, 0);
     const control = this.#ledgerBalance(this.#config.unappliedCashAccountId, asOf);
     const differenceMinor = subledgerMinor - control.balanceMinor;
@@ -301,14 +341,33 @@ export class FinanceReportingService {
     this.#authorize(principal);
     const cutoff = endOfDay(asOf);
     const outstanding = this.#invoiceOutstandingAsOf(cutoff);
-    const totals: Record<AgingBucket, number> = { current: 0, '1-30': 0, '31-60': 0, '61-90': 0, '91+': 0 };
-    const rows = this.#billing.listInvoices()
+    const totals: Record<AgingBucket, number> = {
+      current: 0,
+      '1-30': 0,
+      '31-60': 0,
+      '61-90': 0,
+      '91+': 0,
+    };
+    const rows = this.#billing
+      .listInvoices()
       .filter((invoice) => postedInvoiceAsOf(invoice, cutoff))
       .map((invoice): AgingRow | null => {
         const outstandingMinor = outstanding.get(invoice.id) ?? 0;
         if (outstandingMinor <= 0) return null;
-        const daysOverdue = Math.max(0, Math.floor((startOfDay(asOf) - startOfDay(invoice.dueDate)) / 86_400_000));
-        const bucket: AgingBucket = daysOverdue === 0 ? 'current' : daysOverdue <= 30 ? '1-30' : daysOverdue <= 60 ? '31-60' : daysOverdue <= 90 ? '61-90' : '91+';
+        const daysOverdue = Math.max(
+          0,
+          Math.floor((startOfDay(asOf) - startOfDay(invoice.dueDate)) / 86_400_000),
+        );
+        const bucket: AgingBucket =
+          daysOverdue === 0
+            ? 'current'
+            : daysOverdue <= 30
+              ? '1-30'
+              : daysOverdue <= 60
+                ? '31-60'
+                : daysOverdue <= 90
+                  ? '61-90'
+                  : '91+';
         totals[bucket] += outstandingMinor;
         return Object.freeze({
           invoiceId: invoice.id,
@@ -321,7 +380,11 @@ export class FinanceReportingService {
         });
       })
       .filter((row): row is AgingRow => row !== null)
-      .sort((left, right) => right.daysOverdue - left.daysOverdue || left.invoiceNumber.localeCompare(right.invoiceNumber));
+      .sort(
+        (left, right) =>
+          right.daysOverdue - left.daysOverdue ||
+          left.invoiceNumber.localeCompare(right.invoiceNumber),
+      );
     return Object.freeze({
       asOf,
       currency: this.#reportCurrency(),
@@ -331,49 +394,102 @@ export class FinanceReportingService {
     });
   }
 
-  accountStatement(billingAccountId: string, asOf: string, principal: FinancePrincipal): FinanceAccountStatement {
+  accountStatement(
+    billingAccountId: string,
+    asOf: string,
+    principal: FinancePrincipal,
+  ): FinanceAccountStatement {
     this.#authorize(principal);
-    const account = this.#billing.listBillingAccounts().find((candidate) => candidate.id === billingAccountId);
+    const account = this.#billing
+      .listBillingAccounts()
+      .find((candidate) => candidate.id === billingAccountId);
     if (!account) throw new Error('FIN_NOT_FOUND:billing-account');
     const cutoff = endOfDay(asOf);
-    const documents: { date: string; type: FinanceStatementEntry['type']; id: string; number: string; debit: number; credit: number }[] = [];
+    const documents: {
+      date: string;
+      type: FinanceStatementEntry['type'];
+      id: string;
+      number: string;
+      debit: number;
+      credit: number;
+    }[] = [];
     for (const invoice of this.#billing.listInvoices()) {
       if (invoice.billingAccountId === billingAccountId && postedInvoiceAsOf(invoice, cutoff)) {
-        documents.push({ date: invoice.issueDate, type: 'invoice', id: invoice.id, number: invoice.invoiceNumber, debit: invoice.totalMinor, credit: 0 });
+        documents.push({
+          date: invoice.issueDate,
+          type: 'invoice',
+          id: invoice.id,
+          number: invoice.invoiceNumber,
+          debit: invoice.totalMinor,
+          credit: 0,
+        });
       }
     }
     for (const credit of this.#billing.listCreditNotes()) {
       const invoice = this.#billing.getInvoice(credit.invoiceId);
       if (invoice?.billingAccountId === billingAccountId && postedCreditAsOf(credit, cutoff)) {
-        documents.push({ date: credit.issueDate, type: 'credit-note', id: credit.id, number: credit.creditNoteNumber, debit: 0, credit: credit.totalMinor });
+        documents.push({
+          date: credit.issueDate,
+          type: 'credit-note',
+          id: credit.id,
+          number: credit.creditNoteNumber,
+          debit: 0,
+          credit: credit.totalMinor,
+        });
       }
     }
     for (const payment of this.#payments.listPayments()) {
       if (payment.billingAccountId === billingAccountId && paymentAsOf(payment, cutoff)) {
-        documents.push({ date: payment.receivedAt.slice(0, 10), type: 'payment', id: payment.id, number: payment.receiptNumber, debit: 0, credit: payment.amountMinor });
+        documents.push({
+          date: payment.receivedAt.slice(0, 10),
+          type: 'payment',
+          id: payment.id,
+          number: payment.receiptNumber,
+          debit: 0,
+          credit: payment.amountMinor,
+        });
       }
     }
     for (const refund of this.#payments.listRefunds()) {
       const payment = this.#payments.getPayment(refund.paymentId);
       if (payment?.billingAccountId === billingAccountId && settledRefundAsOf(refund, cutoff)) {
-        documents.push({ date: refund.settledAt!.slice(0, 10), type: 'refund', id: refund.id, number: refund.refundNumber, debit: refund.amountMinor, credit: 0 });
+        documents.push({
+          date: refund.settledAt!.slice(0, 10),
+          type: 'refund',
+          id: refund.id,
+          number: refund.refundNumber,
+          debit: refund.amountMinor,
+          credit: 0,
+        });
       }
     }
-    const typeOrder: Readonly<Record<FinanceStatementEntry['type'], number>> = { invoice: 1, payment: 2, 'credit-note': 3, refund: 4 };
-    documents.sort((left, right) => left.date.localeCompare(right.date) || typeOrder[left.type] - typeOrder[right.type] || left.number.localeCompare(right.number));
+    const typeOrder: Readonly<Record<FinanceStatementEntry['type'], number>> = {
+      invoice: 1,
+      payment: 2,
+      'credit-note': 3,
+      refund: 4,
+    };
+    documents.sort(
+      (left, right) =>
+        left.date.localeCompare(right.date) ||
+        typeOrder[left.type] - typeOrder[right.type] ||
+        left.number.localeCompare(right.number),
+    );
     let runningBalanceMinor = 0;
-    const entries = documents.slice(0, this.#config.maxRows).map((document): FinanceStatementEntry => {
-      runningBalanceMinor += document.debit - document.credit;
-      return Object.freeze({
-        date: document.date,
-        type: document.type,
-        documentId: document.id,
-        documentNumber: document.number,
-        debitMinor: document.debit,
-        creditMinor: document.credit,
-        runningBalanceMinor,
+    const entries = documents
+      .slice(0, this.#config.maxRows)
+      .map((document): FinanceStatementEntry => {
+        runningBalanceMinor += document.debit - document.credit;
+        return Object.freeze({
+          date: document.date,
+          type: document.type,
+          documentId: document.id,
+          documentNumber: document.number,
+          debitMinor: document.debit,
+          creditMinor: document.credit,
+          runningBalanceMinor,
+        });
       });
-    });
     return Object.freeze({
       billingAccountId,
       asOf,
@@ -388,7 +504,8 @@ export class FinanceReportingService {
     this.#authorize(principal);
     assertDate(asOf, 'asOf');
     const accounts = new Map(this.#ledger.accounts().map((account) => [account.id, account]));
-    const rows = this.#ledger.balances(asOf)
+    const rows = this.#ledger
+      .balances(asOf)
       .map((balance): TrialBalanceRow => {
         const account = accounts.get(balance.accountId);
         if (!account) throw new Error(`FIN_NOT_FOUND:account:${balance.accountId}`);
@@ -407,28 +524,48 @@ export class FinanceReportingService {
       .sort((left, right) => left.accountCode.localeCompare(right.accountCode));
     const totalDebitMinor = rows.reduce((sum, row) => sum + row.debitMinor, 0);
     const totalCreditMinor = rows.reduce((sum, row) => sum + row.creditMinor, 0);
-    return Object.freeze({ asOf, rows: frozenArray(rows), totalDebitMinor, totalCreditMinor, balanced: totalDebitMinor === totalCreditMinor });
+    return Object.freeze({
+      asOf,
+      rows: frozenArray(rows),
+      totalDebitMinor,
+      totalCreditMinor,
+      balanced: totalDebitMinor === totalCreditMinor,
+    });
   }
 
-  generalLedger(accountId: string, from: string, to: string, principal: FinancePrincipal, limit = this.#config.maxRows): GeneralLedgerReport {
+  generalLedger(
+    accountId: string,
+    from: string,
+    to: string,
+    principal: FinancePrincipal,
+    limit = this.#config.maxRows,
+  ): GeneralLedgerReport {
     this.#authorize(principal);
     assertDate(from, 'from');
     assertDate(to, 'to');
     if (from > to) throw new Error('FIN_INVALID_DATE_RANGE');
-    if (!Number.isInteger(limit) || limit < 1 || limit > this.#config.maxRows) throw new Error('FIN_INVALID_REPORT_LIMIT');
+    if (!Number.isInteger(limit) || limit < 1 || limit > this.#config.maxRows)
+      throw new Error('FIN_INVALID_REPORT_LIMIT');
     const account = this.#ledger.accounts().find((candidate) => candidate.id === accountId);
     if (!account) throw new Error('FIN_NOT_FOUND:account');
     const movements: { entry: PostedJournal; line: PostedJournalLine }[] = [];
     for (const entry of this.#ledger.listEntries(to)) {
       if (entry.entryDate < from) continue;
-      for (const line of entry.lines) if (line.accountId === accountId) movements.push({ entry, line });
+      for (const line of entry.lines)
+        if (line.accountId === accountId) movements.push({ entry, line });
     }
-    movements.sort((left, right) => left.entry.entryDate.localeCompare(right.entry.entryDate) || left.entry.id.localeCompare(right.entry.id) || left.line.lineNumber - right.line.lineNumber);
+    movements.sort(
+      (left, right) =>
+        left.entry.entryDate.localeCompare(right.entry.entryDate) ||
+        left.entry.id.localeCompare(right.entry.id) ||
+        left.line.lineNumber - right.line.lineNumber,
+    );
     let runningBalanceMinor = 0;
     const rows = movements.slice(0, limit).map(({ entry, line }): GeneralLedgerRow => {
       const debitMinor = line.side === 'debit' ? line.amountMinor : 0;
       const creditMinor = line.side === 'credit' ? line.amountMinor : 0;
-      runningBalanceMinor += account.naturalBalance === 'debit' ? debitMinor - creditMinor : creditMinor - debitMinor;
+      runningBalanceMinor +=
+        account.naturalBalance === 'debit' ? debitMinor - creditMinor : creditMinor - debitMinor;
       return Object.freeze({
         journalEntryId: entry.id,
         entryDate: entry.entryDate,
@@ -441,7 +578,13 @@ export class FinanceReportingService {
         dimensions: line.dimensions,
       });
     });
-    return Object.freeze({ accountId, from, to, rows: frozenArray(rows), truncated: movements.length > limit });
+    return Object.freeze({
+      accountId,
+      from,
+      to,
+      rows: frozenArray(rows),
+      truncated: movements.length > limit,
+    });
   }
 
   incomeStatement(from: string, to: string, principal: FinancePrincipal): IncomeStatementReport {
@@ -451,20 +594,42 @@ export class FinanceReportingService {
     if (from > to) throw new Error('FIN_INVALID_DATE_RANGE');
     const rows = this.#periodMovementByAccount(from, to)
       .filter(({ account }) => account.type === 'income' || account.type === 'expense')
-      .map(({ account, balance }) => Object.freeze({ accountId: account.id, accountCode: account.code, accountName: account.name, amountMinor: balance }))
+      .map(({ account, balance }) =>
+        Object.freeze({
+          accountId: account.id,
+          accountCode: account.code,
+          accountName: account.name,
+          amountMinor: balance,
+        }),
+      )
       .sort((left, right) => left.accountCode.localeCompare(right.accountCode));
-    const incomeMinor = rows.filter((row) => this.#account(row.accountId).type === 'income').reduce((sum, row) => sum + row.amountMinor, 0);
-    const expenseMinor = rows.filter((row) => this.#account(row.accountId).type === 'expense').reduce((sum, row) => sum + row.amountMinor, 0);
-    return Object.freeze({ from, to, incomeMinor, expenseMinor, netIncomeMinor: incomeMinor - expenseMinor, accounts: frozenArray(rows) });
+    const incomeMinor = rows
+      .filter((row) => this.#account(row.accountId).type === 'income')
+      .reduce((sum, row) => sum + row.amountMinor, 0);
+    const expenseMinor = rows
+      .filter((row) => this.#account(row.accountId).type === 'expense')
+      .reduce((sum, row) => sum + row.amountMinor, 0);
+    return Object.freeze({
+      from,
+      to,
+      incomeMinor,
+      expenseMinor,
+      netIncomeMinor: incomeMinor - expenseMinor,
+      accounts: frozenArray(rows),
+    });
   }
 
   balanceSheet(asOf: string, principal: FinancePrincipal): BalanceSheetReport {
     this.#authorize(principal);
     assertDate(asOf, 'asOf');
-    const balances = new Map(this.#ledger.balances(asOf).map((balance) => [balance.accountId, balance.balanceMinor]));
-    const total = (type: LedgerAccountRecord['type']) => this.#ledger.accounts()
-      .filter((account) => account.type === type)
-      .reduce((sum, account) => sum + (balances.get(account.id) ?? 0), 0);
+    const balances = new Map(
+      this.#ledger.balances(asOf).map((balance) => [balance.accountId, balance.balanceMinor]),
+    );
+    const total = (type: LedgerAccountRecord['type']) =>
+      this.#ledger
+        .accounts()
+        .filter((account) => account.type === type)
+        .reduce((sum, account) => sum + (balances.get(account.id) ?? 0), 0);
     const assetsMinor = total('asset');
     const liabilitiesMinor = total('liability');
     const equityMinor = total('equity');
@@ -487,9 +652,25 @@ export class FinanceReportingService {
     this.#authorize(principal);
     const period = this.#ledger.periods().find((candidate) => candidate.id === periodId);
     if (!period) throw new Error('FIN_NOT_FOUND:period');
-    const entries = this.#ledger.listEntries(period.endsOn).filter((entry) => entry.periodId === period.id && entry.entryDate >= period.startsOn);
-    const debitMinor = entries.reduce((sum, entry) => sum + entry.lines.filter((line) => line.side === 'debit').reduce((lineSum, line) => lineSum + line.amountMinor, 0), 0);
-    const creditMinor = entries.reduce((sum, entry) => sum + entry.lines.filter((line) => line.side === 'credit').reduce((lineSum, line) => lineSum + line.amountMinor, 0), 0);
+    const entries = this.#ledger
+      .listEntries(period.endsOn)
+      .filter((entry) => entry.periodId === period.id && entry.entryDate >= period.startsOn);
+    const debitMinor = entries.reduce(
+      (sum, entry) =>
+        sum +
+        entry.lines
+          .filter((line) => line.side === 'debit')
+          .reduce((lineSum, line) => lineSum + line.amountMinor, 0),
+      0,
+    );
+    const creditMinor = entries.reduce(
+      (sum, entry) =>
+        sum +
+        entry.lines
+          .filter((line) => line.side === 'credit')
+          .reduce((lineSum, line) => lineSum + line.amountMinor, 0),
+      0,
+    );
     const income = this.incomeStatement(period.startsOn, period.endsOn, principal);
     return Object.freeze({
       periodId: period.id,
@@ -511,16 +692,22 @@ export class FinanceReportingService {
     const aging = this.aging(asOf, principal);
     const unapplied = this.unappliedCash(asOf, principal);
     const cutoff = endOfDay(asOf);
-    const pendingRefunds = this.#payments.listRefunds()
-      .filter((refund) => refund.status === 'pending-approval' && Date.parse(refund.requestedAt) <= cutoff)
+    const pendingRefunds = this.#payments
+      .listRefunds()
+      .filter(
+        (refund) =>
+          refund.status === 'pending-approval' && Date.parse(refund.requestedAt) <= cutoff,
+      )
       .reduce((sum, refund) => sum + refund.amountMinor, 0);
     return frozenArray([
       Object.freeze({
         id: 'outstanding-receivables' as const,
         label: 'Outstanding receivables',
         valueMinor: receivable.subledgerMinor,
-        definition: 'Posted invoice totals less posted credits and active payment allocations as of the selected date.',
-        source: 'billing invoices, credit notes, payment allocations and receivable control account',
+        definition:
+          'Posted invoice totals less posted credits and active payment allocations as of the selected date.',
+        source:
+          'billing invoices, credit notes, payment allocations and receivable control account',
         asOf,
         drillDown: Object.freeze({ report: 'aging', asOf }),
       }),
@@ -537,7 +724,8 @@ export class FinanceReportingService {
         id: 'unapplied-cash' as const,
         label: 'Unapplied cash',
         valueMinor: unapplied.subledgerMinor,
-        definition: 'Settled payments less active allocations and settled refunds as of the selected date.',
+        definition:
+          'Settled payments less active allocations and settled refunds as of the selected date.',
         source: 'payment, allocation, refund and unapplied-cash control account',
         asOf,
         drillDown: Object.freeze({ report: 'unapplied-cash', asOf }),
@@ -564,14 +752,20 @@ export class FinanceReportingService {
         .filter((credit) => credit.invoiceId === invoice.id && postedCreditAsOf(credit, cutoff))
         .reduce((sum, credit) => sum + credit.totalMinor, 0);
       const allocated = allocations
-        .filter((allocation) => allocation.invoiceId === invoice.id && activeAllocationAsOf(allocation, cutoff))
+        .filter(
+          (allocation) =>
+            allocation.invoiceId === invoice.id && activeAllocationAsOf(allocation, cutoff),
+        )
         .reduce((sum, allocation) => sum + allocation.amountMinor, 0);
       result.set(invoice.id, Math.max(0, invoice.totalMinor - credited - allocated));
     }
     return result;
   }
 
-  #periodMovementByAccount(from: string, to: string): readonly { account: LedgerAccountRecord; balance: number }[] {
+  #periodMovementByAccount(
+    from: string,
+    to: string,
+  ): readonly { account: LedgerAccountRecord; balance: number }[] {
     const totals = new Map<string, { debit: number; credit: number }>();
     for (const entry of this.#ledger.listEntries(to)) {
       if (entry.entryDate < from) continue;
@@ -582,17 +776,30 @@ export class FinanceReportingService {
         totals.set(line.accountId, total);
       }
     }
-    return frozenArray([...totals.entries()].map(([accountId, total]) => {
-      const account = this.#account(accountId);
-      const balance = account.naturalBalance === 'debit' ? total.debit - total.credit : total.credit - total.debit;
-      return Object.freeze({ account, balance });
-    }));
+    return frozenArray(
+      [...totals.entries()].map(([accountId, total]) => {
+        const account = this.#account(accountId);
+        const balance =
+          account.naturalBalance === 'debit'
+            ? total.debit - total.credit
+            : total.credit - total.debit;
+        return Object.freeze({ account, balance });
+      }),
+    );
   }
 
   #ledgerBalance(accountId: string, asOf: string): AccountBalance {
-    const balance = this.#ledger.balances(asOf).find((candidate) => candidate.accountId === accountId);
+    const balance = this.#ledger
+      .balances(asOf)
+      .find((candidate) => candidate.accountId === accountId);
     if (balance) return balance;
-    return Object.freeze({ accountId, debitsMinor: 0, creditsMinor: 0, balanceMinor: 0, currency: this.#reportCurrency() });
+    return Object.freeze({
+      accountId,
+      debitsMinor: 0,
+      creditsMinor: 0,
+      balanceMinor: 0,
+      currency: this.#reportCurrency(),
+    });
   }
 
   #reportCurrency(): CurrencyCode {

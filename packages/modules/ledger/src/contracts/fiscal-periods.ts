@@ -1,6 +1,6 @@
 /**
  * Fiscal Period Contracts
- * 
+ *
  * Fiscal years, periods, open/close status with authorization controls.
  */
 
@@ -43,7 +43,10 @@ export interface FiscalPeriodTransition {
   readonly reason: string;
 }
 
-export const VALID_PERIOD_TRANSITIONS: ReadonlyMap<FiscalPeriodStatus, readonly FiscalPeriodStatus[]> = new Map([
+export const VALID_PERIOD_TRANSITIONS: ReadonlyMap<
+  FiscalPeriodStatus,
+  readonly FiscalPeriodStatus[]
+> = new Map([
   ['open', ['closing', 'closed']],
   ['closing', ['closed']],
   ['closed', ['reopening']],
@@ -52,7 +55,7 @@ export const VALID_PERIOD_TRANSITIONS: ReadonlyMap<FiscalPeriodStatus, readonly 
 
 export function canTransitionPeriod(
   currentStatus: FiscalPeriodStatus,
-  targetStatus: FiscalPeriodStatus
+  targetStatus: FiscalPeriodStatus,
 ): boolean {
   const allowed = VALID_PERIOD_TRANSITIONS.get(currentStatus) ?? [];
   return allowed.includes(targetStatus);
@@ -62,14 +65,14 @@ export function validatePeriodTransition(
   period: FiscalPeriod,
   targetStatus: FiscalPeriodStatus,
   authorizedBy: string,
-  reason: string
+  reason: string,
 ): { isValid: boolean; errors: readonly string[] } {
   const errors: string[] = [];
-  
+
   if (!canTransitionPeriod(period.status, targetStatus)) {
     errors.push(`Cannot transition from ${period.status} to ${targetStatus}`);
   }
-  
+
   if (!authorizedBy || authorizedBy.trim().length === 0) {
     errors.push('Authorizing principal is required');
   }
@@ -77,27 +80,33 @@ export function validatePeriodTransition(
   if (!reason || reason.trim().length === 0) {
     errors.push('Transition reason is required');
   }
-  
+
   if (targetStatus === 'closed' && period.status !== 'closing') {
     errors.push('Period must be in closing status before closing');
   }
-  
+
   if (targetStatus === 'open' && period.status !== 'reopening') {
     errors.push('Period must be in reopening status before reopening');
   }
-  
+
   return {
     isValid: errors.length === 0,
     errors: Object.freeze(errors),
   };
 }
 
-export function getCurrentPeriod(periods: readonly FiscalPeriod[], date: Date = new Date()): FiscalPeriod | null {
-  return periods.find(p => p.startDate <= date && p.endDate >= date) ?? null;
+export function getCurrentPeriod(
+  periods: readonly FiscalPeriod[],
+  date: Date = new Date(),
+): FiscalPeriod | null {
+  return periods.find((p) => p.startDate <= date && p.endDate >= date) ?? null;
 }
 
-export function getPeriodsForYear(periods: readonly FiscalPeriod[], fiscalYearId: string): FiscalPeriod[] {
+export function getPeriodsForYear(
+  periods: readonly FiscalPeriod[],
+  fiscalYearId: string,
+): FiscalPeriod[] {
   return periods
-    .filter(p => p.fiscalYearId === fiscalYearId)
+    .filter((p) => p.fiscalYearId === fiscalYearId)
     .sort((a, b) => a.periodNumber - b.periodNumber);
 }

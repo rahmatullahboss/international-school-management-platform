@@ -1,0 +1,14 @@
+{
+  "name": "@school/finance",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./billing/src/index.ts",
+    "./ledger": "./ledger/src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b"
+  }
+}

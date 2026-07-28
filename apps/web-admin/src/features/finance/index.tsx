@@ -1,8 +1,4 @@
-import type {
-  DashboardMetric,
-  GeneralLedgerRow,
-  TrialBalanceRow,
-} from '../../../../../packages/modules/billing/src/reporting-service.js';
+import type { DashboardMetric, GeneralLedgerRow, TrialBalanceRow } from '@school/finance';
 
 export interface AdminInvoiceRow {
   readonly id: string;

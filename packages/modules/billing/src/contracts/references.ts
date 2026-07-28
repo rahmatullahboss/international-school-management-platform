@@ -28,7 +28,8 @@ export interface PersonSnapshot {
 
 function assertReference(value: string, kind: string): string {
   const normalized = value.trim();
-  if (normalized.length === 0 || normalized.length > 200) throw new Error(`Invalid ${kind} reference`);
+  if (normalized.length === 0 || normalized.length > 200)
+    throw new Error(`Invalid ${kind} reference`);
   return normalized;
 }
 

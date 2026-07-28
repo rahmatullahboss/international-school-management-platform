@@ -25,7 +25,9 @@ describe('FIN-01 public finance contracts', () => {
     const gbp = currencyCode('GBP');
     const total = moneyAdd(parseMoney('10.05', gbp), parseMoney('0.95', gbp));
     expect(moneyEquals(total, parseMoney('11.00', gbp))).toBe(true);
-    expect(() => moneyAdd(total, parseMoney('1.00', currencyCode('USD')))).toThrow('Currency mismatch');
+    expect(() => moneyAdd(total, parseMoney('1.00', currencyCode('USD')))).toThrow(
+      'Currency mismatch',
+    );
     expect(() => parseMoney('1.001', gbp)).toThrow('requires 2 decimal places');
   });
 
@@ -82,17 +84,43 @@ describe('FIN-01 public finance contracts', () => {
       sourceDocumentType: 'invoice',
     };
     const lines: JournalLine[] = [
-      { id: 'line-1', entryId: entry.id, lineNumber: 1, accountId: 'receivable', side: 'debit', amount: 5000, currency: 'GBP', description: null, dimensionValues: new Map(), createdAt: now },
-      { id: 'line-2', entryId: entry.id, lineNumber: 2, accountId: 'tuition-income', side: 'credit', amount: 5000, currency: 'GBP', description: null, dimensionValues: new Map(), createdAt: now },
+      {
+        id: 'line-1',
+        entryId: entry.id,
+        lineNumber: 1,
+        accountId: 'receivable',
+        side: 'debit',
+        amount: 5000,
+        currency: 'GBP',
+        description: null,
+        dimensionValues: new Map(),
+        createdAt: now,
+      },
+      {
+        id: 'line-2',
+        entryId: entry.id,
+        lineNumber: 2,
+        accountId: 'tuition-income',
+        side: 'credit',
+        amount: 5000,
+        currency: 'GBP',
+        description: null,
+        dimensionValues: new Map(),
+        createdAt: now,
+      },
     ];
     expect(validateJournalEntry(entry, lines)).toEqual({ isValid: true, errors: [] });
-    expect(validateJournalEntry(entry, [{ ...lines[0]!, amount: 5001 }, lines[1]!]).isValid).toBe(false);
+    expect(validateJournalEntry(entry, [{ ...lines[0]!, amount: 5001 }, lines[1]!]).isValid).toBe(
+      false,
+    );
   });
 
   it('evaluates a deliberately small safe posting expression language', () => {
     expect(calculateLineAmount('grossAmount', { grossAmount: 5000 })).toBe(5000);
     expect(calculateLineAmount('grossAmount * 0.15', { grossAmount: 5000 })).toBe(750);
     expect(calculateLineAmount('grossAmount / 4', { grossAmount: 5000 })).toBe(1250);
-    expect(() => calculateLineAmount('globalThis.process.exit()', {})).toThrow('Failed to evaluate');
+    expect(() => calculateLineAmount('globalThis.process.exit()', {})).toThrow(
+      'Failed to evaluate',
+    );
   });
 });

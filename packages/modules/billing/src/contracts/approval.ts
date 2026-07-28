@@ -54,19 +54,30 @@ export function canTransition(state: ApprovalState, action: ApprovalAction): boo
   return TRANSITIONS[state].some((transition) => transition.action === action);
 }
 
-export function transitionApproval(request: ApprovalRequest, action: ApprovalAction, principalId: string, comment?: string): ApprovalRequest {
+export function transitionApproval(
+  request: ApprovalRequest,
+  action: ApprovalAction,
+  principalId: string,
+  comment?: string,
+): ApprovalRequest {
   const transition = TRANSITIONS[request.state].find((candidate) => candidate.action === action);
   if (!transition) throw new Error(`Cannot ${action} from state ${request.state}`);
-  if (!request.approvers.includes(principalId) && action !== 'cancel') throw new Error('Principal is not an assigned approver');
-  if (principalId === request.requestedBy && action === 'approve') throw new Error('Requester cannot approve own request');
-  const approvedBy = action === 'approve' ? [...new Set([...request.approvedBy, principalId])] : request.approvedBy;
-  const effectiveState = action === 'approve' && approvedBy.length < request.requiredApprovers ? request.state : transition.to;
+  if (!request.approvers.includes(principalId) && action !== 'cancel')
+    throw new Error('Principal is not an assigned approver');
+  if (principalId === request.requestedBy && action === 'approve')
+    throw new Error('Requester cannot approve own request');
+  const approvedBy =
+    action === 'approve' ? [...new Set([...request.approvedBy, principalId])] : request.approvedBy;
+  const effectiveState =
+    action === 'approve' && approvedBy.length < request.requiredApprovers
+      ? request.state
+      : transition.to;
   return Object.freeze({
     ...request,
     state: effectiveState,
     approvedBy,
     rejectedBy: action === 'reject' ? principalId : request.rejectedBy,
-    rejectionReason: action === 'reject' ? comment ?? 'Rejected' : request.rejectionReason,
+    rejectionReason: action === 'reject' ? (comment ?? 'Rejected') : request.rejectionReason,
     escalatedAt: action === 'escalate' ? new Date() : request.escalatedAt,
   });
 }

@@ -3,7 +3,10 @@
   "references": [
     { "path": "./apps/platform-api/tsconfig.json" },
     { "path": "./apps/platform-web/tsconfig.json" },
+    { "path": "./apps/web-admin/tsconfig.json" },
+    { "path": "./apps/web-family/tsconfig.json" },
     { "path": "./packages/database/tsconfig.json" },
+    { "path": "./packages/modules/tsconfig.json" },
     { "path": "./packages/events/tsconfig.json" },
     { "path": "./packages/platform/tsconfig.json" },
     { "path": "./packages/policy/tsconfig.json" },

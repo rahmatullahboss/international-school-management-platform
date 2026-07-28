@@ -1,11 +1,11 @@
 /**
  * Dimensions Contracts
- * 
+ *
  * Analytical dimensions for multi-dimensional reporting
  * (department, campus, program, fund, project, etc.)
  */
 
-export type DimensionType = 
+export type DimensionType =
   | 'campus'
   | 'department'
   | 'program'
@@ -60,15 +60,15 @@ export const STANDARD_DIMENSIONS: readonly DimensionType[] = [
 
 export function validateDimensions(
   dimensions: JournalLineDimensions,
-  definitions: readonly Dimension[]
+  definitions: readonly Dimension[],
 ): { isValid: boolean; errors: readonly string[] } {
   const errors: string[] = [];
-  
+
   for (const def of definitions) {
     if (def.isRequired && !dimensions[def.code]) {
       errors.push(`Required dimension missing: ${def.code}`);
     }
-    
+
     const assignedValue = dimensions[def.code];
     if (assignedValue !== undefined && def.allowedValues.length > 0) {
       if (!def.allowedValues.includes(assignedValue)) {
@@ -76,7 +76,7 @@ export function validateDimensions(
       }
     }
   }
-  
+
   return {
     isValid: errors.length === 0,
     errors: Object.freeze(errors),
@@ -85,14 +85,14 @@ export function validateDimensions(
 
 export function getDimensionValue(
   dimensions: JournalLineDimensions,
-  code: string
+  code: string,
 ): string | undefined {
   return dimensions[code];
 }
 
 export function mergeDimensions(
   base: JournalLineDimensions,
-  overrides: JournalLineDimensions
+  overrides: JournalLineDimensions,
 ): JournalLineDimensions {
   return { ...base, ...overrides };
 }

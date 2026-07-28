@@ -1,0 +1,14 @@
+{
+  "name": "@school/web-admin",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b"
+  },
+  "dependencies": {
+    "@school/finance": "*",
+    "react": "^19.0.0"
+  }
+}

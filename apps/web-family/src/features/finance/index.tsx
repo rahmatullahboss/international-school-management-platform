@@ -1,4 +1,4 @@
-import type { FinanceStatementEntry } from '../../../../../packages/modules/billing/src/reporting-service.js';
+import type { FinanceStatementEntry } from '@school/finance';
 
 export interface FamilyInvoiceRow {
   readonly id: string;

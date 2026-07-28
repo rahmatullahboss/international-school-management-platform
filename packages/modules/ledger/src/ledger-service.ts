@@ -1,4 +1,8 @@
-import { authorizeFinance, type FinancePrincipal, type FinanceScope } from '../../billing/src/contracts/permissions.js';
+import {
+  authorizeFinance,
+  type FinancePrincipal,
+  type FinanceScope,
+} from '../../billing/src/contracts/permissions.js';
 import { minorUnit, type CurrencyCode, type MinorUnit } from '../../billing/src/contracts/money.js';
 
 export type LedgerAccountType = 'asset' | 'liability' | 'equity' | 'income' | 'expense';
@@ -116,7 +120,8 @@ function assertDate(value: string, field: string): void {
 }
 
 function assertIdentifier(value: string, field: string): void {
-  if (value.trim().length === 0 || value.length > 200) throw new Error(`FIN_INVALID_IDENTIFIER:${field}`);
+  if (value.trim().length === 0 || value.length > 200)
+    throw new Error(`FIN_INVALID_IDENTIFIER:${field}`);
 }
 
 export class LedgerService {
@@ -142,53 +147,98 @@ export class LedgerService {
     assertIdentifier(account.bookId, 'account.bookId');
     if (!/^\d{3,20}$/.test(account.code)) throw new Error('FIN_INVALID_ACCOUNT_CODE');
     if (this.#accounts.has(account.id)) throw new Error('FIN_DUPLICATE_ACCOUNT_ID');
-    if ([...this.#accounts.values()].some((existing) => existing.bookId === account.bookId && existing.code === account.code)) {
+    if (
+      [...this.#accounts.values()].some(
+        (existing) => existing.bookId === account.bookId && existing.code === account.code,
+      )
+    ) {
       throw new Error('FIN_DUPLICATE_ACCOUNT_CODE');
     }
-    const expectedNaturalBalance: LedgerNaturalBalance = account.type === 'asset' || account.type === 'expense' ? 'debit' : 'credit';
-    if (account.naturalBalance !== expectedNaturalBalance) throw new Error('FIN_INVALID_NATURAL_BALANCE');
+    const expectedNaturalBalance: LedgerNaturalBalance =
+      account.type === 'asset' || account.type === 'expense' ? 'debit' : 'credit';
+    if (account.naturalBalance !== expectedNaturalBalance)
+      throw new Error('FIN_INVALID_NATURAL_BALANCE');
     const frozen = Object.freeze({ ...account });
     this.#accounts.set(frozen.id, frozen);
     return frozen;
   }
 
-  createPeriod(period: Omit<LedgerPeriodRecord, 'status' | 'closedBy' | 'closedAt' | 'reopenReason'>): LedgerPeriodRecord {
+  createPeriod(
+    period: Omit<LedgerPeriodRecord, 'status' | 'closedBy' | 'closedAt' | 'reopenReason'>,
+  ): LedgerPeriodRecord {
     this.#assertScope(period.tenantId, period.legalEntityId);
     assertDate(period.startsOn, 'startsOn');
     assertDate(period.endsOn, 'endsOn');
     if (period.startsOn > period.endsOn) throw new Error('FIN_INVALID_PERIOD_RANGE');
     if (this.#periods.has(period.id)) throw new Error('FIN_DUPLICATE_PERIOD');
-    const overlaps = [...this.#periods.values()].some((existing) => existing.bookId === period.bookId && period.startsOn <= existing.endsOn && period.endsOn >= existing.startsOn);
+    const overlaps = [...this.#periods.values()].some(
+      (existing) =>
+        existing.bookId === period.bookId &&
+        period.startsOn <= existing.endsOn &&
+        period.endsOn >= existing.startsOn,
+    );
     if (overlaps) throw new Error('FIN_OVERLAPPING_PERIOD');
-    const created: LedgerPeriodRecord = Object.freeze({ ...period, status: 'open', closedBy: null, closedAt: null, reopenReason: null });
+    const created: LedgerPeriodRecord = Object.freeze({
+      ...period,
+      status: 'open',
+      closedBy: null,
+      closedAt: null,
+      reopenReason: null,
+    });
     this.#periods.set(created.id, created);
     return created;
   }
 
   closePeriod(periodId: string, principal: FinancePrincipal): LedgerPeriodRecord {
     const period = this.#requirePeriod(periodId);
-    authorizeFinance(principal, 'ledger.period.close', scopeOf(period.tenantId, period.legalEntityId));
+    authorizeFinance(
+      principal,
+      'ledger.period.close',
+      scopeOf(period.tenantId, period.legalEntityId),
+    );
     if (period.status !== 'open') throw new Error('FIN_INVALID_PERIOD_STATE');
-    const next = Object.freeze({ ...period, status: 'closed' as const, closedBy: principal.principalId, closedAt: this.#clock.now().toISOString(), reopenReason: null });
+    const next = Object.freeze({
+      ...period,
+      status: 'closed' as const,
+      closedBy: principal.principalId,
+      closedAt: this.#clock.now().toISOString(),
+      reopenReason: null,
+    });
     this.#periods.set(periodId, next);
     return next;
   }
 
   reopenPeriod(periodId: string, principal: FinancePrincipal, reason: string): LedgerPeriodRecord {
     const period = this.#requirePeriod(periodId);
-    authorizeFinance(principal, 'ledger.period.reopen', scopeOf(period.tenantId, period.legalEntityId));
+    authorizeFinance(
+      principal,
+      'ledger.period.reopen',
+      scopeOf(period.tenantId, period.legalEntityId),
+    );
     if (period.status !== 'closed') throw new Error('FIN_INVALID_PERIOD_STATE');
-    if (period.closedBy === principal.principalId) throw new Error('FIN_SOD_VIOLATION:period-close-reopen');
+    if (period.closedBy === principal.principalId)
+      throw new Error('FIN_SOD_VIOLATION:period-close-reopen');
     if (reason.trim().length < 8) throw new Error('FIN_REOPEN_REASON_REQUIRED');
-    const next = Object.freeze({ ...period, status: 'open' as const, closedBy: null, closedAt: null, reopenReason: reason.trim() });
+    const next = Object.freeze({
+      ...period,
+      status: 'open' as const,
+      closedBy: null,
+      closedAt: null,
+      reopenReason: reason.trim(),
+    });
     this.#periods.set(periodId, next);
     return next;
   }
 
   post(command: PostJournalCommand): PostedJournal {
     this.#assertScope(command.tenantId, command.legalEntityId);
-    authorizeFinance(command.postedBy, 'ledger.journal.post', scopeOf(command.tenantId, command.legalEntityId));
-    if (command.createdBy === command.postedBy.principalId) throw new Error('FIN_SOD_VIOLATION:journal-create-post');
+    authorizeFinance(
+      command.postedBy,
+      'ledger.journal.post',
+      scopeOf(command.tenantId, command.legalEntityId),
+    );
+    if (command.createdBy === command.postedBy.principalId)
+      throw new Error('FIN_SOD_VIOLATION:journal-create-post');
     assertIdentifier(command.idempotencyKey, 'idempotencyKey');
     const existingId = this.#idempotency.get(command.idempotencyKey);
     if (existingId) return this.#entries.get(existingId)!;
@@ -196,7 +246,8 @@ export class LedgerService {
     if (period.bookId !== command.bookId) throw new Error('FIN_BOOK_PERIOD_MISMATCH');
     if (period.status !== 'open') throw new Error('FIN_PERIOD_CLOSED');
     assertDate(command.entryDate, 'entryDate');
-    if (command.entryDate < period.startsOn || command.entryDate > period.endsOn) throw new Error('FIN_ENTRY_OUTSIDE_PERIOD');
+    if (command.entryDate < period.startsOn || command.entryDate > period.endsOn)
+      throw new Error('FIN_ENTRY_OUTSIDE_PERIOD');
     if (command.lines.length < 2) throw new Error('FIN_JOURNAL_REQUIRES_TWO_LINES');
     const currencies = new Set(command.lines.map((line) => line.currency));
     if (currencies.size !== 1) throw new Error('FIN_CURRENCY_MISMATCH');
@@ -206,7 +257,8 @@ export class LedgerService {
       const account = this.#accounts.get(line.accountId);
       if (!account || !account.active) throw new Error(`FIN_ACCOUNT_NOT_FOUND:${line.accountId}`);
       if (account.bookId !== command.bookId) throw new Error('FIN_ACCOUNT_BOOK_MISMATCH');
-      if (!Number.isSafeInteger(line.amountMinor) || line.amountMinor <= 0) throw new Error('FIN_INVALID_AMOUNT');
+      if (!Number.isSafeInteger(line.amountMinor) || line.amountMinor <= 0)
+        throw new Error('FIN_INVALID_AMOUNT');
       if (line.side === 'debit') debitTotal += line.amountMinor;
       else creditTotal += line.amountMinor;
       return Object.freeze({
@@ -220,7 +272,8 @@ export class LedgerService {
         dimensions: cloneFrozenRecord(line.dimensions ?? {}),
       });
     });
-    if (debitTotal !== creditTotal) throw new Error(`FIN_UNBALANCED_JOURNAL:${debitTotal}:${creditTotal}`);
+    if (debitTotal !== creditTotal)
+      throw new Error(`FIN_UNBALANCED_JOURNAL:${debitTotal}:${creditTotal}`);
     const id = crypto.randomUUID();
     const posted: PostedJournal = Object.freeze({
       id,
@@ -243,17 +296,30 @@ export class LedgerService {
     this.#entries.set(id, posted);
     this.#idempotency.set(command.idempotencyKey, id);
     const sourceKey = `${command.sourceDocumentType}:${command.sourceDocumentId}`;
-    this.#sourceIndex.set(sourceKey, Object.freeze([...(this.#sourceIndex.get(sourceKey) ?? []), id]));
+    this.#sourceIndex.set(
+      sourceKey,
+      Object.freeze([...(this.#sourceIndex.get(sourceKey) ?? []), id]),
+    );
     return posted;
   }
 
-  reverse(entryId: string, principal: FinancePrincipal, reason: string, idempotencyKey: string): PostedJournal {
+  reverse(
+    entryId: string,
+    principal: FinancePrincipal,
+    reason: string,
+    idempotencyKey: string,
+  ): PostedJournal {
     const existingReversal = this.#idempotency.get(idempotencyKey);
     if (existingReversal) return this.#entries.get(existingReversal)!;
     const original = this.#entries.get(entryId);
     if (!original) throw new Error('FIN_NOT_FOUND:journal');
-    authorizeFinance(principal, 'ledger.journal.reverse', scopeOf(original.tenantId, original.legalEntityId));
-    if (original.postedBy === principal.principalId) throw new Error('FIN_SOD_VIOLATION:poster-reversal');
+    authorizeFinance(
+      principal,
+      'ledger.journal.reverse',
+      scopeOf(original.tenantId, original.legalEntityId),
+    );
+    if (original.postedBy === principal.principalId)
+      throw new Error('FIN_SOD_VIOLATION:poster-reversal');
     if (this.#reversalIndex.has(entryId)) throw new Error('FIN_ALREADY_REVERSED');
     if (reason.trim().length < 8) throw new Error('FIN_REVERSAL_REASON_REQUIRED');
     const reversal = this.post({
@@ -288,31 +354,55 @@ export class LedgerService {
     return this.#entries.get(entryId);
   }
 
-  getEntriesForSource(sourceDocumentType: string, sourceDocumentId: string): readonly PostedJournal[] {
-    return Object.freeze((this.#sourceIndex.get(`${sourceDocumentType}:${sourceDocumentId}`) ?? []).map((id) => this.#entries.get(id)!));
+  getEntriesForSource(
+    sourceDocumentType: string,
+    sourceDocumentId: string,
+  ): readonly PostedJournal[] {
+    return Object.freeze(
+      (this.#sourceIndex.get(`${sourceDocumentType}:${sourceDocumentId}`) ?? []).map((id) =>
+        this.#entries.get(id)!,
+      ),
+    );
   }
 
   listEntries(asOf?: string): readonly PostedJournal[] {
     if (asOf !== undefined) assertDate(asOf, 'asOf');
-    return Object.freeze([...this.#entries.values()].filter((entry) => asOf === undefined || entry.entryDate <= asOf));
+    return Object.freeze(
+      [...this.#entries.values()].filter((entry) => asOf === undefined || entry.entryDate <= asOf),
+    );
   }
 
   balances(asOf?: string): readonly AccountBalance[] {
     const balances = new Map<string, { debit: number; credit: number; currency: CurrencyCode }>();
     for (const entry of this.listEntries(asOf)) {
       for (const line of entry.lines) {
-        const current = balances.get(line.accountId) ?? { debit: 0, credit: 0, currency: line.currency };
+        const current = balances.get(line.accountId) ?? {
+          debit: 0,
+          credit: 0,
+          currency: line.currency,
+        };
         if (current.currency !== line.currency) throw new Error('FIN_CURRENCY_MISMATCH');
         if (line.side === 'debit') current.debit += line.amountMinor;
         else current.credit += line.amountMinor;
         balances.set(line.accountId, current);
       }
     }
-    return Object.freeze([...balances.entries()].map(([accountId, total]) => {
-      const account = this.#accounts.get(accountId)!;
-      const signed = account.naturalBalance === 'debit' ? total.debit - total.credit : total.credit - total.debit;
-      return Object.freeze({ accountId, debitsMinor: total.debit, creditsMinor: total.credit, balanceMinor: signed, currency: total.currency });
-    }));
+    return Object.freeze(
+      [...balances.entries()].map(([accountId, total]) => {
+        const account = this.#accounts.get(accountId)!;
+        const signed =
+          account.naturalBalance === 'debit'
+            ? total.debit - total.credit
+            : total.credit - total.debit;
+        return Object.freeze({
+          accountId,
+          debitsMinor: total.debit,
+          creditsMinor: total.credit,
+          balanceMinor: signed,
+          currency: total.currency,
+        });
+      }),
+    );
   }
 
   accounts(): readonly LedgerAccountRecord[] {
@@ -324,7 +414,8 @@ export class LedgerService {
   }
 
   #assertScope(tenantId: string, legalEntityId: string): void {
-    if (tenantId !== this.#scope.tenantId || legalEntityId !== this.#scope.legalEntityId) throw new Error('FIN_SCOPE_MISMATCH');
+    if (tenantId !== this.#scope.tenantId || legalEntityId !== this.#scope.legalEntityId)
+      throw new Error('FIN_SCOPE_MISMATCH');
   }
 
   #requirePeriod(periodId: string): LedgerPeriodRecord {
