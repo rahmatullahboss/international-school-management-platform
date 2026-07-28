@@ -842,3 +842,5 @@ export class AcademicRegistry {
     return { value, events: [event] };
   }
 }
+
+export * from './application.js';
