@@ -33,7 +33,7 @@ Current readiness: `GATE-FOUNDATION-READY` is passed. `SIS-01`, `FIN-01` and `IN
 | Stream | Wave | Status | Base | Current/next milestone | Final/last checkpoint | Blocking condition |
 |---|---:|---|---|---|---|---|
 | `FND-01` | 0 | complete; gate passed | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | freeze reviewed foundation SHA | pending gate-evidence commit | none |
-| `SIS-01` | 1 | in progress | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | people and households | `3eadcdc95439065853042caa753778572ccd45bf` | none |
+| `SIS-01` | 1 | in progress | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | student/staff profiles | `b6410678d0b27a905f6e71eb78a33794ce798af9` | none |
 | `FIN-01` | 1 | ready to start | reviewed foundation SHA | finance contract | none | none |
 | `INT-01` | 1 | ready to start | reviewed foundation SHA | country-pack engine | none | none |
 | `ACAD-01` | 2 | blocked | reviewed Wave 1 integration SHA | academic structure | none | `GATE-WAVE-1-INTEGRATED` |
@@ -196,6 +196,23 @@ Focused checks and results: SIS contract tests 3/3 PASS; `@school/sis` TypeScrip
 Gate outcome: milestone 1 passed; frozen foundation contracts unchanged
 Exact next milestone: 2 — people, households, guardian authority, consent, duplicate detection and merge
 Dirty/uncommitted state: tracker evidence update only
+Production mutation performed: no
+
+### Milestone 2 — people, households and guardian authority
+
+Date/time: 2026-07-28T08:45:00+06:00
+Stream: SIS-01
+Milestone completed: 2 — people, names, identifiers, contacts, addresses, households, relationships, guardian/emergency/pickup authority, consent, duplicate detection and merge
+Git branch: `module/core-sis-admissions`
+Worktree: `.worktrees/sis-01-core-sis`
+Neon branch: `agent/sis-01-core-sis` (`br-ancient-sunset-axuhcmof`), parent `main` (`br-cool-wildflower-axsot8l1`)
+Starting base: `55114f55a375d3d79dba7ea21f984b789b5dbca1`
+Checkpoint SHA: `b6410678d0b27a905f6e71eb78a33794ce798af9`
+Changed owned paths: `packages/modules/people/**`; `tests/sis/people-*.test.ts`; `docs/modules/sis/people.md`
+Focused checks and results: people domain/migration tests 6/6 PASS; `@school/sis` TypeScript build PASS; foundation migrations 1–5 replayed on SIS Neon child; people migration applied; RLS no-context count 0; Tenant A/B each saw 1 own row and 0 foreign rows
+Gate outcome: milestone 2 passed; synthetic data only; parent/production branches unchanged
+Exact next milestone: 3 — student/staff profiles, statuses, identifiers, documents and lifecycle access effects
+Dirty/uncommitted state: tracker/module documentation update only
 Production mutation performed: no
 
 ## FIN-01 evidence
