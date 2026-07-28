@@ -54,7 +54,8 @@ describe('ACAD-01 observability and migration contract', () => {
         errorCode: 'ATTENDANCE_BATCH_ID_CONFLICT',
       }),
     ]);
-    expect(registry.metrics()).toEqual(
+    const metrics = registry.metrics();
+    expect(metrics).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           name: ACADEMIC_METRICS.commandDurationMs,
@@ -65,10 +66,12 @@ describe('ACAD-01 observability and migration contract', () => {
           name: ACADEMIC_METRICS.commandFailuresTotal,
           kind: 'counter',
           value: 1,
-          labels: expect.objectContaining({ errorCode: 'ATTENDANCE_BATCH_ID_CONFLICT' }),
         }),
       ]),
     );
+    expect(
+      metrics.find((metric) => metric.name === ACADEMIC_METRICS.commandFailuresTotal)?.labels,
+    ).toMatchObject({ errorCode: 'ATTENDANCE_BATCH_ID_CONFLICT' });
 
     expect(() =>
       registry.counter(ACADEMIC_METRICS.transcriptReissuesTotal, 1, {
@@ -154,7 +157,7 @@ describe('ACAD-01 observability and migration contract', () => {
 
   it('keeps every manifest path present, ledgered, tenant-forced and cross-module isolated', () => {
     for (const migration of manifest().migrations) {
-      const absoluteUrl = new URL(`../../../../${migration.path}`, import.meta.url);
+      const absoluteUrl = new URL(`../../${migration.path}`, import.meta.url);
       expect(existsSync(absoluteUrl)).toBe(true);
       const sql = readFileSync(absoluteUrl, 'utf8');
       expect(sql).toContain(`'${migration.id}'`);
