@@ -844,3 +844,4 @@ export class AcademicRegistry {
 }
 
 export * from './application.js';
+export * from './observability.js';

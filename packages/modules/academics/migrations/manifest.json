@@ -1,0 +1,36 @@
+{
+  "stream": "ACAD-01",
+  "reviewedBaseSha": "8cc8ee1562ade672b14c1c44af935fe7e2307976",
+  "migrations": [
+    {
+      "id": "202607280201_ACAD-01_academic_structure",
+      "path": "packages/modules/academics/migrations/202607280201_ACAD-01_academic_structure.sql",
+      "ownsSchemas": ["academics"],
+      "dependsOn": ["202607270001_FND-01_postgres_foundation"]
+    },
+    {
+      "id": "202607280202_ACAD-01_timetable",
+      "path": "packages/modules/scheduling/migrations/202607280202_ACAD-01_timetable.sql",
+      "ownsSchemas": ["scheduling"],
+      "dependsOn": ["202607280201_ACAD-01_academic_structure"]
+    },
+    {
+      "id": "202607280203_ACAD-01_attendance",
+      "path": "packages/modules/attendance/migrations/202607280203_ACAD-01_attendance.sql",
+      "ownsSchemas": ["attendance"],
+      "dependsOn": ["202607280202_ACAD-01_timetable"]
+    },
+    {
+      "id": "202607280204_ACAD-01_gradebook",
+      "path": "packages/modules/gradebook/migrations/202607280204_ACAD-01_gradebook.sql",
+      "ownsSchemas": ["gradebook"],
+      "dependsOn": ["202607280203_ACAD-01_attendance"]
+    },
+    {
+      "id": "202607280205_ACAD-01_records",
+      "path": "packages/modules/records/migrations/202607280205_ACAD-01_records.sql",
+      "ownsSchemas": ["records"],
+      "dependsOn": ["202607280204_ACAD-01_gradebook"]
+    }
+  ]
+}
