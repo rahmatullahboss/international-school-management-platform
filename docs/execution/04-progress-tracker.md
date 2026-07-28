@@ -19,7 +19,7 @@
 
 | Stream | Wave | Status | Base | Current/next milestone | Final/last checkpoint | Blocking condition |
 |---|---:|---|---|---|---|---|
-| `FND-01` | 0 | in progress | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | tenancy, organization and regional routing | `5f7b0d7b669b9ef5882a7dc7cbb883d6b71eaed6` | none |
+| `FND-01` | 0 | in progress | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | identity, policy and privileged access | `ed5a5909d1446eec88e624c854dc53e352e4e551` | none |
 | `SIS-01` | 1 | blocked | reviewed foundation SHA | module contract | none | `GATE-FOUNDATION-READY` |
 | `FIN-01` | 1 | blocked | reviewed foundation SHA | finance contract | none | `GATE-FOUNDATION-READY` |
 | `INT-01` | 1 | blocked | reviewed foundation SHA | country-pack engine | none | `GATE-FOUNDATION-READY` |
@@ -77,6 +77,15 @@ Migration: `202607280001_FND-01_foundation`; schemas `platform`, `tenancy`, `iam
 Focused checks and results: HTTP/WS adapter tests 5/5 PASS; full Vitest 8/8 PASS; typecheck PASS; ESLint PASS; build PASS; migration transaction applied on child branch; RLS no-context count 0; tenant A saw only tenant A; forbidden cross-tenant row count 0
 Gate outcome: milestone 2 passed; production/main branch unchanged
 Exact next milestone: 3 — tenancy, organization and regional routing
+
+### Milestone 3 — tenancy, organization and regional routing
+
+Date/time: 2026-07-28T06:21:00+06:00
+Checkpoint SHA: `ed5a5909d1446eec88e624c854dc53e352e4e551`
+Migration: `202607280002_FND-01_tenancy`; tenant directory/domain, home-region/deployment binding, legal entities, campuses and entitlements
+Focused checks and results: tenancy/migration tests 7/7 PASS; full Vitest 13/13 PASS; typecheck PASS; ESLint PASS; build PASS; no-context campus count 0; tenant A saw only tenant A campus; forbidden cross-tenant entitlement count 0
+Gate outcome: milestone 3 passed; synthetic data only; production/main branch unchanged
+Exact next milestone: 4 — identity, policy and privileged access
 
 ## SIS-01 evidence
 
