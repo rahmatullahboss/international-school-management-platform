@@ -35,7 +35,7 @@ Current readiness: `GATE-FOUNDATION-READY` is passed. `SIS-01`, `FIN-01` and `IN
 | `FND-01` | 0 | complete; gate passed | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | freeze reviewed foundation SHA | pending gate-evidence commit | none |
 | `SIS-01` | 1 | ready to start | reviewed foundation SHA | module contract | none | none |
 | `FIN-01` | 1 | ready to start | reviewed foundation SHA | finance contract | none | none |
-| `INT-01` | 1 | in progress | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | LTI 1.3 and SSO adapters | `0bcca38a87f5069890abfedd353d5528fbf57c00` | none |
+| `INT-01` | 1 | in progress | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | admin, governance, observability and final verification | `0fbb45c50ca5b77801dd43694e3e7f769e8265b5` | none |
 | `ACAD-01` | 2 | blocked | reviewed Wave 1 integration SHA | academic structure | none | `GATE-WAVE-1-INTEGRATED` |
 | `OPS-01` | 2 | blocked | reviewed Wave 1 integration SHA | HR/staff | none | `GATE-WAVE-1-INTEGRATED` |
 | `CARE-01` | 2 | blocked | reviewed Wave 1 integration SHA | security contract | none | threat-model and Wave 1 gates |
@@ -276,6 +276,21 @@ Changed owned paths: OneRoster profile artefact, CSV validator/exporter, domain-
 Focused checks and results: OneRoster behavior 8/8 PASS; profile/schema contracts 2/2 PASS; full `npm run verify` PASS with 74/74 tests and 1 secret-gated Neon test skipped
 Gate outcome: milestone 5 passed as an explicit supported subset; no full certification or implemented REST-service claim is made
 Exact next milestone: 6 — LTI 1.3 registration/launch security, OIDC/SAML SSO and SCIM contract
+Dirty/uncommitted state: tracker evidence only
+Production mutation performed: no
+
+Date/time: 2026-07-28T10:09:06+06:00
+Stream: INT-01
+Milestone completed: 6 — LTI 1.3 launch security, OIDC/SAML SSO and SCIM contract
+Git branch: `module/international-integrations`
+Worktree: `.worktrees/int-01-integrations`
+Neon branch: `agent/int-01-integrations` (`br-super-truth-axp0urxi`)
+Starting base: `21f27b7`
+Checkpoint SHA: `0fbb45c50ca5b77801dd43694e3e7f769e8265b5`
+Changed owned paths: LTI registration/session/RS256 verifier; OIDC and SAML semantic adapters; SCIM contract; tenant migration; focused security tests and module runbook
+Focused checks and results: milestone-focused tests 15/15 PASS including generated-key RS256 success/tamper rejection; full `npm run verify` PASS with 89/89 tests and 1 secret-gated Neon test skipped; format, lint, architecture boundaries, typecheck, build and execution artefact validation PASS
+Gate outcome: milestone 6 passed; unsupported LTI Advantage services, full SAML XML processing and deployed SCIM service remain explicitly outside the current claim
+Exact next milestone: 7 — tenant administration, connector governance, sandbox, observability, privacy/subprocessor metadata and final verification
 Dirty/uncommitted state: tracker evidence only
 Production mutation performed: no
 
