@@ -22,6 +22,29 @@ export interface SourceDocumentTrace {
   readonly correlationId: string;
 }
 
+export interface SourceDocument {
+  readonly id: string;
+  readonly type: SourceDocumentType;
+  readonly tenantId: string;
+  readonly legalEntityId: string;
+  readonly reference: string;
+  readonly issuedAt: Date;
+  readonly metadata: Readonly<Record<string, unknown>>;
+}
+
+export function isSourceDocument(value: unknown): value is SourceDocument {
+  if (typeof value !== 'object' || value === null) return false;
+  const candidate = value as Partial<SourceDocument>;
+  return typeof candidate.id === 'string'
+    && typeof candidate.type === 'string'
+    && typeof candidate.tenantId === 'string'
+    && typeof candidate.legalEntityId === 'string'
+    && typeof candidate.reference === 'string'
+    && candidate.issuedAt instanceof Date
+    && typeof candidate.metadata === 'object'
+    && candidate.metadata !== null;
+}
+
 export type FinanceErrorCode =
   | 'FIN_FORBIDDEN' | 'FIN_SCOPE_MISMATCH' | 'FIN_STEP_UP_REQUIRED' | 'FIN_SOD_VIOLATION'
   | 'FIN_CURRENCY_MISMATCH' | 'FIN_INVALID_AMOUNT' | 'FIN_UNBALANCED_JOURNAL' | 'FIN_PERIOD_CLOSED'

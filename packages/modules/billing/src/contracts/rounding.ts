@@ -12,7 +12,7 @@ export interface DecimalPrecision {
 }
 
 export function createRoundingPolicy(mode: RoundingMode, precision: number): RoundingPolicy {
-  if (!Number.isInteger(precision) || precision < 0 || precision > 10) throw new Error('Precision must be an integer between 0 and 10');
+  if (!Number.isInteger(precision) || precision < 0 || precision > 10) throw new Error('Precision must be between 0 and 10 and use an integer value');
   return Object.freeze({ mode, precision });
 }
 
@@ -21,8 +21,9 @@ function roundHalf(value: number, tieDirection: 'even' | 'up' | 'down'): number 
   const absolute = Math.abs(value);
   const floor = Math.floor(absolute);
   const fraction = absolute - floor;
-  if (fraction < 0.5) return floor * sign;
-  if (fraction > 0.5) return (floor + 1) * sign;
+  const delta = fraction - 0.5;
+  if (delta < -Number.EPSILON * Math.max(1, absolute) * 4) return floor * sign;
+  if (delta > Number.EPSILON * Math.max(1, absolute) * 4) return (floor + 1) * sign;
   if (tieDirection === 'even') return (floor % 2 === 0 ? floor : floor + 1) * sign;
   if (tieDirection === 'up') return (floor + 1) * sign;
   return floor * sign;
@@ -42,6 +43,16 @@ export function applyRounding(value: number, policy: RoundingPolicy): number {
     case 'truncate': rounded = Math.trunc(scaled); break;
   }
   return rounded / factor;
+}
+
+export function getCurrencyRoundingPolicy(currency: string): RoundingPolicy {
+  const normalized = currency.trim().toUpperCase();
+  const zeroDecimal = new Set(['IDR', 'JPY', 'VND']);
+  const threeDecimal = new Set(['BHD', 'JOD', 'KWD', 'OMR']);
+  if (zeroDecimal.has(normalized)) return createRoundingPolicy('half-even', 0);
+  if (threeDecimal.has(normalized)) return createRoundingPolicy('half-even', 3);
+  if (!/^[A-Z]{3}$/.test(normalized)) throw new Error(`Invalid currency code: ${currency}`);
+  return createRoundingPolicy('half-even', 2);
 }
 
 export function roundMinorUnits(value: number, policy: RoundingPolicy): number {

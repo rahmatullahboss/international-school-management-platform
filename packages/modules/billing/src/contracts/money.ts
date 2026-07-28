@@ -33,7 +33,7 @@ export function currencyCode(value: string): CurrencyCode {
 }
 
 export function minorUnit(value: number): MinorUnit {
-  if (!Number.isSafeInteger(value)) throw new Error(`Minor unit must be a safe integer, got ${value}`);
+  if (!Number.isSafeInteger(value)) throw new Error(`Minor unit must be integer and safe, got ${value}`);
   return value as MinorUnit;
 }
 
@@ -75,7 +75,7 @@ export function moneyMultiply(value: Money, factor: number): Money {
 }
 
 export function moneyDivide(value: Money, divisor: number): Money {
-  if (!Number.isFinite(divisor) || divisor === 0) throw new Error('Divisor must be finite and non-zero');
+  if (!Number.isFinite(divisor) || divisor === 0) throw new Error('Divisor must be finite non-zero');
   return { amount: minorUnit(Math.round(value.amount / divisor)), currency: value.currency };
 }
 

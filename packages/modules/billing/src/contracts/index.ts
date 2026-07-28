@@ -76,7 +76,9 @@ export {
 } from './references.js';
 export {
   allocateSequenceNumber,
+  createDefaultInvoiceNumberingPolicy,
   createNumberingPolicy,
+  type NumberingContext,
   type NumberingPolicy,
   type NumberingResetFrequency,
   type NumberingRule,
@@ -87,6 +89,7 @@ export {
 export {
   applyRounding,
   createRoundingPolicy,
+  getCurrencyRoundingPolicy,
   roundMinorUnits,
   type DecimalPrecision,
   type RoundingMode,
@@ -115,10 +118,12 @@ export {
 } from './permissions.js';
 export {
   isFinanceError,
+  isSourceDocument,
   type EventEnvelope,
   type FinanceError,
   type FinanceErrorCode,
   type FinanceEventName,
+  type SourceDocument,
   type SourceDocumentRef,
   type SourceDocumentState,
   type SourceDocumentTrace,
