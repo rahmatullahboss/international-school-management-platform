@@ -12,8 +12,10 @@ Every stream agent must follow these rules:
 6. After each meaningful milestone, run focused checks, checkpoint-commit owned changes, update stream evidence and continue automatically.
 7. Never use real production student data in development or preview Neon branches.
 8. Do not copy GPL/AGPL/no-license school-platform source or translate it line-by-line. Use only approved internal specifications, public standards and approved dependencies.
-9. Do not deploy production, run destructive migrations, enable production features or alter real customer data without separate authorization.
-10. Stop only at a documented hard stop, context limit after a safe checkpoint, or complete stream boundary.
+9. For any frontend/UI scope, load the repository-local `.agents/skills/impeccable/SKILL.md`, `PRODUCT.md`, `DESIGN.md` and applicable `docs/design/` contracts. The same module agent performs shaping, implementation, critique, audit, hardening and polish; do not delegate design subparts.
+10. UI-bearing checkpoints require Impeccable version, surface brief, critique/audit, detector, accessibility, responsive/RTL and polish evidence. A clean detector result alone is not completion.
+11. Do not deploy production, run destructive migrations, enable production features or alter real customer data without separate authorization.
+12. Stop only at a documented hard stop, context limit after a safe checkpoint, or complete stream boundary.
 
 Every completion/context report includes stream ID, branch, worktree, Neon branch, starting base, final HEAD, milestones completed/remaining, checkpoint SHAs, changed paths, tests, gates, next action, cleanup retained and confirmation of no unauthorized production mutation.
 
@@ -63,9 +65,11 @@ Produce a production-shaped Cloudflare/TypeScript/Neon modular-monolith foundati
    - Checkpoint: sample pack and synthetic end-to-end workflow pass.
 
 7. **Shared experience and module boundaries**
-   - Establish design tokens/components, accessibility test baseline, application shells, module registration, route/navigation capability model and architecture boundary tests.
-   - Publish exact module-owned paths and public contracts.
-   - Checkpoint: shared UI and boundary tests pass.
+   - Verify the repository-local Impeccable Codex/GitHub skill and hooks, complete `$impeccable init` to create reviewed `PRODUCT.md`, establish the first approved visual direction, implement shared tokens/components and then create `DESIGN.md` as the visual-system authority.
+   - Establish accessibility test baseline, application shells, module registration, route/navigation capability model, deterministic design-detector CI and architecture boundary tests.
+   - Publish exact module-owned paths, public contracts and the design extension/contract-change process.
+   - Run representative Operate-mode shape, critique, audit, harden and polish evidence across admin/product UI, including responsive, RTL, long-content, keyboard and reduced-motion fixtures.
+   - Checkpoint: shared UI, design governance and boundary tests pass.
 
 8. **Foundation verification and freeze**
    - Run full typecheck, lint, unit/integration/browser tests, tenant-isolation suite, migration-from-zero, restore rehearsal, build and documentation validator.

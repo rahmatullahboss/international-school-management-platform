@@ -13,6 +13,16 @@ The whole-module roadmap is valid only when all conditions below pass.
 - `docs/execution/05-module-ownership-and-integration-contracts.md`
 - `docs/execution/06-open-source-clean-room-policy.md`
 - `docs/execution/artifact-contract.md`
+- `docs/design/README.md`
+- `docs/design/01-product-design-input.md`
+- `docs/design/02-ui-delivery-workflow.md`
+- `docs/design/03-agent-design-contract.md`
+- `docs/adr/ADR-006-impeccable-design-governance.md`
+- `.agents/skills/impeccable/SKILL.md`
+- `.codex/hooks.json`
+- `.github/skills/impeccable/SKILL.md`
+- `.github/hooks/impeccable.json`
+- `THIRD_PARTY_NOTICES`
 - `scripts/validate_execution_artifacts.py`
 
 ## Required streams
@@ -65,6 +75,15 @@ Every prompt states:
 - Cross-module writes use contracts/events rather than direct table mutation.
 - Contract-change requests have a documented path and approval process.
 - The integration stream cannot silently redesign semantic invariants.
+
+## Design requirements
+
+- The repository-local Impeccable skill is installed for Codex and GitHub providers.
+- Codex and GitHub hook manifests point to the installed skill scripts.
+- `FND-01` owns `PRODUCT.md`, `DESIGN.md`, shared design-system contracts and detector CI.
+- UI-bearing module prompts require the same module agent to shape, build, critique, audit, harden and polish.
+- UI checkpoint evidence includes skill version, design authority SHAs, detector, accessibility, responsive/RTL and polish results.
+- Microtask design agents are prohibited.
 
 ## Open-source requirements
 
