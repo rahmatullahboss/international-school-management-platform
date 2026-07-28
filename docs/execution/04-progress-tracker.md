@@ -35,7 +35,7 @@ Current readiness: `GATE-FOUNDATION-READY` is passed. `SIS-01`, `FIN-01` and `IN
 | `FND-01` | 0 | complete; gate passed | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | freeze reviewed foundation SHA | pending gate-evidence commit | none |
 | `SIS-01` | 1 | ready to start | reviewed foundation SHA | module contract | none | none |
 | `FIN-01` | 1 | ready to start | reviewed foundation SHA | finance contract | none | none |
-| `INT-01` | 1 | ready to start | reviewed foundation SHA | country-pack engine | none | none |
+| `INT-01` | 1 | hard-stopped after checkpoint 1 | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | resolve nested-module workspace contract, then integration runtime | `0ac974fd7632079d1dc4f056285cb21e2aa77df4` | unapproved frozen boundary/workspace change required |
 | `ACAD-01` | 2 | blocked | reviewed Wave 1 integration SHA | academic structure | none | `GATE-WAVE-1-INTEGRATED` |
 | `OPS-01` | 2 | blocked | reviewed Wave 1 integration SHA | HR/staff | none | `GATE-WAVE-1-INTEGRATED` |
 | `CARE-01` | 2 | blocked | reviewed Wave 1 integration SHA | security contract | none | threat-model and Wave 1 gates |
@@ -189,7 +189,20 @@ No execution evidence recorded.
 
 ## INT-01 evidence
 
-No execution evidence recorded.
+Date/time: 2026-07-28T08:49:54+06:00
+Stream: INT-01
+Milestone completed: 1 — country-pack engine
+Git branch: `module/international-integrations`
+Worktree: `.worktrees/int-01-integrations`
+Neon branch: `agent/int-01-integrations` (`br-super-truth-axp0urxi`), parent `main` (`br-cool-wildflower-axsot8l1`)
+Starting base: `55114f55a375d3d79dba7ea21f984b789b5dbca1`
+Checkpoint SHA: `0ac974fd7632079d1dc4f056285cb21e2aa77df4`
+Changed owned paths: `packages/modules/country-packs/**`; `tests/integrations/country-packs.test.ts`; `docs/modules/integrations/**`
+Focused checks and results: country-pack Vitest 6/6 PASS; full Vitest 38/38 PASS with 1 pre-existing Neon test skipped; module TypeScript PASS; ESLint PASS; targeted Prettier PASS; Neon foundation migrations 1–5 and `202607280101_INT-01_country_pack_engine` replayed successfully; country-pack schema and tenant-override RLS verified; `npm run check:boundaries` BLOCKED because the frozen checker assumes `packages/modules/package.json`, which conflicts with reviewed nested module ownership
+Gate outcome: country-pack behavior and database checkpoint passed; stream hard-stopped by `docs/execution/contract-change-requests/INT-01-nested-module-workspaces.md`
+Exact next milestone: after an approved foundation/integration SHA resolves nested module discovery and composition, incorporate that reviewed change and begin milestone 2 — integration runtime
+Dirty/uncommitted state: none after the contract-request/tracker evidence commit
+Production mutation performed: no
 
 ## ACAD-01 evidence
 
