@@ -1,0 +1,49 @@
+{
+  "name": "international-school-management-platform",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@10.9.7",
+  "engines": {
+    "node": ">=22.22.0",
+    "npm": ">=10.9.0"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "check:boundaries": "node scripts/check-architecture-boundaries.mjs",
+    "clean": "npm run clean --workspaces --if-present",
+    "dev": "npm run dev --workspace=@school/platform-api",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "licenses:check": "node scripts/check-licenses.mjs",
+    "lint": "eslint . --max-warnings=0",
+    "provenance:generate": "node scripts/generate-provenance.mjs",
+    "test": "vitest run",
+    "test:unit": "vitest run tests/unit packages apps",
+    "test:integration": "vitest run tests/integration",
+    "test:neon": "vitest run tests/integration/neon-direct.test.ts",
+    "test:browser": "playwright test -c playwright.config.mjs",
+    "typecheck": "tsc -b",
+    "validate:artifacts": "python3 scripts/validate_execution_artifacts.py",
+    "verify": "npm run format:check && npm run lint && npm run check:boundaries && npm run typecheck && npm run test && npm run build && npm run validate:artifacts"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260727.1",
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.62.0",
+    "@types/node": "^26.1.2",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitest/coverage-v8": "^4.1.10",
+    "eslint": "^10.8.0",
+    "prettier": "^3.9.6",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.65.0",
+    "vitest": "^4.1.10",
+    "wrangler": "^4.114.0"
+  }
+}

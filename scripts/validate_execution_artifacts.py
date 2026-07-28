@@ -68,6 +68,24 @@ def main() -> int:
     if board.get("agent_delegation_allowed") is not False:
         fail(errors, "agent_delegation_allowed must be false")
 
+    parallel = board.get("parallel_execution", {})
+    if parallel.get("allowed") is not True:
+        fail(errors, "whole-module parallel execution must be allowed")
+    if parallel.get("assignment_unit") != "complete_module_stream":
+        fail(errors, "parallel assignment unit must be complete_module_stream")
+    if parallel.get("small_task_agents_allowed") is not False:
+        fail(errors, "small-task agents must be forbidden")
+    if parallel.get("max_concurrent_module_streams_per_wave") != 3:
+        fail(errors, "maximum normal module parallelism must be three")
+    if set(parallel.get("first_parallel_set", [])) != {"SIS-01", "FIN-01", "INT-01"}:
+        fail(errors, "first parallel set must be SIS-01, FIN-01 and INT-01")
+    if parallel.get("requires_shared_reviewed_base") is not True:
+        fail(errors, "parallel streams must require one shared reviewed base")
+    if parallel.get("coordinator_writes_module_owned_paths") is not False:
+        fail(errors, "coordinator must not write active module-owned paths")
+    if parallel.get("tracker_update_required_at_every_checkpoint") is not True:
+        fail(errors, "tracker updates must be required at every checkpoint")
+
     database = board.get("database_baseline", {})
     if database.get("provider") != "Neon Serverless PostgreSQL":
         fail(errors, "database provider must be Neon Serverless PostgreSQL")

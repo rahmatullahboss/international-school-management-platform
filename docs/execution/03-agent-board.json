@@ -5,6 +5,16 @@
   "execution_mode": "whole-module-agent-ownership",
   "microtask_agents_allowed": false,
   "agent_delegation_allowed": false,
+  "parallel_execution": {
+    "allowed": true,
+    "assignment_unit": "complete_module_stream",
+    "small_task_agents_allowed": false,
+    "max_concurrent_module_streams_per_wave": 3,
+    "first_parallel_set": ["SIS-01", "FIN-01", "INT-01"],
+    "requires_shared_reviewed_base": true,
+    "coordinator_writes_module_owned_paths": false,
+    "tracker_update_required_at_every_checkpoint": true
+  },
   "database_baseline": {
     "provider": "Neon Serverless PostgreSQL",
     "worker_driver": "@neondatabase/serverless",
@@ -19,12 +29,15 @@
     "wave_3": "EXP-01 uses the exact reviewed Wave 2 integration SHA",
     "integration": "accept only reviewed checkpoint/final SHAs recorded in the progress tracker"
   },
+  "reviewed_bases": {
+    "foundation": "55114f55a375d3d79dba7ea21f984b789b5dbca1"
+  },
   "streams": [
     {
       "id": "FND-01",
       "name": "Platform Foundation",
       "wave": 0,
-      "status": "ready_after_document_review",
+      "status": "gate_passed",
       "branch": "program/foundation-neon-platform",
       "worktree": ".worktrees/fnd-01-foundation",
       "neon_branch": "agent/fnd-01-foundation",
@@ -39,7 +52,7 @@
       "id": "SIS-01",
       "name": "Core SIS and Admissions",
       "wave": 1,
-      "status": "blocked_by_foundation",
+      "status": "ready_to_start",
       "branch": "module/core-sis-admissions",
       "worktree": ".worktrees/sis-01-core-sis",
       "neon_branch": "agent/sis-01-core-sis",
@@ -54,7 +67,7 @@
       "id": "FIN-01",
       "name": "Billing and Accounting",
       "wave": 1,
-      "status": "blocked_by_foundation",
+      "status": "ready_to_start",
       "branch": "module/finance-ledger",
       "worktree": ".worktrees/fin-01-finance",
       "neon_branch": "agent/fin-01-finance",
@@ -69,7 +82,7 @@
       "id": "INT-01",
       "name": "Internationalization and Integration Platform",
       "wave": 1,
-      "status": "blocked_by_foundation",
+      "status": "ready_to_start",
       "branch": "module/international-integrations",
       "worktree": ".worktrees/int-01-integrations",
       "neon_branch": "agent/int-01-integrations",
