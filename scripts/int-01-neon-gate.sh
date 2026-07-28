@@ -11,9 +11,12 @@ case "$mode" in
 esac
 
 if [[ -z "${DATABASE_URL:-}" ]]; then
-  echo "DATABASE_URL is required" >&2
+  echo "INT01_DATABASE_URL is required through DATABASE_URL" >&2
   exit 1
 fi
+
+readonly EXPECTED_NEON_PROJECT_ID="lingering-brook-52999532"
+readonly EXPECTED_NEON_BRANCH_ID="br-super-truth-axp0urxi"
 
 psql_base=(psql "$DATABASE_URL" -X --no-psqlrc -v ON_ERROR_STOP=1)
 
@@ -59,8 +62,22 @@ PY
 )
   echo "endpoint_id=$endpoint_id"
   "${psql_base[@]}" -Atc "SELECT 'database=' || current_database(), 'role=' || current_user"
-  "${psql_base[@]}" -Atc "SELECT name || '=' || setting FROM pg_settings WHERE name LIKE 'neon.%' ORDER BY name" || true
-  "${psql_base[@]}" -Atc "SELECT 'neon.branch_id=' || COALESCE(current_setting('neon.branch_id', true), ''), 'neon.project_id=' || COALESCE(current_setting('neon.project_id', true), '')" || true
+  "${psql_base[@]}" -Atc "SELECT 'neon.branch_id=' || COALESCE(current_setting('neon.branch_id', true), ''), 'neon.project_id=' || COALESCE(current_setting('neon.project_id', true), '')"
+}
+
+require_agent_branch_identity() {
+  local actual_project_id actual_branch_id
+  actual_project_id=$("${psql_base[@]}" -Atc "SELECT COALESCE(current_setting('neon.project_id', true), '')")
+  actual_branch_id=$("${psql_base[@]}" -Atc "SELECT COALESCE(current_setting('neon.branch_id', true), '')")
+
+  if [[ "$actual_project_id" != "$EXPECTED_NEON_PROJECT_ID" ]]; then
+    echo "Configured database belongs to unexpected Neon project: $actual_project_id" >&2
+    exit 1
+  fi
+  if [[ "$actual_branch_id" != "$EXPECTED_NEON_BRANCH_ID" ]]; then
+    echo "Configured database belongs to unexpected Neon branch: $actual_branch_id" >&2
+    exit 1
+  fi
 }
 
 require_agent_branch_baseline() {
@@ -254,6 +271,7 @@ PY
 }
 
 print_connection_identity
+require_agent_branch_identity
 
 if [[ "$mode" == "replay-database" ]]; then
   require_agent_branch_baseline
