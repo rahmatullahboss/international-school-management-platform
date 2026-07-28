@@ -1,0 +1,66 @@
+name: INT-01 Neon Gate
+
+on:
+  push:
+    branches:
+      - module/international-integrations
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Neon gate operation
+        required: true
+        default: inspect
+        type: choice
+        options:
+          - inspect
+          - apply
+          - replay-database
+
+permissions:
+  contents: read
+
+concurrency:
+  group: int-01-neon-gate
+  cancel-in-progress: false
+
+jobs:
+  neon-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+
+      - name: Resolve operation
+        id: operation
+        env:
+          DISPATCH_OPERATION: ${{ inputs.operation }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          mode=inspect
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            mode="${DISPATCH_OPERATION:-inspect}"
+          elif [[ "$COMMIT_MESSAGE" == *"[neon-replay-db]"* ]]; then
+            mode=replay-database
+          elif [[ "$COMMIT_MESSAGE" == *"[neon-apply]"* ]]; then
+            mode=apply
+          fi
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+          echo "Resolved INT-01 Neon gate mode: $mode"
+
+      - name: Require configured database
+        run: |
+          if [[ -z "$DATABASE_URL" ]]; then
+            echo "DATABASE_URL repository secret is required" >&2
+            exit 1
+          fi
+
+      - name: Run INT-01 Neon gate
+        run: bash scripts/int-01-neon-gate.sh "${{ steps.operation.outputs.mode }}"
