@@ -34,7 +34,7 @@ Current readiness: `GATE-FOUNDATION-READY` is passed. `SIS-01`, `FIN-01` and `IN
 |---|---:|---|---|---|---|---|
 | `FND-01` | 0 | complete; gate passed | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | freeze reviewed foundation SHA | pending gate-evidence commit | none |
 | `SIS-01` | 1 | ready to start | reviewed foundation SHA | module contract | none | none |
-| `FIN-01` | 1 | in progress | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | secure import/export and finance UI | `6d08d24444f9f943eede9b2dbfc38fd25f9d85a4` | none |
+| `FIN-01` | 1 | in progress | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | final resilience, browser and recovery gates | `4b9ed26` | none |
 | `INT-01` | 1 | ready to start | reviewed foundation SHA | country-pack engine | none | none |
 | `ACAD-01` | 2 | blocked | reviewed Wave 1 integration SHA | academic structure | none | `GATE-WAVE-1-INTEGRATED` |
 | `OPS-01` | 2 | blocked | reviewed Wave 1 integration SHA | HR/staff | none | `GATE-WAVE-1-INTEGRATED` |
@@ -249,6 +249,18 @@ Neon migration: `202607280104_FIN-01_reporting` applied on `agent/fin-01-finance
 Neon proof: receivable subledger view returned invoice total/outstanding=25000; unapplied cash view returned 25000; trial-balance aggregate debit=credit; general-ledger view returned posted rows under tenant context
 Gate outcome: milestone 5 passed; as-of receivable/unapplied reconciliation, aging, statements, trial balance, general ledger, income statement, balance sheet, fiscal summaries and dashboard drill-down definitions are executable
 Exact next milestone: 6 — secure finance imports/exports and role-aware admin/family UI
+Dirty/uncommitted state: tracker and agent-board evidence only
+Production mutation performed: no; Neon main untouched
+
+Date/time: 2026-07-28T10:20:00+06:00
+Stream: FIN-01
+Milestone completed: 6 — secure import/export and role-aware finance UI
+Checkpoint SHA: `4b9ed26`
+Changed owned paths: `packages/modules/billing/src/csv.ts`, `apps/web-admin/src/features/finance/**`, `apps/web-family/src/features/finance/**`, `tests/finance/csv.test.ts`, `tests/finance/ui.test.tsx`, `tests/finance/tsconfig.json`
+Compatible registration change: `tsconfig.lint.json` now includes `tests/**/*.tsx` so owned TSX tests participate in lint parsing
+Focused checks and results: finance Vitest 92/92 PASS; owned-path ESLint PASS; billing TypeScript PASS; ledger TypeScript PASS; FIN-owned strict TypeScript PASS; focused Prettier PASS after formatting
+Gate outcome: milestone 6 passed; bounded typed CSV import/export, duplicate and formula-injection defenses, finance/admin/cashier UI, family invoice/payment/statement UI, role-aware actions and accessible static rendering are executable
+Exact next milestone: 7 — property/high-volume/restore/browser tests, recovery runbook and completion report
 Dirty/uncommitted state: tracker and agent-board evidence only
 Production mutation performed: no; Neon main untouched
 
