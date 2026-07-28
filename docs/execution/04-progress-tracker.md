@@ -33,7 +33,7 @@ Current readiness: `GATE-FOUNDATION-READY` is passed. `SIS-01`, `FIN-01` and `IN
 | Stream | Wave | Status | Base | Current/next milestone | Final/last checkpoint | Blocking condition |
 |---|---:|---|---|---|---|---|
 | `FND-01` | 0 | complete; gate passed | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | freeze reviewed foundation SHA | pending gate-evidence commit | none |
-| `SIS-01` | 1 | ready to start | reviewed foundation SHA | module contract | none | none |
+| `SIS-01` | 1 | in progress | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | people and households | `3eadcdc95439065853042caa753778572ccd45bf` | none |
 | `FIN-01` | 1 | ready to start | reviewed foundation SHA | finance contract | none | none |
 | `INT-01` | 1 | ready to start | reviewed foundation SHA | country-pack engine | none | none |
 | `ACAD-01` | 2 | blocked | reviewed Wave 1 integration SHA | academic structure | none | `GATE-WAVE-1-INTEGRATED` |
@@ -181,7 +181,22 @@ Production mutation performed: no
 
 ## SIS-01 evidence
 
-No execution evidence recorded.
+### Milestone 1 — module contract
+
+Date/time: 2026-07-28T08:36:00+06:00
+Stream: SIS-01
+Milestone completed: 1 — approved requirements and versioned schema/event/API contract
+Git branch: `module/core-sis-admissions`
+Worktree: `.worktrees/sis-01-core-sis`
+Neon branch: `agent/sis-01-core-sis` (`br-ancient-sunset-axuhcmof`), parent `main` (`br-cool-wildflower-axsot8l1`)
+Starting base: `55114f55a375d3d79dba7ea21f984b789b5dbca1`
+Checkpoint SHA: `3eadcdc95439065853042caa753778572ccd45bf`
+Changed owned paths: `packages/modules/{people,admissions,student-lifecycle}` contract surfaces; `tests/sis/contracts.test.ts`; `docs/modules/sis/contracts.md`; compatible workspace lock registration
+Focused checks and results: SIS contract tests 3/3 PASS; `@school/sis` TypeScript build PASS; dependency install audit 0 vulnerabilities
+Gate outcome: milestone 1 passed; frozen foundation contracts unchanged
+Exact next milestone: 2 — people, households, guardian authority, consent, duplicate detection and merge
+Dirty/uncommitted state: tracker evidence update only
+Production mutation performed: no
 
 ## FIN-01 evidence
 
