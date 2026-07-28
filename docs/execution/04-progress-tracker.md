@@ -33,7 +33,7 @@ Current readiness: `GATE-FOUNDATION-READY` is passed. `SIS-01`, `FIN-01` and `IN
 | Stream | Wave | Status | Base | Current/next milestone | Final/last checkpoint | Blocking condition |
 |---|---:|---|---|---|---|---|
 | `FND-01` | 0 | complete; gate passed | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | Wave 1 released | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | none |
-| `SIS-01` | 1 | complete | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | complete | `c05a710a772338dad37bc1e5224467214e8057e0` | none |
+| `SIS-01` | 1 | complete | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | complete | `91be1b651a9e2366fc5bc8aacc9d3e00be34ca74` | none |
 | `FIN-01` | 1 | ready to start | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | finance contract | none | none |
 | `INT-01` | 1 | ready to start | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | country-pack engine | none | none |
 | `ACAD-01` | 2 | blocked | reviewed Wave 1 integration SHA | academic structure | none | `GATE-WAVE-1-INTEGRATED` |
@@ -295,7 +295,7 @@ Worktree: `.worktrees/sis-01-core-sis`
 Primary Neon branch: `agent/sis-01-core-sis` (`br-ancient-sunset-axuhcmof`)
 Replay Neon branch: `agent/sis-01-core-sis-replay` (`br-aged-flower-axspjezr`)
 Starting base: `55114f55a375d3d79dba7ea21f984b789b5dbca1`
-Final implementation SHA: `c05a710a772338dad37bc1e5224467214e8057e0`
+Final implementation SHA: `91be1b651a9e2366fc5bc8aacc9d3e00be34ca74`
 Changed owned paths: `tests/sis/**`; `docs/modules/sis/{runbook,verification-report,completion-checklist}.md`; formatting corrections within SIS-owned module/UI paths
 Verification results: repository `npm run verify` PASS; full Vitest 65 PASS with one credential-dependent Neon test conditional; all workspace builds PASS; artifact validation PASS; Chromium browser flows 3/3 PASS including two SIS flows; V8 coverage 82.30% statements and 83.59% lines; 5,000-row import load test PASS
 Fresh migration replay: foundation 1–5 and SIS 101–105 applied in order on a new Neon child branch; ledger 10 total/5 SIS; people 21 tables; admissions 18 tables; student_lifecycle 20 tables; forced RLS 59/59
