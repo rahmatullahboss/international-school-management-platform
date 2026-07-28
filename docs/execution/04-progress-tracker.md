@@ -19,7 +19,7 @@
 
 | Stream | Wave | Status | Base | Current/next milestone | Final/last checkpoint | Blocking condition |
 |---|---:|---|---|---|---|---|
-| `FND-01` | 0 | in progress | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | localization and shared workflow services | `b17e6eaf308017f363d61da142f8bb0ac1c30029` | none |
+| `FND-01` | 0 | in progress | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | shared UI and module boundaries | `7f827e98099fffcc57fd542499295d7aba8967d1` | none |
 | `SIS-01` | 1 | blocked | reviewed foundation SHA | module contract | none | `GATE-FOUNDATION-READY` |
 | `FIN-01` | 1 | blocked | reviewed foundation SHA | finance contract | none | `GATE-FOUNDATION-READY` |
 | `INT-01` | 1 | blocked | reviewed foundation SHA | country-pack engine | none | `GATE-FOUNDATION-READY` |
@@ -104,6 +104,15 @@ Migration: `202607280004_FND-01_transactional_primitives`; idempotency, versione
 Focused checks and results: event tests 4/4 PASS; full Vitest 23/23 PASS; typecheck PASS; ESLint PASS; build PASS; duplicate idempotency rows 1; outbox rows 1; original response preserved; audit mutation rejected; no-context outbox count 0; forbidden cross-tenant outbox count 0
 Gate outcome: milestone 5 passed; append-only and duplicate-safe behavior executable; production/main branch unchanged
 Exact next milestone: 6 — localization and shared workflow services
+
+### Milestone 6 — localization and shared workflow services
+
+Date/time: 2026-07-28T06:44:00+06:00
+Checkpoint SHA: `7f827e98099fffcc57fd542499295d7aba8967d1`
+Migration: `202607280005_FND-01_shared_services`; immutable country packs, tenant activations, workflow definitions/instances/tasks, scanned documents and notification delivery
+Focused checks and results: shared-services tests 5/5 PASS; full Vitest 29/29 PASS; typecheck PASS; ESLint PASS; build PASS; pack mutation blocked and default locale remained en; no-context workflow count 0; tenant A saw only its approved workflow and clean document; forbidden cross-tenant notification count 0
+Gate outcome: milestone 6 passed; production/main branch unchanged
+Exact next milestone: 7 — shared UI and module boundaries
 
 ## SIS-01 evidence
 
