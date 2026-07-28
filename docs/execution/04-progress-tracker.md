@@ -525,6 +525,22 @@ Exact next milestone: 4 — grading policy/scales/categories, assessments/rubric
 Dirty/uncommitted state: tracker evidence only
 Production mutation performed: no
 
+### Milestone 4 — gradebook, moderation and publication
+
+Date/time: 2026-07-28T23:50:28+06:00
+Stream: ACAD-01
+Milestone completed: 4 — versioned grading policies/scales/categories, rubrics/outcomes, assessments, raw result states, explainable calculations, moderation, locks, publication windows and approved grade changes
+Git branch/worktree: `module/academics-attendance-records` / `.worktrees/acad-01-academics`
+Neon branch: `agent/acad-01-academics` (`br-gentle-waterfall-axcl7l8z`)
+Starting base: `8cc8ee1562ade672b14c1c44af935fe7e2307976`
+Checkpoint SHA: `42a354f51b29e4154b56becebf9e4c41f7d171a1`
+Changed owned paths: `packages/modules/gradebook/**`; `tests/academics/gradebook.test.ts`; `docs/modules/academics/gradebook.md`; append-only TypeScript include registration
+Focused checks and results: focused ESLint PASS; module TypeScript project-reference build PASS; cumulative academic Vitest 20/20 PASS; category/scale validation, raw-score/state separation, standards evidence, weighted calculation inputs/formula, moderation-before-lock, publication windows and approved locked-grade changes verified
+Gate outcome: milestone 4 passed; live reviewed-base migration replay remains pending final database gate
+Exact next milestone: 5 — reporting periods/templates, report-card snapshots/approval, promotion/retention, credits/GPA and immutable transcript issue/amend/reissue
+Dirty/uncommitted state: tracker evidence only
+Production mutation performed: no
+
 ## OPS-01 evidence
 
 No execution evidence recorded.
