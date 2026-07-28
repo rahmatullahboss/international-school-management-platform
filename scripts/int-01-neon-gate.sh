@@ -279,9 +279,14 @@ SQL
 replay_in_fresh_database() {
   local replay_database="int01_replay_${GITHUB_RUN_ID:-local}_${GITHUB_RUN_ATTEMPT:-1}"
   replay_database=${replay_database//-/_}
-  local replay_url
+  local replay_url stale_database
 
-  dropdb --maintenance-db="$DATABASE_URL" --if-exists "$replay_database" >/dev/null 2>&1 || true
+  while IFS= read -r stale_database; do
+    [[ -z "$stale_database" ]] && continue
+    echo "cleanup stale replay database: $stale_database"
+    dropdb --maintenance-db="$DATABASE_URL" --if-exists "$stale_database"
+  done < <("${psql_base[@]}" -Atc "SELECT datname FROM pg_database WHERE datname LIKE 'int01_replay_%' ORDER BY datname")
+
   createdb --maintenance-db="$DATABASE_URL" "$replay_database"
   replay_url=$(python3 - "$DATABASE_URL" "$replay_database" <<'PY'
 import sys
@@ -300,6 +305,8 @@ PY
   apply_migration_set "$replay_url" "${int_migrations[@]}"
 
   DATABASE_URL="$replay_url" bash "$0" apply
+  cleanup_replay
+  trap - EXIT
   echo "fresh database replay passed"
 }
 
