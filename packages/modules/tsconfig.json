@@ -4,8 +4,15 @@
     "composite": true,
     "rootDir": ".",
     "outDir": "dist",
-    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
+    "types": ["node"]
   },
-  "include": ["people/**/*.ts", "admissions/**/*.ts", "student-lifecycle/**/*.ts"],
-  "references": [{ "path": "../events" }]
+  "include": [
+    "people/**/*.ts",
+    "admissions/**/*.ts",
+    "student-lifecycle/**/*.ts",
+    "billing/src/**/*.ts",
+    "ledger/src/**/*.ts"
+  ],
+  "references": [{ "path": "../events" }, { "path": "../policy" }]
 }

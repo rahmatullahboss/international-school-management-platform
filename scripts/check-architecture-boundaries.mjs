@@ -7,6 +7,11 @@ const workspaceRoots = ['apps', 'packages'];
 const sourceExtensions = new Set(['.ts', '.tsx', '.js', '.jsx']);
 const importPattern = /(?:from\s+|import\s*\(|require\s*\()\s*['"]([^'"]+)['"]/gu;
 
+function packageName(specifier) {
+  const parts = specifier.split('/');
+  return specifier.startsWith('@') ? parts.slice(0, 2).join('/') : parts[0];
+}
+
 async function directories(parent) {
   const entries = await readdir(path.join(root, parent), { withFileTypes: true });
   return entries
@@ -40,10 +45,11 @@ for (const workspaceRoot of workspaceRoots) {
       for (const match of source.matchAll(importPattern)) {
         const specifier = match[1];
         if (!specifier) continue;
+        const importedPackage = packageName(specifier);
         if (
           specifier.startsWith('@school/') &&
-          specifier !== manifest.name &&
-          !declared.has(specifier)
+          importedPackage !== manifest.name &&
+          !declared.has(importedPackage)
         ) {
           failures.push(
             `${path.relative(root, file)} imports undeclared workspace dependency ${specifier}`,
