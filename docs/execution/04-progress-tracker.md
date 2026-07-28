@@ -32,10 +32,10 @@ Current readiness: `GATE-FOUNDATION-READY` is passed. `SIS-01`, `FIN-01` and `IN
 
 | Stream | Wave | Status | Base | Current/next milestone | Final/last checkpoint | Blocking condition |
 |---|---:|---|---|---|---|---|
-| `FND-01` | 0 | complete; gate passed | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | freeze reviewed foundation SHA | pending gate-evidence commit | none |
-| `SIS-01` | 1 | ready to start | reviewed foundation SHA | module contract | none | none |
-| `FIN-01` | 1 | ready to start | reviewed foundation SHA | finance contract | none | none |
-| `INT-01` | 1 | ready to start | reviewed foundation SHA | country-pack engine | none | none |
+| `FND-01` | 0 | complete; gate passed | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | Wave 1 released | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | none |
+| `SIS-01` | 1 | ready to start | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | module contract | none | none |
+| `FIN-01` | 1 | ready to start | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | finance contract | none | none |
+| `INT-01` | 1 | ready to start | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | country-pack engine | none | none |
 | `ACAD-01` | 2 | blocked | reviewed Wave 1 integration SHA | academic structure | none | `GATE-WAVE-1-INTEGRATED` |
 | `OPS-01` | 2 | blocked | reviewed Wave 1 integration SHA | HR/staff | none | `GATE-WAVE-1-INTEGRATED` |
 | `CARE-01` | 2 | blocked | reviewed Wave 1 integration SHA | security contract | none | threat-model and Wave 1 gates |
@@ -172,10 +172,12 @@ Production mutation performed: no
 
 Date/time: 2026-07-28T07:54:00+06:00
 Stream: FND-01
+Checkpoint SHA: `55114f55a375d3d79dba7ea21f984b789b5dbca1`
 Verification: `npm run test:neon` executed with an ephemeral `DATABASE_URL` supplied through the local clipboard; no credential was written to repository files, documentation or command output
 Result: direct Neon serverless driver integration test passed 1/1; parameterized HTTP query returned a database name and the expected `fnd-01` echo value
 Gate outcome: `GATE-FOUNDATION-READY` passed
-Exact next milestone: freeze this gate-evidence commit as the reviewed Wave 1 foundation base, then prepare the three module streams
+Reviewed Wave 1 base: `55114f55a375d3d79dba7ea21f984b789b5dbca1`
+Exact next milestone: prepare and start `SIS-01`, `FIN-01` and `INT-01` as separate whole-module streams
 Dirty/uncommitted state: gate evidence and agent-board updates only
 Production mutation performed: no
 

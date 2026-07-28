@@ -29,6 +29,9 @@
     "wave_3": "EXP-01 uses the exact reviewed Wave 2 integration SHA",
     "integration": "accept only reviewed checkpoint/final SHAs recorded in the progress tracker"
   },
+  "reviewed_bases": {
+    "foundation": "55114f55a375d3d79dba7ea21f984b789b5dbca1"
+  },
   "streams": [
     {
       "id": "FND-01",
