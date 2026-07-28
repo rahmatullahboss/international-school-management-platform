@@ -197,7 +197,8 @@ function median(values: readonly number[]): number | undefined {
 function daysBetween(start: string, end: string): number | undefined {
   const startTime = Date.parse(start);
   const endTime = Date.parse(end);
-  if (!Number.isFinite(startTime) || !Number.isFinite(endTime) || endTime < startTime) return undefined;
+  if (!Number.isFinite(startTime) || !Number.isFinite(endTime) || endTime < startTime)
+    return undefined;
   return (endTime - startTime) / 86_400_000;
 }
 
@@ -264,7 +265,14 @@ export function buildEnrollmentSummary(
       current += 1;
     }
   }
-  return deepFreeze({ total: scoped.length, byStatus, byCampus, byProgram, byAcademicYear, current });
+  return deepFreeze({
+    total: scoped.length,
+    byStatus,
+    byCampus,
+    byProgram,
+    byAcademicYear,
+    current,
+  });
 }
 
 export function buildMovementSummary(
@@ -292,18 +300,27 @@ export function buildGuardianDataQuality(
   );
   return deepFreeze({
     totalRelationships: scoped.length,
-    studentsWithoutGuardian: knownStudentPersonIds.filter((studentId) => !coveredStudents.has(studentId)).length,
+    studentsWithoutGuardian: knownStudentPersonIds.filter(
+      (studentId) => !coveredStudents.has(studentId),
+    ).length,
     unverifiedAuthorities: scoped.filter((row) => !row.verified).length,
-    portalAccessWithoutVerification: scoped.filter((row) => row.portalAccess && !row.verified).length,
+    portalAccessWithoutVerification: scoped.filter((row) => row.portalAccess && !row.verified)
+      .length,
     communicationGaps: scoped.filter((row) => row.verified && !row.communicationAuthority).length,
   });
 }
 
 export function reconcileSis(input: ReconciliationInput): readonly ReconciliationIssue[] {
   const profileById = new Map(input.profiles.map((profile) => [profile.studentProfileId, profile]));
-  const enrollmentById = new Map(input.enrollments.map((enrollment) => [enrollment.enrollmentId, enrollment]));
-  const enrollmentProfileIds = new Set(input.enrollments.map((enrollment) => enrollment.studentProfileId));
-  const guardianStudentIds = new Set(input.guardianAuthorities.map((authority) => authority.studentPersonId));
+  const enrollmentById = new Map(
+    input.enrollments.map((enrollment) => [enrollment.enrollmentId, enrollment]),
+  );
+  const enrollmentProfileIds = new Set(
+    input.enrollments.map((enrollment) => enrollment.studentProfileId),
+  );
+  const guardianStudentIds = new Set(
+    input.guardianAuthorities.map((authority) => authority.studentPersonId),
+  );
   const detectedAt = new Date().toISOString();
   const issues: ReconciliationIssue[] = [];
   const push = (
@@ -325,7 +342,10 @@ export function reconcileSis(input: ReconciliationInput): readonly Reconciliatio
 
   for (const application of input.applications) {
     if (application.status !== 'converted') continue;
-    if (application.studentProfileId === undefined || !profileById.has(application.studentProfileId)) {
+    if (
+      application.studentProfileId === undefined ||
+      !profileById.has(application.studentProfileId)
+    ) {
       push(
         'converted-application-missing-profile',
         'critical',
@@ -344,7 +364,10 @@ export function reconcileSis(input: ReconciliationInput): readonly Reconciliatio
   }
 
   for (const profile of input.profiles) {
-    if (['active', 'leave'].includes(profile.status) && !enrollmentProfileIds.has(profile.studentProfileId)) {
+    if (
+      ['active', 'leave'].includes(profile.status) &&
+      !enrollmentProfileIds.has(profile.studentProfileId)
+    ) {
       push(
         'profile-missing-enrollment',
         'error',
@@ -419,7 +442,10 @@ export class SisReportRegistry {
   getSnapshot<T>(tenantId: string, reportSnapshotId: string): ReportSnapshot<T> {
     const snapshot = this.#snapshots.get(reportSnapshotId);
     if (!snapshot || snapshot.tenantId !== tenantId) {
-      throw new ReportingDomainError('SIS_REPORT_SNAPSHOT_NOT_FOUND', 'Report snapshot was not found');
+      throw new ReportingDomainError(
+        'SIS_REPORT_SNAPSHOT_NOT_FOUND',
+        'Report snapshot was not found',
+      );
     }
     return snapshot as ReportSnapshot<T>;
   }

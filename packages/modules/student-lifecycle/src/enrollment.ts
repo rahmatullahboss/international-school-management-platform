@@ -132,7 +132,12 @@ function validPeriod(from: string, to?: string): boolean {
   return to === undefined || to >= from;
 }
 
-function periodsOverlap(leftFrom: string, leftTo: string | undefined, rightFrom: string, rightTo?: string): boolean {
+function periodsOverlap(
+  leftFrom: string,
+  leftTo: string | undefined,
+  rightFrom: string,
+  rightTo?: string,
+): boolean {
   const leftEnd = leftTo ?? '9999-12-31';
   const rightEnd = rightTo ?? '9999-12-31';
   return leftFrom <= rightEnd && rightFrom <= leftEnd;
@@ -221,7 +226,10 @@ export class EnrollmentRegistry {
     correlationId: string;
   }): EnrollmentCommandResult<EnrollmentRecord> {
     if (!validPeriod(input.effectiveFrom, input.effectiveTo)) {
-      throw new EnrollmentDomainError('SIS_ENROLLMENT_PERIOD_INVALID', 'Enrollment period is invalid');
+      throw new EnrollmentDomainError(
+        'SIS_ENROLLMENT_PERIOD_INVALID',
+        'Enrollment period is invalid',
+      );
     }
     const retryKey = `${input.tenantId}:${input.idempotencyKey}`;
     const replayId = this.#enrollmentIdempotency.get(retryKey);
@@ -234,10 +242,18 @@ export class EnrollmentRegistry {
         enrollment.programId === input.programId &&
         enrollment.academicYearId === input.academicYearId &&
         !['withdrawn', 'cancelled', 'completed', 'transferred'].includes(enrollment.status) &&
-        periodsOverlap(enrollment.effectiveFrom, enrollment.effectiveTo, input.effectiveFrom, input.effectiveTo),
+        periodsOverlap(
+          enrollment.effectiveFrom,
+          enrollment.effectiveTo,
+          input.effectiveFrom,
+          input.effectiveTo,
+        ),
     );
     if (conflict) {
-      throw new EnrollmentDomainError('SIS_ENROLLMENT_OVERLAP', 'An overlapping enrollment already exists');
+      throw new EnrollmentDomainError(
+        'SIS_ENROLLMENT_OVERLAP',
+        'An overlapping enrollment already exists',
+      );
     }
 
     const now = new Date().toISOString();
@@ -287,11 +303,17 @@ export class EnrollmentRegistry {
     this.#admissionHistory.push({
       admissionHistoryId: crypto.randomUUID(),
       studentProfileId: input.studentProfileId,
-      ...(input.sourceApplicationId === undefined ? {} : { applicationId: input.sourceApplicationId }),
+      ...(input.sourceApplicationId === undefined
+        ? {}
+        : { applicationId: input.sourceApplicationId }),
       admittedAt: input.effectiveFrom,
       admissionType: input.sourceApplicationId ? 'new' : 'transfer-in',
     });
-    this.#audit.append({ tenantId: input.tenantId, action: 'sis.lifecycle.enrollment-created', subjectId: enrollment.enrollmentId });
+    this.#audit.append({
+      tenantId: input.tenantId,
+      action: 'sis.lifecycle.enrollment-created',
+      subjectId: enrollment.enrollmentId,
+    });
 
     return {
       value: cloneEnrollment(enrollment),
@@ -331,15 +353,25 @@ export class EnrollmentRegistry {
     const replayId = this.#transferIdempotency.get(retryKey);
     if (replayId) {
       const replay = this.#transfers.get(replayId);
-      if (!replay) throw new EnrollmentDomainError('SIS_TRANSFER_REPLAY_MISSING', 'Transfer replay was missing');
+      if (!replay)
+        throw new EnrollmentDomainError(
+          'SIS_TRANSFER_REPLAY_MISSING',
+          'Transfer replay was missing',
+        );
       return { value: { ...replay }, events: [] };
     }
     const source = this.#requireEnrollment(input.tenantId, input.sourceEnrollmentId);
     if (source.status !== 'active') {
-      throw new EnrollmentDomainError('SIS_TRANSFER_SOURCE_NOT_ACTIVE', 'Only active enrollment can transfer');
+      throw new EnrollmentDomainError(
+        'SIS_TRANSFER_SOURCE_NOT_ACTIVE',
+        'Only active enrollment can transfer',
+      );
     }
     if (input.transferDate < source.effectiveFrom) {
-      throw new EnrollmentDomainError('SIS_TRANSFER_DATE_INVALID', 'Transfer date predates enrollment');
+      throw new EnrollmentDomainError(
+        'SIS_TRANSFER_DATE_INVALID',
+        'Transfer date predates enrollment',
+      );
     }
 
     source.effectiveTo = input.transferDate;
@@ -372,7 +404,11 @@ export class EnrollmentRegistry {
     };
     this.#transfers.set(transfer.transferId, transfer);
     this.#transferIdempotency.set(retryKey, transfer.transferId);
-    this.#audit.append({ tenantId: input.tenantId, action: 'sis.lifecycle.student-transferred', subjectId: transfer.transferId });
+    this.#audit.append({
+      tenantId: input.tenantId,
+      action: 'sis.lifecycle.student-transferred',
+      subjectId: transfer.transferId,
+    });
 
     return {
       value: { ...transfer },
@@ -409,10 +445,16 @@ export class EnrollmentRegistry {
     if (existing) return { value: { ...existing }, events: [] };
     const enrollment = this.#requireEnrollment(input.tenantId, input.enrollmentId);
     if (!['active', 'pending', 'leave'].includes(enrollment.status)) {
-      throw new EnrollmentDomainError('SIS_WITHDRAWAL_STATUS_INVALID', 'Enrollment cannot be withdrawn');
+      throw new EnrollmentDomainError(
+        'SIS_WITHDRAWAL_STATUS_INVALID',
+        'Enrollment cannot be withdrawn',
+      );
     }
     if (input.withdrawalDate < enrollment.effectiveFrom) {
-      throw new EnrollmentDomainError('SIS_WITHDRAWAL_DATE_INVALID', 'Withdrawal date predates enrollment');
+      throw new EnrollmentDomainError(
+        'SIS_WITHDRAWAL_DATE_INVALID',
+        'Withdrawal date predates enrollment',
+      );
     }
     enrollment.effectiveTo = input.withdrawalDate;
     closeCurrentStatus(enrollment, 'withdrawn', input.withdrawalDate, input.reasonCode);
@@ -421,7 +463,9 @@ export class EnrollmentRegistry {
       enrollmentId: enrollment.enrollmentId,
       withdrawalDate: input.withdrawalDate,
       reasonCode: input.reasonCode,
-      ...(input.destinationSchool === undefined ? {} : { destinationSchool: input.destinationSchool }),
+      ...(input.destinationSchool === undefined
+        ? {}
+        : { destinationSchool: input.destinationSchool }),
       ...(input.destinationCountryCode === undefined
         ? {}
         : { destinationCountryCode: input.destinationCountryCode }),
@@ -429,7 +473,11 @@ export class EnrollmentRegistry {
       createdAt: new Date().toISOString(),
     };
     this.#withdrawals.set(enrollment.enrollmentId, withdrawal);
-    this.#audit.append({ tenantId: input.tenantId, action: 'sis.lifecycle.student-withdrawn', subjectId: withdrawal.withdrawalId });
+    this.#audit.append({
+      tenantId: input.tenantId,
+      action: 'sis.lifecycle.student-withdrawn',
+      subjectId: withdrawal.withdrawalId,
+    });
     return {
       value: { ...withdrawal },
       events: [
@@ -462,7 +510,10 @@ export class EnrollmentRegistry {
   }): PromotionRecord {
     const source = this.#requireEnrollment(input.tenantId, input.sourceEnrollmentId);
     if (source.status !== 'active') {
-      throw new EnrollmentDomainError('SIS_PROMOTION_SOURCE_NOT_ACTIVE', 'Promotion requires active enrollment');
+      throw new EnrollmentDomainError(
+        'SIS_PROMOTION_SOURCE_NOT_ACTIVE',
+        'Promotion requires active enrollment',
+      );
     }
     source.effectiveTo = input.effectiveFrom;
     closeCurrentStatus(source, 'completed', input.effectiveFrom, 'year-end-promotion');
@@ -506,7 +557,10 @@ export class EnrollmentRegistry {
   }): ReEnrollmentRecord {
     const prior = this.#requireEnrollment(input.tenantId, input.priorEnrollmentId);
     if (!['withdrawn', 'completed', 'cancelled', 'transferred'].includes(prior.status)) {
-      throw new EnrollmentDomainError('SIS_REENROLLMENT_PRIOR_OPEN', 'Prior enrollment is still open');
+      throw new EnrollmentDomainError(
+        'SIS_REENROLLMENT_PRIOR_OPEN',
+        'Prior enrollment is still open',
+      );
     }
     const next = this.createEnrollment({
       tenantId: input.tenantId,
@@ -542,9 +596,14 @@ export class EnrollmentRegistry {
     return { ...record };
   }
 
-  recordPreviousSchool(input: Omit<PreviousSchoolRecord, 'previousSchoolId'> & { tenantId: string }): PreviousSchoolRecord {
+  recordPreviousSchool(
+    input: Omit<PreviousSchoolRecord, 'previousSchoolId'> & { tenantId: string },
+  ): PreviousSchoolRecord {
     if (input.attendedFrom !== undefined && !validPeriod(input.attendedFrom, input.attendedTo)) {
-      throw new EnrollmentDomainError('SIS_PREVIOUS_SCHOOL_PERIOD_INVALID', 'Previous school period is invalid');
+      throw new EnrollmentDomainError(
+        'SIS_PREVIOUS_SCHOOL_PERIOD_INVALID',
+        'Previous school period is invalid',
+      );
     }
     const record: PreviousSchoolRecord = {
       previousSchoolId: crypto.randomUUID(),
@@ -560,7 +619,11 @@ export class EnrollmentRegistry {
         : { transcriptDocumentId: input.transcriptDocumentId }),
     };
     this.#previousSchools.push(record);
-    this.#audit.append({ tenantId: input.tenantId, action: 'sis.lifecycle.previous-school-recorded', subjectId: record.previousSchoolId });
+    this.#audit.append({
+      tenantId: input.tenantId,
+      action: 'sis.lifecycle.previous-school-recorded',
+      subjectId: record.previousSchoolId,
+    });
     return { ...record };
   }
 
@@ -573,7 +636,10 @@ export class EnrollmentRegistry {
   }): AlumniTransitionRecord {
     const enrollment = this.#requireEnrollment(input.tenantId, input.finalEnrollmentId);
     if (!['completed', 'withdrawn'].includes(enrollment.status)) {
-      throw new EnrollmentDomainError('SIS_ALUMNI_FINAL_ENROLLMENT_OPEN', 'Final enrollment must be closed');
+      throw new EnrollmentDomainError(
+        'SIS_ALUMNI_FINAL_ENROLLMENT_OPEN',
+        'Final enrollment must be closed',
+      );
     }
     const existing = this.#alumniTransitions.find(
       (record) => record.studentProfileId === enrollment.studentProfileId,
@@ -588,7 +654,11 @@ export class EnrollmentRegistry {
       alumniAccess: input.alumniAccess,
     };
     this.#alumniTransitions.push(record);
-    this.#audit.append({ tenantId: input.tenantId, action: 'sis.lifecycle.alumni-transitioned', subjectId: record.alumniTransitionId });
+    this.#audit.append({
+      tenantId: input.tenantId,
+      action: 'sis.lifecycle.alumni-transitioned',
+      subjectId: record.alumniTransitionId,
+    });
     return { ...record };
   }
 
@@ -598,7 +668,10 @@ export class EnrollmentRegistry {
 
   getEnrollmentHistory(tenantId: string, studentProfileId: string): readonly EnrollmentRecord[] {
     return [...this.#enrollments.values()]
-      .filter((enrollment) => enrollment.tenantId === tenantId && enrollment.studentProfileId === studentProfileId)
+      .filter(
+        (enrollment) =>
+          enrollment.tenantId === tenantId && enrollment.studentProfileId === studentProfileId,
+      )
       .sort((left, right) => left.effectiveFrom.localeCompare(right.effectiveFrom))
       .map(cloneEnrollment);
   }

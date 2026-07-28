@@ -139,7 +139,10 @@ export interface Application {
   updatedAt: string;
 }
 
-interface MutableApplication extends Omit<Application, 'responseVersions' | 'checklist' | 'reviews' | 'interviews'> {
+interface MutableApplication extends Omit<
+  Application,
+  'responseVersions' | 'checklist' | 'reviews' | 'interviews'
+> {
   responseVersions: ApplicationResponseVersion[];
   checklist: ChecklistItem[];
   reviews: ApplicationReview[];
@@ -183,7 +186,12 @@ function cloneApplication(application: MutableApplication): Application {
       : { depositReference: { ...application.depositReference } }),
     ...(application.conversion === undefined
       ? {}
-      : { conversion: { ...application.conversion, fieldMapping: { ...application.conversion.fieldMapping } } }),
+      : {
+          conversion: {
+            ...application.conversion,
+            fieldMapping: { ...application.conversion.fieldMapping },
+          },
+        }),
   };
 }
 
@@ -210,7 +218,10 @@ export class AdmissionsRegistry {
 
   createCycle(input: Omit<AdmissionsCycle, 'cycleId'>): AdmissionsCycle {
     if (input.closesAt <= input.opensAt) {
-      throw new AdmissionsDomainError('SIS_ADMISSIONS_CYCLE_PERIOD_INVALID', 'Cycle period is invalid');
+      throw new AdmissionsDomainError(
+        'SIS_ADMISSIONS_CYCLE_PERIOD_INVALID',
+        'Cycle period is invalid',
+      );
     }
     const cycle: AdmissionsCycle = { ...input, cycleId: crypto.randomUUID() };
     this.#cycles.set(cycle.cycleId, cycle);
@@ -265,18 +276,30 @@ export class AdmissionsRegistry {
   }): Application {
     const cycle = this.#cycles.get(input.cycleId);
     if (!cycle || cycle.tenantId !== input.tenantId || !['draft', 'open'].includes(cycle.status)) {
-      throw new AdmissionsDomainError('SIS_ADMISSIONS_CYCLE_UNAVAILABLE', 'Admissions cycle is unavailable');
+      throw new AdmissionsDomainError(
+        'SIS_ADMISSIONS_CYCLE_UNAVAILABLE',
+        'Admissions cycle is unavailable',
+      );
     }
     const form = this.#forms.get(input.formVersionId);
     if (!form || form.tenantId !== input.tenantId) {
-      throw new AdmissionsDomainError('SIS_ADMISSIONS_FORM_VERSION_NOT_FOUND', 'Form version was not found');
+      throw new AdmissionsDomainError(
+        'SIS_ADMISSIONS_FORM_VERSION_NOT_FOUND',
+        'Form version was not found',
+      );
     }
     const numberKey = `${input.tenantId}:${input.applicationNumber.trim().toLowerCase()}`;
     if (this.#applicationNumbers.has(numberKey)) {
-      throw new AdmissionsDomainError('SIS_APPLICATION_NUMBER_DUPLICATE', 'Application number already exists');
+      throw new AdmissionsDomainError(
+        'SIS_APPLICATION_NUMBER_DUPLICATE',
+        'Application number already exists',
+      );
     }
     if (input.programChoiceIds.length === 0) {
-      throw new AdmissionsDomainError('SIS_APPLICATION_PROGRAM_REQUIRED', 'A program choice is required');
+      throw new AdmissionsDomainError(
+        'SIS_APPLICATION_PROGRAM_REQUIRED',
+        'A program choice is required',
+      );
     }
     const now = new Date().toISOString();
     const application: MutableApplication = {
@@ -317,7 +340,10 @@ export class AdmissionsRegistry {
   }): ApplicationResponseVersion {
     const application = this.#requireApplication(input.tenantId, input.applicationId);
     if (['withdrawn', 'converted'].includes(application.status)) {
-      throw new AdmissionsDomainError('SIS_APPLICATION_NOT_AMENDABLE', 'Application cannot be amended');
+      throw new AdmissionsDomainError(
+        'SIS_APPLICATION_NOT_AMENDABLE',
+        'Application cannot be amended',
+      );
     }
     const previous = application.responseVersions.at(-1);
     const response: ApplicationResponseVersion = {
@@ -326,7 +352,9 @@ export class AdmissionsRegistry {
       answers: Object.freeze({ ...input.answers }),
       submitted: false,
       createdAt: new Date().toISOString(),
-      ...(previous === undefined ? {} : { supersedesResponseVersionId: previous.responseVersionId }),
+      ...(previous === undefined
+        ? {}
+        : { supersedesResponseVersionId: previous.responseVersionId }),
     };
     application.responseVersions.push(response);
     application.version += 1;
@@ -343,7 +371,10 @@ export class AdmissionsRegistry {
   }): ChecklistItem {
     const application = this.#requireApplication(input.tenantId, input.applicationId);
     if (application.checklist.some((item) => item.requirementKey === input.requirementKey)) {
-      throw new AdmissionsDomainError('SIS_CHECKLIST_REQUIREMENT_DUPLICATE', 'Checklist item already exists');
+      throw new AdmissionsDomainError(
+        'SIS_CHECKLIST_REQUIREMENT_DUPLICATE',
+        'Checklist item already exists',
+      );
     }
     const item: ChecklistItem = {
       checklistItemId: crypto.randomUUID(),
@@ -365,11 +396,18 @@ export class AdmissionsRegistry {
     documentId?: string;
   }): ChecklistItem {
     const application = this.#requireApplication(input.tenantId, input.applicationId);
-    const item = application.checklist.find((candidate) => candidate.checklistItemId === input.checklistItemId);
-    if (!item) throw new AdmissionsDomainError('SIS_CHECKLIST_ITEM_NOT_FOUND', 'Checklist item was not found');
+    const item = application.checklist.find(
+      (candidate) => candidate.checklistItemId === input.checklistItemId,
+    );
+    if (!item)
+      throw new AdmissionsDomainError(
+        'SIS_CHECKLIST_ITEM_NOT_FOUND',
+        'Checklist item was not found',
+      );
     item.status = input.status;
     if (input.documentId !== undefined) item.documentId = input.documentId;
-    if (input.status === 'verified' || input.status === 'waived') item.verifiedAt = new Date().toISOString();
+    if (input.status === 'verified' || input.status === 'waived')
+      item.verifiedAt = new Date().toISOString();
     application.version += 1;
     return { ...item };
   }
@@ -384,10 +422,14 @@ export class AdmissionsRegistry {
       if (application.status === 'submitted' || application.status === 'under-review') {
         return { value: cloneApplication(application), events: [] };
       }
-      throw new AdmissionsDomainError('SIS_APPLICATION_NOT_SUBMITTABLE', 'Application cannot be submitted');
+      throw new AdmissionsDomainError(
+        'SIS_APPLICATION_NOT_SUBMITTABLE',
+        'Application cannot be submitted',
+      );
     }
     const currentResponse = application.responseVersions.at(-1);
-    if (!currentResponse) throw new AdmissionsDomainError('SIS_APPLICATION_RESPONSE_REQUIRED', 'Response is required');
+    if (!currentResponse)
+      throw new AdmissionsDomainError('SIS_APPLICATION_RESPONSE_REQUIRED', 'Response is required');
     currentResponse.submitted = true;
     application.status = 'submitted';
     application.submittedAt = new Date().toISOString();
@@ -419,10 +461,18 @@ export class AdmissionsRegistry {
     };
   }
 
-  recordReview(input: Omit<ApplicationReview, 'reviewId' | 'recordedAt'> & { tenantId: string; applicationId: string }): ApplicationReview {
+  recordReview(
+    input: Omit<ApplicationReview, 'reviewId' | 'recordedAt'> & {
+      tenantId: string;
+      applicationId: string;
+    },
+  ): ApplicationReview {
     const application = this.#requireApplication(input.tenantId, input.applicationId);
     if (!['submitted', 'under-review', 'waitlisted'].includes(application.status)) {
-      throw new AdmissionsDomainError('SIS_APPLICATION_NOT_REVIEWABLE', 'Application is not reviewable');
+      throw new AdmissionsDomainError(
+        'SIS_APPLICATION_NOT_REVIEWABLE',
+        'Application is not reviewable',
+      );
     }
     const review: ApplicationReview = {
       reviewerAccountId: input.reviewerAccountId,
@@ -470,8 +520,11 @@ export class AdmissionsRegistry {
     outcome?: string;
   }): InterviewEvent {
     const application = this.#requireApplication(input.tenantId, input.applicationId);
-    const interview = application.interviews.find((candidate) => candidate.interviewId === input.interviewId);
-    if (!interview) throw new AdmissionsDomainError('SIS_INTERVIEW_NOT_FOUND', 'Interview was not found');
+    const interview = application.interviews.find(
+      (candidate) => candidate.interviewId === input.interviewId,
+    );
+    if (!interview)
+      throw new AdmissionsDomainError('SIS_INTERVIEW_NOT_FOUND', 'Interview was not found');
     interview.status = input.status;
     if (input.outcome !== undefined) interview.outcome = input.outcome;
     application.version += 1;
@@ -488,7 +541,10 @@ export class AdmissionsRegistry {
   }): AdmissionsCommandResult<AdmissionsDecision> {
     const application = this.#requireApplication(input.tenantId, input.applicationId);
     if (!['submitted', 'under-review', 'waitlisted'].includes(application.status)) {
-      throw new AdmissionsDomainError('SIS_APPLICATION_DECISION_INVALID', 'Decision cannot be recorded');
+      throw new AdmissionsDomainError(
+        'SIS_APPLICATION_DECISION_INVALID',
+        'Decision cannot be recorded',
+      );
     }
     const decision: AdmissionsDecision = {
       decisionId: crypto.randomUUID(),
@@ -498,9 +554,18 @@ export class AdmissionsRegistry {
       decidedAt: new Date().toISOString(),
     };
     application.decision = decision;
-    application.status = input.decision === 'waitlist' ? 'waitlisted' : input.decision === 'decline' ? 'declined' : 'under-review';
+    application.status =
+      input.decision === 'waitlist'
+        ? 'waitlisted'
+        : input.decision === 'decline'
+          ? 'declined'
+          : 'under-review';
     application.version += 1;
-    this.#audit.append({ tenantId: input.tenantId, action: 'sis.admissions.decision-recorded', subjectId: application.applicationId });
+    this.#audit.append({
+      tenantId: input.tenantId,
+      action: 'sis.admissions.decision-recorded',
+      subjectId: application.applicationId,
+    });
     return {
       value: { ...decision },
       events: [
@@ -529,7 +594,10 @@ export class AdmissionsRegistry {
   }): AdmissionOffer {
     const application = this.#requireApplication(input.tenantId, input.applicationId);
     if (application.decision?.decision !== 'admit') {
-      throw new AdmissionsDomainError('SIS_OFFER_REQUIRES_ADMIT_DECISION', 'Offer requires an admit decision');
+      throw new AdmissionsDomainError(
+        'SIS_OFFER_REQUIRES_ADMIT_DECISION',
+        'Offer requires an admit decision',
+      );
     }
     if (application.offer) return { ...application.offer };
     const offer: AdmissionOffer = {
@@ -554,7 +622,8 @@ export class AdmissionsRegistry {
     documentId: string;
   }): EnrollmentContract {
     const application = this.#requireApplication(input.tenantId, input.applicationId);
-    if (!application.offer) throw new AdmissionsDomainError('SIS_CONTRACT_REQUIRES_OFFER', 'Contract requires an offer');
+    if (!application.offer)
+      throw new AdmissionsDomainError('SIS_CONTRACT_REQUIRES_OFFER', 'Contract requires an offer');
     const contract: EnrollmentContract = {
       contractId: crypto.randomUUID(),
       templateVersion: input.templateVersion,
@@ -577,7 +646,10 @@ export class AdmissionsRegistry {
     const application = this.#requireApplication(input.tenantId, input.applicationId);
     const deposit: DepositReference = {
       depositReferenceId: application.depositReference?.depositReferenceId ?? crypto.randomUUID(),
-      externalBillingReference: requireNonEmpty(input.externalBillingReference, 'SIS_DEPOSIT_REFERENCE_REQUIRED'),
+      externalBillingReference: requireNonEmpty(
+        input.externalBillingReference,
+        'SIS_DEPOSIT_REFERENCE_REQUIRED',
+      ),
       status: input.status,
       ...(input.amountMinor === undefined ? {} : { amountMinor: input.amountMinor }),
       ...(input.currency === undefined ? {} : { currency: input.currency }),
@@ -599,17 +671,31 @@ export class AdmissionsRegistry {
     if (offer.status !== 'issued' || offer.expiresAt < new Date().toISOString()) {
       throw new AdmissionsDomainError('SIS_OFFER_NOT_ACCEPTABLE', 'Offer cannot be accepted');
     }
-    if (application.checklist.some((item) => item.required && !['verified', 'waived'].includes(item.status))) {
-      throw new AdmissionsDomainError('SIS_REQUIRED_CHECKLIST_INCOMPLETE', 'Required checklist is incomplete');
+    if (
+      application.checklist.some(
+        (item) => item.required && !['verified', 'waived'].includes(item.status),
+      )
+    ) {
+      throw new AdmissionsDomainError(
+        'SIS_REQUIRED_CHECKLIST_INCOMPLETE',
+        'Required checklist is incomplete',
+      );
     }
     if (application.contract && application.contract.status !== 'signed') {
-      throw new AdmissionsDomainError('SIS_CONTRACT_NOT_SIGNED', 'Enrollment contract is not signed');
+      throw new AdmissionsDomainError(
+        'SIS_CONTRACT_NOT_SIGNED',
+        'Enrollment contract is not signed',
+      );
     }
     offer.status = 'accepted';
     offer.acceptedAt = new Date().toISOString();
     application.status = 'accepted';
     application.version += 1;
-    this.#audit.append({ tenantId: input.tenantId, action: 'sis.admissions.offer-accepted', subjectId: offer.offerId });
+    this.#audit.append({
+      tenantId: input.tenantId,
+      action: 'sis.admissions.offer-accepted',
+      subjectId: offer.offerId,
+    });
     return {
       value: { ...offer },
       events: [
@@ -629,7 +715,8 @@ export class AdmissionsRegistry {
 
   signContract(input: { tenantId: string; applicationId: string }): EnrollmentContract {
     const application = this.#requireApplication(input.tenantId, input.applicationId);
-    if (!application.contract) throw new AdmissionsDomainError('SIS_CONTRACT_NOT_FOUND', 'Contract was not found');
+    if (!application.contract)
+      throw new AdmissionsDomainError('SIS_CONTRACT_NOT_FOUND', 'Contract was not found');
     application.contract.status = 'signed';
     application.contract.signedAt = new Date().toISOString();
     application.version += 1;
@@ -649,14 +736,18 @@ export class AdmissionsRegistry {
     const application = this.#requireApplication(input.tenantId, input.applicationId);
     const idempotencyKey = `${input.tenantId}:${input.idempotencyKey}`;
     const replay = this.#conversionByIdempotency.get(idempotencyKey);
-    if (replay) return { value: { ...replay, fieldMapping: { ...replay.fieldMapping } }, events: [] };
+    if (replay)
+      return { value: { ...replay, fieldMapping: { ...replay.fieldMapping } }, events: [] };
     const prior = this.#conversionByApplication.get(application.applicationId);
     if (prior) {
       this.#conversionByIdempotency.set(idempotencyKey, prior);
       return { value: { ...prior, fieldMapping: { ...prior.fieldMapping } }, events: [] };
     }
     if (application.status !== 'accepted' || application.offer?.status !== 'accepted') {
-      throw new AdmissionsDomainError('SIS_APPLICATION_NOT_CONVERTIBLE', 'Application must have an accepted offer');
+      throw new AdmissionsDomainError(
+        'SIS_APPLICATION_NOT_CONVERTIBLE',
+        'Application must have an accepted offer',
+      );
     }
     const conversion: ApplicantConversion = {
       conversionId: crypto.randomUUID(),
@@ -672,7 +763,11 @@ export class AdmissionsRegistry {
     application.version += 1;
     this.#conversionByApplication.set(application.applicationId, conversion);
     this.#conversionByIdempotency.set(idempotencyKey, conversion);
-    this.#audit.append({ tenantId: input.tenantId, action: 'sis.admissions.applicant-converted', subjectId: conversion.conversionId });
+    this.#audit.append({
+      tenantId: input.tenantId,
+      action: 'sis.admissions.applicant-converted',
+      subjectId: conversion.conversionId,
+    });
     return {
       value: { ...conversion, fieldMapping: { ...conversion.fieldMapping } },
       events: [
@@ -702,10 +797,16 @@ export class AdmissionsRegistry {
     tenantId: string,
     applicationId: string,
     guardianPersonId: string,
-  ): Pick<Application, 'applicationId' | 'applicationNumber' | 'status' | 'checklist' | 'decision' | 'offer'> {
+  ): Pick<
+    Application,
+    'applicationId' | 'applicationNumber' | 'status' | 'checklist' | 'decision' | 'offer'
+  > {
     const application = this.#requireApplication(tenantId, applicationId);
     if (application.submittingGuardianPersonId !== guardianPersonId) {
-      throw new AdmissionsDomainError('SIS_GUARDIAN_APPLICATION_ACCESS_DENIED', 'Guardian cannot access application');
+      throw new AdmissionsDomainError(
+        'SIS_GUARDIAN_APPLICATION_ACCESS_DENIED',
+        'Guardian cannot access application',
+      );
     }
     return {
       applicationId: application.applicationId,

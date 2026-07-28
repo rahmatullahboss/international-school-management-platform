@@ -110,8 +110,8 @@ export function FamilyAdmissionsWorkspace(props: FamilyAdmissionsWorkspaceProps)
         </p>
         {requiredIncomplete.length > 0 ? (
           <p role="alert">
-            {requiredIncomplete.length} required item{requiredIncomplete.length === 1 ? '' : 's'} still need
-            attention.
+            {requiredIncomplete.length} required item{requiredIncomplete.length === 1 ? '' : 's'}{' '}
+            still need attention.
           </p>
         ) : (
           <p role="status">All required checklist items are complete.</p>
@@ -203,7 +203,9 @@ export function FamilyAdmissionsWorkspace(props: FamilyAdmissionsWorkspaceProps)
 
       <aside aria-labelledby="support-heading">
         <h2 id="support-heading">Need help?</h2>
-        <p>Contact the admissions office about checklist items, offer deadlines or family access.</p>
+        <p>
+          Contact the admissions office about checklist items, offer deadlines or family access.
+        </p>
         <a href={props.supportHref}>Contact admissions support</a>
       </aside>
     </main>

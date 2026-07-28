@@ -68,15 +68,15 @@ describe('PeopleDirectory', () => {
       correlationId: crypto.randomUUID(),
     });
 
-    expect(directory.canGuardian(tenantA, guardian.personId, student.personId, 'portal', '2026-07-28')).toBe(
-      true,
-    );
-    expect(directory.canGuardian(tenantA, guardian.personId, student.personId, 'pickup', '2026-07-28')).toBe(
-      false,
-    );
-    expect(directory.canGuardian(tenantA, guardian.personId, student.personId, 'portal', '2027-01-01')).toBe(
-      false,
-    );
+    expect(
+      directory.canGuardian(tenantA, guardian.personId, student.personId, 'portal', '2026-07-28'),
+    ).toBe(true);
+    expect(
+      directory.canGuardian(tenantA, guardian.personId, student.personId, 'pickup', '2026-07-28'),
+    ).toBe(false);
+    expect(
+      directory.canGuardian(tenantA, guardian.personId, student.personId, 'portal', '2027-01-01'),
+    ).toBe(false);
   });
 
   it('detects duplicates and merges without deleting historical identity', () => {

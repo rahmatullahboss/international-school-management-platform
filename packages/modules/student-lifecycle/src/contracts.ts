@@ -1,19 +1,9 @@
 export const STUDENT_LIFECYCLE_SCHEMA_VERSION = 1 as const;
 
 export type StudentStatus =
-  | 'prospective'
-  | 'active'
-  | 'leave'
-  | 'withdrawn'
-  | 'graduated'
-  | 'alumni';
+  'prospective' | 'active' | 'leave' | 'withdrawn' | 'graduated' | 'alumni';
 export type EnrollmentStatus =
-  | 'pending'
-  | 'active'
-  | 'transferred'
-  | 'withdrawn'
-  | 'completed'
-  | 'cancelled';
+  'pending' | 'active' | 'transferred' | 'withdrawn' | 'completed' | 'cancelled';
 
 export interface EnrollmentReference {
   tenantId: string;

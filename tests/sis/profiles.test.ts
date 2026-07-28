@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { ProfileDomainError, ProfileRegistry } from '../../packages/modules/student-lifecycle/src/profiles.js';
+import {
+  ProfileDomainError,
+  ProfileRegistry,
+} from '../../packages/modules/student-lifecycle/src/profiles.js';
 
 const tenantA = '00000000-0000-4000-8000-0000000000a1';
 const tenantB = '00000000-0000-4000-8000-0000000000b1';
@@ -127,6 +130,8 @@ describe('ProfileRegistry', () => {
       interactiveAccess: 'suspended',
       futureOperationalExpectations: 'paused',
     });
-    expect(() => registry.getStaff(tenantB, staff.staffProfileId)).toThrow('Staff profile was not found');
+    expect(() => registry.getStaff(tenantB, staff.staffProfileId)).toThrow(
+      'Staff profile was not found',
+    );
   });
 });

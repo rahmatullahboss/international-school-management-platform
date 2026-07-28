@@ -64,7 +64,10 @@ export interface SisAdminWorkspaceProps {
   activeSection?: 'overview' | 'people' | 'admissions' | 'students' | 'imports' | 'reports';
 }
 
-const navigation: readonly { key: NonNullable<SisAdminWorkspaceProps['activeSection']>; label: string }[] = [
+const navigation: readonly {
+  key: NonNullable<SisAdminWorkspaceProps['activeSection']>;
+  label: string;
+}[] = [
   { key: 'overview', label: 'Overview' },
   { key: 'people', label: 'People and households' },
   { key: 'admissions', label: 'Admissions' },
@@ -75,9 +78,13 @@ const navigation: readonly { key: NonNullable<SisAdminWorkspaceProps['activeSect
 
 function Section(props: { title: string; description: string; children: ReactNode }): ReactElement {
   return (
-    <section aria-labelledby={`${props.title.toLowerCase().replaceAll(/[^a-z0-9]+/gu, '-')}-heading`}>
+    <section
+      aria-labelledby={`${props.title.toLowerCase().replaceAll(/[^a-z0-9]+/gu, '-')}-heading`}
+    >
       <header>
-        <h2 id={`${props.title.toLowerCase().replaceAll(/[^a-z0-9]+/gu, '-')}-heading`}>{props.title}</h2>
+        <h2 id={`${props.title.toLowerCase().replaceAll(/[^a-z0-9]+/gu, '-')}-heading`}>
+          {props.title}
+        </h2>
         <p>{props.description}</p>
       </header>
       {props.children}
@@ -105,8 +112,8 @@ export function SisAdminWorkspace(props: SisAdminWorkspaceProps): ReactElement {
         <p>School information system</p>
         <h1>{props.schoolName}: SIS operations</h1>
         <p>
-          Review admissions, people, guardian authority, enrollment movements, imports and data quality
-          from one accountable workspace.
+          Review admissions, people, guardian authority, enrollment movements, imports and data
+          quality from one accountable workspace.
         </p>
       </header>
 
@@ -114,7 +121,10 @@ export function SisAdminWorkspace(props: SisAdminWorkspaceProps): ReactElement {
         <ul>
           {navigation.map((item) => (
             <li key={item.key}>
-              <a href={`#${item.key}`} aria-current={activeSection === item.key ? 'page' : undefined}>
+              <a
+                href={`#${item.key}`}
+                aria-current={activeSection === item.key ? 'page' : undefined}
+              >
                 {item.label}
               </a>
             </li>
@@ -194,12 +204,15 @@ export function SisAdminWorkspace(props: SisAdminWorkspaceProps): ReactElement {
           <button type="submit">Search people</button>
         </form>
         <p>
-          Duplicate candidates and guardian-authority restrictions are reviewed through separate audited
-          actions; search results never merge records automatically.
+          Duplicate candidates and guardian-authority restrictions are reviewed through separate
+          audited actions; search results never merge records automatically.
         </p>
       </section>
 
-      <Section title="Admissions pipeline" description="Application status with checklist progress and direct review actions.">
+      <Section
+        title="Admissions pipeline"
+        description="Application status with checklist progress and direct review actions."
+      >
         <div id="admissions">
           {props.applications.length === 0 ? (
             <EmptyState message="No applications match the current filters." />
@@ -327,7 +340,10 @@ export function SisAdminWorkspace(props: SisAdminWorkspaceProps): ReactElement {
         </div>
       </Section>
 
-      <Section title="Reports and reconciliation" description="Snapshots preserve filters, generation time and accountable actor.">
+      <Section
+        title="Reports and reconciliation"
+        description="Snapshots preserve filters, generation time and accountable actor."
+      >
         <ul id="reports">
           {props.reportLinks.map((report) => (
             <li key={report.href}>

@@ -1,5 +1,7 @@
-export type ImportEntity = 'person' | 'household' | 'guardian-authority' | 'student-profile' | 'enrollment';
-export type ImportBatchStatus = 'draft' | 'validated' | 'applying' | 'completed' | 'completed-with-errors' | 'failed';
+export type ImportEntity =
+  'person' | 'household' | 'guardian-authority' | 'student-profile' | 'enrollment';
+export type ImportBatchStatus =
+  'draft' | 'validated' | 'applying' | 'completed' | 'completed-with-errors' | 'failed';
 
 export interface ImportColumnMapping {
   sourceColumn: string;
@@ -147,7 +149,10 @@ export class ImportPipeline {
     const existingId = this.#batchByIdempotency.get(retryKey);
     if (existingId) return this.getBatch(input.tenantId, existingId);
     if (input.mappings.length === 0) {
-      throw new ImportDomainError('SIS_IMPORT_MAPPING_REQUIRED', 'At least one mapping is required');
+      throw new ImportDomainError(
+        'SIS_IMPORT_MAPPING_REQUIRED',
+        'At least one mapping is required',
+      );
     }
     const duplicateSourceKeys = new Set<string>();
     const seenSourceKeys = new Set<string>();
@@ -229,7 +234,10 @@ export class ImportPipeline {
   async apply(
     tenantId: string,
     importBatchId: string,
-    applyRow: (entity: ImportEntity, values: Readonly<Record<string, unknown>>) => Promise<ImportApplyResult>,
+    applyRow: (
+      entity: ImportEntity,
+      values: Readonly<Record<string, unknown>>,
+    ) => Promise<ImportApplyResult>,
   ): Promise<ImportBatch> {
     const batch = this.#requireBatch(tenantId, importBatchId);
     if (batch.status === 'completed' || batch.status === 'completed-with-errors') {
@@ -290,16 +298,26 @@ export class ImportPipeline {
     return this.#cloneBatch(this.#requireBatch(tenantId, importBatchId));
   }
 
-  listIssues(tenantId: string, status: DataQualityIssue['status'] = 'open'): readonly DataQualityIssue[] {
+  listIssues(
+    tenantId: string,
+    status: DataQualityIssue['status'] = 'open',
+  ): readonly DataQualityIssue[] {
     return [...this.#issues.values()]
       .filter((issue) => issue.tenantId === tenantId && issue.status === status)
       .map(cloneIssue);
   }
 
-  resolveIssue(tenantId: string, issueId: string, resolution: 'resolved' | 'dismissed'): DataQualityIssue {
+  resolveIssue(
+    tenantId: string,
+    issueId: string,
+    resolution: 'resolved' | 'dismissed',
+  ): DataQualityIssue {
     const issue = this.#issues.get(issueId);
     if (!issue || issue.tenantId !== tenantId) {
-      throw new ImportDomainError('SIS_DATA_QUALITY_ISSUE_NOT_FOUND', 'Data-quality issue was not found');
+      throw new ImportDomainError(
+        'SIS_DATA_QUALITY_ISSUE_NOT_FOUND',
+        'Data-quality issue was not found',
+      );
     }
     issue.status = resolution;
     issue.resolvedAt = new Date().toISOString();

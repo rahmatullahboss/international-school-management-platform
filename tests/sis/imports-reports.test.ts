@@ -28,7 +28,11 @@ describe('SIS imports and reporting', () => {
         { sourceColumn: 'dob', targetField: 'dateOfBirth', required: true, transform: 'date-iso' },
       ],
       rows: [
-        { rowNumber: 1, sourceKey: 'legacy-1', values: { name: ' Amina Rahman ', dob: '2015-05-10' } },
+        {
+          rowNumber: 1,
+          sourceKey: 'legacy-1',
+          values: { name: ' Amina Rahman ', dob: '2015-05-10' },
+        },
         { rowNumber: 2, sourceKey: 'legacy-2', values: { name: '', dob: 'not-a-date' } },
       ],
     });
@@ -55,7 +59,9 @@ describe('SIS imports and reporting', () => {
     expect(applyReplay.rows).toEqual(applied.rows);
     expect(applyCount).toBe(1);
     expect(pipeline.listIssues(tenantA)).toHaveLength(2);
-    expect(() => pipeline.getBatch(tenantB, staged.importBatchId)).toThrow('Import batch was not found');
+    expect(() => pipeline.getBatch(tenantB, staged.importBatchId)).toThrow(
+      'Import batch was not found',
+    );
   });
 
   it('supports dry-run validation without applying rows', async () => {
@@ -65,7 +71,14 @@ describe('SIS imports and reporting', () => {
       entity: 'enrollment',
       idempotencyKey: 'enrollment-dry-run',
       dryRun: true,
-      mappings: [{ sourceColumn: 'student', targetField: 'studentNumber', required: true, transform: 'trim' }],
+      mappings: [
+        {
+          sourceColumn: 'student',
+          targetField: 'studentNumber',
+          required: true,
+          transform: 'trim',
+        },
+      ],
       rows: [{ rowNumber: 1, sourceKey: 'E-1', values: { student: 'S-1001' } }],
     });
     let called = false;
@@ -157,18 +170,27 @@ describe('SIS imports and reporting', () => {
         effectiveAt: '2026-07-15',
       },
     ]);
-    const guardian = buildGuardianDataQuality(tenantA, ['person-s1', 'person-s2'], [
-      {
-        tenantId: tenantA,
-        studentPersonId: 'person-s1',
-        guardianPersonId: 'person-g1',
-        verified: false,
-        portalAccess: true,
-        communicationAuthority: false,
-      },
-    ]);
+    const guardian = buildGuardianDataQuality(
+      tenantA,
+      ['person-s1', 'person-s2'],
+      [
+        {
+          tenantId: tenantA,
+          studentPersonId: 'person-s1',
+          guardianPersonId: 'person-g1',
+          verified: false,
+          portalAccess: true,
+          communicationAuthority: false,
+        },
+      ],
+    );
 
-    expect(funnel).toMatchObject({ total: 2, conversionRate: 0.5, offerAcceptanceRate: 0.5, medianDecisionDays: 4 });
+    expect(funnel).toMatchObject({
+      total: 2,
+      conversionRate: 0.5,
+      offerAcceptanceRate: 0.5,
+      medianDecisionDays: 4,
+    });
     expect(enrollment).toMatchObject({ total: 2, current: 1, byCampus: { 'campus-a': 2 } });
     expect(movement).toMatchObject({ total: 2, byMonth: { '2026-07': 2 } });
     expect(guardian).toMatchObject({
@@ -214,7 +236,9 @@ describe('SIS imports and reporting', () => {
         'portal-authority-unverified',
       ]),
     );
-    expect(issues.filter((issue) => issue.severity === 'critical').length).toBeGreaterThanOrEqual(3);
+    expect(issues.filter((issue) => issue.severity === 'critical').length).toBeGreaterThanOrEqual(
+      3,
+    );
   });
 
   it('stores immutable report snapshots within tenant scope', () => {
@@ -227,10 +251,14 @@ describe('SIS imports and reporting', () => {
       generatedByAccountId: 'account-1',
     });
 
-    expect(registry.getSnapshot<{ current: number }>(tenantA, snapshot.reportSnapshotId).data.current).toBe(250);
+    expect(
+      registry.getSnapshot<{ current: number }>(tenantA, snapshot.reportSnapshotId).data.current,
+    ).toBe(250);
     expect(Object.isFrozen(snapshot)).toBe(true);
     expect(Object.isFrozen(snapshot.data)).toBe(true);
-    expect(() => registry.getSnapshot(tenantB, snapshot.reportSnapshotId)).toThrow('Report snapshot was not found');
+    expect(() => registry.getSnapshot(tenantB, snapshot.reportSnapshotId)).toThrow(
+      'Report snapshot was not found',
+    );
   });
 
   it('stages 5,000 import rows without losing deterministic row state', () => {

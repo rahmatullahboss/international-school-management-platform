@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { AdmissionsDomainError, AdmissionsRegistry } from '../../packages/modules/admissions/src/domain.js';
+import {
+  AdmissionsDomainError,
+  AdmissionsRegistry,
+} from '../../packages/modules/admissions/src/domain.js';
 
 const tenantA = '00000000-0000-4000-8000-0000000000a1';
 const tenantB = '00000000-0000-4000-8000-0000000000b1';
@@ -46,7 +49,11 @@ function acceptApplication(registry: AdmissionsRegistry) {
     status: 'verified',
     documentId: crypto.randomUUID(),
   });
-  registry.submitApplication({ tenantId: tenantA, applicationId: application.applicationId, correlationId: 'submit' });
+  registry.submitApplication({
+    tenantId: tenantA,
+    applicationId: application.applicationId,
+    correlationId: 'submit',
+  });
   registry.recordReview({
     tenantId: tenantA,
     applicationId: application.applicationId,
@@ -71,7 +78,11 @@ function acceptApplication(registry: AdmissionsRegistry) {
     academicYearId: crypto.randomUUID(),
     expiresAt: '2099-01-01T00:00:00.000Z',
   });
-  registry.acceptOffer({ tenantId: tenantA, applicationId: application.applicationId, correlationId: 'accept' });
+  registry.acceptOffer({
+    tenantId: tenantA,
+    applicationId: application.applicationId,
+    correlationId: 'accept',
+  });
   return application.applicationId;
 }
 
@@ -107,7 +118,11 @@ describe('AdmissionsRegistry', () => {
       label: 'Passport',
       required: true,
     });
-    registry.submitApplication({ tenantId: tenantA, applicationId: application.applicationId, correlationId: 'submit-2' });
+    registry.submitApplication({
+      tenantId: tenantA,
+      applicationId: application.applicationId,
+      correlationId: 'submit-2',
+    });
     registry.recordDecision({
       tenantId: tenantA,
       applicationId: application.applicationId,
@@ -126,7 +141,11 @@ describe('AdmissionsRegistry', () => {
     });
 
     expect(() =>
-      registry.acceptOffer({ tenantId: tenantA, applicationId: application.applicationId, correlationId: 'accept-2' }),
+      registry.acceptOffer({
+        tenantId: tenantA,
+        applicationId: application.applicationId,
+        correlationId: 'accept-2',
+      }),
     ).toThrow('Required checklist is incomplete');
   });
 
@@ -172,8 +191,14 @@ describe('AdmissionsRegistry', () => {
       ).status,
     ).toBe('draft');
     expect(() =>
-      registry.getGuardianApplicationStatus(tenantA, application.applicationId, crypto.randomUUID()),
+      registry.getGuardianApplicationStatus(
+        tenantA,
+        application.applicationId,
+        crypto.randomUUID(),
+      ),
     ).toThrowError(AdmissionsDomainError);
-    expect(() => registry.getApplication(tenantB, application.applicationId)).toThrow('Application was not found');
+    expect(() => registry.getApplication(tenantB, application.applicationId)).toThrow(
+      'Application was not found',
+    );
   });
 });

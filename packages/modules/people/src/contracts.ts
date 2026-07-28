@@ -4,12 +4,7 @@ export type PersonStatus = 'active' | 'inactive' | 'deceased' | 'merged';
 export type NameUsage = 'legal' | 'preferred' | 'former' | 'local-script';
 export type ContactKind = 'email' | 'phone' | 'messaging';
 export type AuthorityKind =
-  | 'legal'
-  | 'education'
-  | 'billing'
-  | 'communication'
-  | 'pickup'
-  | 'portal';
+  'legal' | 'education' | 'billing' | 'communication' | 'pickup' | 'portal';
 
 export interface EffectivePeriod {
   effectiveFrom: string;

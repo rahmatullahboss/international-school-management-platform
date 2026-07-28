@@ -35,7 +35,7 @@ describe('SIS people migration', () => {
 
   it('forces tenant RLS and records the migration ledger entry', async () => {
     const sql = await readFile(migrationPath, 'utf8');
-    expect(sql).toContain("ALTER TABLE people.%I FORCE ROW LEVEL SECURITY");
+    expect(sql).toContain('ALTER TABLE people.%I FORCE ROW LEVEL SECURITY');
     expect(sql).toContain("current_setting(''app.tenant_id'', true)");
     expect(sql).toContain("'202607280101_SIS-01_people'");
     expect(sql).toContain("'SIS-01'");

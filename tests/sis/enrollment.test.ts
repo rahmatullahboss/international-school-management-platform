@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { EnrollmentDomainError, EnrollmentRegistry } from '../../packages/modules/student-lifecycle/src/enrollment.js';
+import {
+  EnrollmentDomainError,
+  EnrollmentRegistry,
+} from '../../packages/modules/student-lifecycle/src/enrollment.js';
 
 const tenantA = '00000000-0000-4000-8000-0000000000a1';
 const tenantB = '00000000-0000-4000-8000-0000000000b1';
@@ -128,8 +131,12 @@ describe('EnrollmentRegistry', () => {
     });
 
     expect(registry.getEnrollment(tenantA, source.enrollmentId).status).toBe('completed');
-    expect(registry.getEnrollment(tenantA, promotion.destinationEnrollmentId).status).toBe('withdrawn');
+    expect(registry.getEnrollment(tenantA, promotion.destinationEnrollmentId).status).toBe(
+      'withdrawn',
+    );
     expect(alumni.studentProfileId).toBe(source.studentProfileId);
-    expect(() => registry.getEnrollment(tenantB, source.enrollmentId)).toThrow('Enrollment was not found');
+    expect(() => registry.getEnrollment(tenantB, source.enrollmentId)).toThrow(
+      'Enrollment was not found',
+    );
   });
 });

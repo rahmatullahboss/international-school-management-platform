@@ -307,7 +307,10 @@ export class ProfileRegistry {
     effectiveTo?: string;
   }): ProfileIdentifier {
     if (!periodValid(input.effectiveFrom, input.effectiveTo)) {
-      throw new ProfileDomainError('SIS_PROFILE_IDENTIFIER_PERIOD_INVALID', 'Identifier period is invalid');
+      throw new ProfileDomainError(
+        'SIS_PROFILE_IDENTIFIER_PERIOD_INVALID',
+        'Identifier period is invalid',
+      );
     }
     const uniquenessKey = `${input.tenantId}:${identifierKey(input)}`;
     const owner = this.#identifierOwners.get(uniquenessKey);
@@ -343,7 +346,10 @@ export class ProfileRegistry {
     validTo?: string;
   }): ProfileDocument {
     if (input.validFrom !== undefined && !periodValid(input.validFrom, input.validTo)) {
-      throw new ProfileDomainError('SIS_PROFILE_DOCUMENT_PERIOD_INVALID', 'Document period is invalid');
+      throw new ProfileDomainError(
+        'SIS_PROFILE_DOCUMENT_PERIOD_INVALID',
+        'Document period is invalid',
+      );
     }
     const document: ProfileDocument = {
       profileDocumentId: crypto.randomUUID(),
@@ -367,7 +373,11 @@ export class ProfileRegistry {
     return cloneStaff(this.#requireStaff(tenantId, staffProfileId));
   }
 
-  accessEffect(tenantId: string, profileKind: ProfileKind, profileId: string): LifecycleAccessEffect {
+  accessEffect(
+    tenantId: string,
+    profileKind: ProfileKind,
+    profileId: string,
+  ): LifecycleAccessEffect {
     if (profileKind === 'student') {
       const profile = this.#requireStudent(tenantId, profileId);
       if (profile.status === 'active') {
@@ -441,7 +451,10 @@ export class ProfileRegistry {
   #requireStudent(tenantId: string, profileId: string): MutableStudentProfile {
     const profile = this.#students.get(profileId);
     if (!profile || profile.tenantId !== tenantId) {
-      throw new ProfileDomainError('SIS_STUDENT_PROFILE_NOT_FOUND', 'Student profile was not found');
+      throw new ProfileDomainError(
+        'SIS_STUDENT_PROFILE_NOT_FOUND',
+        'Student profile was not found',
+      );
     }
     return profile;
   }

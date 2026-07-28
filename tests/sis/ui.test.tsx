@@ -76,8 +76,12 @@ describe('SIS user interfaces', () => {
     expect(html).toContain('<main id="main-content" tabindex="-1">');
     expect(html).toContain('aria-label="SIS sections"');
     expect(html).toContain('aria-label="Severity: critical"');
-    expect(html).toContain('<caption>Admissions, lifecycle, import and data-quality work</caption>');
-    expect(html).toContain('<label for="sis-person-search">Name, identifier, email or phone</label>');
+    expect(html).toContain(
+      '<caption>Admissions, lifecycle, import and data-quality work</caption>',
+    );
+    expect(html).toContain(
+      '<label for="sis-person-search">Name, identifier, email or phone</label>',
+    );
     expect(html).toContain('Review item');
     expect(html).toContain('Open application');
     expect(html).toContain('Open student record');

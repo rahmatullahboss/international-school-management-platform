@@ -21,13 +21,15 @@ const eventNames = [
 describe('SIS contract v1', () => {
   it('publishes unique versioned event names', () => {
     expect(new Set(eventNames).size).toBe(eventNames.length);
-    expect(eventNames.every((name) => name.startsWith('sis.') && name.endsWith('.v1'))).toBe(
-      true,
-    );
+    expect(eventNames.every((name) => name.startsWith('sis.') && name.endsWith('.v1'))).toBe(true);
   });
 
   it('keeps command and query names unique within each API', () => {
-    for (const contract of [peopleApiContract, admissionsApiContract, studentLifecycleApiContract]) {
+    for (const contract of [
+      peopleApiContract,
+      admissionsApiContract,
+      studentLifecycleApiContract,
+    ]) {
       expect(contract.version).toBe('v1');
       expect(new Set(contract.commands).size).toBe(contract.commands.length);
       expect(new Set(contract.queries).size).toBe(contract.queries.length);

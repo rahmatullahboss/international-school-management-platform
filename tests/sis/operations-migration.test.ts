@@ -25,7 +25,7 @@ describe('SIS operations migration', () => {
 
   it('forces tenant RLS, immutable report snapshots and migration-ledger evidence', async () => {
     const sql = await readFile(migrationPath, 'utf8');
-    expect(sql).toContain("ALTER TABLE %I.%I FORCE ROW LEVEL SECURITY");
+    expect(sql).toContain('ALTER TABLE %I.%I FORCE ROW LEVEL SECURITY');
     expect(sql).toContain("current_setting(''app.tenant_id'', true)");
     expect(sql).toContain('report snapshots are immutable');
     expect(sql).toContain("'202607280105_SIS-01_operations'");

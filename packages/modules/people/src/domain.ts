@@ -293,7 +293,9 @@ export class PeopleDirectory {
     return { ...record, members: [...record.members] };
   }
 
-  setGuardianAuthority(input: GuardianAuthorityInput): PeopleCommandResult<GuardianAuthorityRecord> {
+  setGuardianAuthority(
+    input: GuardianAuthorityInput,
+  ): PeopleCommandResult<GuardianAuthorityRecord> {
     this.#requirePerson(input.tenantId, input.guardianPersonId);
     this.#requirePerson(input.tenantId, input.studentPersonId);
     if (input.guardianPersonId === input.studentPersonId) {
@@ -303,7 +305,10 @@ export class PeopleDirectory {
       );
     }
     if (input.authorities.length === 0) {
-      throw new PeopleDomainError('SIS_GUARDIAN_AUTHORITY_REQUIRED', 'Authority flags are required');
+      throw new PeopleDomainError(
+        'SIS_GUARDIAN_AUTHORITY_REQUIRED',
+        'Authority flags are required',
+      );
     }
     if (input.effectiveTo !== undefined && input.effectiveTo < input.effectiveFrom) {
       throw new PeopleDomainError('SIS_EFFECTIVE_PERIOD_INVALID', 'Authority period is invalid');
@@ -348,9 +353,7 @@ export class PeopleDirectory {
             studentPersonId: authority.studentPersonId,
             portalAccess,
             effectiveFrom: authority.effectiveFrom,
-            ...(authority.effectiveTo === undefined
-              ? {}
-              : { effectiveTo: authority.effectiveTo }),
+            ...(authority.effectiveTo === undefined ? {} : { effectiveTo: authority.effectiveTo }),
           },
         }),
       ],
@@ -415,8 +418,9 @@ export class PeopleDirectory {
           reasons.push('date-of-birth');
         }
         const leftIdentifiers = new Set(
-          left.identifiers.map((identifier) =>
-            `${normalized(identifier.identifierType)}:${normalized(identifier.value)}`,
+          left.identifiers.map(
+            (identifier) =>
+              `${normalized(identifier.identifierType)}:${normalized(identifier.value)}`,
           ),
         );
         if (
@@ -468,12 +472,18 @@ export class PeopleDirectory {
     correlationId: string,
   ): PeopleCommandResult<PersonMergeRecord> {
     if (survivingPersonId === mergedPersonId) {
-      throw new PeopleDomainError('SIS_PERSON_MERGE_SELF_INVALID', 'Cannot merge a person into itself');
+      throw new PeopleDomainError(
+        'SIS_PERSON_MERGE_SELF_INVALID',
+        'Cannot merge a person into itself',
+      );
     }
     const surviving = this.#requirePerson(tenantId, survivingPersonId);
     const merged = this.#requirePerson(tenantId, mergedPersonId);
     if (surviving.status === 'merged' || merged.status === 'merged') {
-      throw new PeopleDomainError('SIS_PERSON_ALREADY_MERGED', 'A merged person is not authoritative');
+      throw new PeopleDomainError(
+        'SIS_PERSON_ALREADY_MERGED',
+        'A merged person is not authoritative',
+      );
     }
 
     surviving.names = uniqueBy(
@@ -511,7 +521,9 @@ export class PeopleDirectory {
             ? survivingPersonId
             : authority.guardianPersonId,
         studentPersonId:
-          authority.studentPersonId === mergedPersonId ? survivingPersonId : authority.studentPersonId,
+          authority.studentPersonId === mergedPersonId
+            ? survivingPersonId
+            : authority.studentPersonId,
         version: authority.version + 1,
       };
       this.#authorities.set(authorityId, updated);
@@ -559,7 +571,9 @@ export class PeopleDirectory {
   }
 
   listMerges(tenantId: string): readonly PersonMergeRecord[] {
-    return this.#merges.filter((merge) => merge.tenantId === tenantId).map((merge) => ({ ...merge }));
+    return this.#merges
+      .filter((merge) => merge.tenantId === tenantId)
+      .map((merge) => ({ ...merge }));
   }
 
   #requirePerson(tenantId: string, personId: string): MutablePerson {
