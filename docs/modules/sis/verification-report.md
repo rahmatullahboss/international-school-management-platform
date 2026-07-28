@@ -35,17 +35,19 @@ SIS-01 delivers the complete owned stream:
 
 The following checks passed:
 
-- Prettier format check for the repository after SIS formatting corrections;
-- ESLint on `packages/modules`, owned admin/family SIS features and `tests/sis`: PASS with zero warnings;
-- architecture boundaries: PASS;
-- root TypeScript project references: PASS;
-- `@school/sis` TypeScript build: PASS;
-- Vitest full suite: 11 files, 27 tests PASS;
-- production workspace build: PASS;
-- build artifact validation: PASS;
-- Playwright Chromium flows: 2 tests PASS.
+- repository Prettier format check;
+- repository ESLint with zero warnings;
+- architecture boundaries;
+- root TypeScript project references, including typed `web-admin` and `web-family` workspaces;
+- all workspace builds, including `@school/sis`, `@school/web-admin` and `@school/web-family`;
+- full Vitest suite: 19 files and 65 tests PASS;
+- execution artifact validation;
+- Playwright Chromium: one platform flow and two SIS flows PASS;
+- V8 coverage: 82.30% statements, 65.96% branches, 87.64% functions and 83.59% lines.
 
-The test suite includes domain invariants, migration contracts, tenant-scope behavior, immutable records, replay safety, privacy-safe rendering, reconciliation, and a 5,000-row import staging load check.
+One environment-dependent test, `tests/integration/neon-direct.test.ts`, remains conditional and is skipped when `DATABASE_URL` is not supplied. The same Neon connectivity, migration, RLS and immutability controls were verified directly on the isolated primary and fresh-replay Neon branches without storing credentials in the repository or test logs.
+
+The suite covers domain invariants, migration contracts, tenant-scope behaviour, immutable records, replay safety, import validation, privacy-safe rendering, reconciliation, workspace boundaries and a 5,000-row import staging load check.
 
 ### Browser verification
 
@@ -59,9 +61,7 @@ Chromium exercised the actual admin and family feature components after standard
 
 ### Repository-wide `npm run verify`
 
-The composite command reached lint and reported two unchanged foundation-base errors in `packages/tenancy/src/index.ts`: unused private helpers `parseTenantContext` and `unauthorizedMessage`. A diff against the reviewed foundation SHA confirmed SIS-01 did not modify that file. Because foundation contracts and non-owned paths were frozen, SIS-01 did not alter those helpers.
-
-All SIS-owned lint targets and every remaining verification stage passed independently. The unchanged foundation lint debt is recorded separately and is not caused by the SIS stream.
+The complete composite command now passes: format, lint, architecture boundaries, root typecheck, Vitest, all workspace builds and execution artifact validation. The earlier lint and workspace-boundary gaps were corrected before review; no baseline exception or waived quality gate remains.
 
 ## Database verification
 

@@ -295,9 +295,9 @@ Replay Neon branch: `agent/sis-01-core-sis-replay` (`br-aged-flower-axspjezr`)
 Starting base: `55114f55a375d3d79dba7ea21f984b789b5dbca1`
 Final implementation SHA: `c05a710a772338dad37bc1e5224467214e8057e0`
 Changed owned paths: `tests/sis/**`; `docs/modules/sis/{runbook,verification-report,completion-checklist}.md`; formatting corrections within SIS-owned module/UI paths
-Verification results: repository format check PASS; SIS-owned lint PASS with zero warnings; boundaries PASS; root typecheck PASS; `@school/sis` build PASS; full Vitest 27/27 PASS; production build PASS; artifact validation PASS; Chromium browser flows 2/2 PASS; 5,000-row import load test PASS
+Verification results: repository `npm run verify` PASS; full Vitest 65 PASS with one credential-dependent Neon test conditional; all workspace builds PASS; artifact validation PASS; Chromium browser flows 3/3 PASS including two SIS flows; V8 coverage 82.30% statements and 83.59% lines; 5,000-row import load test PASS
 Fresh migration replay: foundation 1–5 and SIS 101–105 applied in order on a new Neon child branch; ledger 10 total/5 SIS; people 21 tables; admissions 18 tables; student_lifecycle 20 tables; forced RLS 59/59
-Repository-wide composite note: `npm run verify` reaches lint and reports two unchanged foundation-base unused helpers in `packages/tenancy/src/index.ts`; SIS-01 did not modify that frozen path, and every SIS-owned plus remaining verification gate passed independently
+Repository-wide composite note: earlier lint, test-project and workspace-boundary gaps were fixed before review; no waived repository quality gate remains
 Gate outcome: SIS-01 whole-module completion passed; no open SIS blocker; parent/production branches and data unchanged
 Exact next milestone: complete
 Dirty/uncommitted state: tracker/agent-board completion evidence only

@@ -44,13 +44,13 @@ describe('SIS imports and reporting', () => {
       rows: [],
     });
     let applyCount = 0;
-    const applied = await pipeline.apply(tenantA, staged.importBatchId, async (_entity, values) => {
+    const applied = await pipeline.apply(tenantA, staged.importBatchId, (_entity, values) => {
       applyCount += 1;
-      return { resultReference: `person:${String(values.legalName)}` };
+      return Promise.resolve({ resultReference: `person:${String(values.legalName)}` });
     });
-    const applyReplay = await pipeline.apply(tenantA, staged.importBatchId, async () => {
+    const applyReplay = await pipeline.apply(tenantA, staged.importBatchId, () => {
       applyCount += 1;
-      return { resultReference: 'unexpected' };
+      return Promise.resolve({ resultReference: 'unexpected' });
     });
 
     expect(replay.importBatchId).toBe(staged.importBatchId);
@@ -82,14 +82,31 @@ describe('SIS imports and reporting', () => {
       rows: [{ rowNumber: 1, sourceKey: 'E-1', values: { student: 'S-1001' } }],
     });
     let called = false;
-    const result = await pipeline.apply(tenantA, staged.importBatchId, async () => {
+    const result = await pipeline.apply(tenantA, staged.importBatchId, () => {
       called = true;
-      return { resultReference: 'not-used' };
+      return Promise.resolve({ resultReference: 'not-used' });
     });
 
     expect(called).toBe(false);
     expect(result.status).toBe('completed');
     expect(result.rows[0]?.status).toBe('skipped');
+  });
+
+  it('rejects non-scalar mapped values with a row-level validation error', () => {
+    const pipeline = new ImportPipeline();
+    const batch = pipeline.stage({
+      tenantId: tenantA,
+      entity: 'person',
+      idempotencyKey: 'people-object-transform',
+      mappings: [{ sourceColumn: 'name', targetField: 'legalName', transform: 'trim' }],
+      rows: [{ rowNumber: 1, sourceKey: 'legacy-object', values: { name: { nested: true } } }],
+    });
+
+    expect(batch.rows[0]).toMatchObject({
+      status: 'invalid',
+      errors: [{ code: 'SIS_IMPORT_SCALAR_REQUIRED' }],
+    });
+    expect(pipeline.listIssues(tenantA)).toHaveLength(1);
   });
 
   it('creates field-allowlisted exports and excludes restricted documents by default', () => {

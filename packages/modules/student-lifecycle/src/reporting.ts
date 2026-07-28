@@ -435,7 +435,7 @@ export class SisReportRegistry {
       generatedAt: new Date().toISOString(),
       generatedByAccountId: input.generatedByAccountId,
     });
-    this.#snapshots.set(snapshot.reportSnapshotId, snapshot as ReportSnapshot<unknown>);
+    this.#snapshots.set(snapshot.reportSnapshotId, snapshot);
     return snapshot;
   }
 

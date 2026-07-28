@@ -83,13 +83,14 @@
 
 - [x] Focused tests at every milestone.
 - [x] Commit and push at every milestone.
-- [x] Full Vitest suite passed.
-- [x] SIS-owned lint passed with zero warnings.
-- [x] Boundary checks passed.
+- [x] Full Vitest suite passed: 65 tests; one credential-dependent Neon driver test is conditional.
+- [x] Repository lint passed with zero warnings.
+- [x] Boundary checks passed, including typed admin/family workspace packages.
 - [x] Type checks passed.
-- [x] SIS and production builds passed.
+- [x] SIS, admin/family and production workspace builds passed.
 - [x] Artifact validation passed.
-- [x] Chromium browser flows passed.
+- [x] Chromium browser flows passed: one platform and two SIS flows.
+- [x] V8 coverage recorded: 82.30% statements and 83.59% lines.
 - [x] 5,000-row import load test passed.
 - [x] Fresh Neon migration replay passed.
 - [x] 59 of 59 SIS tables verified with forced RLS.

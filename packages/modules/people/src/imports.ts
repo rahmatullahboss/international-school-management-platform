@@ -103,7 +103,22 @@ function checksum(value: unknown): string {
 
 function transformValue(value: unknown, transform?: ImportColumnMapping['transform']): unknown {
   if (value === null || value === undefined || transform === undefined) return value;
-  const text = String(value);
+  let text: string;
+  switch (typeof value) {
+    case 'string':
+      text = value;
+      break;
+    case 'number':
+    case 'bigint':
+    case 'boolean':
+      text = value.toString();
+      break;
+    default:
+      throw new ImportDomainError(
+        'SIS_IMPORT_SCALAR_REQUIRED',
+        'Mapped values must be strings, numbers, bigints or booleans',
+      );
+  }
   switch (transform) {
     case 'trim':
       return text.trim();
@@ -182,7 +197,10 @@ export class ImportPipeline {
       }
       for (const mapping of input.mappings) {
         const raw = row.values[mapping.sourceColumn];
-        if (mapping.required && (raw === undefined || raw === null || String(raw).trim() === '')) {
+        if (
+          mapping.required &&
+          (raw === undefined || raw === null || (typeof raw === 'string' && raw.trim() === ''))
+        ) {
           errors.push({
             rowNumber: row.rowNumber,
             sourceKey: row.sourceKey,
