@@ -2,14 +2,14 @@
 
 **Program:** `international-school-platform-v1`
 **Updated:** 2026-07-28
-**Current repository state:** `FND-01` milestones 1–8 are implemented and owner-approved on `program/foundation-neon-platform`; only the secret-backed direct Neon driver check remains before the foundation gate can pass.
+**Current repository state:** `FND-01` milestones 1–8, owner review and the secret-backed direct Neon driver check have passed on `program/foundation-neon-platform`; `GATE-FOUNDATION-READY` is passed and Wave 1 is eligible to start from the reviewed foundation SHA.
 
 ## Gate status
 
 | Gate | Status | Evidence / required condition |
 |---|---|---|
 | `GATE-DOCUMENTS-APPROVED` | passed | Owner authorized FND-01 execution; `python3 scripts/validate_execution_artifacts.py` passed on 2026-07-28 |
-| `GATE-FOUNDATION-READY` | blocked | Milestones 1–8 implemented, owner review approved and Neon SQL/RLS proof passed; requires `npm run test:neon` in a secret-enabled non-production environment |
+| `GATE-FOUNDATION-READY` | passed | Milestones 1–8 implemented; owner review approved; Neon SQL/RLS proof passed; secret-backed `npm run test:neon` passed 1/1 on 2026-07-28 |
 | `GATE-WAVE-1-INTEGRATED` | blocked | `SIS-01`, `FIN-01`, `INT-01` reviewed and serially integrated |
 | `GATE-STUDENT-SUPPORT-THREAT-MODEL` | blocked | Wave 1 integrated plus approved student-support threat model |
 | `GATE-WAVE-2-INTEGRATED` | blocked | `ACAD-01`, `OPS-01`, `CARE-01` reviewed and integrated |
@@ -26,16 +26,16 @@ Owner decision recorded on 2026-07-28:
 - the foundation/program coordinator maintains shared documentation, gate state, contract-change decisions and this tracker without writing concurrently inside module-owned paths;
 - `INTEG-01` reviews and integrates module SHAs serially after they are recorded here.
 
-Current readiness: the whole-module multi-agent policy and owner review are approved, but Wave 1 remains blocked until the secret-backed direct Neon driver check passes.
+Current readiness: `GATE-FOUNDATION-READY` is passed. `SIS-01`, `FIN-01` and `INT-01` may now start as separate whole-module agents from the same exact reviewed foundation SHA.
 
 ## Stream tracker
 
 | Stream | Wave | Status | Base | Current/next milestone | Final/last checkpoint | Blocking condition |
 |---|---:|---|---|---|---|---|
-| `FND-01` | 0 | implementation complete; live Neon check pending | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | secret-backed direct Neon driver evidence | `7b70d9c6385786644fe3579450469d34b51cb190` | `GATE-FOUNDATION-READY` |
-| `SIS-01` | 1 | blocked | reviewed foundation SHA | module contract | none | `GATE-FOUNDATION-READY` |
-| `FIN-01` | 1 | blocked | reviewed foundation SHA | finance contract | none | `GATE-FOUNDATION-READY` |
-| `INT-01` | 1 | blocked | reviewed foundation SHA | country-pack engine | none | `GATE-FOUNDATION-READY` |
+| `FND-01` | 0 | complete; gate passed | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | freeze reviewed foundation SHA | pending gate-evidence commit | none |
+| `SIS-01` | 1 | ready to start | reviewed foundation SHA | module contract | none | none |
+| `FIN-01` | 1 | ready to start | reviewed foundation SHA | finance contract | none | none |
+| `INT-01` | 1 | ready to start | reviewed foundation SHA | country-pack engine | none | none |
 | `ACAD-01` | 2 | blocked | reviewed Wave 1 integration SHA | academic structure | none | `GATE-WAVE-1-INTEGRATED` |
 | `OPS-01` | 2 | blocked | reviewed Wave 1 integration SHA | HR/staff | none | `GATE-WAVE-1-INTEGRATED` |
 | `CARE-01` | 2 | blocked | reviewed Wave 1 integration SHA | security contract | none | threat-model and Wave 1 gates |
@@ -164,8 +164,19 @@ Production mutation performed: no
 Date/time: 2026-07-28T07:39:00+06:00
 Decision: owner approved proceeding to the multi-agent-ready foundation state
 Verification attempt: `npm run test:neon` executed; test remained explicitly skipped because `DATABASE_URL` and `NEON_API_KEY` were not available in the execution environment
-Gate outcome: owner-review condition passed; `GATE-FOUNDATION-READY` is blocked only by the secret-backed direct Neon driver check
+Gate outcome: owner-review condition passed; at this checkpoint `GATE-FOUNDATION-READY` remained blocked only by the secret-backed direct Neon driver check
 Multiple-agent eligibility: immediately after that check passes and the reviewed foundation SHA is recorded as the Wave 1 base
+Production mutation performed: no
+
+### Foundation live-driver gate checkpoint
+
+Date/time: 2026-07-28T07:54:00+06:00
+Stream: FND-01
+Verification: `npm run test:neon` executed with an ephemeral `DATABASE_URL` supplied through the local clipboard; no credential was written to repository files, documentation or command output
+Result: direct Neon serverless driver integration test passed 1/1; parameterized HTTP query returned a database name and the expected `fnd-01` echo value
+Gate outcome: `GATE-FOUNDATION-READY` passed
+Exact next milestone: freeze this gate-evidence commit as the reviewed Wave 1 foundation base, then prepare the three module streams
+Dirty/uncommitted state: gate evidence and agent-board updates only
 Production mutation performed: no
 
 ## SIS-01 evidence
