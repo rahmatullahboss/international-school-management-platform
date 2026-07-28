@@ -10,13 +10,46 @@ case "$mode" in
     ;;
 esac
 
-if [[ -z "${DATABASE_URL:-}" ]]; then
-  echo "INT01_DATABASE_URL is required through DATABASE_URL" >&2
-  exit 1
-fi
-
 readonly EXPECTED_NEON_PROJECT_ID="lingering-brook-52999532"
 readonly EXPECTED_NEON_BRANCH_ID="br-super-truth-axp0urxi"
+readonly EXPECTED_NEON_DATABASE_NAME="neondb"
+readonly EXPECTED_NEON_ROLE_NAME="neondb_owner"
+
+resolve_database_url() {
+  if [[ -n "${DATABASE_URL:-}" ]]; then
+    return
+  fi
+
+  if [[ -z "${NEON_API_KEY:-}" ]]; then
+    echo "DATABASE_URL or NEON_API_KEY is required" >&2
+    exit 1
+  fi
+
+  local response
+  response=$(curl --fail --silent --show-error \
+    --header "Authorization: Bearer $NEON_API_KEY" \
+    --get "https://console.neon.tech/api/v2/projects/$EXPECTED_NEON_PROJECT_ID/connection_uri" \
+    --data-urlencode "branch_id=$EXPECTED_NEON_BRANCH_ID" \
+    --data-urlencode "database_name=$EXPECTED_NEON_DATABASE_NAME" \
+    --data-urlencode "role_name=$EXPECTED_NEON_ROLE_NAME" \
+    --data-urlencode "pooled=false")
+
+  DATABASE_URL=$(python3 -c 'import json, sys; print(json.load(sys.stdin).get("uri", ""))' <<<"$response")
+  unset response
+
+  if [[ -z "$DATABASE_URL" ]]; then
+    echo "Neon API response did not contain a connection URI" >&2
+    exit 1
+  fi
+
+  export DATABASE_URL
+  if [[ -n "${GITHUB_ACTIONS:-}" ]]; then
+    echo "::add-mask::$DATABASE_URL"
+  fi
+  echo "Resolved Neon connection for project=$EXPECTED_NEON_PROJECT_ID branch=$EXPECTED_NEON_BRANCH_ID"
+}
+
+resolve_database_url
 
 psql_base=(psql "$DATABASE_URL" -X --no-psqlrc -v ON_ERROR_STOP=1)
 

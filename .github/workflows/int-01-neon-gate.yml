@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      DATABASE_URL: ${{ secrets.INT01_DATABASE_URL }}
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
       COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
     steps:
       - uses: actions/checkout@v4
@@ -55,22 +55,22 @@ jobs:
           echo "mode=$mode" >> "$GITHUB_OUTPUT"
           echo "Resolved INT-01 Neon gate mode: $mode"
 
-      - name: Resolve database availability
-        id: database
+      - name: Resolve Neon API availability
+        id: neon
         env:
           EVENT_NAME: ${{ github.event_name }}
         run: |
-          if [[ -n "$DATABASE_URL" ]]; then
+          if [[ -n "$NEON_API_KEY" ]]; then
             echo "available=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           echo "available=false" >> "$GITHUB_OUTPUT"
           if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
-            echo "INT01_DATABASE_URL repository secret is required" >&2
+            echo "NEON_API_KEY repository secret is required" >&2
             exit 1
           fi
-          echo "INT01_DATABASE_URL is not configured; live Neon gate remains pending."
+          echo "NEON_API_KEY is not configured; live Neon gate remains pending."
 
       - name: Run INT-01 Neon gate
-        if: steps.database.outputs.available == 'true'
+        if: steps.neon.outputs.available == 'true'
         run: bash scripts/int-01-neon-gate.sh "${{ steps.operation.outputs.mode }}"
