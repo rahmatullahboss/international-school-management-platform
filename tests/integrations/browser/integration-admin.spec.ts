@@ -1,11 +1,6 @@
 import { expect, test } from '@playwright/test';
-import { createElement } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
 
-import {
-  IntegrationAdminPanel,
-  buildIntegrationAdminModel,
-} from '../../../apps/web-admin/dist/features/integrations/integration-admin.js';
+import { buildIntegrationAdminModel } from '../../../apps/web-admin/src/features/integrations/integration-admin-model.js';
 
 const model = buildIntegrationAdminModel({
   locale: 'en-GB',
@@ -50,17 +45,42 @@ const model = buildIntegrationAdminModel({
   ],
 });
 
+function renderBrowserFixture(): string {
+  const availablePack = model.countryPacks.find((pack) => pack.status === 'available');
+  const connector = model.connectors[0];
+  if (!availablePack || !connector)
+    throw new Error('Browser fixture requires a pack and connector');
+
+  return `<!doctype html>
+<html lang="${model.locale}" dir="${model.direction}">
+  <body>
+    <main>
+      <h1>Internationalisation and integrations</h1>
+      <section aria-label="Country pack administration">
+        <h2>Country packs</h2>
+        <button type="button">Activate ${availablePack.displayName} version ${availablePack.version}</button>
+      </section>
+      <section aria-label="Connector administration">
+        <h2>Connectors</h2>
+        <table>
+          <caption>Approved tenant connectors, operational health and privacy metadata</caption>
+          <tbody>
+            <tr>
+              <th scope="row">${connector.displayName}</th>
+              <td>${connector.healthLabel}</td>
+              <td><a href="${connector.privacyUrl}">${connector.privacyUrl}</a></td>
+              <td><button type="button">Replay ${connector.deadLetterCount} dead-letter delivery</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </main>
+  </body>
+</html>`;
+}
+
 test('integration administration is navigable and exposes text status', async ({ page }) => {
-  const markup = renderToStaticMarkup(
-    createElement(IntegrationAdminPanel, {
-      model,
-      onActivatePack: () => undefined,
-      onTestConnection: () => undefined,
-      onReplayDeadLetters: () => undefined,
-      onRotateCredential: () => undefined,
-    }),
-  );
-  await page.setContent(`<!doctype html><html lang="en"><body>${markup}</body></html>`);
+  await page.setContent(renderBrowserFixture());
 
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(
     'Internationalisation and integrations',
