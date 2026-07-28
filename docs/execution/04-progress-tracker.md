@@ -34,7 +34,7 @@ Current readiness: `GATE-FOUNDATION-READY` is passed. `SIS-01`, `FIN-01` and `IN
 |---|---:|---|---|---|---|---|
 | `FND-01` | 0 | complete; gate passed | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | freeze reviewed foundation SHA | pending gate-evidence commit | none |
 | `SIS-01` | 1 | ready to start | reviewed foundation SHA | module contract | none | none |
-| `FIN-01` | 1 | in progress | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | reconciliation and reporting | `e1a9455ea722afc9c08276fab5e4463c617b252c` | none |
+| `FIN-01` | 1 | in progress | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | secure import/export and finance UI | `6d08d24444f9f943eede9b2dbfc38fd25f9d85a4` | none |
 | `INT-01` | 1 | ready to start | reviewed foundation SHA | country-pack engine | none | none |
 | `ACAD-01` | 2 | blocked | reviewed Wave 1 integration SHA | academic structure | none | `GATE-WAVE-1-INTEGRATED` |
 | `OPS-01` | 2 | blocked | reviewed Wave 1 integration SHA | HR/staff | none | `GATE-WAVE-1-INTEGRATED` |
@@ -236,6 +236,19 @@ Neon migration: `202607280103_FIN-01_payments` applied on `agent/fin-01-finance`
 Neon proof: settled receipt amount/unapplied=25000; provider-event update rejected with `FIN_PROVIDER_EVENT_IMMUTABLE`; tenant A visible intents=1 and tenant B=0; no-context visibility=0; forced-RLS billing tables=21
 Gate outcome: milestone 4 passed; signed provider events, duplicate replay, receipts, unapplied cash, allocations/unallocations, bounded refunds, cashier sessions/deposits and bank statement matching are executable
 Exact next milestone: 5 — reconciliation, aging and financial reporting
+Dirty/uncommitted state: tracker and agent-board evidence only
+Production mutation performed: no; Neon main untouched
+
+Date/time: 2026-07-28T10:15:00+06:00
+Stream: FIN-01
+Milestone completed: 5 — reconciliation, aging and financial reporting
+Checkpoint SHA: `6d08d24444f9f943eede9b2dbfc38fd25f9d85a4`
+Changed owned paths: `packages/modules/billing/src/reporting-service.ts`, `packages/modules/billing/migrations/202607280104_FIN-01_reporting.sql`, `tests/finance/reporting.test.ts`
+Focused checks and results: reporting Vitest PASS; full finance Vitest PASS; focused ESLint PASS; billing TypeScript PASS; ledger TypeScript PASS
+Neon migration: `202607280104_FIN-01_reporting` applied on `agent/fin-01-finance` only
+Neon proof: receivable subledger view returned invoice total/outstanding=25000; unapplied cash view returned 25000; trial-balance aggregate debit=credit; general-ledger view returned posted rows under tenant context
+Gate outcome: milestone 5 passed; as-of receivable/unapplied reconciliation, aging, statements, trial balance, general ledger, income statement, balance sheet, fiscal summaries and dashboard drill-down definitions are executable
+Exact next milestone: 6 — secure finance imports/exports and role-aware admin/family UI
 Dirty/uncommitted state: tracker and agent-board evidence only
 Production mutation performed: no; Neon main untouched
 
