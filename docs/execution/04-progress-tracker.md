@@ -35,7 +35,7 @@ Current readiness: `GATE-FOUNDATION-READY` is passed. `SIS-01`, `FIN-01` and `IN
 | `FND-01` | 0 | complete; gate passed | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | freeze reviewed foundation SHA | pending gate-evidence commit | none |
 | `SIS-01` | 1 | ready to start | reviewed foundation SHA | module contract | none | none |
 | `FIN-01` | 1 | ready to start | reviewed foundation SHA | finance contract | none | none |
-| `INT-01` | 1 | hard-stopped after checkpoint 1 | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | resolve nested-module workspace contract, then integration runtime | `0ac974fd7632079d1dc4f056285cb21e2aa77df4` | unapproved frozen boundary/workspace change required |
+| `INT-01` | 1 | in progress | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | integration runtime | `a55d6d7284516395a195da0411ad50fa93a6cc75` | none |
 | `ACAD-01` | 2 | blocked | reviewed Wave 1 integration SHA | academic structure | none | `GATE-WAVE-1-INTEGRATED` |
 | `OPS-01` | 2 | blocked | reviewed Wave 1 integration SHA | HR/staff | none | `GATE-WAVE-1-INTEGRATED` |
 | `CARE-01` | 2 | blocked | reviewed Wave 1 integration SHA | security contract | none | threat-model and Wave 1 gates |
@@ -202,6 +202,21 @@ Focused checks and results: country-pack Vitest 6/6 PASS; full Vitest 38/38 PASS
 Gate outcome: country-pack behavior and database checkpoint passed; stream hard-stopped by `docs/execution/contract-change-requests/INT-01-nested-module-workspaces.md`
 Exact next milestone: after an approved foundation/integration SHA resolves nested module discovery and composition, incorporate that reviewed change and begin milestone 2 — integration runtime
 Dirty/uncommitted state: none after the contract-request/tracker evidence commit
+Production mutation performed: no
+
+Date/time: 2026-07-28T09:03:20+06:00
+Stream: INT-01
+Milestone completed: owner-approved nested-module workspace compatibility gate
+Git branch: `module/international-integrations`
+Worktree: `.worktrees/int-01-integrations`
+Neon branch: `agent/int-01-integrations` (`br-super-truth-axp0urxi`)
+Starting base: `9326bb05ad37f86ec13a74910439da91d72ad4a6`
+Checkpoint SHA: `a55d6d7284516395a195da0411ad50fa93a6cc75`
+Changed paths under explicit owner approval: root workspace/typecheck configuration; `scripts/check-architecture-boundaries.mjs`; `packages/modules/country-packs/package.json`; nested-workspace regression tests
+Focused checks and results: nested workspace tests 4/4 PASS; architecture boundary PASS; full Vitest 42/42 PASS with 1 secret-gated Neon test skipped; root TypeScript PASS including `@school/country-packs`; ESLint PASS; build PASS including nested package
+Gate outcome: `INT-01-nested-module-workspaces` approved and resolved; previous hard stop cleared
+Exact next milestone: 2 — versioned OpenAPI, scoped integration credentials, external IDs, signed webhooks, inbound deduplication, retry/dead-letter/replay, health and disclosure audit
+Dirty/uncommitted state: tracker and decision evidence only
 Production mutation performed: no
 
 ## ACAD-01 evidence

@@ -88,4 +88,12 @@ The requested change is build-time/package-boundary infrastructure only. It must
 
 ## Owner/integrator decision
 
-Pending. `INT-01` is hard-stopped after the country-pack checkpoint until an approved foundation/integration SHA resolves the nested-module workspace contract.
+Approved by the owner through the explicit `continue` instruction on 2026-07-28. The compatible resolution is checkpoint `a55d6d7284516395a195da0411ad50fa93a6cc75` on `module/international-integrations`:
+
+- root npm workspaces include `packages/modules/*`;
+- every nested module remains an independent package with its own manifest and scripts;
+- the architecture checker discovers actual manifests recursively and ignores namespace-only directories;
+- root typecheck composes all registered workspaces without requiring parallel streams to edit one shared TypeScript reference list;
+- regression tests prove valid nested packages pass and undeclared or boundary-crossing imports fail.
+
+Verification: boundary check PASS; nested workspace tests 4/4 PASS; full tests 42/42 PASS with one pre-existing secret-gated Neon test skipped; root typecheck, lint and build PASS. The hard stop is cleared and `INT-01` may continue to milestone 2.
