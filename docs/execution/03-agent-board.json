@@ -79,7 +79,7 @@
       "id": "INT-01",
       "name": "Internationalization and Integration Platform",
       "wave": 1,
-      "status": "in_progress",
+      "status": "implementation_complete_live_neon_replay_pending",
       "branch": "module/international-integrations",
       "worktree": ".worktrees/int-01-integrations",
       "neon_branch": "agent/int-01-integrations",

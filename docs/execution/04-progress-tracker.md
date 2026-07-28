@@ -35,7 +35,7 @@ Current readiness: `GATE-FOUNDATION-READY` is passed. `SIS-01`, `FIN-01` and `IN
 | `FND-01` | 0 | complete; gate passed | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | freeze reviewed foundation SHA | pending gate-evidence commit | none |
 | `SIS-01` | 1 | ready to start | reviewed foundation SHA | module contract | none | none |
 | `FIN-01` | 1 | ready to start | reviewed foundation SHA | finance contract | none | none |
-| `INT-01` | 1 | in progress | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | admin, governance, observability and final verification | `0fbb45c50ca5b77801dd43694e3e7f769e8265b5` | none |
+| `INT-01` | 1 | implementation complete; live Neon replay pending | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | apply/replay migrations 102–107 and pass live database gate | `ad4ec0789b7760b26123afef39969d36fd538915` | live Neon credentials/tools unavailable in resumed shell |
 | `ACAD-01` | 2 | blocked | reviewed Wave 1 integration SHA | academic structure | none | `GATE-WAVE-1-INTEGRATED` |
 | `OPS-01` | 2 | blocked | reviewed Wave 1 integration SHA | HR/staff | none | `GATE-WAVE-1-INTEGRATED` |
 | `CARE-01` | 2 | blocked | reviewed Wave 1 integration SHA | security contract | none | threat-model and Wave 1 gates |
@@ -292,6 +292,21 @@ Focused checks and results: milestone-focused tests 15/15 PASS including generat
 Gate outcome: milestone 6 passed; unsupported LTI Advantage services, full SAML XML processing and deployed SCIM service remain explicitly outside the current claim
 Exact next milestone: 7 — tenant administration, connector governance, sandbox, observability, privacy/subprocessor metadata and final verification
 Dirty/uncommitted state: tracker evidence only
+Production mutation performed: no
+
+Date/time: 2026-07-28T10:33:01+06:00
+Stream: INT-01
+Milestone completed: 7 — connector governance, tenant administration, observability and final local verification
+Git branch: `module/international-integrations`
+Worktree: `.worktrees/int-01-integrations`
+Neon branch: `agent/int-01-integrations` (`br-super-truth-axp0urxi`)
+Starting base: `21976f90073794a1588eb5b336b05356b37c339e`
+Checkpoint SHA: `ad4ec0789b7760b26123afef39969d36fd538915`
+Changed owned paths: immutable connector manifests, independent approval, synthetic sandbox, privacy/subprocessor metadata, metrics/alerts, tenant admin feature, governance migration, browser/accessibility tests, security/performance tests and final runbook
+Focused checks and results: `npm run verify` PASS; format, ESLint, boundaries, all workspace TypeScript and builds PASS; Vitest 102/102 PASS with 1 direct-Neon test skipped; module browser test 1/1 PASS; generated-key RS256 and tamper checks PASS; cross-tenant and digest-only credential checks PASS; 10,000 external-ID and webhook-queue operations passed bounded performance tests
+Gate outcome: all seven implementation milestones passed locally; `GATE-INT-COMPLETE` remains blocked only by live application of migrations `202607280102`–`202607280107`, tenant/RLS/trigger probes and fresh-Neon-branch replay evidence
+Exact next milestone: live Neon database gate and final gate-evidence commit; do not implement additional module scope before that evidence
+Dirty/uncommitted state: completion, tracker and agent-board evidence only
 Production mutation performed: no
 
 ## ACAD-01 evidence

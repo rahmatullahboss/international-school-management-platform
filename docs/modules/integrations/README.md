@@ -31,3 +31,4 @@ The long-lived agent database branch is `agent/int-01-integrations`. Foundation 
 - [LTI 1.3, SSO and SCIM foundation](./lti-sso-scim.md)
 - [Connector governance, administration and observability](./connector-governance.md)
 - [Operations runbook](./runbook.md)
+- [INT-01 completion evidence](./completion.md)
