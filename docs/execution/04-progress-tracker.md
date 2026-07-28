@@ -33,7 +33,7 @@ Current readiness: `GATE-FOUNDATION-READY` is passed. `SIS-01`, `FIN-01` and `IN
 | Stream | Wave | Status | Base | Current/next milestone | Final/last checkpoint | Blocking condition |
 |---|---:|---|---|---|---|---|
 | `FND-01` | 0 | complete; gate passed | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | freeze reviewed foundation SHA | pending gate-evidence commit | none |
-| `SIS-01` | 1 | in progress | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | UI, imports and reports | `8a8c0f5e17e49d6ca198cf1875aeca98079128a9` | none |
+| `SIS-01` | 1 | in progress | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | verification and completion | `0e828f84863a2e1111e6ad4d26ad22d0188aa4d4` | none |
 | `FIN-01` | 1 | ready to start | reviewed foundation SHA | finance contract | none | none |
 | `INT-01` | 1 | ready to start | reviewed foundation SHA | country-pack engine | none | none |
 | `ACAD-01` | 2 | blocked | reviewed Wave 1 integration SHA | academic structure | none | `GATE-WAVE-1-INTEGRATED` |
@@ -264,6 +264,23 @@ Focused checks and results: enrollment tests 4/4 PASS; `@school/sis` build PASS;
 Gate outcome: milestone 5 passed; historical periods retained; parent/production branches unchanged
 Exact next milestone: 6 — admin/family UI, import/export, reconciliation, reports and data-quality queues
 Dirty/uncommitted state: tracker/module documentation update only
+Production mutation performed: no
+
+### Milestone 6 — imports, reports and user workflows
+
+Date/time: 2026-07-28T09:18:00+06:00
+Stream: SIS-01
+Milestone completed: 6 — validated imports, privacy-aware exports, data-quality queues, reconciliation, immutable report snapshots and admin/family UI
+Git branch: `module/core-sis-admissions`
+Worktree: `.worktrees/sis-01-core-sis`
+Neon branch: `agent/sis-01-core-sis` (`br-ancient-sunset-axuhcmof`)
+Starting base: `55114f55a375d3d79dba7ea21f984b789b5dbca1`
+Checkpoint SHA: `0e828f84863a2e1111e6ad4d26ad22d0188aa4d4`
+Changed owned paths: `packages/modules/people/{src/imports.ts,migrations/202607280105_SIS-01_operations.sql}`; `packages/modules/student-lifecycle/src/reporting.ts`; `apps/web-admin/src/features/sis/**`; `apps/web-family/src/features/admissions/**`; `tests/sis/{imports-reports,operations-migration,ui}.test.*`; SIS module docs
+Focused checks and results: milestone tests 11/11 PASS; `@school/sis` build PASS; 5,000-row import staging PASS under 5 seconds; seven-table operations migration applied; import/report RLS no-context 0 and Tenant A foreign 0; report snapshot mutation rejected
+Gate outcome: milestone 6 passed; family UI excludes confidential review/restriction content; parent/production branches unchanged
+Exact next milestone: 7 — full verification, browser tests, migration replay, runbook and completion evidence
+Dirty/uncommitted state: tracker evidence update only
 Production mutation performed: no
 
 ## FIN-01 evidence
