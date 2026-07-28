@@ -284,6 +284,7 @@ replay_in_fresh_database() {
   while IFS= read -r stale_database; do
     [[ -z "$stale_database" ]] && continue
     echo "cleanup stale replay database: $stale_database"
+    "${psql_base[@]}" -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$stale_database' AND pid <> pg_backend_pid()" >/dev/null
     dropdb --maintenance-db="$DATABASE_URL" --if-exists "$stale_database"
   done < <("${psql_base[@]}" -Atc "SELECT datname FROM pg_database WHERE datname LIKE 'int01_replay_%' ORDER BY datname")
 
@@ -297,6 +298,7 @@ PY
 )
 
   cleanup_replay() {
+    "${psql_base[@]}" -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$replay_database' AND pid <> pg_backend_pid()" >/dev/null 2>&1 || true
     dropdb --maintenance-db="$DATABASE_URL" --if-exists "$replay_database" >/dev/null 2>&1 || true
   }
   trap cleanup_replay EXIT
