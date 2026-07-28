@@ -557,6 +557,24 @@ Exact next milestone: 6 — permission-scoped application APIs, reports/import-e
 Dirty/uncommitted state: tracker evidence only
 Production mutation performed: no
 
+### Milestone 6 — application APIs, reports and academic workspaces
+
+Date/time: 2026-07-29T00:21:15+06:00
+Stream: ACAD-01
+Milestone completed: 6 — deny-by-default application facade, external SIS/INT reference validation, scoped attendance/grade/records APIs, attendance reporting, safe CSV export, validated import staging, admin control room and teacher academic workspace
+Git branch/worktree: `module/academics-attendance-records` / `.worktrees/acad-01-academics`
+Neon branch: `agent/acad-01-academics` (`br-gentle-waterfall-axcl7l8z`)
+Starting base: `8cc8ee1562ade672b14c1c44af935fe7e2307976`
+Checkpoint SHA: `0950a95222daba35301fde65e31f9dd30b9fc492`
+Changed owned paths: `packages/modules/academics/src/application.ts`; academic public export; `apps/web-admin/src/features/academics/**`; `apps/web-teacher/src/features/academics/**`; `tests/academics/application-service.test.ts`; `tests/academics/academic-ui.test.tsx`; application/UI and workflow evidence docs
+Focused checks and results: focused Prettier/ESLint PASS; module and admin TypeScript project-reference builds PASS; standalone teacher strict TypeScript PASS; application-service tests 6/6 PASS; SSR UI tests 6/6 PASS; cumulative ACAD Vitest 37/37 PASS; Impeccable detector 0 findings; manual critique/audit resolved skip navigation, locale-aware counts, loading/error recovery, scoped tokens, long-content wrapping and invalid grade-state placeholder; responsive/RTL, forced-colour and reduced-motion assertions PASS
+Cross-module outcome: SIS/tenancy/INT identifiers validated only through public external contracts; no writes to active Wave 2 branches or other module schemas; ordinary academic flows remain uncoupled from FIN
+UI authority note: exact reviewed base lacks foundation-owned `PRODUCT.md` and `DESIGN.md`; ACAD did not recreate them and documented repository-design/Operate workflow substitution
+Gate outcome: milestone 6 passed; final complete gate requires root verification, reviewed-base Neon migration replay/isolation probes, recovery evidence, final docs and handoff
+Exact next milestone: 7 — full repository verification, migration composition on isolated Neon, RLS/immutability/recovery probes, observability/release documentation and final PR handoff
+Dirty/uncommitted state: tracker evidence only
+Production mutation performed: no
+
 ## OPS-01 evidence
 
 No execution evidence recorded.
