@@ -2,7 +2,7 @@
 
 **Program:** `international-school-platform-v1`
 **Updated:** 2026-07-28
-**Current repository state:** Wave 1 implementation is complete and reviewed. `SIS-01` is already integrated into `main`; `FIN-01` and `INT-01` are complete on their reviewed SHAs and require serial conflict resolution, migration composition and cross-module verification by `INTEG-01`.
+**Current repository state:** `INTEG-01` is executing Wave 1 serial integration from `042b75990f9cd819239c584a370687042393f6a7`. `SIS-01` is present from `main`; reviewed `FIN-01` SHA `5f9e1692a8fc19fc2e9789a338d028918acdeaf6` is integrated at merge checkpoint `da3d561`; reviewed `INT-01` remains pending.
 
 ## Gate status
 
@@ -27,7 +27,7 @@ Owner decision recorded on 2026-07-28:
 - the foundation/program coordinator maintains shared documentation, gate state, contract-change decisions and this tracker without writing concurrently inside module-owned paths;
 - `INTEG-01` reviews and integrates module SHAs serially after they are recorded here.
 
-Current readiness: all three Wave 1 module streams are complete and their reviewed SHAs are frozen. `INTEG-01` may now start serial integration from current `main` SHA `9b9605aff93901eb1ad9e5b4d9ad9d6517d04aba`.
+Current readiness: `INTEG-01` is active from exact current `main` SHA `042b75990f9cd819239c584a370687042393f6a7`; FIN integration is verified and INT integration is next.
 
 ## Stream tracker
 
@@ -35,13 +35,13 @@ Current readiness: all three Wave 1 module streams are complete and their review
 |---|---:|---|---|---|---|---|
 | `FND-01` | 0 | complete; gate passed | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | Wave 1 released | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | none |
 | `SIS-01` | 1 | complete; integrated to `main` | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | complete | reviewed head `5e2499018282d8296abfe093b5dd95b231829379`; main merge `9b9605aff93901eb1ad9e5b4d9ad9d6517d04aba` | none |
-| `FIN-01` | 1 | complete; reviewed | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | serial integration | `5f9e1692a8fc19fc2e9789a338d028918acdeaf6` | conflicts with current `main`; resolve only in `INTEG-01` |
+| `FIN-01` | 1 | complete; integrated by `INTEG-01` | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | complete | reviewed head `5f9e1692a8fc19fc2e9789a338d028918acdeaf6`; integration merge `da3d561` | none |
 | `INT-01` | 1 | complete; reviewed | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | serial integration | `bfa95a4a42025213fa7c2090a587ef5304924da7` | conflicts with current `main`; resolve only in `INTEG-01` |
 | `ACAD-01` | 2 | blocked | reviewed Wave 1 integration SHA | academic structure | none | `GATE-WAVE-1-INTEGRATED` |
 | `OPS-01` | 2 | blocked | reviewed Wave 1 integration SHA | HR/staff | none | `GATE-WAVE-1-INTEGRATED` |
 | `CARE-01` | 2 | blocked | reviewed Wave 1 integration SHA | security contract | none | threat-model and Wave 1 gates |
 | `EXP-01` | 3 | blocked | reviewed Wave 2 integration SHA | persona shells | none | `GATE-WAVE-2-INTEGRATED` |
-| `INTEG-01` | gated serial | ready for Wave 1 | `9b9605aff93901eb1ad9e5b4d9ad9d6517d04aba` | Wave 1 serial integration | none | none |
+| `INTEG-01` | gated serial | Wave 1 integration in progress | `042b75990f9cd819239c584a370687042393f6a7` | integrate reviewed `INT-01` | FIN merge checkpoint `da3d561` | none |
 
 ## Required checkpoint evidence format
 
@@ -342,7 +342,24 @@ No execution evidence recorded.
 
 ## INTEG-01 evidence
 
-No execution evidence recorded.
+### Wave 1 checkpoint 1 — FIN-01 integrated
+
+Date/time: 2026-07-28T18:40:00+06:00
+Stream: INTEG-01
+Milestone completed: Wave 1 serial integration — reviewed FIN-01 accepted
+Git branch: `integration/international-school-platform-v1`
+Worktree: `.worktrees/integ-01-release`
+Neon branch: `integration/international-school-platform-v1` (`br-shiny-silence-axznuy37`), parent `main` (`br-cool-wildflower-axsot8l1`)
+Starting base: `042b75990f9cd819239c584a370687042393f6a7`
+Accepted module SHA: FIN-01 `5f9e1692a8fc19fc2e9789a338d028918acdeaf6`
+Checkpoint SHA: `da3d561`
+Changed integration paths: shared admin/family manifests and TypeScript references; package lock; composite module package exports; `@school/sis` compatibility facade; architecture-boundary scoped-subpath handling; FIN domain, migrations, UI, tests and docs
+Focused checks and results: `npm ci`/install audit 0 vulnerabilities; typecheck PASS; 181 tests PASS with one secret-backed Neon test skipped; deterministic TypeScript/Worker/Vite build PASS; architecture boundaries PASS; full `npm run verify` PASS; execution artifact validator PASS
+Conflict resolution: SIS exports and app surfaces retained; FIN root/ledger exports and app surfaces retained; no finance invariant, authorization rule or module-owned semantic behavior redesigned
+Gate outcome: FIN checkpoint passed; `GATE-WAVE-1-INTEGRATED` remains blocked pending reviewed INT-01 integration, migration composition and cross-module verification
+Exact next milestone: integrate reviewed INT-01 SHA `bfa95a4a42025213fa7c2090a587ef5304924da7`
+Dirty/uncommitted state: tracker/agent-board checkpoint evidence only
+Production mutation performed: no
 
 ## Resume rule
 
