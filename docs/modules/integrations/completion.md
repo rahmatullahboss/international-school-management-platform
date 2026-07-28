@@ -4,7 +4,7 @@
 
 All seven INT-01 implementation milestones are complete on `module/international-integrations`. The code, module contracts, migrations, focused tests, full repository verification, browser/accessibility test, security checks, performance checks and operations documentation are committed.
 
-`GATE-INT-COMPLETE` is **not yet passed** because migrations `202607280102` through `202607280107` still require live application and fresh-branch replay evidence on Neon. The resumed execution shell did not expose a branch-specific connection or Neon API access. A guarded GitHub inspection proved that the existing generic `DATABASE_URL` repository secret targets Neon `main` (`br-cool-wildflower-axsot8l1`), not `agent/int-01-integrations` (`br-super-truth-axp0urxi`); the guard stopped before any schema write. The workflow now requires a dedicated `INT01_DATABASE_URL` secret and checks the exact Neon project and branch IDs before migration or replay. Milestone 1 migration `202607280101` was previously applied to the agent branch after replaying foundation migrations `202607280001` through `202607280005`, and tenant RLS was verified.
+`GATE-INT-COMPLETE` is **passed**. The `NEON_API_KEY`-backed gate resolved only the exact agent branch `br-super-truth-axp0urxi`, applied INT migrations `202607280102` through `202607280107`, verified migration history, 31/31 forced-RLS tenant tables, required immutable/append-only triggers, cross-tenant negative probes and the direct Neon integration test. It then replayed foundation plus INT migrations in a fresh logical database and in a disposable fresh Neon branch created from reviewed parent `main` (`br-cool-wildflower-axsot8l1`). The temporary branch `br-twilight-lake-ax8ykaey` passed the same checks and was deleted after verification. The existing generic `DATABASE_URL`, which targets Neon `main`, was never used for schema mutation.
 
 ## Repository identity
 
@@ -16,6 +16,7 @@ All seven INT-01 implementation milestones are complete on `module/international
 - Neon branch ID: `br-super-truth-axp0urxi`
 - Neon parent: `main` (`br-cool-wildflower-axsot8l1`)
 - Final implementation checkpoint: `ad4ec0789b7760b26123afef39969d36fd538915`
+- Final Neon gate automation checkpoint: `ae88d8e`
 
 ## Milestones
 
@@ -90,31 +91,22 @@ Executed after milestone 7:
   - ESLint: PASS
   - architecture boundaries: PASS
   - root and all workspace TypeScript projects: PASS
-  - Vitest: 102/102 PASS; one direct Neon test skipped because connection configuration was unavailable
+  - Vitest: 102/102 PASS; the direct Neon test is intentionally skipped only in local runs without credentials
   - all workspace builds: PASS
   - execution artefact validator: PASS
 - `npm run test:browser --workspace=@school/integrations`: 1/1 PASS
-- GitHub CI after the clean-checkout browser fix and final evidence push: PASS (`30329479311`, `30329744058`, `30330768874`).
-- Guarded Neon inspections: `30329744096` stopped because the generic secret was not foundation-ready; `30330061274` identified project `lingering-brook-52999532` and branch `br-cool-wildflower-axsot8l1`, then stopped before writes because it was Neon `main`.
-- Branch-specific Neon workflow `30330768882`: PASS as an explicit pending no-op because `INT01_DATABASE_URL` is not configured; no database connection or mutation was attempted.
+- GitHub CI after the clean-checkout browser fix: PASS (`30329479311`, `30329744058`, `30330768874`).
+- Guarded generic-secret inspections `30329744096` and `30330061274` stopped before writes and proved the generic `DATABASE_URL` targets Neon `main`.
+- API-backed exact-branch inspection `30345672557`: PASS on `br-super-truth-axp0urxi`.
+- Agent-branch migration/application gate `30345998526`: PASS; migrations `202607280101`–`202607280107`, required triggers, tenant isolation and direct Neon test verified.
+- Fresh logical database replay `30346762735`: PASS; foundation `202607280001`–`202607280005` and INT `202607280101`–`202607280107` replayed and the disposable database was removed.
+- Fresh Neon branch replay `30347294967`: PASS on temporary branch `br-twilight-lake-ax8ykaey`, created from `main` (`br-cool-wildflower-axsot8l1`); 31/31 tenant tables had forced RLS, the direct Neon test passed 1/1 and the temporary branch was deleted.
 - Security checks include cross-tenant credential rejection, digest-only persistence, tenant-partitioned external IDs and metrics, webhook assertion tamper detection, LTI nonce/state replay, SAML assertion replay and unsafe SCIM patch rejection.
 - Performance checks link and resolve 10,000 external identifiers and enqueue/select 10,000 due webhook deliveries within the bounded local test budget.
 
-## Remaining live Neon gate
+## Gate outcome
 
-To pass `GATE-INT-COMPLETE`:
-
-1. Add repository secret `INT01_DATABASE_URL` with the connection string for project `lingering-brook-52999532`, branch `br-super-truth-axp0urxi`; the gate will reject every other project or branch.
-2. Dispatch `INT-01 Neon Gate` in `inspect` mode and verify the foundation plus INT-101 baseline.
-3. Dispatch `apply` to apply INT migrations `202607280102` through `202607280107` in order to the agent branch. Do not reapply or mutate production.
-4. Verify `platform.schema_migration` contains foundation migrations `202607280001`–`202607280005` and INT migrations `202607280101`–`202607280107`.
-5. Inspect `country_pack`, `integration` and `migration_studio` objects.
-6. Verify forced RLS and tenant-negative probes with `app_runtime` on every tenant-owned table.
-7. Verify immutable/append-only triggers.
-8. Dispatch `replay-database` to replay foundation and INT migrations in a fresh logical database on the isolated agent branch; treat this as schema-replay rehearsal, not as fresh-branch evidence.
-9. When Neon API/MCP access is available, create a fresh Neon branch from the reviewed parent and replay foundation plus INT migrations there.
-10. Run the secret-backed direct Neon integration test and record exact branch/database IDs and results.
-11. Update the agent board and progress tracker to `complete; gate passed`, commit and push the evidence.
+`GATE-INT-COMPLETE` passed on 2026-07-28. The module is ready for owner review and serial integration by `INTEG-01`; no additional INT-01 scope is required before integration.
 
 ## Safety and cleanup
 

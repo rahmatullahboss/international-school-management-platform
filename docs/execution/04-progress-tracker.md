@@ -2,7 +2,7 @@
 
 **Program:** `international-school-platform-v1`
 **Updated:** 2026-07-28
-**Current repository state:** `FND-01` milestones 1–8, owner review and the secret-backed direct Neon driver check have passed on `program/foundation-neon-platform`; `GATE-FOUNDATION-READY` is passed and Wave 1 is eligible to start from the reviewed foundation SHA.
+**Current repository state:** `GATE-FOUNDATION-READY` is passed; `INT-01` has completed all seven milestones and passed `GATE-INT-COMPLETE` with live agent-branch application, logical replay and independent fresh-Neon-branch replay evidence. `SIS-01` and `FIN-01` remain separate Wave 1 streams pending their own completion evidence.
 
 ## Gate status
 
@@ -10,6 +10,7 @@
 |---|---|---|
 | `GATE-DOCUMENTS-APPROVED` | passed | Owner authorized FND-01 execution; `python3 scripts/validate_execution_artifacts.py` passed on 2026-07-28 |
 | `GATE-FOUNDATION-READY` | passed | Milestones 1–8 implemented; owner review approved; Neon SQL/RLS proof passed; secret-backed `npm run test:neon` passed 1/1 on 2026-07-28 |
+| `GATE-INT-COMPLETE` | passed | Seven milestones complete; agent-branch apply `30345998526`, logical replay `30346762735` and fresh Neon branch replay `30347294967` passed |
 | `GATE-WAVE-1-INTEGRATED` | blocked | `SIS-01`, `FIN-01`, `INT-01` reviewed and serially integrated |
 | `GATE-STUDENT-SUPPORT-THREAT-MODEL` | blocked | Wave 1 integrated plus approved student-support threat model |
 | `GATE-WAVE-2-INTEGRATED` | blocked | `ACAD-01`, `OPS-01`, `CARE-01` reviewed and integrated |
@@ -26,7 +27,7 @@ Owner decision recorded on 2026-07-28:
 - the foundation/program coordinator maintains shared documentation, gate state, contract-change decisions and this tracker without writing concurrently inside module-owned paths;
 - `INTEG-01` reviews and integrates module SHAs serially after they are recorded here.
 
-Current readiness: `GATE-FOUNDATION-READY` is passed. `SIS-01`, `FIN-01` and `INT-01` may now start as separate whole-module agents from the same exact reviewed foundation SHA.
+Current readiness: `GATE-FOUNDATION-READY` and `GATE-INT-COMPLETE` are passed. `INT-01` awaits owner review / serial integration; `SIS-01` and `FIN-01` may proceed independently from the reviewed foundation SHA.
 
 ## Stream tracker
 
@@ -35,7 +36,7 @@ Current readiness: `GATE-FOUNDATION-READY` is passed. `SIS-01`, `FIN-01` and `IN
 | `FND-01` | 0 | complete; gate passed | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | freeze reviewed foundation SHA | pending gate-evidence commit | none |
 | `SIS-01` | 1 | ready to start | reviewed foundation SHA | module contract | none | none |
 | `FIN-01` | 1 | ready to start | reviewed foundation SHA | finance contract | none | none |
-| `INT-01` | 1 | implementation complete; live Neon replay pending | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | configure branch-specific `INT01_DATABASE_URL`, then inspect/apply/replay migrations 102–107 | `70f31d36b946044e67af6703c9ee484ee48cf9d5` | generic `DATABASE_URL` is verified Neon `main`; agent-branch connection/API access unavailable |
+| `INT-01` | 1 | complete; gate passed | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | freeze reviewed module SHA for `INTEG-01` | `ae88d8e` | none |
 | `ACAD-01` | 2 | blocked | reviewed Wave 1 integration SHA | academic structure | none | `GATE-WAVE-1-INTEGRATED` |
 | `OPS-01` | 2 | blocked | reviewed Wave 1 integration SHA | HR/staff | none | `GATE-WAVE-1-INTEGRATED` |
 | `CARE-01` | 2 | blocked | reviewed Wave 1 integration SHA | security contract | none | threat-model and Wave 1 gates |
@@ -322,6 +323,21 @@ Gate outcome: no database mutation occurred; workflow now accepts only dedicated
 Exact next milestone: configure `INT01_DATABASE_URL`, dispatch `inspect`, `apply` and logical `replay-database`, then obtain separate fresh-Neon-branch replay evidence through Neon API/MCP access; only after all pass may `GATE-INT-COMPLETE` be marked passed
 Dirty/uncommitted state: tracker and completion evidence only
 Production mutation performed: no
+
+Date/time: 2026-07-28T15:40:50+06:00
+Stream: INT-01
+Checkpoint completed: live Neon application, logical replay, fresh-branch replay and `GATE-INT-COMPLETE`
+Git branch: `module/international-integrations`
+Worktree: `.worktrees/int-01-integrations`
+Neon agent branch: `agent/int-01-integrations` (`br-super-truth-axp0urxi`), endpoint `ep-twilight-shape-axn4glx7`
+Reviewed Neon parent: `main` (`br-cool-wildflower-axsot8l1`)
+Checkpoint SHA: `ae88d8e`
+Changed owned paths: API-backed exact-branch Neon workflow; safe migration/replay script; final completion, tracker and agent-board evidence
+Focused checks and results: API inspection `30345672557` PASS; agent-branch apply `30345998526` PASS for migrations `202607280102`–`202607280107`; fresh logical database replay `30346762735` PASS and cleanup confirmed; fresh Neon branch replay `30347294967` PASS on temporary branch `br-twilight-lake-ax8ykaey` created from reviewed parent; 31/31 tenant tables forced RLS; required immutable/append-only triggers and cross-tenant negative probes PASS; direct Neon test 1/1 PASS; temporary branch deleted; local `npm run verify` PASS with 102/102 tests and one credential-gated local skip
+Gate outcome: `GATE-INT-COMPLETE` passed; all seven milestones, live migration application, logical replay and independent fresh-Neon-branch replay are evidenced
+Exact next milestone: freeze the reviewed INT-01 SHA and hand the stream to owner review / `INTEG-01` for serial integration
+Dirty/uncommitted state: final gate evidence only
+Production mutation performed: no; the generic `DATABASE_URL`/Neon `main` database was not used for schema writes
 
 ## ACAD-01 evidence
 
