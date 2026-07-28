@@ -13,6 +13,7 @@
     "student-lifecycle/**/*.ts",
     "academics/src/**/*.ts",
     "scheduling/src/**/*.ts",
+    "attendance/src/**/*.ts",
     "billing/src/**/*.ts",
     "ledger/src/**/*.ts"
   ],
