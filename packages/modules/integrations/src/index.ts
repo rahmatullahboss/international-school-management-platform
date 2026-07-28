@@ -1,6 +1,7 @@
 export * from './credentials.js';
 export * from './disclosure-audit.js';
 export * from './external-ids.js';
+export * from './governance.js';
 export * from './health.js';
 export * from './import-export.js';
 export * from './lti.js';

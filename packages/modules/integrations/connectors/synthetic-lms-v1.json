@@ -1,0 +1,27 @@
+{
+  "connectorKey": "synthetic-lms",
+  "version": 1,
+  "displayName": "Synthetic LMS",
+  "provider": "Synthetic Provider",
+  "supportedRegions": ["global"],
+  "dataCategories": ["directory", "enrollment"],
+  "authenticationModes": ["oauth2"],
+  "requiredScopes": ["roster.read", "roster.write"],
+  "inboundEvents": ["roster.changed.v1"],
+  "outboundCommands": ["roster.upsert.v1"],
+  "rateLimit": {
+    "requests": 100,
+    "intervalSeconds": 60
+  },
+  "retryPolicy": {
+    "maxAttempts": 5,
+    "baseDelaySeconds": 30
+  },
+  "retentionDays": 30,
+  "subprocessor": {
+    "legalName": "Synthetic Provider Ltd",
+    "countryCode": "GB",
+    "privacyUrl": "https://provider.example.test/privacy",
+    "purpose": "Roster synchronisation"
+  }
+}

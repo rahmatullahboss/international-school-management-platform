@@ -8,6 +8,7 @@
   },
   "scripts": {
     "build": "tsc -b",
+    "test:browser": "playwright test -c playwright.config.ts",
     "typecheck": "tsc -b"
   }
 }
