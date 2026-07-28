@@ -509,6 +509,22 @@ Exact next milestone: 3 — attendance policies/codes/sessions, low-latency rost
 Dirty/uncommitted state: tracker evidence only
 Production mutation performed: no
 
+### Milestone 3 — attendance and offline synchronization
+
+Date/time: 2026-07-28T23:44:29+06:00
+Stream: ACAD-01
+Milestone completed: 3 — versioned policies/codes, meeting-resolved sessions, roster capture, offline batch idempotency, reconciliation, finalization, approved amendments, guardian notices and attendance summaries/alerts
+Git branch/worktree: `module/academics-attendance-records` / `.worktrees/acad-01-academics`
+Neon branch: `agent/acad-01-academics` (`br-gentle-waterfall-axcl7l8z`)
+Starting base: `8cc8ee1562ade672b14c1c44af935fe7e2307976`
+Checkpoint SHA: `f2005a19fadf4e9149b78aa24c781cbce1736dc4`
+Changed owned paths: `packages/modules/attendance/**`; `tests/academics/attendance.test.ts`; `docs/modules/academics/attendance.md`; append-only TypeScript include registration
+Focused checks and results: focused ESLint PASS; module TypeScript project-reference build PASS; cumulative academic Vitest 15/15 PASS; identical offline retries replay, changed payload IDs conflict, invalid rows isolate, one-current-result invariant, incomplete finalization guard, approved historical amendment and chronic-absence calculation verified
+Gate outcome: milestone 3 passed; live reviewed-base migration replay remains pending final database gate
+Exact next milestone: 4 — grading policy/scales/categories, assessments/rubrics, score states, explainable calculations, moderation, locks, publication windows and grade-change approvals
+Dirty/uncommitted state: tracker evidence only
+Production mutation performed: no
+
 ## OPS-01 evidence
 
 No execution evidence recorded.
