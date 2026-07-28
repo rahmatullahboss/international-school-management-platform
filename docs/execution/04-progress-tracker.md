@@ -39,7 +39,7 @@ Current readiness: `INTEG-01` is active from exact current `main` SHA `042b75990
 | `FIN-01` | 1 | complete; integrated by `INTEG-01` | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | complete | reviewed head `5f9e1692a8fc19fc2e9789a338d028918acdeaf6`; integration merge `da3d561` | none |
 | `INT-01` | 1 | complete; gate passed; integration in progress | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | serial integration verification | reviewed head `bfa95a4a42025213fa7c2090a587ef5304924da7`; module gate evidence `ae88d8e` | none |
 | `ACAD-01` | 2 | blocked | reviewed Wave 1 integration SHA | academic structure | none | `GATE-WAVE-1-INTEGRATED` |
-| `OPS-01` | 2 | in progress | `8cc8ee1562ade672b14c1c44af935fe7e2307976` | hostel and cafeteria | transport `2ea5cd7` | none; root `PRODUCT.md`/`DESIGN.md` absent from reviewed history |
+| `OPS-01` | 2 | in progress | `8cc8ee1562ade672b14c1c44af935fe7e2307976` | activities and trips | hostel/cafeteria `9dc0bfd` | none; root `PRODUCT.md`/`DESIGN.md` absent from reviewed history |
 | `CARE-01` | 2 | blocked | reviewed Wave 1 integration SHA | security contract | none | threat-model and Wave 1 gates |
 | `EXP-01` | 3 | blocked | reviewed Wave 2 integration SHA | persona shells | none | `GATE-WAVE-2-INTEGRATED` |
 | `INTEG-01` | gated serial | Wave 1 integration in progress | `042b75990f9cd819239c584a370687042393f6a7` | integrate reviewed `INT-01` | FIN merge checkpoint `da3d561` | none |
@@ -571,6 +571,25 @@ Safeguarding evidence: trip completion rejects unreconciled boarded riders and p
 Neon result: schema replay deferred until isolated foundation/Wave 1 composition; production/main untouched
 Production mutation performed: no
 Exact next milestone: hostel buildings/rooms/beds/allocations/visitors/incidents and cafeteria menus/allergens/meal plans/orders/service
+Dirty/uncommitted state: tracker checkpoint evidence only
+
+### Checkpoint 6 — Hostel and cafeteria
+
+Date/time: 2026-07-29T00:14:00+06:00
+Stream: OPS-01
+Milestone completed: hostel and cafeteria
+Git branch: `module/school-operations`
+Worktree: `.worktrees/ops-01-operations`
+Neon branch: `agent/ops-01-operations` (`br-polished-voice-ax2fsdfg`)
+Starting base: `8cc8ee1562ade672b14c1c44af935fe7e2307976`
+Checkpoint SHA: `9dc0bfd`
+Changed owned paths: `packages/modules/residential-catering/**`, hostel/cafeteria operation tests and module documentation; package workspace metadata only
+Delivered: hostel buildings/rooms/beds, date-effective non-overlapping resident allocations and checkout history, visitors, incidents, maintenance and occupancy reporting; cafeteria menus with inventory refs/allergens, date-effective plans, entitlement/daily-limit/allergen enforcement, orders, idempotent service confirmation, pay-per-meal FIN charge source contract, reports, audit/events and forced-RLS migrations
+Focused checks and results: hostel/cafeteria domain and migration tests 11 PASS; combined OPS tests 56 PASS; TypeScript PASS; ESLint PASS; architecture boundaries PASS; npm audit 0 vulnerabilities
+Integration boundary: opaque SIS/CARE/inventory references only; pay-per-meal charges use `CafeteriaChargeSourceDocument` v1.0 and leave posting/collection to FIN
+Neon result: schema replay deferred until isolated foundation/Wave 1 composition; production/main untouched
+Production mutation performed: no
+Exact next milestone: clubs, activities, events/trips, capacity/waitlist, consent, risk, attendance, incidents and finance source records
 Dirty/uncommitted state: tracker checkpoint evidence only
 
 ## CARE-01 evidence
