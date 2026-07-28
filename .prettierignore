@@ -1,0 +1,9 @@
+node_modules
+dist
+coverage
+.worktrees
+playwright-report
+test-results
+package-lock.json
+docs/**
+README.md
