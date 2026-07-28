@@ -1,0 +1,27 @@
+{
+  "standard": "OneRoster",
+  "standardVersion": "1.2",
+  "profileVersion": 1,
+  "mode": "csv",
+  "conformanceClaim": "supported-subset",
+  "requiredFiles": [
+    "orgs.csv",
+    "academicSessions.csv",
+    "courses.csv",
+    "classes.csv",
+    "users.csv",
+    "enrollments.csv"
+  ],
+  "supportedObjects": ["org", "academicSession", "course", "class", "user", "enrollment"],
+  "syncModes": ["full", "delta"],
+  "restExtensionStatus": "contract-only",
+  "extensions": [],
+  "excludedFromCurrentProfile": [
+    "demographics.csv",
+    "lineItems.csv",
+    "results.csv",
+    "categories.csv",
+    "resources.csv",
+    "manifest packaging and certification artefacts"
+  ]
+}
