@@ -34,7 +34,7 @@ Current readiness: `GATE-FOUNDATION-READY` is passed. `SIS-01`, `FIN-01` and `IN
 |---|---:|---|---|---|---|---|
 | `FND-01` | 0 | complete; gate passed | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | freeze reviewed foundation SHA | pending gate-evidence commit | none |
 | `SIS-01` | 1 | ready to start | reviewed foundation SHA | module contract | none | none |
-| `FIN-01` | 1 | in progress | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | final resilience, browser and recovery gates | `4b9ed26` | none |
+| `FIN-01` | 1 | complete; `GATE-FIN-COMPLETE` passed | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | integration review | `43f7d78` | none |
 | `INT-01` | 1 | ready to start | reviewed foundation SHA | country-pack engine | none | none |
 | `ACAD-01` | 2 | blocked | reviewed Wave 1 integration SHA | academic structure | none | `GATE-WAVE-1-INTEGRATED` |
 | `OPS-01` | 2 | blocked | reviewed Wave 1 integration SHA | HR/staff | none | `GATE-WAVE-1-INTEGRATED` |
@@ -262,6 +262,21 @@ Focused checks and results: finance Vitest 92/92 PASS; owned-path ESLint PASS; b
 Gate outcome: milestone 6 passed; bounded typed CSV import/export, duplicate and formula-injection defenses, finance/admin/cashier UI, family invoice/payment/statement UI, role-aware actions and accessible static rendering are executable
 Exact next milestone: 7 — property/high-volume/restore/browser tests, recovery runbook and completion report
 Dirty/uncommitted state: tracker and agent-board evidence only
+Production mutation performed: no; Neon main untouched
+
+Date/time: 2026-07-28T10:45:00+06:00
+Stream: FIN-01
+Milestone completed: 7 — resilience, restore/replay, browser and operational completion
+Checkpoint SHA: `43f7d78`
+Changed owned paths: `tests/finance/completion.test.ts`, `tests/finance/migrations.test.ts`, `tests/finance/browser.e2e.tsx`, `tests/finance/playwright.config.ts`, `docs/modules/finance/runbook.md`, `docs/modules/finance/completion-report.md`, finance package/UI registration and canonical owned-path formatting
+High-volume/replay evidence: 1,000 invoice/payment/allocation chains; every provider event replayed; exactly 1,000 invoices, 1,000 payments, 1,000 allocations and 3,000 journals; receivable and unapplied-cash differences zero; command log replay produced identical normalized statements and financial reports
+Final finance gates: Vitest 103/103 PASS; Chromium 2/2 PASS; owned ESLint PASS; billing, ledger and FIN-owned strict TypeScript PASS; finance formatting PASS
+Final repository gate: `npm run verify` PASS — repository format, lint, architecture boundaries, root TypeScript, 135 tests passed with 1 environment-gated Neon direct test skipped, all workspace builds PASS, execution artifact validation PASS
+Architecture registration: `packages/modules` registered as `@school/finance`; admin/family workspaces declare the public dependency and no UI source crosses package boundaries or imports database clients
+Neon evidence retained: all four FIN migrations applied only on `agent/fin-01-finance`; forced RLS/no-context deny/cross-tenant isolation, immutable records, idempotent numbering/provider replay and balanced reporting proofs passed; Neon `main` untouched
+Gate outcome: `GATE-FIN-COMPLETE` passed; FIN-01 completion boundary satisfied
+Exact next milestone: integration review and composition by the integration stream
+Dirty/uncommitted state: tracker, agent-board and completion metadata only
 Production mutation performed: no; Neon main untouched
 
 ## INT-01 evidence

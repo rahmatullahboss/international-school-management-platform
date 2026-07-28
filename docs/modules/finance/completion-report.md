@@ -223,8 +223,8 @@ These are explicit integration boundaries, not hidden completion claims:
 - Milestone 5 reporting checkpoint: `6d08d24444f9f943eede9b2dbfc38fd25f9d85a4`
 - Milestone 6 imports/UI checkpoint: `4b9ed26`
 - Milestone 6 tracker checkpoint: `17b2b16`
-- Milestone 7 final checkpoint: recorded in `docs/execution/04-progress-tracker.md` after the final gate
+- Milestone 7 resilience/recovery checkpoint: `43f7d78`
 
 ## Completion decision
 
-FIN-01 is module-complete when the final repository and module gates pass, the final checkpoint is pushed, the tracker marks FIN-01 complete and the worktree is clean. Module completion does not authorize production deployment or mark `GATE-PILOT-READY`; those decisions remain outside FIN-01 ownership.
+FIN-01 is module-complete. The final repository and module gates passed, checkpoint `43f7d78` was pushed and the tracker records `GATE-FIN-COMPLETE` as passed. Module completion does not authorize production deployment or mark `GATE-PILOT-READY`; those decisions remain outside FIN-01 ownership.
