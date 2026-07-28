@@ -4,7 +4,7 @@
 
 All seven INT-01 implementation milestones are complete on `module/international-integrations`. The code, module contracts, migrations, focused tests, full repository verification, browser/accessibility test, security checks, performance checks and operations documentation are committed.
 
-`GATE-INT-COMPLETE` is **not yet passed** because migrations `202607280102` through `202607280107` still require live application and fresh-branch replay evidence on Neon. The resumed execution shell did not expose `DATABASE_URL`, `NEON_API_KEY` or the Neon MCP tools. Milestone 1 migration `202607280101` was previously applied to `agent/int-01-integrations`, after replaying foundation migrations `202607280001` through `202607280005`, and tenant RLS was verified.
+`GATE-INT-COMPLETE` is **not yet passed** because migrations `202607280102` through `202607280107` still require live application and fresh-branch replay evidence on Neon. The resumed execution shell did not expose a branch-specific connection or Neon API access. A guarded GitHub inspection proved that the existing generic `DATABASE_URL` repository secret targets Neon `main` (`br-cool-wildflower-axsot8l1`), not `agent/int-01-integrations` (`br-super-truth-axp0urxi`); the guard stopped before any schema write. The workflow now requires a dedicated `INT01_DATABASE_URL` secret and checks the exact Neon project and branch IDs before migration or replay. Milestone 1 migration `202607280101` was previously applied to the agent branch after replaying foundation migrations `202607280001` through `202607280005`, and tenant RLS was verified.
 
 ## Repository identity
 
@@ -94,6 +94,8 @@ Executed after milestone 7:
   - all workspace builds: PASS
   - execution artefact validator: PASS
 - `npm run test:browser --workspace=@school/integrations`: 1/1 PASS
+- GitHub CI after the clean-checkout browser fix: PASS (`30329479311`, `30329744058`).
+- Guarded Neon inspections: `30329744096` stopped because the generic secret was not foundation-ready; `30330061274` identified project `lingering-brook-52999532` and branch `br-cool-wildflower-axsot8l1`, then stopped before writes because it was Neon `main`.
 - Security checks include cross-tenant credential rejection, digest-only persistence, tenant-partitioned external IDs and metrics, webhook assertion tamper detection, LTI nonce/state replay, SAML assertion replay and unsafe SCIM patch rejection.
 - Performance checks link and resolve 10,000 external identifiers and enqueue/select 10,000 due webhook deliveries within the bounded local test budget.
 
@@ -101,15 +103,17 @@ Executed after milestone 7:
 
 To pass `GATE-INT-COMPLETE`:
 
-1. Verify `agent/int-01-integrations` still matches project and parent identity.
-2. Apply INT migrations `202607280102` through `202607280107` in order to the agent branch. Do not reapply or mutate production.
-3. Verify `platform.schema_migration` contains foundation migrations `202607280001`–`202607280005` and INT migrations `202607280101`–`202607280107`.
-4. Inspect `country_pack`, `integration` and `migration_studio` objects.
-5. Verify forced RLS and tenant-negative probes with `app_runtime` on every tenant-owned table.
-6. Verify immutable/append-only triggers.
-7. Create a fresh Neon branch from the reviewed integration parent and replay all INT migrations from an empty/foundation-ready state.
-8. Run the secret-backed direct Neon integration test and record exact branch IDs/results.
-9. Update the agent board and progress tracker to `complete; gate passed`, commit and push the evidence.
+1. Add repository secret `INT01_DATABASE_URL` with the connection string for project `lingering-brook-52999532`, branch `br-super-truth-axp0urxi`; the gate will reject every other project or branch.
+2. Dispatch `INT-01 Neon Gate` in `inspect` mode and verify the foundation plus INT-101 baseline.
+3. Dispatch `apply` to apply INT migrations `202607280102` through `202607280107` in order to the agent branch. Do not reapply or mutate production.
+4. Verify `platform.schema_migration` contains foundation migrations `202607280001`–`202607280005` and INT migrations `202607280101`–`202607280107`.
+5. Inspect `country_pack`, `integration` and `migration_studio` objects.
+6. Verify forced RLS and tenant-negative probes with `app_runtime` on every tenant-owned table.
+7. Verify immutable/append-only triggers.
+8. Dispatch `replay-database` to replay foundation and INT migrations in a fresh logical database on the isolated agent branch; treat this as schema-replay rehearsal, not as fresh-branch evidence.
+9. When Neon API/MCP access is available, create a fresh Neon branch from the reviewed parent and replay foundation plus INT migrations there.
+10. Run the secret-backed direct Neon integration test and record exact branch/database IDs and results.
+11. Update the agent board and progress tracker to `complete; gate passed`, commit and push the evidence.
 
 ## Safety and cleanup
 
