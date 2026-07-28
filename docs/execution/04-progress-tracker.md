@@ -19,7 +19,7 @@
 
 | Stream | Wave | Status | Base | Current/next milestone | Final/last checkpoint | Blocking condition |
 |---|---:|---|---|---|---|---|
-| `FND-01` | 0 | in progress | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | shared UI and module boundaries | `7f827e98099fffcc57fd542499295d7aba8967d1` | none |
+| `FND-01` | 0 | in progress | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | verification, provenance and foundation freeze | `c0b78c66058d5e4161fa7c1decb1c4af249038d9` | none |
 | `SIS-01` | 1 | blocked | reviewed foundation SHA | module contract | none | `GATE-FOUNDATION-READY` |
 | `FIN-01` | 1 | blocked | reviewed foundation SHA | finance contract | none | `GATE-FOUNDATION-READY` |
 | `INT-01` | 1 | blocked | reviewed foundation SHA | country-pack engine | none | `GATE-FOUNDATION-READY` |
@@ -113,6 +113,15 @@ Migration: `202607280005_FND-01_shared_services`; immutable country packs, tenan
 Focused checks and results: shared-services tests 5/5 PASS; full Vitest 29/29 PASS; typecheck PASS; ESLint PASS; build PASS; pack mutation blocked and default locale remained en; no-context workflow count 0; tenant A saw only its approved workflow and clean document; forbidden cross-tenant notification count 0
 Gate outcome: milestone 6 passed; production/main branch unchanged
 Exact next milestone: 7 — shared UI and module boundaries
+
+### Milestone 7 — shared UI and module boundaries
+
+Date/time: 2026-07-28T06:59:00+06:00
+Checkpoint SHA: `c0b78c66058d5e4161fa7c1decb1c4af249038d9`
+Changed owned paths: `packages/ui`, platform module registry, responsive web shell, architecture-boundary checker, Playwright/browser configuration and CI boundary gate
+Focused checks and results: UI/module tests 3/3 PASS; full Vitest 32/32 PASS; architecture boundary validation PASS; `npm run verify` PASS; Chromium browser test 1/1 PASS; Worker/Vite/workspace builds PASS
+Gate outcome: milestone 7 passed; module ownership and accessible shell are executable
+Exact next milestone: 8 — verification, provenance and foundation freeze
 
 ## SIS-01 evidence
 
