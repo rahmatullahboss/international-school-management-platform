@@ -7,5 +7,5 @@
     "types": ["@cloudflare/workers-types"]
   },
   "include": ["src/**/*.ts"],
-  "references": [{ "path": "../../packages/platform" }]
+  "references": [{ "path": "../../packages/platform/tsconfig.json" }]
 }

@@ -1,5 +1,7 @@
 export type { RuntimeEnvironment } from './environment.js';
 export { parseRuntimeEnvironment } from './environment.js';
+export type { ModuleRegistration } from './module-registry.js';
+export { ModuleRegistry } from './module-registry.js';
 export type {
   DeploymentProfile,
   ProvisioningStatus,

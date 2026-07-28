@@ -9,6 +9,8 @@ export default tseslint.config(
       '**/node_modules/**',
       '.worktrees/**',
       'playwright-report/**',
+      'playwright.config.mjs',
+      'scripts/**/*.mjs',
       'test-results/**',
     ],
   },

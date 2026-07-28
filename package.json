@@ -14,6 +14,7 @@
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
+    "check:boundaries": "node scripts/check-architecture-boundaries.mjs",
     "clean": "npm run clean --workspaces --if-present",
     "dev": "npm run dev --workspace=@school/platform-api",
     "format": "prettier --write .",
@@ -22,10 +23,10 @@
     "test": "vitest run",
     "test:unit": "vitest run tests/unit packages apps",
     "test:integration": "vitest run tests/integration",
-    "test:browser": "playwright test",
+    "test:browser": "playwright test -c playwright.config.mjs",
     "typecheck": "tsc -b",
     "validate:artifacts": "python3 scripts/validate_execution_artifacts.py",
-    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run build && npm run validate:artifacts"
+    "verify": "npm run format:check && npm run lint && npm run check:boundaries && npm run typecheck && npm run test && npm run build && npm run validate:artifacts"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260727.1",
