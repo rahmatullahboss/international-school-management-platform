@@ -1,4 +1,4 @@
-import { readFile, readdir } from 'node:fs/promises';
+import { access, readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 
@@ -7,11 +7,34 @@ const workspaceRoots = ['apps', 'packages'];
 const sourceExtensions = new Set(['.ts', '.tsx', '.js', '.jsx']);
 const importPattern = /(?:from\s+|import\s*\(|require\s*\()\s*['"]([^'"]+)['"]/gu;
 
-async function directories(parent) {
-  const entries = await readdir(path.join(root, parent), { withFileTypes: true });
-  return entries
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => path.join(root, parent, entry.name));
+async function hasManifest(directory) {
+  try {
+    await access(path.join(directory, 'package.json'));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function packageDirectories(parent) {
+  const packages = [];
+
+  async function visit(directory) {
+    if (await hasManifest(directory)) {
+      packages.push(directory);
+      return;
+    }
+
+    for (const entry of await readdir(directory, { withFileTypes: true })) {
+      if (!entry.isDirectory() || ['dist', 'node_modules', 'coverage'].includes(entry.name)) {
+        continue;
+      }
+      await visit(path.join(directory, entry.name));
+    }
+  }
+
+  await visit(path.join(root, parent));
+  return packages;
 }
 
 async function sourceFiles(directory) {
@@ -27,7 +50,7 @@ async function sourceFiles(directory) {
 
 const failures = [];
 for (const workspaceRoot of workspaceRoots) {
-  for (const directory of await directories(workspaceRoot)) {
+  for (const directory of await packageDirectories(workspaceRoot)) {
     const manifest = JSON.parse(await readFile(path.join(directory, 'package.json'), 'utf8'));
     const declared = new Set([
       ...Object.keys(manifest.dependencies ?? {}),

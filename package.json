@@ -10,7 +10,8 @@
   },
   "workspaces": [
     "apps/*",
-    "packages/*"
+    "packages/*",
+    "packages/modules/*"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
@@ -27,7 +28,7 @@
     "test:integration": "vitest run tests/integration",
     "test:neon": "vitest run tests/integration/neon-direct.test.ts",
     "test:browser": "playwright test -c playwright.config.mjs",
-    "typecheck": "tsc -b",
+    "typecheck": "tsc -b && npm run typecheck --workspaces --if-present",
     "validate:artifacts": "python3 scripts/validate_execution_artifacts.py",
     "verify": "npm run format:check && npm run lint && npm run check:boundaries && npm run typecheck && npm run test && npm run build && npm run validate:artifacts"
   },
