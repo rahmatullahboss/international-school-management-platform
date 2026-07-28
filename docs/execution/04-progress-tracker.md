@@ -493,6 +493,22 @@ Exact next milestone: 2 — timetable versions, meetings, rooms, conflict detect
 Dirty/uncommitted state: tracker evidence only
 Production mutation performed: no
 
+### Milestone 2 — timetable and scheduling
+
+Date/time: 2026-07-28T23:38:55+06:00
+Stream: ACAD-01
+Milestone completed: 2 — versioned timetables, meeting patterns/instances, teacher-room-student conflict detection, publication, substitutions and schedule views
+Git branch/worktree: `module/academics-attendance-records` / `.worktrees/acad-01-academics`
+Neon branch: `agent/acad-01-academics` (`br-gentle-waterfall-axcl7l8z`)
+Starting base: `8cc8ee1562ade672b14c1c44af935fe7e2307976`
+Checkpoint SHA: `48e17eafba473cae544fbef99e7edf6a7e808d06`
+Changed owned paths: `packages/modules/scheduling/**`; `tests/academics/timetable.test.ts`; `docs/modules/academics/timetable.md`; append-only TypeScript include registration
+Focused checks and results: focused ESLint PASS; module TypeScript project-reference build PASS; cumulative academic Vitest 10/10 PASS; idempotent materialization, local timezone intent, conflict blocking, immutable publication, dated teacher/room substitution and tenant-scoped student/teacher views verified
+Gate outcome: milestone 2 passed; live reviewed-base migration replay remains pending final database gate
+Exact next milestone: 3 — attendance policies/codes/sessions, low-latency roster capture, offline sync, amendments, finalization, notices, alerts and reports
+Dirty/uncommitted state: tracker evidence only
+Production mutation performed: no
+
 ## OPS-01 evidence
 
 No execution evidence recorded.
