@@ -132,7 +132,6 @@ class _AuthorizedStaffAppState extends State<_AuthorizedStaffApp> {
       routes: [
         ShellRoute(
           builder: (context, state, child) => _AuthorizedStaffShell(
-            child: child,
             coordinator: widget.coordinator,
             location: state.uri.path,
             session: session,
