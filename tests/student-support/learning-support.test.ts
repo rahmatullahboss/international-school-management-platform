@@ -139,18 +139,23 @@ describe('CARE-01 learning-support domain', () => {
       }),
     );
     const { teacherAccess, referral } = bootstrap(service);
-    expect(
-      service.submitReferral(teacherAccess, {
-        tenantId: 'tenant-a',
-        studentPersonId: 'student-1',
-        campusId: 'campus-1',
-        referralCategory: 'ignored',
-        priority: 'urgent',
-        classroomSummary: 'Ignored replay',
-        idempotencyKey: 'learning-referral-1',
-        basisEvidence: basis,
-      }),
-    ).toEqual(referral);
+    const replay = service.submitReferral(teacherAccess, {
+      tenantId: 'tenant-a',
+      studentPersonId: 'student-1',
+      campusId: 'campus-1',
+      referralCategory: 'ignored',
+      priority: 'urgent',
+      classroomSummary: 'Ignored replay',
+      idempotencyKey: 'learning-referral-1',
+      basisEvidence: basis,
+    });
+    expect(replay).toMatchObject({
+      referralId: referral.referralId,
+      idempotencyKey: referral.idempotencyKey,
+      status: 'accepted',
+      version: 2,
+      assignedLeadPrincipalId: 'learning-support-1',
+    });
   });
 
   test('denies teachers access to CARE-C3 assessment source', () => {
