@@ -46,6 +46,13 @@ const navigation: readonly ExperienceNavigationItem[] = [
     capability: 'care.read',
   },
   {
+    id: 'communications',
+    label: 'Communications',
+    href: '/admin/communications',
+    description: 'Announcements, messages and delivery evidence',
+    capability: 'communications.read',
+  },
+  {
     id: 'integrations',
     label: 'Integrations',
     href: '/admin/integrations',
