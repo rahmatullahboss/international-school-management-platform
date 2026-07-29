@@ -95,9 +95,19 @@ const connectivityLabels: Readonly<Record<ConnectivityState, string>> = {
 
 const iconPaths: Readonly<Record<ExperienceNavigationIcon, readonly string[]>> = {
   home: ['M3 11.5 12 4l9 7.5', 'M5.5 10.5V20h13v-9.5', 'M9.5 20v-6h5v6'],
-  people: ['M8 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z', 'M2.5 21v-2a5.5 5.5 0 0 1 11 0v2', 'M16 4.2a3.5 3.5 0 0 1 0 6.6', 'M16.5 14a4.5 4.5 0 0 1 5 4.5V21'],
+  people: [
+    'M8 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z',
+    'M2.5 21v-2a5.5 5.5 0 0 1 11 0v2',
+    'M16 4.2a3.5 3.5 0 0 1 0 6.6',
+    'M16.5 14a4.5 4.5 0 0 1 5 4.5V21',
+  ],
   learning: ['m3 6 9-4 9 4-9 4-9-4Z', 'M6 8.2V14l6 3 6-3V8.2', 'M21 6v7'],
-  money: ['M4 6.5h16v11H4z', 'M8 10h.01', 'M16 14h.01', 'M12 9.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z'],
+  money: [
+    'M4 6.5h16v11H4z',
+    'M8 10h.01',
+    'M16 14h.01',
+    'M12 9.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z',
+  ],
   operations: ['M4 4h6v6H4z', 'M14 4h6v6h-6z', 'M4 14h6v6H4z', 'M14 14h6v6h-6z'],
   support: ['M12 21s7-3.2 7-9V5.5L12 3 5 5.5V12c0 5.8 7 9 7 9Z', 'm9.5 12 1.7 1.7 3.6-4'],
   messages: ['M4 5h16v12H8l-4 3V5Z', 'M8 9h8', 'M8 13h5'],
@@ -276,7 +286,10 @@ export function ExperienceShell(props: ExperienceShellProps): ReactElement {
                           <small>{item.description}</small>
                         </span>
                         {item.badge === undefined ? null : (
-                          <span className="experience-nav__badge" aria-label={`${item.badge} items`}>
+                          <span
+                            className="experience-nav__badge"
+                            aria-label={`${item.badge} items`}
+                          >
                             {item.badge}
                           </span>
                         )}

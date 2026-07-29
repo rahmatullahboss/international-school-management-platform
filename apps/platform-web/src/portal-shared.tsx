@@ -34,7 +34,8 @@ export const roleDescriptions: Readonly<
   },
 };
 
-export function shellUtilityActions(_activeRole: PilotRole) {
+export function shellUtilityActions(activeRole: PilotRole) {
+  void activeRole;
   return [] as const;
 }
 
@@ -70,7 +71,11 @@ export function PilotModuleSurface(props: { readonly page: PilotModulePage }): R
           <strong>What would you like to do?</strong>
         </div>
         {props.page.actions.map((action, index) => (
-          <a data-emphasis={index === 0 ? 'primary' : 'secondary'} href={action.href} key={action.label}>
+          <a
+            data-emphasis={index === 0 ? 'primary' : 'secondary'}
+            href={action.href}
+            key={action.label}
+          >
             {action.label}
           </a>
         ))}

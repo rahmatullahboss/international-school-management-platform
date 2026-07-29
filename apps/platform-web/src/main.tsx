@@ -7,7 +7,6 @@ import {
   useRef,
   useState,
   type ComponentType,
-  type MouseEvent as ReactMouseEvent,
   type ReactElement,
 } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -208,7 +207,10 @@ function PilotLanding(): ReactElement {
               ['Student support', 'Health, wellbeing, safeguarding and learning support'],
               ['Communication', 'Messages, announcements, forms, documents and notifications'],
               ['Integrations', 'Imports, country settings, OneRoster, LTI, SSO and webhooks'],
-              ['Trust and governance', 'Permissions, audit history, isolation and recovery evidence'],
+              [
+                'Trust and governance',
+                'Permissions, audit history, isolation and recovery evidence',
+              ],
             ].map(([title, detail]) => (
               <article key={title}>
                 <h3>{title}</h3>

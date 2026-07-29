@@ -3,7 +3,9 @@ import { expect, test } from '@playwright/test';
 test('pilot role chooser explains every role workspace', async ({ page }) => {
   await page.goto('/');
 
-  await expect(page.getByRole('heading', { name: 'Run the school day from one place' })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Run the school day from one place' }),
+  ).toBeVisible();
   await expect(page.getByRole('link', { name: /Go to administration/u })).toHaveAttribute(
     'href',
     '/admin',
