@@ -1,9 +1,6 @@
 name: Deploy Cloudflare Staging
 
 on:
-  push:
-    branches:
-      - deploy/cloudflare-staging-pilot
   pull_request:
     branches:
       - main
@@ -18,11 +15,11 @@ permissions:
 
 concurrency:
   group: cloudflare-staging-pilot
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   verify-deploy-smoke:
-    if: github.event_name == 'workflow_dispatch' || github.ref_name == 'deploy/cloudflare-staging-pilot' || github.head_ref == 'deploy/cloudflare-staging-pilot'
+    if: github.event_name == 'workflow_dispatch' || github.head_ref == 'deploy/cloudflare-staging-pilot'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     environment: cloudflare-staging
