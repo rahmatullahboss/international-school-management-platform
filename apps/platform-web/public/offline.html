@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en" dir="auto">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#12263a" />
+    <title>School Platform — Offline support</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: system-ui, sans-serif;
+        background: #f3f6f8;
+        color: #12263a;
+      }
+      body {
+        min-block-size: 100vh;
+        margin: 0;
+        display: grid;
+        place-items: center;
+        padding: 1rem;
+        box-sizing: border-box;
+      }
+      main {
+        inline-size: min(100%, 42rem);
+        background: #fff;
+        border: 1px solid #cbd6de;
+        border-inline-start: 0.35rem solid #8a1c17;
+        border-radius: 0.85rem;
+        padding: clamp(1.25rem, 4vw, 2rem);
+      }
+      h1 {
+        margin-block: 0 0.75rem;
+      }
+      p,
+      li {
+        line-height: 1.55;
+      }
+      a {
+        display: inline-flex;
+        min-block-size: 2.75rem;
+        align-items: center;
+        font-weight: 700;
+        color: #004f57;
+        text-underline-offset: 0.2em;
+      }
+      a:focus-visible {
+        outline: 3px solid #0b63ce;
+        outline-offset: 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p>Resilient workspace</p>
+      <h1>You are offline</h1>
+      <p>
+        The application shell is available, but only explicitly approved drafts should continue on
+        this device.
+      </p>
+      <ul>
+        <li>
+          Attendance, forms, surveys and requests may be saved as drafts when the screen confirms
+          offline support.
+        </li>
+        <li>
+          Payments, publication, document downloads and final approval require a trusted connection.
+        </li>
+        <li>Do not sign out or clear site data while pending drafts remain on this device.</li>
+      </ul>
+      <a href="/">Retry the school platform</a>
+    </main>
+  </body>
+</html>

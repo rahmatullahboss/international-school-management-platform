@@ -10,6 +10,7 @@
     "typecheck": "tsc -b"
   },
   "dependencies": {
+    "@school/documents-experience": "*",
     "@school/platform": "*",
     "@school/ui": "*",
     "react": "^19.0.0",

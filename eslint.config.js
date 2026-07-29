@@ -14,6 +14,7 @@ export default tseslint.config(
       'codexpro/**',
       'playwright-report/**',
       'playwright.config.mjs',
+      'apps/platform-web/public/sw.js',
       'scripts/**/*.mjs',
       'test-results/**',
     ],

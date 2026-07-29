@@ -12,6 +12,14 @@ body {
   margin: 0;
 }
 
+html[data-bandwidth='low'] {
+  scroll-behavior: auto;
+}
+
+html[data-bandwidth='low'] [data-optional-media='true'] {
+  display: none;
+}
+
 [data-app-shell='school-platform'] {
   min-height: 100vh;
   display: grid;

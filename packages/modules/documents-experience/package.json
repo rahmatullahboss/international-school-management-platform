@@ -7,9 +7,11 @@
     ".": "./src/index.tsx",
     "./communications": "./src/communications.tsx",
     "./reporting": "./src/reporting.tsx",
+    "./resilience": "./src/resilience.tsx",
     "./shell.css": "./src/shell.css",
     "./communications.css": "./src/communications.css",
-    "./reporting.css": "./src/reporting.css"
+    "./reporting.css": "./src/reporting.css",
+    "./resilience.css": "./src/resilience.css"
   },
   "scripts": {
     "build": "tsc -b",

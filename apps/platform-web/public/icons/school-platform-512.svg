@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">International School Platform</title>
+  <rect width="512" height="512" rx="96" fill="#12263a" />
+  <path d="M96 196 256 88l160 108-160 108L96 196Z" fill="#fff" />
+  <path d="M144 248v102c0 37 50 74 112 74s112-37 112-74V248l-112 76-112-76Z" fill="#dbe7ed" />
+  <path d="M408 210v132" stroke="#fff" stroke-width="28" stroke-linecap="round" />
+</svg>

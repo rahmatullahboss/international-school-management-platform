@@ -13,6 +13,10 @@ const reportingCss = readFileSync(
   new URL('../../packages/modules/documents-experience/src/reporting.css', import.meta.url),
   'utf8',
 );
+const resilienceCss = readFileSync(
+  new URL('../../packages/modules/documents-experience/src/resilience.css', import.meta.url),
+  'utf8',
+);
 
 function shellFixture(options: { direction?: 'ltr' | 'rtl'; offline?: boolean } = {}): string {
   const direction = options.direction ?? 'ltr';
@@ -128,6 +132,28 @@ function reportingFixture(direction: 'ltr' | 'rtl' = 'ltr'): string {
       <section class="reporting-section" aria-labelledby="reporting-documents">
         <header><h3 id="reporting-documents">Authorised documents</h3><p>Publication and security scanning determine availability.</p></header>
         <ol class="reporting-documents"><li data-ready="true"><div><span>personal</span><strong>Ready to download</strong></div><h4>Term attendance evidence</h4><p>Attendance evidence</p><dl><div><dt>Generated</dt><dd><time datetime="2026-07-29T08:00:00+06:00">29 Jul 2026</time></dd></div><div><dt>Evidence</dt><dd>SHA-256 verified</dd></div></dl><a href="/admin/documents/document-ready/request">Request secure download</a></li></ol>
+      </section>
+    </main>
+  </body>
+</html>`;
+}
+
+function resilienceFixture(direction: 'ltr' | 'rtl' = 'ltr'): string {
+  return `<!doctype html>
+<html lang="${direction === 'rtl' ? 'ar' : 'en'}" dir="${direction}">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>EXP-01 resilience proof</title>
+    <style>${resilienceCss}</style>
+  </head>
+  <body>
+    <main>
+      <section class="experience-resilience" data-connectivity="offline" data-bandwidth="low" aria-labelledby="experience-resilience-title">
+        <header><div><p>Resilient workspace</p><h2 id="experience-resilience-title">Working offline</h2><span>Only approved drafts remain available. Final submission waits for a trusted connection.</span></div><strong role="status" aria-live="polite">12 pending on this device</strong></header>
+        <dl><div><dt>Bandwidth mode</dt><dd>Low bandwidth</dd></div><div><dt>Last successful sync</dt><dd>29 Jul 2026</dd></div><div><dt>Offline boundary</dt><dd>Drafts only; payments, publication and finalisation stay online.</dd></div></dl>
+        <div class="experience-resilience__notice" role="status"><strong>An application update is ready.</strong><span>Finish or sync current drafts before refreshing.</span></div>
+        <footer><button type="button">Use standard mode</button><a href="/teacher/sync">Retry sync</a><a href="/offline.html">Open offline support</a></footer>
       </section>
     </main>
   </body>
@@ -262,5 +288,40 @@ test('reporting ledger contains provenance, responsive overflow and keyboard acc
   expect(layout.mastheadColumns.split(' ')).toHaveLength(1);
   expect(layout.metricColumns.split(' ')).toHaveLength(1);
   expect(['auto', 'scroll']).toContain(layout.tableOverflow);
+  expect(layout.bodyWidth).toBeLessThanOrEqual(layout.viewportWidth);
+});
+
+test('resilience panel preserves offline boundaries, mobile RTL layout and keyboard actions', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.setViewportSize({ width: 360, height: 800 });
+  await page.setContent(resilienceFixture('rtl'));
+
+  await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+  await expect(page.getByRole('heading', { name: 'Working offline' })).toBeVisible();
+  await expect(page.getByRole('status', { name: '' }).first()).toContainText(
+    '12 pending on this device',
+  );
+  await expect(page.getByText('Drafts only; payments, publication and finalisation')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Retry sync' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Open offline support' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Use standard mode' }).focus();
+  await expect(page.getByRole('button', { name: 'Use standard mode' })).toBeFocused();
+
+  const layout = await page.evaluate(() => {
+    const details = document.querySelector<HTMLElement>('.experience-resilience > dl')!;
+    const panel = document.querySelector<HTMLElement>('.experience-resilience')!;
+    return {
+      detailColumns: getComputedStyle(details).gridTemplateColumns,
+      direction: getComputedStyle(panel).direction,
+      bodyWidth: document.body.scrollWidth,
+      viewportWidth: window.innerWidth,
+    };
+  });
+
+  expect(layout.detailColumns.split(' ')).toHaveLength(1);
+  expect(layout.direction).toBe('rtl');
   expect(layout.bodyWidth).toBeLessThanOrEqual(layout.viewportWidth);
 });
