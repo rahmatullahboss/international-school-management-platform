@@ -1,20 +1,8 @@
-import {
-  StrictMode,
-  Suspense,
-  lazy,
-  useEffect,
-  useState,
-  type ReactElement,
-} from 'react';
+import { StrictMode, Suspense, lazy, useEffect, useState, type ReactElement } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { registerPlatformServiceWorker } from './pwa';
-import {
-  PortalLoading,
-  roleRoots,
-  type PilotConnectivity,
-  type PilotRole,
-} from './portal-shared';
+import { PortalLoading, roleRoots, type PilotConnectivity, type PilotRole } from './portal-shared';
 import './pilot.css';
 import './styles.css';
 

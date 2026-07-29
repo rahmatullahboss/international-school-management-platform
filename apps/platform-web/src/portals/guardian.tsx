@@ -1,9 +1,6 @@
 import type { ReactElement } from 'react';
 
-import {
-  GuardianExperienceShell,
-  GuardianHouseholdWorkspace,
-} from '@school/web-family/experience';
+import { GuardianExperienceShell, GuardianHouseholdWorkspace } from '@school/web-family/experience';
 
 import {
   guardianCapabilities,
