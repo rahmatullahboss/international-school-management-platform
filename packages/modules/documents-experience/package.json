@@ -9,6 +9,7 @@
     "./reporting": "./src/reporting.tsx",
     "./resilience": "./src/resilience.tsx",
     "./shell.css": "./src/shell.css",
+    "./shell-ux.css": "./src/shell-ux.css",
     "./communications.css": "./src/communications.css",
     "./reporting.css": "./src/reporting.css",
     "./resilience.css": "./src/resilience.css"
