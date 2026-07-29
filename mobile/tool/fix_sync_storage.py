@@ -64,9 +64,7 @@ anchor = """  EncryptedSyncRecord._({required Uint8List bytes, required this.key
 if factory_block in source:
     source = source.replace(factory_block, '', 1)
     source = source.replace(anchor, anchor + factory_block, 1)
-elif source.find(factory_block) < source.find('final Uint8List _bytes;'):
-    pass
-else:
+elif source.find('factory EncryptedSyncRecord.fromJson') > source.find('final Uint8List _bytes;'):
     raise SystemExit('Unexpected EncryptedSyncRecord factory shape')
 cipher_path.write_text(source, encoding='utf-8')
 
@@ -90,18 +88,16 @@ anchor = """  const SyncStorageScope._({
 if factory_block in source:
     source = source.replace(factory_block, '', 1)
     source = source.replace(anchor, anchor + factory_block, 1)
-elif source.find(factory_block) < source.find('final String accountId;'):
-    pass
-else:
+elif source.find('factory SyncStorageScope.fromJson') > source.find('final String accountId;'):
     raise SystemExit('Unexpected SyncStorageScope factory shape')
 scope_path.write_text(source, encoding='utf-8')
 
 test_path = root / 'test/sync_storage_test.dart'
 source = test_path.read_text(encoding='utf-8')
-old = """Future<File> activeFile(Directory directory) async =>
-    directory.list().whereType<File>().firstWhere(
-      (file) => file.path.endsWith('.json'),
-    );
+old = """Future<File> activeFile(Directory directory) async => directory
+    .list()
+    .whereType<File>()
+    .firstWhere((file) => file.path.endsWith('.json'));
 """
 new = """Future<File> activeFile(Directory directory) async {
   await for (final entity in directory.list()) {
