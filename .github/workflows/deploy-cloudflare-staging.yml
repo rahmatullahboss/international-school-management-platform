@@ -80,16 +80,26 @@ jobs:
         run: |
           set -euo pipefail
 
-          for attempt in {1..12}; do
-            if curl --fail --silent --show-error "$API_URL/health" --output api-health.json; then
-              break
-            fi
-            if [[ "$attempt" == "12" ]]; then
-              echo "API health endpoint did not become ready." >&2
-              exit 1
-            fi
-            sleep 5
-          done
+          fetch_with_retry() {
+            local url="$1"
+            local output="$2"
+            local label="$3"
+            for attempt in {1..12}; do
+              if curl --fail --silent --show-error "$url" --output "$output"; then
+                return 0
+              fi
+              if [[ "$attempt" == "12" ]]; then
+                echo "$label did not become ready: $url" >&2
+                return 1
+              fi
+              sleep 5
+            done
+          }
+
+          fetch_with_retry "$API_URL/health" api-health.json "API health endpoint"
+          fetch_with_retry "$WEB_URL/" web-index.html "Web homepage"
+          fetch_with_retry "$WEB_URL/manifest.webmanifest" web-manifest.json "PWA manifest"
+          fetch_with_retry "$WEB_URL/offline.html" web-offline.html "Offline page"
 
           python3 - <<'PY'
           import json
@@ -98,11 +108,10 @@ jobs:
           payload = json.loads(Path('api-health.json').read_text(encoding='utf-8'))
           assert payload.get('status') == 'ok', payload
           assert payload.get('environment') == 'staging', payload
+          assert 'International School Platform' in Path('web-index.html').read_text(encoding='utf-8')
+          assert 'School Platform' in Path('web-manifest.json').read_text(encoding='utf-8')
+          assert 'You are offline' in Path('web-offline.html').read_text(encoding='utf-8')
           PY
-
-          curl --fail --silent --show-error "$WEB_URL/" | grep -q 'International School Platform'
-          curl --fail --silent --show-error "$WEB_URL/manifest.webmanifest" | grep -q 'School Platform'
-          curl --fail --silent --show-error "$WEB_URL/offline.html" | grep -q 'You are offline'
 
       - name: Publish staging URLs
         shell: bash
