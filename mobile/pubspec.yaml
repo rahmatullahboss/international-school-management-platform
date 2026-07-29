@@ -1,0 +1,13 @@
+name: school_mobile_workspace
+description: Shared Flutter workspace for the school family and staff applications.
+publish_to: none
+
+environment:
+  sdk: ^3.10.0
+
+workspace:
+  - apps/family_app
+  - apps/staff_app
+  - packages/api_client
+  - packages/design_system
+  - packages/mobile_core
