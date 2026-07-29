@@ -4,11 +4,13 @@ class FamilyProductionApp extends StatefulWidget {
   const FamilyProductionApp({
     this.coordinator,
     this.initializeCoordinator = true,
+    this.repository,
     super.key,
   });
 
   final MobileAppCoordinator? coordinator;
   final bool initializeCoordinator;
+  final FamilyReadRepository? repository;
 
   @override
   State<FamilyProductionApp> createState() => _FamilyProductionAppState();
@@ -66,8 +68,24 @@ class _FamilyProductionAppState extends State<FamilyProductionApp> {
         final state = coordinator.state;
         final session = state.session;
         if (state.isReady && session != null) {
+          final repository =
+              widget.repository ??
+              (coordinator.apiClient == null
+                  ? null
+                  : FamilyReadApi(coordinator.apiClient!));
+          if (repository == null) {
+            return MaterialApp(
+              debugShowCheckedModeBanner: false,
+              home: const MobileConfigurationFailureScreen(
+                appName: 'School Family',
+                reasonCode: 'FAMILY_REPOSITORY_CONFIGURATION_REQUIRED',
+              ),
+              theme: SchoolTheme.light(),
+            );
+          }
           return _AuthorizedFamilyApp(
             coordinator: coordinator,
+            repository: repository,
             session: session,
           );
         }
@@ -99,10 +117,12 @@ class _FamilyProductionAppState extends State<FamilyProductionApp> {
 class _AuthorizedFamilyApp extends StatefulWidget {
   const _AuthorizedFamilyApp({
     required this.coordinator,
+    required this.repository,
     required this.session,
   });
 
   final MobileAppCoordinator coordinator;
+  final FamilyReadRepository repository;
   final SchoolSession session;
 
   @override
@@ -110,71 +130,97 @@ class _AuthorizedFamilyApp extends StatefulWidget {
 }
 
 class _AuthorizedFamilyAppState extends State<_AuthorizedFamilyApp> {
+  late FamilyJourneyController _journey;
   late GoRouter _router;
 
   @override
   void initState() {
     super.initState();
+    _journey = FamilyJourneyController(
+      repository: widget.repository,
+      session: widget.session,
+    );
     _router = _createRouter();
+    unawaited(_journey.initialize());
   }
 
   @override
   void didUpdateWidget(covariant _AuthorizedFamilyApp oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.session.tenantId != widget.session.tenantId ||
-        oldWidget.session.campusId != widget.session.campusId ||
-        oldWidget.session.activePersona != widget.session.activePersona ||
-        !setEquals(
-          oldWidget.session.capabilities,
-          widget.session.capabilities,
-        )) {
+    final scopeChanged = !_sameSession(oldWidget.session, widget.session);
+    if (oldWidget.repository != widget.repository) {
+      _journey.dispose();
+      _journey = FamilyJourneyController(
+        repository: widget.repository,
+        session: widget.session,
+      );
+      unawaited(_journey.initialize());
+    } else if (scopeChanged) {
+      unawaited(_journey.updateSession(widget.session));
+    }
+    if (scopeChanged) {
       _router.dispose();
       _router = _createRouter();
     }
   }
 
+  bool _sameSession(SchoolSession first, SchoolSession second) =>
+      first.tenantId == second.tenantId &&
+      first.campusId == second.campusId &&
+      first.activePersona == second.activePersona &&
+      setEquals(first.capabilities, second.capabilities);
+
   GoRouter _createRouter() {
     final session = widget.session;
-    final routes = <RouteBase>[
-      ShellRoute(
-        builder: (context, state, child) => _AuthorizedFamilyShell(
-          coordinator: widget.coordinator,
-          location: state.uri.path,
-          session: session,
-          child: child,
-        ),
-        routes: [
-          GoRoute(
-            path: '/',
-            builder: (context, state) =>
-                _AuthorizedFamilyHomeScreen(session: session),
+    return GoRouter(
+      routes: [
+        ShellRoute(
+          builder: (context, state, child) => _AuthorizedFamilyShell(
+            coordinator: widget.coordinator,
+            journey: _journey,
+            location: state.uri.path,
+            session: session,
+            child: child,
           ),
-          if (session.can(SchoolCapability.attendanceRead))
+          routes: [
             GoRoute(
-              path: '/attendance',
-              builder: (context, state) =>
-                  _AuthorizedFamilyAttendanceScreen(session: session),
+              path: '/',
+              builder: (context, state) => _FamilyHomeScreen(
+                journey: _journey,
+                session: session,
+              ),
             ),
-          if (session.can(SchoolCapability.gradesReadPublished))
-            GoRoute(
-              path: '/results',
-              builder: (context, state) => const FamilyResultsScreen(),
-            ),
-          if (session.activePersona == SchoolPersona.guardian &&
-              session.can(SchoolCapability.billingRead))
-            GoRoute(
-              path: '/fees',
-              builder: (context, state) => const _AuthorizedFamilyFeesScreen(),
-            ),
-          if (session.can(SchoolCapability.messagesRead))
-            GoRoute(
-              path: '/messages',
-              builder: (context, state) => const FamilyMessagesScreen(),
-            ),
-        ],
-      ),
-    ];
-    return GoRouter(routes: routes);
+            if (session.can(SchoolCapability.attendanceRead))
+              GoRoute(
+                path: '/attendance',
+                builder: (context, state) => _FamilyAttendanceScreen(
+                  journey: _journey,
+                  session: session,
+                ),
+              ),
+            if (session.can(SchoolCapability.gradesReadPublished))
+              GoRoute(
+                path: '/results',
+                builder: (context, state) =>
+                    _FamilyResultsReadScreen(journey: _journey),
+              ),
+            if (session.activePersona == SchoolPersona.guardian &&
+                session.can(SchoolCapability.billingRead))
+              GoRoute(
+                path: '/fees',
+                builder: (context, state) =>
+                    _FamilyFeesReadScreen(journey: _journey),
+              ),
+            if (session.can(SchoolCapability.messagesRead))
+              GoRoute(
+                path: '/messages',
+                builder: (context, state) =>
+                    _FamilyMessagesReadScreen(journey: _journey),
+              ),
+          ],
+        ),
+      ],
+    );
   }
 
   @override
@@ -188,6 +234,7 @@ class _AuthorizedFamilyAppState extends State<_AuthorizedFamilyApp> {
   @override
   void dispose() {
     _router.dispose();
+    _journey.dispose();
     super.dispose();
   }
 }
@@ -196,12 +243,14 @@ class _AuthorizedFamilyShell extends StatelessWidget {
   const _AuthorizedFamilyShell({
     required this.child,
     required this.coordinator,
+    required this.journey,
     required this.location,
     required this.session,
   });
 
   final Widget child;
   final MobileAppCoordinator coordinator;
+  final FamilyJourneyController journey;
   final String location;
   final SchoolSession session;
 
@@ -271,207 +320,420 @@ class _AuthorizedFamilyShell extends StatelessWidget {
         )
         .toSet();
 
-    return SchoolAdaptiveScaffold(
-      actions: [
-        if (availablePersonas.length > 1)
-          PopupMenuButton<SchoolPersona>(
-            icon: const Icon(Icons.switch_account_outlined),
-            initialValue: session.activePersona,
-            itemBuilder: (context) => availablePersonas
-                .map(
-                  (persona) => PopupMenuItem(
-                    value: persona,
-                    child: Text('${persona.label} profile'),
-                  ),
-                )
-                .toList(growable: false),
-            onSelected: coordinator.switchPersona,
-            tooltip: 'Switch profile',
-          ),
-        IconButton(
-          icon: const Icon(Icons.logout),
-          onPressed: () => unawaited(coordinator.signOut()),
-          tooltip: 'Sign out',
-        ),
-      ],
-      body: child,
-      destinations: destinations,
-      onDestinationSelected: (index) => context.go(paths[index]),
-      selectedIndex: paths.indexOf(location).clamp(0, paths.length - 1).toInt(),
-      status: const SchoolStatusBanner(
-        label: 'Authorized session',
-        message: 'Published information follows the selected school access.',
-        tone: SchoolStatusTone.success,
-      ),
-      title: 'School Family · ${session.activePersona.label}',
+    return AnimatedBuilder(
+      animation: journey,
+      builder: (context, _) {
+        final directory = journey.state.directory;
+        return SchoolAdaptiveScaffold(
+          actions: [
+            if (directory != null && directory.students.length > 1)
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.people_outline),
+                initialValue: directory.activeStudentId,
+                itemBuilder: (context) => directory.students
+                    .map(
+                      (student) => PopupMenuItem(
+                        value: student.studentId,
+                        child: Text(
+                          '${student.displayName} · ${student.gradeLabel}',
+                        ),
+                      ),
+                    )
+                    .toList(growable: false),
+                onSelected: (studentId) =>
+                    unawaited(journey.selectStudent(studentId)),
+                tooltip: 'Switch student',
+              ),
+            if (availablePersonas.length > 1)
+              PopupMenuButton<SchoolPersona>(
+                icon: const Icon(Icons.switch_account_outlined),
+                initialValue: session.activePersona,
+                itemBuilder: (context) => availablePersonas
+                    .map(
+                      (persona) => PopupMenuItem(
+                        value: persona,
+                        child: Text('${persona.label} profile'),
+                      ),
+                    )
+                    .toList(growable: false),
+                onSelected: coordinator.switchPersona,
+                tooltip: 'Switch role',
+              ),
+            IconButton(
+              icon: const Icon(Icons.logout),
+              onPressed: () => unawaited(coordinator.signOut()),
+              tooltip: 'Sign out',
+            ),
+          ],
+          body: child,
+          destinations: destinations,
+          onDestinationSelected: (index) => context.go(paths[index]),
+          selectedIndex: paths
+              .indexOf(location)
+              .clamp(0, paths.length - 1)
+              .toInt(),
+          status: _journeyStatus(journey.state),
+          title: 'School Family · ${session.activePersona.label}',
+        );
+      },
     );
   }
+
+  Widget _journeyStatus(FamilyJourneyState state) => switch (state.phase) {
+    FamilyJourneyPhase.loading => const SchoolStatusBanner(
+      label: 'Loading published information',
+      message: 'The selected school profile is being refreshed.',
+      tone: SchoolStatusTone.information,
+    ),
+    FamilyJourneyPhase.ready => SchoolStatusBanner(
+      label: 'Published information',
+      message:
+          'Showing ${state.directory!.activeStudent.displayName} · ${state.directory!.activeStudent.gradeLabel}',
+      tone: SchoolStatusTone.success,
+    ),
+    FamilyJourneyPhase.failed => const SchoolStatusBanner(
+      label: 'Information unavailable',
+      message: 'No cached academic or financial values are being substituted.',
+      tone: SchoolStatusTone.error,
+    ),
+  };
 }
 
-class _AuthorizedFamilyHomeScreen extends StatelessWidget {
-  const _AuthorizedFamilyHomeScreen({required this.session});
+class _FamilyJourneyView extends StatelessWidget {
+  const _FamilyJourneyView({
+    required this.builder,
+    required this.journey,
+  });
 
-  final SchoolSession session;
-
-  @override
-  Widget build(BuildContext context) {
-    final links = <Widget>[];
-    void addLink({
-      required IconData icon,
-      required String label,
-      required String path,
-      required String supporting,
-    }) {
-      if (links.isNotEmpty) {
-        links.add(const Divider());
-      }
-      links.add(
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: Icon(icon),
-          onTap: () => context.go(path),
-          subtitle: Text(supporting),
-          title: Text(label),
-          trailing: const Icon(Icons.chevron_right),
-        ),
-      );
-    }
-
-    if (session.can(SchoolCapability.attendanceRead)) {
-      addLink(
-        icon: Icons.fact_check_outlined,
-        label: 'Review attendance',
-        path: '/attendance',
-        supporting: 'Published and finalized sessions only',
-      );
-    }
-    if (session.can(SchoolCapability.gradesReadPublished)) {
-      addLink(
-        icon: Icons.school_outlined,
-        label: 'View published results',
-        path: '/results',
-        supporting: 'Academic calculations remain server-governed',
-      );
-    }
-    if (session.activePersona == SchoolPersona.guardian &&
-        session.can(SchoolCapability.billingRead)) {
-      addLink(
-        icon: Icons.receipt_long_outlined,
-        label: 'Review fees and receipts',
-        path: '/fees',
-        supporting: 'Issued invoices and allocated payments',
-      );
-    }
-    if (session.can(SchoolCapability.messagesRead)) {
-      addLink(
-        icon: Icons.forum_outlined,
-        label: 'Open messages',
-        path: '/messages',
-        supporting: 'Authorized school conversations',
-      );
-    }
-
-    return ListView(
-      children: [
-        SchoolPageSection(
-          description:
-              'School and role access is loaded from your verified account.',
-          title: session.activePersona == SchoolPersona.guardian
-              ? 'Family overview'
-              : 'My school day',
-          child: SchoolPanel(
-            child: links.isEmpty
-                ? const SchoolStatusBanner(
-                    label: 'No mobile journeys assigned',
-                    message:
-                        'Your account is valid, but no supported Family app capability is currently available.',
-                    tone: SchoolStatusTone.information,
-                  )
-                : Column(children: links),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _AuthorizedFamilyAttendanceScreen extends StatelessWidget {
-  const _AuthorizedFamilyAttendanceScreen({required this.session});
-
-  final SchoolSession session;
+  final Widget Function(
+    BuildContext context,
+    FamilyProfileDirectory directory,
+    FamilyDashboardReadModel dashboard,
+  ) builder;
+  final FamilyJourneyController journey;
 
   @override
-  Widget build(BuildContext context) => ListView(
-    children: [
-      SchoolPageSection(
-        description:
-            'Published sessions only. Approved corrections may change these totals.',
-        title: session.activePersona == SchoolPersona.guardian
-            ? 'Student attendance'
-            : 'My attendance',
-        child: const SchoolPanel(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: journey,
+    builder: (context, _) {
+      final state = journey.state;
+      switch (state.phase) {
+        case FamilyJourneyPhase.loading:
+          return const Center(child: CircularProgressIndicator());
+        case FamilyJourneyPhase.failed:
+          return ListView(
             children: [
-              Text('96% present'),
-              Divider(height: SchoolSpacing.lg),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Icon(Icons.check_circle_outline),
-                title: Text('Present · 48 sessions'),
-                subtitle: Text('Source: finalized attendance sessions'),
-              ),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Icon(Icons.access_time_outlined),
-                title: Text('Late · 1 session'),
-                subtitle: Text('Corrected by the attendance office'),
-              ),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Icon(Icons.event_busy_outlined),
-                title: Text('Absent · 1 session'),
-                subtitle: Text('Notice acknowledged'),
+              SchoolPageSection(
+                description:
+                    'Published information could not be verified for this profile.',
+                title: 'Unable to load Family information',
+                child: SchoolPanel(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SchoolStatusBanner(
+                        label: 'No substitute values shown',
+                        message:
+                            'Academic and financial values remain hidden until the authorized service responds.',
+                        tone: SchoolStatusTone.error,
+                      ),
+                      const SizedBox(height: SchoolSpacing.md),
+                      FilledButton.icon(
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Try again'),
+                        onPressed: () => unawaited(journey.initialize()),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ],
-          ),
-        ),
-      ),
-    ],
+          );
+        case FamilyJourneyPhase.ready:
+          return builder(context, state.directory!, state.dashboard!);
+      }
+    },
   );
 }
 
-class _AuthorizedFamilyFeesScreen extends StatelessWidget {
-  const _AuthorizedFamilyFeesScreen();
+class _FamilyHomeScreen extends StatelessWidget {
+  const _FamilyHomeScreen({required this.journey, required this.session});
+
+  final FamilyJourneyController journey;
+  final SchoolSession session;
 
   @override
-  Widget build(BuildContext context) => ListView(
-    children: [
-      SchoolPageSection(
-        description:
-            'Balance is derived from issued invoices and allocated payments.',
-        title: 'Fees and receipts',
-        child: SchoolPanel(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'Outstanding · BDT 4,500',
-                style: Theme.of(context).textTheme.titleLarge,
+  Widget build(BuildContext context) => _FamilyJourneyView(
+    journey: journey,
+    builder: (context, directory, dashboard) {
+      final links = <Widget>[];
+      void addLink(IconData icon, String label, String path, String supporting) {
+        if (links.isNotEmpty) links.add(const Divider());
+        links.add(
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: Icon(icon),
+            onTap: () => context.go(path),
+            subtitle: Text(supporting),
+            title: Text(label),
+            trailing: const Icon(Icons.chevron_right),
+          ),
+        );
+      }
+
+      if (dashboard.attendance != null) {
+        addLink(
+          Icons.fact_check_outlined,
+          'Review attendance',
+          '/attendance',
+          dashboard.attendance!.summaryLabel,
+        );
+      }
+      if (dashboard.publishedResults.isNotEmpty) {
+        addLink(
+          Icons.school_outlined,
+          'View published results',
+          '/results',
+          '${dashboard.publishedResults.length} published result(s)',
+        );
+      }
+      if (dashboard.fees != null) {
+        addLink(
+          Icons.receipt_long_outlined,
+          'Review fees and receipts',
+          '/fees',
+          'Invoice ${dashboard.fees!.invoiceReference}',
+        );
+      }
+      if (dashboard.messages != null) {
+        addLink(
+          Icons.forum_outlined,
+          'Open messages',
+          '/messages',
+          '${dashboard.messages!.unreadCount} unread message(s)',
+        );
+      }
+
+      return ListView(
+        children: [
+          SchoolPageSection(
+            description:
+                '${dashboard.student.gradeLabel} · ${dashboard.student.relationshipLabel}',
+            title: dashboard.student.displayName,
+            child: SchoolPanel(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Today’s timetable',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: SchoolSpacing.sm),
+                  if (dashboard.timetable.isEmpty)
+                    const Text('No published timetable items.')
+                  else
+                    for (final item in dashboard.timetable)
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.schedule_outlined),
+                        title: Text(item.subjectLabel),
+                        subtitle: Text(item.locationLabel),
+                      ),
+                  if (links.isNotEmpty) const Divider(),
+                  ...links,
+                ],
               ),
-              const SizedBox(height: SchoolSpacing.xs),
-              const Text('Invoice INV-2026-0719 · Tuition installment'),
-              const Divider(height: SchoolSpacing.lg),
-              const ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Icon(Icons.receipt_outlined),
-                title: Text('Last receipt · BDT 4,500'),
-                subtitle: Text('Allocated receipt RCPT-1042'),
-              ),
-            ],
+            ),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+class _FamilyAttendanceScreen extends StatelessWidget {
+  const _FamilyAttendanceScreen({required this.journey, required this.session});
+
+  final FamilyJourneyController journey;
+  final SchoolSession session;
+
+  @override
+  Widget build(BuildContext context) => _FamilyJourneyView(
+    journey: journey,
+    builder: (context, directory, dashboard) {
+      final attendance = dashboard.attendance;
+      return ListView(
+        children: [
+          SchoolPageSection(
+            description:
+                'Published sessions only. Approved corrections may change these totals.',
+            title: session.activePersona == SchoolPersona.guardian
+                ? '${dashboard.student.displayName} attendance'
+                : 'My attendance',
+            child: SchoolPanel(
+              child: attendance == null
+                  ? const Text('No published attendance summary is available.')
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          attendance.summaryLabel,
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const Divider(height: SchoolSpacing.lg),
+                        _countTile(
+                          Icons.check_circle_outline,
+                          'Present',
+                          attendance.presentSessions,
+                        ),
+                        _countTile(
+                          Icons.access_time_outlined,
+                          'Late',
+                          attendance.lateSessions,
+                        ),
+                        _countTile(
+                          Icons.event_busy_outlined,
+                          'Absent',
+                          attendance.absentSessions,
+                        ),
+                        Text('Total finalized sessions · ${attendance.totalSessions}'),
+                      ],
+                    ),
+            ),
+          ),
+        ],
+      );
+    },
+  );
+
+  Widget _countTile(IconData icon, String label, int count) => ListTile(
+    contentPadding: EdgeInsets.zero,
+    leading: Icon(icon),
+    title: Text('$label · $count session(s)'),
+  );
+}
+
+class _FamilyResultsReadScreen extends StatelessWidget {
+  const _FamilyResultsReadScreen({required this.journey});
+
+  final FamilyJourneyController journey;
+
+  @override
+  Widget build(BuildContext context) => _FamilyJourneyView(
+    journey: journey,
+    builder: (context, directory, dashboard) => ListView(
+      children: [
+        SchoolPageSection(
+          description:
+              'Only results released by the academic publication workflow are shown.',
+          title: '${dashboard.student.displayName} · Published results',
+          child: SchoolPanel(
+            child: dashboard.publishedResults.isEmpty
+                ? const Text('No published results are available.')
+                : Column(
+                    children: [
+                      for (final result in dashboard.publishedResults)
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: const Icon(Icons.verified_outlined),
+                          title: Text('${result.subjectLabel} · ${result.gradeLabel}'),
+                          subtitle: Text(result.assessmentLabel),
+                        ),
+                    ],
+                  ),
           ),
         ),
-      ),
-    ],
+      ],
+    ),
+  );
+}
+
+class _FamilyFeesReadScreen extends StatelessWidget {
+  const _FamilyFeesReadScreen({required this.journey});
+
+  final FamilyJourneyController journey;
+
+  @override
+  Widget build(BuildContext context) => _FamilyJourneyView(
+    journey: journey,
+    builder: (context, directory, dashboard) {
+      final fees = dashboard.fees;
+      return ListView(
+        children: [
+          SchoolPageSection(
+            description:
+                'Amounts come from issued invoices and allocated receipts.',
+            title: 'Fees and receipts',
+            child: SchoolPanel(
+              child: fees == null
+                  ? const Text('No fee summary is available for this profile.')
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          'Outstanding · ${_moneyLabel(fees.outstanding)}',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: SchoolSpacing.xs),
+                        Text('Invoice ${fees.invoiceReference}'),
+                        if (fees.lastReceipt != null) ...[
+                          const Divider(height: SchoolSpacing.lg),
+                          ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: const Icon(Icons.receipt_outlined),
+                            title: Text(
+                              'Last receipt · ${_moneyLabel(fees.lastReceipt!)}',
+                            ),
+                            subtitle: Text(fees.lastReceiptReference!),
+                          ),
+                        ],
+                      ],
+                    ),
+            ),
+          ),
+        ],
+      );
+    },
+  );
+
+  String _moneyLabel(FamilyMoneyAmount amount) {
+    final major = amount.minorUnits ~/ 100;
+    final fraction = (amount.minorUnits % 100).toString().padLeft(2, '0');
+    return '${amount.currencyCode} $major.$fraction';
+  }
+}
+
+class _FamilyMessagesReadScreen extends StatelessWidget {
+  const _FamilyMessagesReadScreen({required this.journey});
+
+  final FamilyJourneyController journey;
+
+  @override
+  Widget build(BuildContext context) => _FamilyJourneyView(
+    journey: journey,
+    builder: (context, directory, dashboard) {
+      final messages = dashboard.messages;
+      return ListView(
+        children: [
+          SchoolPageSection(
+            description:
+                'Conversation access follows school relationship permissions.',
+            title: 'Messages',
+            child: SchoolPanel(
+              child: messages == null
+                  ? const Text('No message summary is available.')
+                  : ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.mark_email_unread_outlined),
+                      title: Text('${messages.unreadCount} unread message(s)'),
+                      subtitle: const Text(
+                        'Open conversation data will be added through the server-owned messaging contract.',
+                      ),
+                    ),
+            ),
+          ),
+        ],
+      );
+    },
   );
 }
