@@ -29,12 +29,24 @@
   "design_baseline": {
     "skill": "impeccable",
     "skill_version": "4.0.2",
-    "providers": ["codex", "github"],
+    "providers": [
+      "codex",
+      "github"
+    ],
     "product_authority": "PRODUCT.md",
     "visual_authority": "DESIGN.md",
     "whole_module_agent_owns_ui": true,
     "microtask_design_agents_allowed": false,
-    "required_ui_evidence": ["shape-or-approved-brief", "critique", "audit", "detector", "accessibility", "responsive-rtl", "harden", "polish"]
+    "required_ui_evidence": [
+      "shape-or-approved-brief",
+      "critique",
+      "audit",
+      "detector",
+      "accessibility",
+      "responsive-rtl",
+      "harden",
+      "polish"
+    ]
   },
   "base_rules": {
     "FND-01": "resolve latest reviewed origin/main in rahmatullahboss/international-school-management-platform, create or resume the fixed foundation branch/worktree and record the exact base SHA",
@@ -45,7 +57,8 @@
   },
   "reviewed_bases": {
     "foundation": "55114f55a375d3d79dba7ea21f984b789b5dbca1",
-    "wave_1": "8cc8ee1562ade672b14c1c44af935fe7e2307976"
+    "wave_1": "8cc8ee1562ade672b14c1c44af935fe7e2307976",
+    "wave_2": "60836a8fe92f64ba581c4bde65005729d1fe14b2"
   },
   "reviewed_stream_shas": {
     "wave_1": {
@@ -59,7 +72,9 @@
       "CARE-01": "9304bd6c425eca4ec69db90c1f1cab3f7a409b8d"
     },
     "wave_1_integration_base": "042b75990f9cd819239c584a370687042393f6a7",
-    "wave_1_integration": "8cc8ee1562ade672b14c1c44af935fe7e2307976"
+    "wave_1_integration": "8cc8ee1562ade672b14c1c44af935fe7e2307976",
+    "wave_2_integration_base": "ec921ea26f6980017f848bfd6646a77868bd4cb1",
+    "wave_2_integration": "60836a8fe92f64ba581c4bde65005729d1fe14b2"
   },
   "streams": [
     {
@@ -73,8 +88,35 @@
       "dependencies": [],
       "entry_gate": "GATE-DOCUMENTS-APPROVED",
       "full_prompt_section": "FND-01 — Platform Foundation",
-      "owned_paths": ["apps/platform/**", "packages/platform/**", "packages/database/**", "packages/policy/**", "packages/events/**", "packages/localization/**", "packages/ui/**", "infra/**", "scripts/**", ".agents/skills/impeccable/**", ".codex/hooks.json", ".github/**", "docs/design/**", "PRODUCT.md", "DESIGN.md", ".impeccable/config.json", "root configuration files"],
-      "milestones": ["repository-bootstrap", "neon-data-platform", "tenancy-routing", "identity-policy", "audit-outbox-idempotency", "localization-documents-workflows", "shared-experience-boundaries", "foundation-verification-freeze"],
+      "owned_paths": [
+        "apps/platform/**",
+        "packages/platform/**",
+        "packages/database/**",
+        "packages/policy/**",
+        "packages/events/**",
+        "packages/localization/**",
+        "packages/ui/**",
+        "infra/**",
+        "scripts/**",
+        ".agents/skills/impeccable/**",
+        ".codex/hooks.json",
+        ".github/**",
+        "docs/design/**",
+        "PRODUCT.md",
+        "DESIGN.md",
+        ".impeccable/config.json",
+        "root configuration files"
+      ],
+      "milestones": [
+        "repository-bootstrap",
+        "neon-data-platform",
+        "tenancy-routing",
+        "identity-policy",
+        "audit-outbox-idempotency",
+        "localization-documents-workflows",
+        "shared-experience-boundaries",
+        "foundation-verification-freeze"
+      ],
       "completion_gate": "GATE-FOUNDATION-READY"
     },
     {
@@ -178,7 +220,7 @@
       "id": "ACAD-01",
       "name": "Academics Attendance and Records",
       "wave": 2,
-      "status": "complete_reviewed_waiting_integration",
+      "status": "complete_and_integrated",
       "reviewed_sha": "1d895afdf51f6d4f6323ada4b93d9ba32b244480",
       "branch": "module/academics-attendance-records",
       "worktree": ".worktrees/acad-01-academics",
@@ -217,7 +259,7 @@
       "id": "OPS-01",
       "name": "School Operations ERP",
       "wave": 2,
-      "status": "complete_reviewed_waiting_integration",
+      "status": "complete_and_integrated",
       "reviewed_sha": "fc749d7c0ece36964da8f923431bb3b7ac925e56",
       "branch": "module/school-operations",
       "worktree": ".worktrees/ops-01-operations",
@@ -259,7 +301,7 @@
       "id": "CARE-01",
       "name": "Health Wellbeing and Safeguarding",
       "wave": 2,
-      "status": "complete_reviewed_waiting_integration",
+      "status": "complete_and_integrated",
       "reviewed_sha": "9304bd6c425eca4ec69db90c1f1cab3f7a409b8d",
       "branch": "module/student-support",
       "worktree": ".worktrees/care-01-student-support",
@@ -296,7 +338,7 @@
       "id": "EXP-01",
       "name": "Portals Communications and Reporting Experience",
       "wave": 3,
-      "status": "blocked_by_wave_2",
+      "status": "ready_for_execution",
       "branch": "module/experience-portals-reporting",
       "worktree": ".worktrees/exp-01-experience",
       "neon_branch": "agent/exp-01-experience",
@@ -329,13 +371,14 @@
         "documents-reporting",
         "pwa-verification"
       ],
-      "completion_gate": "GATE-EXP-COMPLETE"
+      "completion_gate": "GATE-EXP-COMPLETE",
+      "reviewed_base": "60836a8fe92f64ba581c4bde65005729d1fe14b2"
     },
     {
       "id": "INTEG-01",
       "name": "Serial Integration and Release Verification",
       "wave": "continuous-gated",
-      "status": "ready_for_wave_2_integration",
+      "status": "wave_2_integrated",
       "branch": "integration/international-school-platform-v1",
       "worktree": ".worktrees/integ-01-release",
       "neon_branch": "integration/international-school-platform-v1",
@@ -368,7 +411,8 @@
         "release-evidence",
         "safe-cleanup-report"
       ],
-      "completion_gate": "GATE-PILOT-READY"
+      "completion_gate": "GATE-PILOT-READY",
+      "reviewed_wave_2_sha": "60836a8fe92f64ba581c4bde65005729d1fe14b2"
     }
   ],
   "hard_stops": [
