@@ -68,20 +68,27 @@ function pageShell(direction: 'ltr' | 'rtl' = 'ltr'): string {
 </html>`;
 }
 
-test('desktop shell exposes stable role, session, active task and keyboard entry', async ({ page }) => {
+test('desktop shell exposes stable role, session, active task and keyboard entry', async ({
+  page,
+}) => {
   await page.setContent(pageShell());
 
-  await expect(page.getByRole('complementary', { name: 'Teacher workspace navigation' })).toBeVisible();
+  await expect(
+    page.getByRole('complementary', { name: 'Teacher workspace navigation' }),
+  ).toBeVisible();
   await expect(page.getByRole('heading', { level: 1, name: 'Morning attendance' })).toBeVisible();
-  await expect(page.getByRole('link', { name: /Attendance/ })).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByRole('link', { name: /Attendance/ })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
   await expect(page.getByText('Verified session', { exact: true })).toBeVisible();
   await expect(page.getByText('Syncing changes', { exact: false })).toBeVisible();
 
   await page.keyboard.press('Tab');
   await expect(page.getByRole('link', { name: 'Skip to current work' })).toBeFocused();
-  const focusOutline = await page.getByRole('link', { name: 'Skip to current work' }).evaluate((element) =>
-    getComputedStyle(element).outlineColor,
-  );
+  const focusOutline = await page
+    .getByRole('link', { name: 'Skip to current work' })
+    .evaluate((element) => getComputedStyle(element).outlineColor);
   expect(focusOutline).toBe('rgb(11, 99, 206)');
 
   const shell = page.locator('.experience-shell');
@@ -92,7 +99,9 @@ test('desktop shell exposes stable role, session, active task and keyboard entry
   );
 });
 
-test('mobile shell becomes one reading flow with horizontally reachable navigation', async ({ page }) => {
+test('mobile shell becomes one reading flow with horizontally reachable navigation', async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 360, height: 800 });
   await page.setContent(pageShell());
 
@@ -113,7 +122,9 @@ test('mobile shell becomes one reading flow with horizontally reachable navigati
   await expect(page.locator('.experience-session')).toHaveCSS('justify-content', 'flex-start');
 });
 
-test('RTL and reduced-motion preferences preserve logical layout without animation', async ({ page }) => {
+test('RTL and reduced-motion preferences preserve logical layout without animation', async ({
+  page,
+}) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.setContent(pageShell('rtl'));
 
@@ -124,7 +135,10 @@ test('RTL and reduced-motion preferences preserve logical layout without animati
   });
   expect(railBorders.left).toBe('1px');
   expect(railBorders.right).toBe('0px');
-  await expect(page.locator('.experience-connectivity__signal')).toHaveCSS('animation-name', 'none');
+  await expect(page.locator('.experience-connectivity__signal')).toHaveCSS(
+    'animation-name',
+    'none',
+  );
   await expect(page.locator('.experience-loading__line').first()).toHaveCSS(
     'animation-name',
     'none',
