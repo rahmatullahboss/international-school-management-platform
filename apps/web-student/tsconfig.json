@@ -8,8 +8,5 @@
     "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "references": [
-    { "path": "../../packages/modules/tsconfig.json" },
-    { "path": "../../packages/modules/documents-experience/tsconfig.json" }
-  ]
+  "references": [{ "path": "../../packages/modules/documents-experience/tsconfig.json" }]
 }

@@ -1,11 +1,10 @@
 {
-  "name": "@school/web-family",
+  "name": "@school/web-teacher",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "exports": {
-    "./admissions": "./src/features/admissions/index.ts",
-    "./finance": "./src/features/finance/index.tsx",
+    "./academics": "./src/features/academics/index.ts",
     "./experience": "./src/features/experience/index.ts"
   },
   "scripts": {
@@ -14,7 +13,6 @@
   },
   "dependencies": {
     "@school/documents-experience": "*",
-    "@school/finance": "*",
     "react": "^19.0.0"
   },
   "devDependencies": {
