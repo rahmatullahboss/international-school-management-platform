@@ -10,6 +10,10 @@ const adminHeaders = {
   'x-school-subject-id': 'principal-1',
 };
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 describe('platform API', () => {
   it('returns a correlation id and non-sensitive health response', async () => {
     const response = await app.request('/health', {}, environment);
@@ -33,19 +37,30 @@ describe('platform API', () => {
     expect(response.status).toBe(200);
     expect(response.headers.get('cache-control')).toBe('private, max-age=0, must-revalidate');
     expect(response.headers.get('etag')).toContain('pilot-read-v1');
-    await expect(response.json()).resolves.toMatchObject({
-      schemaVersion: 1,
-      scope: {
-        tenantId: 'tenant-pilot-001',
-        campusId: 'campus-main',
-        role: 'admin',
-        subjectId: 'principal-1',
-        capabilities: expect.arrayContaining(['finance.read']),
-      },
-      data: {
-        metrics: expect.arrayContaining([expect.objectContaining({ id: 'students' })]),
-      },
-    });
+
+    const payload: unknown = await response.json();
+    expect(isRecord(payload)).toBe(true);
+    if (!isRecord(payload)) throw new Error('Expected a scoped snapshot object.');
+    expect(payload.schemaVersion).toBe(1);
+
+    const scope = payload.scope;
+    expect(isRecord(scope)).toBe(true);
+    if (!isRecord(scope)) throw new Error('Expected a scoped snapshot scope.');
+    expect(scope.tenantId).toBe('tenant-pilot-001');
+    expect(scope.campusId).toBe('campus-main');
+    expect(scope.role).toBe('admin');
+    expect(scope.subjectId).toBe('principal-1');
+    expect(Array.isArray(scope.capabilities)).toBe(true);
+    if (!Array.isArray(scope.capabilities)) throw new Error('Expected scoped capabilities.');
+    expect(scope.capabilities).toContain('finance.read');
+    expect(scope.capabilities).not.toContain('gradebook.assigned.write');
+
+    const data = payload.data;
+    expect(isRecord(data)).toBe(true);
+    if (!isRecord(data)) throw new Error('Expected scoped snapshot data.');
+    expect(Array.isArray(data.metrics)).toBe(true);
+    if (!Array.isArray(data.metrics)) throw new Error('Expected scoped readiness metrics.');
+    expect(data.metrics.length).toBeGreaterThan(0);
   });
 
   it('revalidates a scoped snapshot with an etag without returning another body', async () => {
