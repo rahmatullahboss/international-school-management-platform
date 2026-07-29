@@ -13,11 +13,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 async function issueSession(role: string): Promise<string> {
-  const response = await app.request(
-    `/pilot/v1/sessions/${role}`,
-    { method: 'POST' },
-    environment,
-  );
+  const response = await app.request(`/pilot/v1/sessions/${role}`, { method: 'POST' }, environment);
   expect(response.status).toBe(201);
   const payload: unknown = await response.json();
   if (!isRecord(payload) || typeof payload.accessToken !== 'string') {
@@ -44,11 +40,7 @@ describe('platform API', () => {
   });
 
   it('issues a short-lived synthetic session with fixed tenant, campus, role and subject context', async () => {
-    const response = await app.request(
-      '/pilot/v1/sessions/admin',
-      { method: 'POST' },
-      environment,
-    );
+    const response = await app.request('/pilot/v1/sessions/admin', { method: 'POST' }, environment);
 
     expect(response.status).toBe(201);
     expect(response.headers.get('cache-control')).toBe('no-store');

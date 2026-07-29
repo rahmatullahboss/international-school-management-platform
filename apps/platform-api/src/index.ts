@@ -3,11 +3,7 @@ import { Hono } from 'hono';
 import { parseRuntimeEnvironment } from '@school/platform';
 
 import { isAllowedPilotWebOrigin, resolvePilotReadSnapshot } from './pilot-read-models.js';
-import {
-  issuePilotSession,
-  pilotSessionHeaders,
-  verifyPilotSession,
-} from './pilot-sessions.js';
+import { issuePilotSession, pilotSessionHeaders, verifyPilotSession } from './pilot-sessions.js';
 
 interface Bindings {
   APP_ENV: string;
@@ -55,10 +51,7 @@ app.use('/pilot/*', async (context, next) => {
   if (isAllowedOrigin && origin !== undefined) {
     context.header('access-control-allow-origin', origin);
     context.header('access-control-allow-methods', 'GET, POST, OPTIONS');
-    context.header(
-      'access-control-allow-headers',
-      'authorization, content-type, if-none-match',
-    );
+    context.header('access-control-allow-headers', 'authorization, content-type, if-none-match');
     context.header('access-control-expose-headers', 'etag, x-correlation-id');
     context.header('access-control-max-age', '600');
   }

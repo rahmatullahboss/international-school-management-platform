@@ -246,7 +246,11 @@ function clearSession(key: string): void {
   }
 }
 
-async function requestSession(apiBase: string, role: PilotRole, force = false): Promise<StoredSession> {
+async function requestSession(
+  apiBase: string,
+  role: PilotRole,
+  force = false,
+): Promise<StoredSession> {
   const key = sessionKey(apiBase, role);
   if (!force) {
     const current = readStoredSession(key, role);
