@@ -36,4 +36,6 @@ This milestone delivers the age-appropriate student workspace for the student’
 
 ## Verification
 
-Canonical formatter checkpoint `205c4d1e463c35320c1119b1a512ee7a5b44c29c` restored the standard repository CI and formatted the student workspace and focused tests. The clean-head full repository, migration, Neon, build, browser and artifact gate remains required before Milestone 5 is marked complete.
+Canonical formatter checkpoint `205c4d1e463c35320c1119b1a512ee7a5b44c29c` restored the standard repository CI and formatted the student workspace and focused tests.
+
+Full verification run `30449572525` passed format, lint, architecture boundaries, repository typecheck, all tests, fresh 40-migration replay, live Neon driver, build, dependency audit, licences, provenance, all Chromium suites and execution-artifact validation. Focused tests prove exact self-ID filtering before sorting/counting, published-only attendance/results/documents, other-student exclusion, internal-note and restricted-message masking, request-state actions and recoverable failures. No production deployment or database mutation was performed.
