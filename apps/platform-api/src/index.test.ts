@@ -100,6 +100,22 @@ describe('platform API', () => {
     expect(crossSubject.status).toBe(403);
   });
 
+  it('does not expose synthetic pilot routes in a production runtime', async () => {
+    const response = await app.request(
+      '/pilot/v1/snapshots/admin',
+      { headers: adminHeaders },
+      { APP_ENV: 'production', APP_REGION: 'global' },
+    );
+
+    expect(response.status).toBe(404);
+    await expect(response.json()).resolves.toEqual({
+      error: {
+        code: 'not_found',
+        message: 'The requested resource was not found.',
+      },
+    });
+  });
+
   it('permits the staging web origin and rejects an unrelated browser origin', async () => {
     const preflight = await app.request(
       '/pilot/v1/snapshots/admin',
