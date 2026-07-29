@@ -1,4 +1,4 @@
-name: EXP-01 Evidence Format
+name: EXP-01 Checkpoint Format
 
 on:
   push:
@@ -25,13 +25,31 @@ jobs:
       - run: npm ci
       - name: Apply pinned Prettier output
         run: |
-          npx prettier --write .github/workflows/exp-01-record-m1.yml
-          if git diff --quiet -- .github/workflows/exp-01-record-m1.yml; then
+          npx prettier --write \
+            .github/workflows/exp-01-record-m1.yml \
+            apps/web-admin/src/features/experience/AdminOperationsHome.tsx \
+            apps/web-admin/src/features/experience/admin-operations.css \
+            apps/web-admin/src/features/experience/index.ts \
+            tests/experience/admin-workflows.test.tsx \
+            docs/modules/experience/milestone-2-admin-experience.md
+          if git diff --quiet -- \
+            .github/workflows/exp-01-record-m1.yml \
+            apps/web-admin/src/features/experience/AdminOperationsHome.tsx \
+            apps/web-admin/src/features/experience/admin-operations.css \
+            apps/web-admin/src/features/experience/index.ts \
+            tests/experience/admin-workflows.test.tsx \
+            docs/modules/experience/milestone-2-admin-experience.md; then
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .github/workflows/exp-01-record-m1.yml
-          git commit -m "style(EXP-01): format Milestone 1 evidence workflow"
+          git add \
+            .github/workflows/exp-01-record-m1.yml \
+            apps/web-admin/src/features/experience/AdminOperationsHome.tsx \
+            apps/web-admin/src/features/experience/admin-operations.css \
+            apps/web-admin/src/features/experience/index.ts \
+            tests/experience/admin-workflows.test.tsx \
+            docs/modules/experience/milestone-2-admin-experience.md
+          git commit -m "style(EXP-01): normalize admin experience checkpoint"
           git pull --rebase origin module/experience-portals-reporting
           git push origin HEAD:module/experience-portals-reporting
