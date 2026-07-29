@@ -21,6 +21,8 @@ jobs:
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -32,7 +34,7 @@ jobs:
         working-directory: mobile
         run: flutter pub get
       - name: Generate reviewed native projects
-        if: github.event_name == 'push'
+        if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
         run: |
           set -euo pipefail
           for app in family_app staff_app; do
@@ -153,7 +155,7 @@ jobs:
               project.write_text(source)
           PY
       - name: Commit native projects
-        if: github.event_name == 'push'
+        if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
         run: |
           if git diff --quiet -- mobile/apps/family_app/android mobile/apps/family_app/ios mobile/apps/family_app/.metadata mobile/apps/family_app/.gitignore mobile/apps/staff_app/android mobile/apps/staff_app/ios mobile/apps/staff_app/.metadata mobile/apps/staff_app/.gitignore; then
             exit 0
