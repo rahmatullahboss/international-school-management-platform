@@ -1,7 +1,7 @@
 {
   "program": "international-school-platform-v1",
-  "gate": "GATE-WAVE-1-INTEGRATED",
-  "orderingRule": "foundation, then reviewed Wave 1 streams in serial integration order: SIS-01, FIN-01, INT-01",
+  "gate": "GATE-WAVE-2-INTEGRATED",
+  "orderingRule": "foundation, then reviewed streams in serial integration order: SIS-01, FIN-01, INT-01, ACAD-01, OPS-01, CARE-01",
   "migrations": [
     {
       "order": 1,
@@ -134,6 +134,114 @@
       "id": "202607280107_INT-01_connector_governance",
       "stream": "INT-01",
       "path": "packages/modules/integrations/migrations/202607280107_INT-01_connector_governance.sql"
+    },
+    {
+      "order": 23,
+      "id": "202607280201_ACAD-01_academic_structure",
+      "stream": "ACAD-01",
+      "path": "packages/modules/academics/migrations/202607280201_ACAD-01_academic_structure.sql"
+    },
+    {
+      "order": 24,
+      "id": "202607280202_ACAD-01_timetable",
+      "stream": "ACAD-01",
+      "path": "packages/modules/scheduling/migrations/202607280202_ACAD-01_timetable.sql"
+    },
+    {
+      "order": 25,
+      "id": "202607280203_ACAD-01_attendance",
+      "stream": "ACAD-01",
+      "path": "packages/modules/attendance/migrations/202607280203_ACAD-01_attendance.sql"
+    },
+    {
+      "order": 26,
+      "id": "202607280204_ACAD-01_gradebook",
+      "stream": "ACAD-01",
+      "path": "packages/modules/gradebook/migrations/202607280204_ACAD-01_gradebook.sql"
+    },
+    {
+      "order": 27,
+      "id": "202607280205_ACAD-01_records",
+      "stream": "ACAD-01",
+      "path": "packages/modules/records/migrations/202607280205_ACAD-01_records.sql"
+    },
+    {
+      "order": 28,
+      "id": "202607280201_OPS-01_hr_staff",
+      "stream": "OPS-01",
+      "path": "packages/modules/hr/migrations/202607280201_OPS-01_hr_staff.sql"
+    },
+    {
+      "order": 29,
+      "id": "202607280202_OPS-01_procurement_payables",
+      "stream": "OPS-01",
+      "path": "packages/modules/procurement/migrations/202607280202_OPS-01_procurement_payables.sql"
+    },
+    {
+      "order": 30,
+      "id": "202607280203_OPS-01_inventory_assets",
+      "stream": "OPS-01",
+      "path": "packages/modules/inventory-assets/migrations/202607280203_OPS-01_inventory_assets.sql"
+    },
+    {
+      "order": 31,
+      "id": "202607280204_OPS-01_library",
+      "stream": "OPS-01",
+      "path": "packages/modules/library/migrations/202607280204_OPS-01_library.sql"
+    },
+    {
+      "order": 32,
+      "id": "202607290205_OPS-01_transport",
+      "stream": "OPS-01",
+      "path": "packages/modules/transport/migrations/202607290205_OPS-01_transport.sql"
+    },
+    {
+      "order": 33,
+      "id": "202607290206_OPS-01_hostel_cafeteria",
+      "stream": "OPS-01",
+      "path": "packages/modules/residential-catering/migrations/202607290206_OPS-01_hostel_cafeteria.sql"
+    },
+    {
+      "order": 34,
+      "id": "202607290207_OPS-01_activities_trips",
+      "stream": "OPS-01",
+      "path": "packages/modules/activities-trips/migrations/202607290207_OPS-01_activities_trips.sql"
+    },
+    {
+      "order": 35,
+      "id": "202607290201_CARE-01_security_contract",
+      "stream": "CARE-01",
+      "path": "packages/modules/safeguarding/migrations/202607290201_CARE-01_security_contract.sql"
+    },
+    {
+      "order": 36,
+      "id": "202607290202_CARE-01_health",
+      "stream": "CARE-01",
+      "path": "packages/modules/health/migrations/202607290202_CARE-01_health.sql"
+    },
+    {
+      "order": 37,
+      "id": "202607290203_CARE-01_behavior",
+      "stream": "CARE-01",
+      "path": "packages/modules/behavior/migrations/202607290203_CARE-01_behavior.sql"
+    },
+    {
+      "order": 38,
+      "id": "202607290204_CARE-01_wellbeing",
+      "stream": "CARE-01",
+      "path": "packages/modules/wellbeing/migrations/202607290204_CARE-01_wellbeing.sql"
+    },
+    {
+      "order": 39,
+      "id": "202607290205_CARE-01_safeguarding_domain",
+      "stream": "CARE-01",
+      "path": "packages/modules/safeguarding/migrations/202607290205_CARE-01_safeguarding_domain.sql"
+    },
+    {
+      "order": 40,
+      "id": "202607290206_CARE-01_learning_support",
+      "stream": "CARE-01",
+      "path": "packages/modules/learning-support/migrations/202607290206_CARE-01_learning_support.sql"
     }
   ]
 }
