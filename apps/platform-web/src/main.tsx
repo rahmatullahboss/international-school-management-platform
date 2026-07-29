@@ -1,32 +1,27 @@
-import { StrictMode, useEffect, useState, type ReactElement } from 'react';
+import {
+  StrictMode,
+  Suspense,
+  lazy,
+  useEffect,
+  useState,
+  type ReactElement,
+} from 'react';
 import { createRoot } from 'react-dom/client';
-
-import { AdminExperienceShell, AdminOperationsHome } from '@school/web-admin/experience';
-import { GuardianExperienceShell, GuardianHouseholdWorkspace } from '@school/web-family/experience';
-import { StudentDailyWorkspace, StudentExperienceShell } from '@school/web-student/experience';
-import { TeacherDailyWorkspace, TeacherExperienceShell } from '@school/web-teacher/experience';
 
 import { registerPlatformServiceWorker } from './pwa';
 import {
-  adminCapabilities,
-  adminOverview,
-  campusName,
-  guardianCapabilities,
-  guardianOverview,
-  modulePages,
-  pilotTimestamp,
-  schoolName,
-  studentCapabilities,
-  studentOverview,
-  teacherCapabilities,
-  teacherOverview,
-  type PilotModulePage,
-} from './pilot-data';
+  PortalLoading,
+  roleRoots,
+  type PilotConnectivity,
+  type PilotRole,
+} from './portal-shared';
 import './pilot.css';
 import './styles.css';
 
-type PilotRole = 'admin' | 'teacher' | 'guardian' | 'student';
-type PilotConnectivity = 'online' | 'degraded' | 'offline';
+const AdminPortal = lazy(() => import('./portals/admin'));
+const TeacherPortal = lazy(() => import('./portals/teacher'));
+const GuardianPortal = lazy(() => import('./portals/guardian'));
+const StudentPortal = lazy(() => import('./portals/student'));
 
 interface NavigatorWithConnection extends Navigator {
   readonly connection?: {
@@ -34,52 +29,16 @@ interface NavigatorWithConnection extends Navigator {
   };
 }
 
-const roleRoots: Readonly<Record<PilotRole, string>> = {
-  admin: '/admin',
-  teacher: '/teacher',
-  guardian: '/family',
-  student: '/student',
-};
-
-const roleLinks = [
-  { label: 'Admin', href: '/admin' },
-  { label: 'Teacher', href: '/teacher' },
-  { label: 'Guardian', href: '/family' },
-  { label: 'Student', href: '/student' },
-  { label: 'Role chooser', href: '/' },
-] as const;
-
-const roleDescriptions: Readonly<
-  Record<PilotRole, { readonly title: string; readonly detail: string }>
-> = {
-  admin: {
-    title: 'School operations overview',
-    detail: 'Exceptions, approvals and governed cross-module readiness.',
-  },
-  teacher: {
-    title: 'Today’s teaching workspace',
-    detail: 'Assigned classes, attendance, gradebook work and permitted student context.',
-  },
-  guardian: {
-    title: 'Family home',
-    detail: 'Applications, children, attendance, results, fees, forms and messages.',
-  },
-  student: {
-    title: 'Today',
-    detail: 'Lessons, published progress, resources, requests and secure messages.',
-  },
-};
-
 function normalisePath(pathname: string): string {
   if (pathname === '/') return pathname;
   return pathname.replace(/\/+$/u, '');
 }
 
 function roleForPath(path: string): PilotRole | undefined {
-  if (path.startsWith('/admin')) return 'admin';
-  if (path.startsWith('/teacher')) return 'teacher';
-  if (path.startsWith('/family')) return 'guardian';
-  if (path.startsWith('/student')) return 'student';
+  if (path.startsWith(roleRoots.admin)) return 'admin';
+  if (path.startsWith(roleRoots.teacher)) return 'teacher';
+  if (path.startsWith(roleRoots.guardian)) return 'guardian';
+  if (path.startsWith(roleRoots.student)) return 'student';
   return undefined;
 }
 
@@ -192,338 +151,6 @@ function PilotLanding(): ReactElement {
   );
 }
 
-function PilotModuleSurface(props: { readonly page: PilotModulePage }): ReactElement {
-  return (
-    <div className="pilot-module">
-      <header className="pilot-module__heading">
-        <p>{props.page.eyebrow}</p>
-        <h2>{props.page.title}</h2>
-        <span>{props.page.description}</span>
-      </header>
-
-      <section className="pilot-metrics" aria-label={`${props.page.title} summary`}>
-        {props.page.metrics.map((metric) => (
-          <article key={metric.label}>
-            <span>{metric.label}</span>
-            <strong>{metric.value}</strong>
-            <p>{metric.detail}</p>
-          </article>
-        ))}
-      </section>
-
-      <section className="pilot-work-queue" aria-labelledby="pilot-queue-title">
-        <div>
-          <p>Current work</p>
-          <h3 id="pilot-queue-title">Priority queue</h3>
-        </div>
-        <ol>
-          {props.page.queue.map((item) => (
-            <li key={item.title}>
-              <div>
-                <strong>{item.title}</strong>
-                <span>{item.detail}</span>
-              </div>
-              <span className="pilot-status">{item.status}</span>
-              <a href={item.href}>Open</a>
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      <nav className="pilot-actions" aria-label={`${props.page.title} actions`}>
-        {props.page.actions.map((action) => (
-          <a href={action.href} key={action.label}>
-            {action.label}
-          </a>
-        ))}
-      </nav>
-
-      <aside className="pilot-demo-note">
-        <strong>Pilot data</strong>
-        <span>
-          This route is composed from the integrated module contracts with synthetic staging
-          records. Mutating production actions remain disabled.
-        </span>
-      </aside>
-    </div>
-  );
-}
-
-function UnknownRoute(props: { readonly homeHref: string }): ReactElement {
-  return (
-    <section className="pilot-unknown" role="alert">
-      <p>Route not available in this pilot</p>
-      <h2>The requested workspace is not composed yet.</h2>
-      <a href={props.homeHref}>Return to role home</a>
-    </section>
-  );
-}
-
-function shellUtilityActions(activeRole: PilotRole) {
-  const activeRoot = roleRoots[activeRole];
-  return roleLinks
-    .filter((link) => link.href === '/' || link.href !== activeRoot)
-    .map((link) => ({ label: link.label, href: link.href }));
-}
-
-function resolvePageHeading(
-  role: PilotRole,
-  path: string,
-  page: PilotModulePage | undefined,
-  fallbackTitle: string,
-  fallbackDescription: string,
-): { readonly title: string; readonly description: string } {
-  if (path === roleRoots[role]) {
-    const roleDescription = roleDescriptions[role];
-    return { title: roleDescription.title, description: roleDescription.detail };
-  }
-  return {
-    title: page?.title ?? fallbackTitle,
-    description: page?.description ?? fallbackDescription,
-  };
-}
-
-function AdminPortal(props: {
-  readonly path: string;
-  readonly connectivity: PilotConnectivity;
-}): ReactElement {
-  const page = modulePages[props.path];
-  const heading = resolvePageHeading(
-    'admin',
-    props.path,
-    page,
-    'Administration',
-    'Integrated administration workspace',
-  );
-
-  return (
-    <AdminExperienceShell
-      schoolName={schoolName}
-      userName="Amina Chowdhury · Principal"
-      locale="en-BD"
-      pageTitle={heading.title}
-      pageDescription={heading.description}
-      activeHref={props.path}
-      capabilities={adminCapabilities}
-      session={{
-        assurance: 'aal2',
-        deviceLabel: 'Pilot browser',
-        expiresAt: '2026-07-30T08:00:00+06:00',
-      }}
-      connectivity={{
-        state: props.connectivity,
-        pendingChanges: 0,
-        lastSyncedAt: pilotTimestamp,
-        retryHref: props.path,
-      }}
-      utilityActions={shellUtilityActions('admin')}
-    >
-      {props.path === '/admin' ? (
-        <AdminOperationsHome
-          schoolName={schoolName}
-          campusName={campusName}
-          locale="en-BD"
-          asOf={pilotTimestamp}
-          assurance="aal2"
-          capabilities={adminCapabilities}
-          metrics={adminOverview.metrics}
-          exceptions={adminOverview.exceptions}
-          approvals={adminOverview.approvals}
-          searchQuery="Samira"
-          searchResults={adminOverview.searchResults}
-          selectedExceptionIds={['attendance-1']}
-          bulkActions={adminOverview.bulkActions}
-        />
-      ) : page === undefined ? (
-        <UnknownRoute homeHref="/admin" />
-      ) : (
-        <PilotModuleSurface page={page} />
-      )}
-    </AdminExperienceShell>
-  );
-}
-
-function TeacherPortal(props: {
-  readonly path: string;
-  readonly connectivity: PilotConnectivity;
-}): ReactElement {
-  const page = modulePages[props.path];
-  const heading = resolvePageHeading(
-    'teacher',
-    props.path,
-    page,
-    'Teacher workspace',
-    'Assigned teaching work',
-  );
-
-  return (
-    <TeacherExperienceShell
-      schoolName={schoolName}
-      userName="Nusrat Rahman · Mathematics"
-      locale="en-BD"
-      pageTitle={heading.title}
-      pageDescription={heading.description}
-      activeHref={props.path}
-      capabilities={teacherCapabilities}
-      session={{
-        assurance: 'aal1',
-        deviceLabel: 'Pilot browser',
-        expiresAt: '2026-07-30T08:00:00+06:00',
-      }}
-      connectivity={{
-        state: props.connectivity,
-        pendingChanges: 0,
-        lastSyncedAt: pilotTimestamp,
-        retryHref: props.path,
-      }}
-      utilityActions={shellUtilityActions('teacher')}
-    >
-      {props.path === '/teacher' ? (
-        <TeacherDailyWorkspace
-          teacherName="Nusrat Rahman"
-          schoolName={schoolName}
-          locale="en-BD"
-          date={pilotTimestamp}
-          connectivity={props.connectivity}
-          pendingChanges={0}
-          capabilities={teacherCapabilities}
-          sessions={teacherOverview.sessions}
-          attendance={teacherOverview.attendance}
-          gradebook={teacherOverview.gradebook}
-          studentContext={teacherOverview.studentContext}
-          conversations={teacherOverview.conversations}
-        />
-      ) : page === undefined ? (
-        <UnknownRoute homeHref="/teacher" />
-      ) : (
-        <PilotModuleSurface page={page} />
-      )}
-    </TeacherExperienceShell>
-  );
-}
-
-function GuardianPortal(props: {
-  readonly path: string;
-  readonly connectivity: PilotConnectivity;
-}): ReactElement {
-  const page = modulePages[props.path];
-  const heading = resolvePageHeading(
-    'guardian',
-    props.path,
-    page,
-    'Family portal',
-    'Household school services',
-  );
-
-  return (
-    <GuardianExperienceShell
-      schoolName={schoolName}
-      userName="Farhana Noor · Guardian"
-      locale="en-BD"
-      pageTitle={heading.title}
-      pageDescription={heading.description}
-      activeHref={props.path}
-      capabilities={guardianCapabilities}
-      session={{
-        assurance: 'aal1',
-        deviceLabel: 'Pilot browser',
-        expiresAt: '2026-07-30T08:00:00+06:00',
-      }}
-      connectivity={{
-        state: props.connectivity,
-        pendingChanges: 0,
-        lastSyncedAt: pilotTimestamp,
-        retryHref: props.path,
-      }}
-      utilityActions={shellUtilityActions('guardian')}
-    >
-      {props.path === '/family' ? (
-        <GuardianHouseholdWorkspace
-          guardianName="Farhana Noor"
-          householdLabel="Noor household"
-          locale="en-BD"
-          activeChildId="student-1"
-          capabilities={guardianCapabilities}
-          children={guardianOverview.children}
-          applications={guardianOverview.applications}
-          attendance={guardianOverview.attendance}
-          grades={guardianOverview.grades}
-          fees={guardianOverview.fees}
-          forms={guardianOverview.forms}
-          documents={guardianOverview.documents}
-          conversations={guardianOverview.conversations}
-        />
-      ) : page === undefined ? (
-        <UnknownRoute homeHref="/family" />
-      ) : (
-        <PilotModuleSurface page={page} />
-      )}
-    </GuardianExperienceShell>
-  );
-}
-
-function StudentPortal(props: {
-  readonly path: string;
-  readonly connectivity: PilotConnectivity;
-}): ReactElement {
-  const page = modulePages[props.path];
-  const heading = resolvePageHeading(
-    'student',
-    props.path,
-    page,
-    'Student portal',
-    'Published student services',
-  );
-
-  return (
-    <StudentExperienceShell
-      schoolName={schoolName}
-      userName="Samira Noor · Year 8"
-      locale="en-BD"
-      pageTitle={heading.title}
-      pageDescription={heading.description}
-      activeHref={props.path}
-      capabilities={studentCapabilities}
-      session={{
-        assurance: 'aal1',
-        deviceLabel: 'Pilot browser',
-        expiresAt: '2026-07-30T08:00:00+06:00',
-      }}
-      connectivity={{
-        state: props.connectivity,
-        pendingChanges: 0,
-        lastSyncedAt: pilotTimestamp,
-        retryHref: props.path,
-      }}
-      utilityActions={shellUtilityActions('student')}
-    >
-      {props.path === '/student' ? (
-        <StudentDailyWorkspace
-          studentId="student-1"
-          studentName="Samira Noor"
-          schoolName={schoolName}
-          yearLabel="Year 8"
-          locale="en-BD"
-          date={pilotTimestamp}
-          ageBand="secondary"
-          capabilities={studentCapabilities}
-          lessons={studentOverview.lessons}
-          attendance={studentOverview.attendance}
-          results={studentOverview.results}
-          resources={studentOverview.resources}
-          requests={studentOverview.requests}
-          documents={studentOverview.documents}
-          conversations={studentOverview.conversations}
-        />
-      ) : page === undefined ? (
-        <UnknownRoute homeHref="/student" />
-      ) : (
-        <PilotModuleSurface page={page} />
-      )}
-    </StudentExperienceShell>
-  );
-}
-
 function PilotApplication(): ReactElement {
   const path = normalisePath(window.location.pathname);
   const role = roleForPath(path);
@@ -535,10 +162,15 @@ function PilotApplication(): ReactElement {
   }, []);
 
   if (role === undefined) return <PilotLanding />;
-  if (role === 'admin') return <AdminPortal path={path} connectivity={connectivity} />;
-  if (role === 'teacher') return <TeacherPortal path={path} connectivity={connectivity} />;
-  if (role === 'guardian') return <GuardianPortal path={path} connectivity={connectivity} />;
-  return <StudentPortal path={path} connectivity={connectivity} />;
+
+  return (
+    <Suspense fallback={<PortalLoading />}>
+      {role === 'admin' ? <AdminPortal path={path} connectivity={connectivity} /> : null}
+      {role === 'teacher' ? <TeacherPortal path={path} connectivity={connectivity} /> : null}
+      {role === 'guardian' ? <GuardianPortal path={path} connectivity={connectivity} /> : null}
+      {role === 'student' ? <StudentPortal path={path} connectivity={connectivity} /> : null}
+    </Suspense>
+  );
 }
 
 const root = document.getElementById('root');
