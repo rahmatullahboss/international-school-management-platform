@@ -1,13 +1,13 @@
 # International School Management Platform — Documentation Index
 
-**Project status:** Research and architecture documentation baseline
-**Prepared on:** 2026-07-28
+**Project status:** Platform implementation active; native mobile architecture baseline proposed for review
+**Prepared on:** 2026-07-28; mobile baseline added 2026-07-29
 **Target product:** International, multi-tenant K–12 Student Information System (SIS) and School ERP
 **Primary deployment recommendation:** Cloudflare Workers with direct Neon Serverless PostgreSQL connections
 
 ## Purpose
 
-এই ডকুমেন্টেশন সেটটি implementation শুরু করার আগের product, domain, architecture, database, security, internationalization, integration এবং delivery baseline। লক্ষ্য হলো এমন একটি school management platform ডিজাইন করা যা ছোট private school থেকে multi-campus international school group পর্যন্ত ব্যবহার করতে পারে এবং country-specific configuration দিয়ে বিভিন্ন দেশে চালানো যায়।
+এই ডকুমেন্টেশন সেটটি implementation শুরু করার আগের product, domain, architecture, database, security, internationalization, integration এবং delivery baseline। লক্ষ্য হলো এমন একটি school management platform ডিজাইন করা যা ছোট private school থেকে multi-campus international school group পর্যন্ত ব্যবহার করতে পারে এবং country-specific configuration দিয়ে বিভিন্ন দেশে চালানো যায়। Native mobile applications একই platform contracts consume করবে; আলাদা domain system বা database তৈরি করবে না।
 
 ## Recommended reading order
 
@@ -23,6 +23,7 @@
 10. [Testing, operations, observability and SLOs](10-testing-operations-and-slo.md)
 11. [Risks, decisions and product guardrails](11-risks-decisions-and-guardrails.md)
 12. [Research references](99-references.md)
+13. [Native mobile documentation authority](mobile/README.md)
 
 ## Design governance
 
@@ -30,6 +31,21 @@
 - [Product design input brief](design/01-product-design-input.md)
 - [UI delivery workflow](design/02-ui-delivery-workflow.md)
 - [Agent design contract](design/03-agent-design-contract.md)
+
+## Native mobile architecture and planning
+
+- [Mobile documentation index and gates](mobile/README.md)
+- [Product and persona scope](mobile/01-product-and-persona-scope.md)
+- [Flutter application and repository architecture](mobile/02-application-and-repository-architecture.md)
+- [API contract and backend readiness](mobile/03-api-contract-and-backend-readiness.md)
+- [Offline synchronization and local data](mobile/04-offline-sync-and-local-data.md)
+- [Authentication, device security and privacy](mobile/05-auth-device-security-privacy.md)
+- [Design system, accessibility and localization](mobile/06-design-system-accessibility-localization.md)
+- [Testing, CI, release and observability](mobile/07-testing-ci-release-observability.md)
+- [Delivery plan and parallel execution](mobile/08-delivery-plan-parallel-execution.md)
+- [Agent ownership and handoff](mobile/09-agent-ownership-and-handoff.md)
+- [Decision log and risk register](mobile/10-decision-log-and-risk-register.md)
+- [Mobile primary research references](mobile/99-references.md)
 
 ## Multi-agent execution documents
 
@@ -42,6 +58,9 @@
 - [Module ownership and integration contracts](execution/05-module-ownership-and-integration-contracts.md)
 - [Open-source clean-room and reuse policy](execution/06-open-source-clean-room-policy.md)
 - [Execution artifact contract](execution/artifact-contract.md)
+- [MOB-01 mobile foundation one-shot prompt](execution/MOB-01-MOBILE-FOUNDATION-ONE-SHOT-PROMPT.md)
+- [Mobile machine-readable program board](execution/mobile-program-board.json)
+- [Mobile progress tracker](execution/mobile-progress-tracker.md)
 
 ## Architecture Decision Records
 
@@ -51,6 +70,7 @@
 - [ADR-004 — Direct Neon Serverless PostgreSQL connectivity](adr/ADR-004-neon-serverless-direct.md)
 - [ADR-005 — Whole-module agent ownership](adr/ADR-005-whole-module-agent-ownership.md)
 - [ADR-006 — Impeccable design governance](adr/ADR-006-impeccable-design-governance.md)
+- [ADR-007 — Flutter mobile product strategy](adr/ADR-007-flutter-mobile-product-strategy.md)
 
 ## Core decisions already made
 
@@ -63,6 +83,8 @@
 - **Accounting:** Immutable double-entry ledger; billing and accounting cannot be implemented as editable balance fields.
 - **International design:** Country packs, locale-aware UI, configurable curricula, grading, academic calendars, currency, taxation, retention and document templates.
 - **Interoperability:** OpenAPI/webhooks plus OneRoster, LTI, Ed-Fi-oriented mappings, SSO and bulk import/export.
+- **Mobile product:** One governed Flutter workspace produces School Family (guardian/student) and School Staff (teacher-first) applications. Mobile consumes versioned permission-aware APIs and never reads Neon tables directly.
+- **Mobile sequencing:** Documentation and shared foundation may proceed alongside EXP-01; final persona features wait for reviewed contract families, and mobile integration remains serial.
 - **Open source:** Direct source reuse requires exact license/commit review. GPL/AGPL/no-license school-platform code is reference-only for the proprietary core; permissive dependencies may be reused with notices and LGPL components require isolation/compliance review.
 - **Agent execution:** One agent owns one complete large module on one branch/worktree. Internal module milestones use checkpoint commits and automatic continuation, not separate agents.
 - **Design governance:** All frontend work uses the repository-local Impeccable skill. `FND-01` owns `PRODUCT.md`, `DESIGN.md`, shared tokens/components and design hooks; module agents run shape, critique, audit, harden and polish inside their whole-module stream.
@@ -79,4 +101,4 @@
 
 ## Important limitation
 
-এই নথি একটি technical/product baseline; এটি কোনো দেশের legal opinion নয়। Production launch-এর আগে target country অনুযায়ী privacy, education, finance, tax, payroll, record-retention এবং child-safety counsel প্রয়োজন হবে।
+এই নথি একটি technical/product baseline; এটি কোনো দেশের legal opinion নয়। Production launch-এর আগে target country অনুযায়ী privacy, education, finance, tax, payroll, record-retention এবং child-safety counsel প্রয়োজন হবে। Native app launch-এর আগে platform/store privacy disclosures, child-data review, mobile security verification এবং target-country legal review প্রয়োজন হবে।
