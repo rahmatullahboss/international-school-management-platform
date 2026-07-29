@@ -61,18 +61,22 @@ final class SchoolApiClient {
     String path, {
     required ApiRequestContext context,
     required Map<String, Object?> body,
+    String? idempotencyKey,
   }) async {
     final response = await _client.post(
       _resolve(path),
       body: jsonEncode(body),
-      headers: await _headers(context),
+      headers: await _headers(context, idempotencyKey: idempotencyKey),
     );
     return _decode(response);
   }
 
   void close() => _client.close();
 
-  Future<Map<String, String>> _headers(ApiRequestContext context) async {
+  Future<Map<String, String>> _headers(
+    ApiRequestContext context, {
+    String? idempotencyKey,
+  }) async {
     final token = await _accessTokenProvider();
     if (token == null || token.isEmpty) {
       throw const SchoolApiException(
@@ -93,6 +97,16 @@ final class SchoolApiClient {
       'Content-Type': 'application/json',
       'X-Correlation-Id': context.correlationId,
     };
+    if (idempotencyKey != null) {
+      final normalized = idempotencyKey.trim();
+      if (normalized.isEmpty) {
+        throw const SchoolApiException(
+          code: 'IDEMPOTENCY_KEY_REQUIRED',
+          message: 'A non-empty idempotency key is required.',
+        );
+      }
+      headers['Idempotency-Key'] = normalized;
+    }
     final session = context.session;
     if (session != null) {
       headers.addAll(<String, String>{
