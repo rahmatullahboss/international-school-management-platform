@@ -2,7 +2,7 @@
 
 ## Status
 
-Milestone 1 passed on 2026-07-29 after the web program reached `GATE-PILOT-READY`. Milestone 2 authentication and mobile bootstrap is next.
+Milestone 1 passed on 2026-07-29 after the web program reached `GATE-PILOT-READY`. Milestone 2 client-side authentication and bootstrap foundation has passed; native Android/iOS wiring, device-session registration and the server-owned bootstrap endpoint remain before Milestone 2 can close.
 
 ## Execution identity
 
@@ -37,7 +37,7 @@ Any backend API, notification, identity or shared platform contract change requi
 1. **Workspace and shared foundation — passed**
    - Dart pub workspace, strict analysis, shared mobile contracts, design system, API transport and CI.
    - Adaptive Family and Staff application shells.
-2. **Authentication and bootstrap — next**
+2. **Authentication and bootstrap — client foundation passed; native/server wiring remains**
    - OIDC authorization-code flow with PKCE, secure token storage, device sessions, tenant/campus/persona selection and capability bootstrap.
 3. **Family journeys**
    - Multi-child guardian context, student context, timetable, attendance, published results, fees, documents, forms, consent and communication.
@@ -65,6 +65,22 @@ Any backend API, notification, identity or shared platform contract change requi
 - Real student data used: no.
 - Production deployment or database mutation performed: no.
 
+## Checkpoint 2 evidence — authentication and bootstrap foundation
+
+- Added `school_authentication` with compile-time OIDC configuration, AppAuth authorization-code exchange, PKCE-compatible native browser flow, refresh, end-session and stable failure codes.
+- Added secure token persistence through platform secure storage, redacted token diagnostics, one-minute refresh skew, concurrent refresh coalescing and local-first sign-out.
+- Added account-scoped API requests that carry authentication and correlation context without inventing tenant, campus or persona headers before the user selects an authorized scope.
+- Added immutable tenant/campus/persona bootstrap contracts and capability-specific `SchoolSession` activation.
+- Added a strict client contract for proposed endpoint `/v1/mobile/bootstrap`; the endpoint is not implemented by MOB-01 and remains subject to the existing server-module ownership process.
+- Tests reject unknown personas, duplicate access declarations and unavailable tenant/campus/persona selections; they verify that scoped headers appear only after activation.
+- Checkpoint implementation head: `3da3ed04a94e58bedb68402704f93bc6cfff79e2`.
+- Mobile CI run `30481736792`: authentication foundation passed formatting, generated-state guard, six analysis targets and all then-configured tests.
+- Root CI run `30481735986`: full repository verification passed after the authentication foundation.
+- Mobile CI run `30482768167`: bootstrap contract passed formatting, six analysis targets and six test targets, including API header/decoder tests.
+- Root CI run `30482768058`: full repository verification, browser journeys and artifact validation passed after the bootstrap contract.
+- Real student data used: no.
+- Production deployment or database mutation performed: no.
+
 ## Exact next action
 
-Implement milestone 2 authentication and mobile bootstrap contracts on the same branch, beginning with OIDC/PKCE session boundaries and tenant/campus/persona bootstrap without silently changing frozen backend ownership.
+Generate and verify the native Android/iOS application projects, configure reviewed redirect schemes and secure-storage platform requirements, connect both app shells to `AuthSessionManager`, and submit the server-owned `/v1/mobile/bootstrap` plus device-session registration contract through the existing ownership process before using live account data.
