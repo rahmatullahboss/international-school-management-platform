@@ -8,10 +8,7 @@ import 'package:school_mobile_core/mobile_core.dart';
 typedef AccessTokenProvider = Future<String?> Function();
 
 final class ApiRequestContext {
-  const ApiRequestContext({
-    required this.correlationId,
-    required this.session,
-  });
+  const ApiRequestContext({required this.correlationId, required this.session});
 
   final String correlationId;
   final SchoolSession session;
@@ -137,9 +134,11 @@ final class SchoolApiClient {
     Map<String, String> queryParameters = const <String, String>{},
   ]) {
     final normalizedPath = path.startsWith('/') ? path.substring(1) : path;
-    return baseUri.resolve(normalizedPath).replace(
-      queryParameters: queryParameters.isEmpty ? null : queryParameters,
-    );
+    return baseUri
+        .resolve(normalizedPath)
+        .replace(
+          queryParameters: queryParameters.isEmpty ? null : queryParameters,
+        );
   }
 
   static Uri _normalizeBaseUri(Uri baseUri) {

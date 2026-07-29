@@ -6,10 +6,7 @@ void main() {
     final session = SchoolSession(
       accountId: 'account-1',
       activePersona: SchoolPersona.guardian,
-      availablePersonas: const {
-        SchoolPersona.guardian,
-        SchoolPersona.student,
-      },
+      availablePersonas: const {SchoolPersona.guardian, SchoolPersona.student},
       campusId: 'campus-1',
       capabilities: const {
         SchoolCapability.attendanceRead,
@@ -37,22 +34,25 @@ void main() {
     });
   });
 
-  test('pending operation preserves idempotency identity across status changes', () {
-    final operation = PendingOperation<Map<String, Object?>>(
-      baseVersion: 3,
-      campusId: 'campus-1',
-      clientCreatedAt: DateTime.utc(2026, 7, 29),
-      idempotencyKey: 'attendance-batch-1',
-      operationId: 'operation-1',
-      payload: const {'studentId': 'student-1', 'mark': 'present'},
-      persona: SchoolPersona.teacher,
-      status: MobileSyncStatus.savedOnDevice,
-      tenantId: 'tenant-1',
-    );
+  test(
+    'pending operation preserves idempotency identity across status changes',
+    () {
+      final operation = PendingOperation<Map<String, Object?>>(
+        baseVersion: 3,
+        campusId: 'campus-1',
+        clientCreatedAt: DateTime.utc(2026, 7, 29),
+        idempotencyKey: 'attendance-batch-1',
+        operationId: 'operation-1',
+        payload: const {'studentId': 'student-1', 'mark': 'present'},
+        persona: SchoolPersona.teacher,
+        status: MobileSyncStatus.savedOnDevice,
+        tenantId: 'tenant-1',
+      );
 
-    final synced = operation.copyWith(status: MobileSyncStatus.synced);
-    expect(synced.operationId, operation.operationId);
-    expect(synced.idempotencyKey, operation.idempotencyKey);
-    expect(synced.status, MobileSyncStatus.synced);
-  });
+      final synced = operation.copyWith(status: MobileSyncStatus.synced);
+      expect(synced.operationId, operation.operationId);
+      expect(synced.idempotencyKey, operation.idempotencyKey);
+      expect(synced.status, MobileSyncStatus.synced);
+    },
+  );
 }

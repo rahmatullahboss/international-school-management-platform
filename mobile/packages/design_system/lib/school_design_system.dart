@@ -31,16 +31,15 @@ abstract final class SchoolSpacing {
 
 abstract final class SchoolTheme {
   static ThemeData light() {
-    final colorScheme = ColorScheme.fromSeed(
-      seedColor: SchoolColors.actionTeal,
-    ).copyWith(
-      error: SchoolColors.errorText,
-      onError: SchoolColors.paper,
-      onPrimary: SchoolColors.paper,
-      onSurface: SchoolColors.institutionalInk,
-      primary: SchoolColors.actionTeal,
-      surface: SchoolColors.paper,
-    );
+    final colorScheme = ColorScheme.fromSeed(seedColor: SchoolColors.actionTeal)
+        .copyWith(
+          error: SchoolColors.errorText,
+          onError: SchoolColors.paper,
+          onPrimary: SchoolColors.paper,
+          onSurface: SchoolColors.institutionalInk,
+          primary: SchoolColors.actionTeal,
+          surface: SchoolColors.paper,
+        );
 
     return ThemeData(
       appBarTheme: const AppBarTheme(
@@ -59,16 +58,12 @@ abstract final class SchoolTheme {
           backgroundColor: SchoolColors.actionTeal,
           foregroundColor: SchoolColors.paper,
           minimumSize: const Size(48, 48),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
       ),
       focusColor: SchoolColors.focusBlue,
       inputDecorationTheme: InputDecorationTheme(
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         filled: true,
         fillColor: SchoolColors.paper,
       ),
@@ -210,14 +205,17 @@ class SchoolPanel extends StatelessWidget {
   final EdgeInsetsGeometry? padding;
 
   @override
-  Widget build(BuildContext context) => Container(
-    decoration: BoxDecoration(
-      border: Border.all(color: SchoolColors.structuralRule),
+  Widget build(BuildContext context) => Material(
+    clipBehavior: Clip.antiAlias,
+    color: SchoolColors.paper,
+    shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(16),
-      color: SchoolColors.paper,
+      side: const BorderSide(color: SchoolColors.structuralRule),
     ),
-    padding: padding ?? const EdgeInsets.all(SchoolSpacing.md),
-    child: child,
+    child: Padding(
+      padding: padding ?? const EdgeInsets.all(SchoolSpacing.md),
+      child: child,
+    ),
   );
 }
 

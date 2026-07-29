@@ -38,8 +38,7 @@ final class AttendanceDraftController extends Notifier<AttendanceDraftState> {
   @override
   AttendanceDraftState build() => AttendanceDraftState(
     marks: Map<String, AttendanceMark>.unmodifiable({
-      for (final student in rosterStudents)
-        student.id: AttendanceMark.present,
+      for (final student in rosterStudents) student.id: AttendanceMark.present,
     }),
     pendingStudentIds: const <String>{},
   );
@@ -65,10 +64,8 @@ final class AttendanceDraftController extends Notifier<AttendanceDraftState> {
 final _staffRouter = GoRouter(
   routes: [
     ShellRoute(
-      builder: (context, state, child) => StaffShell(
-        location: state.uri.path,
-        child: child,
-      ),
+      builder: (context, state, child) =>
+          StaffShell(location: state.uri.path, child: child),
       routes: [
         GoRoute(
           path: '/',
@@ -104,11 +101,7 @@ class StaffApp extends StatelessWidget {
 }
 
 class StaffShell extends ConsumerWidget {
-  const StaffShell({
-    required this.child,
-    required this.location,
-    super.key,
-  });
+  const StaffShell({required this.child, required this.location, super.key});
 
   final Widget child;
   final String location;
@@ -269,9 +262,14 @@ class StaffAttendanceScreen extends ConsumerWidget {
               SchoolPanel(
                 child: Column(
                   children: [
-                    for (var index = 0; index < rosterStudents.length; index++) ...[
+                    for (
+                      var index = 0;
+                      index < rosterStudents.length;
+                      index++
+                    ) ...[
                       _AttendanceRow(
-                        mark: draft.marks[rosterStudents[index].id] ??
+                        mark:
+                            draft.marks[rosterStudents[index].id] ??
                             AttendanceMark.present,
                         onChanged: (mark) => ref
                             .read(attendanceDraftProvider.notifier)
@@ -412,13 +410,11 @@ class _AttendanceRow extends StatelessWidget {
             segments: AttendanceMark.values
                 .map(
                   (value) => ButtonSegment<AttendanceMark>(
-                    icon: Icon(
-                      switch (value) {
-                        AttendanceMark.present => Icons.check_circle_outline,
-                        AttendanceMark.absent => Icons.cancel_outlined,
-                        AttendanceMark.late => Icons.access_time_outlined,
-                      },
-                    ),
+                    icon: Icon(switch (value) {
+                      AttendanceMark.present => Icons.check_circle_outline,
+                      AttendanceMark.absent => Icons.cancel_outlined,
+                      AttendanceMark.late => Icons.access_time_outlined,
+                    }),
                     label: Text(value.label),
                     value: value,
                   ),

@@ -118,15 +118,16 @@ final class PendingOperation<T extends Object> {
   final T payload;
   final MobileSyncStatus status;
 
-  PendingOperation<T> copyWith({MobileSyncStatus? status}) => PendingOperation<T>(
-    baseVersion: baseVersion,
-    campusId: campusId,
-    clientCreatedAt: clientCreatedAt,
-    idempotencyKey: idempotencyKey,
-    operationId: operationId,
-    payload: payload,
-    persona: persona,
-    status: status ?? this.status,
-    tenantId: tenantId,
-  );
+  PendingOperation<T> copyWith({MobileSyncStatus? status}) =>
+      PendingOperation<T>(
+        baseVersion: baseVersion,
+        campusId: campusId,
+        clientCreatedAt: clientCreatedAt,
+        idempotencyKey: idempotencyKey,
+        operationId: operationId,
+        payload: payload,
+        persona: persona,
+        status: status ?? this.status,
+        tenantId: tenantId,
+      );
 }

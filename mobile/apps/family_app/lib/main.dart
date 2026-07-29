@@ -18,8 +18,7 @@ final class FamilyPersonaController extends Notifier<SchoolPersona> {
   SchoolPersona build() => SchoolPersona.guardian;
 
   void select(SchoolPersona persona) {
-    if (persona == SchoolPersona.guardian ||
-        persona == SchoolPersona.student) {
+    if (persona == SchoolPersona.guardian || persona == SchoolPersona.student) {
       state = persona;
     }
   }
@@ -28,10 +27,8 @@ final class FamilyPersonaController extends Notifier<SchoolPersona> {
 final _familyRouter = GoRouter(
   routes: [
     ShellRoute(
-      builder: (context, state, child) => FamilyShell(
-        location: state.uri.path,
-        child: child,
-      ),
+      builder: (context, state, child) =>
+          FamilyShell(location: state.uri.path, child: child),
       routes: [
         GoRoute(
           path: '/',
@@ -71,11 +68,7 @@ class FamilyApp extends StatelessWidget {
 }
 
 class FamilyShell extends ConsumerWidget {
-  const FamilyShell({
-    required this.child,
-    required this.location,
-    super.key,
-  });
+  const FamilyShell({required this.child, required this.location, super.key});
 
   final Widget child;
   final String location;
@@ -87,12 +80,7 @@ class FamilyShell extends ConsumerWidget {
     '/fees',
     '/messages',
   ];
-  static const _studentPaths = [
-    '/',
-    '/attendance',
-    '/results',
-    '/messages',
-  ];
+  static const _studentPaths = ['/', '/attendance', '/results', '/messages'];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -324,7 +312,11 @@ class FamilyResultsScreen extends StatelessWidget {
         child: SchoolPanel(
           child: Column(
             children: const [
-              _ResultRow(subject: 'Mathematics', result: 'A', score: '88 / 100'),
+              _ResultRow(
+                subject: 'Mathematics',
+                result: 'A',
+                score: '88 / 100',
+              ),
               Divider(),
               _ResultRow(subject: 'English', result: 'A-', score: '84 / 100'),
               Divider(),
@@ -462,9 +454,6 @@ class _ResultRow extends StatelessWidget {
     contentPadding: EdgeInsets.zero,
     title: Text(subject),
     subtitle: Text('Published score · $score'),
-    trailing: Text(
-      result,
-      style: Theme.of(context).textTheme.titleMedium,
-    ),
+    trailing: Text(result, style: Theme.of(context).textTheme.titleMedium),
   );
 }
