@@ -3,19 +3,17 @@ import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-type IntegratedStream =
-  | 'FND-01'
-  | 'SIS-01'
-  | 'FIN-01'
-  | 'INT-01'
-  | 'ACAD-01'
-  | 'OPS-01'
-  | 'CARE-01';
-
 interface ManifestMigration {
   readonly order: number;
   readonly id: string;
-  readonly stream: IntegratedStream;
+  readonly stream:
+    | 'FND-01'
+    | 'SIS-01'
+    | 'FIN-01'
+    | 'INT-01'
+    | 'ACAD-01'
+    | 'OPS-01'
+    | 'CARE-01';
   readonly path: string;
 }
 
@@ -73,23 +71,21 @@ describe('Wave 2 canonical migration manifest', () => {
 
     expect(manifest.program).toBe('international-school-platform-v1');
     expect(manifest.gate).toBe('GATE-WAVE-2-INTEGRATED');
-    expect(manifest.migrations).toHaveLength(40);
     expect(manifestFiles).toEqual(expectedFiles);
     expect(new Set(manifest.migrations.map((migration) => migration.id)).size).toBe(
       manifest.migrations.length,
     );
-    expect(new Set(manifestFiles).size).toBe(manifestFiles.length);
     expect(manifest.migrations.map((migration) => migration.order)).toEqual(
       Array.from({ length: manifest.migrations.length }, (_, index) => index + 1),
     );
     expect(manifest.migrations.map((migration) => migration.stream)).toEqual([
-      ...Array<IntegratedStream>(5).fill('FND-01'),
-      ...Array<IntegratedStream>(6).fill('SIS-01'),
-      ...Array<IntegratedStream>(4).fill('FIN-01'),
-      ...Array<IntegratedStream>(7).fill('INT-01'),
-      ...Array<IntegratedStream>(5).fill('ACAD-01'),
-      ...Array<IntegratedStream>(7).fill('OPS-01'),
-      ...Array<IntegratedStream>(6).fill('CARE-01'),
+      ...Array<string>(5).fill('FND-01'),
+      ...Array<string>(6).fill('SIS-01'),
+      ...Array<string>(4).fill('FIN-01'),
+      ...Array<string>(7).fill('INT-01'),
+      ...Array<string>(5).fill('ACAD-01'),
+      ...Array<string>(7).fill('OPS-01'),
+      ...Array<string>(6).fill('CARE-01'),
     ]);
   });
 
