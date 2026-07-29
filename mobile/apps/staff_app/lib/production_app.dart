@@ -5,12 +5,14 @@ class StaffProductionApp extends StatefulWidget {
     this.coordinator,
     this.initializeCoordinator = true,
     this.repository,
+    this.syncRuntimeLoader,
     super.key,
   });
 
   final MobileAppCoordinator? coordinator;
   final bool initializeCoordinator;
   final TeacherJourneyRepository? repository;
+  final StaffSyncRuntimeLoader? syncRuntimeLoader;
 
   @override
   State<StaffProductionApp> createState() => _StaffProductionAppState();
@@ -84,6 +86,7 @@ class _StaffProductionAppState extends State<StaffProductionApp> {
             coordinator: coordinator,
             repository: repository,
             session: session,
+            syncRuntimeLoader: widget.syncRuntimeLoader,
           );
         }
         return MaterialApp(
@@ -116,11 +119,13 @@ class _AuthorizedStaffApp extends StatefulWidget {
     required this.coordinator,
     required this.repository,
     required this.session,
+    this.syncRuntimeLoader,
   });
 
   final MobileAppCoordinator coordinator;
   final TeacherJourneyRepository repository;
   final SchoolSession session;
+  final StaffSyncRuntimeLoader? syncRuntimeLoader;
 
   @override
   State<_AuthorizedStaffApp> createState() => _AuthorizedStaffAppState();
@@ -129,6 +134,7 @@ class _AuthorizedStaffApp extends StatefulWidget {
 class _AuthorizedStaffAppState extends State<_AuthorizedStaffApp> {
   late StaffJourneyController _journey;
   late GoRouter _router;
+  late StaffAttendanceSyncController _sync;
 
   @override
   void initState() {
@@ -137,8 +143,14 @@ class _AuthorizedStaffAppState extends State<_AuthorizedStaffApp> {
       repository: widget.repository,
       session: widget.session,
     );
+    _sync = StaffAttendanceSyncController(
+      repository: widget.repository,
+      runtimeLoader: widget.syncRuntimeLoader,
+      session: widget.session,
+    );
     _router = _createRouter();
     unawaited(_journey.initialize());
+    unawaited(_sync.initialize());
   }
 
   @override
@@ -161,6 +173,12 @@ class _AuthorizedStaffAppState extends State<_AuthorizedStaffApp> {
       unawaited(_journey.updateSession(widget.session));
     }
     if (repositoryChanged || scopeChanged) {
+      unawaited(
+        _sync.updateScope(
+          repository: widget.repository,
+          session: widget.session,
+        ),
+      );
       _router.dispose();
       _router = _createRouter();
     }
@@ -175,6 +193,7 @@ class _AuthorizedStaffAppState extends State<_AuthorizedStaffApp> {
             coordinator: widget.coordinator,
             location: state.uri.path,
             session: session,
+            sync: _sync,
             child: child,
           ),
           routes: [
@@ -186,8 +205,11 @@ class _AuthorizedStaffAppState extends State<_AuthorizedStaffApp> {
             if (session.can(SchoolCapability.attendanceTake))
               GoRoute(
                 path: '/attendance',
-                builder: (context, state) =>
-                    _TeacherRosterScreen(journey: _journey),
+                builder: (context, state) => _TeacherRosterScreen(
+                  journey: _journey,
+                  session: session,
+                  sync: _sync,
+                ),
               ),
             if (session.can(SchoolCapability.gradesWrite))
               GoRoute(
@@ -218,93 +240,118 @@ class _AuthorizedStaffAppState extends State<_AuthorizedStaffApp> {
   void dispose() {
     _router.dispose();
     _journey.dispose();
+    _sync.dispose();
     super.dispose();
   }
 }
 
-class _AuthorizedStaffShell extends ConsumerWidget {
+class _AuthorizedStaffShell extends StatelessWidget {
   const _AuthorizedStaffShell({
     required this.child,
     required this.coordinator,
     required this.location,
     required this.session,
+    required this.sync,
   });
 
   final Widget child;
   final MobileAppCoordinator coordinator;
   final String location;
   final SchoolSession session;
+  final StaffAttendanceSyncController sync;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final paths = <String>['/'];
-    final destinations = <SchoolDestination>[
-      const SchoolDestination(
-        icon: Icons.home_outlined,
-        label: 'Today',
-        selectedIcon: Icons.home,
-      ),
-    ];
-    if (session.can(SchoolCapability.attendanceTake)) {
-      paths.add('/attendance');
-      destinations.add(
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: sync,
+    builder: (context, _) {
+      final paths = <String>['/'];
+      final destinations = <SchoolDestination>[
         const SchoolDestination(
-          icon: Icons.fact_check_outlined,
-          label: 'Attendance',
-          selectedIcon: Icons.fact_check,
+          icon: Icons.home_outlined,
+          label: 'Today',
+          selectedIcon: Icons.home,
         ),
-      );
-    }
-    if (session.can(SchoolCapability.gradesWrite)) {
-      paths.add('/gradebook');
-      destinations.add(
-        const SchoolDestination(
-          icon: Icons.edit_note_outlined,
-          label: 'Gradebook',
-          selectedIcon: Icons.edit_note,
-        ),
-      );
-    }
-    if (session.can(SchoolCapability.messagesRead) ||
-        session.can(SchoolCapability.messagesSend)) {
-      paths.add('/messages');
-      destinations.add(
-        const SchoolDestination(
-          icon: Icons.forum_outlined,
-          label: 'Messages',
-          selectedIcon: Icons.forum,
-        ),
-      );
-    }
+      ];
+      if (session.can(SchoolCapability.attendanceTake)) {
+        paths.add('/attendance');
+        destinations.add(
+          const SchoolDestination(
+            icon: Icons.fact_check_outlined,
+            label: 'Attendance',
+            selectedIcon: Icons.fact_check,
+          ),
+        );
+      }
+      if (session.can(SchoolCapability.gradesWrite)) {
+        paths.add('/gradebook');
+        destinations.add(
+          const SchoolDestination(
+            icon: Icons.edit_note_outlined,
+            label: 'Gradebook',
+            selectedIcon: Icons.edit_note,
+          ),
+        );
+      }
+      if (session.can(SchoolCapability.messagesRead) ||
+          session.can(SchoolCapability.messagesSend)) {
+        paths.add('/messages');
+        destinations.add(
+          const SchoolDestination(
+            icon: Icons.forum_outlined,
+            label: 'Messages',
+            selectedIcon: Icons.forum,
+          ),
+        );
+      }
 
-    final pendingCount = ref.watch(
-      attendanceDraftProvider.select((state) => state.pendingCount),
-    );
-    return SchoolAdaptiveScaffold(
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.logout),
-          onPressed: () => unawaited(coordinator.signOut()),
-          tooltip: 'Sign out',
+      final syncState = sync.state;
+      final status = switch ((
+        syncState.phase,
+        syncState.attentionCount,
+        syncState.pendingCount,
+      )) {
+        (StaffSyncPhase.failed, _, _) => SchoolStatusBanner(
+          label: 'Sync unavailable',
+          message:
+              syncState.reasonCode ?? 'Attendance sync could not be verified.',
+          tone: SchoolStatusTone.error,
         ),
-      ],
-      body: child,
-      destinations: destinations,
-      onDestinationSelected: (index) => context.go(paths[index]),
-      selectedIndex: paths.indexOf(location).clamp(0, paths.length - 1).toInt(),
-      status: pendingCount == 0
-          ? const SchoolStatusBanner(
-              label: 'Authorized session',
-              message: 'No attendance changes are waiting on this device.',
-              tone: SchoolStatusTone.success,
-            )
-          : SchoolStatusBanner(
-              label: 'Saved on device',
-              message:
-                  '$pendingCount attendance change(s) are waiting to sync.',
-              tone: SchoolStatusTone.warning,
-            ),
-      title: 'School Staff · Teacher',
-    );
-  }
+        (_, final attention, _) when attention > 0 => SchoolStatusBanner(
+          label: 'Review required',
+          message: '$attention attendance operation(s) need reconciliation.',
+          tone: SchoolStatusTone.error,
+        ),
+        (_, _, final pending) when pending > 0 => SchoolStatusBanner(
+          label: 'Saved on device',
+          message:
+              '$pending encrypted attendance operation(s) are waiting to sync.',
+          tone: SchoolStatusTone.warning,
+        ),
+        _ => const SchoolStatusBanner(
+          label: 'Authorized session',
+          message: 'No attendance operations are waiting on this device.',
+          tone: SchoolStatusTone.success,
+        ),
+      };
+
+      return SchoolAdaptiveScaffold(
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () => unawaited(coordinator.signOut()),
+            tooltip: 'Sign out',
+          ),
+        ],
+        body: child,
+        destinations: destinations,
+        onDestinationSelected: (index) => context.go(paths[index]),
+        selectedIndex: paths
+            .indexOf(location)
+            .clamp(0, paths.length - 1)
+            .toInt(),
+        status: status,
+        title: 'School Staff · Teacher',
+      );
+    },
+  );
 }

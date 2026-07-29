@@ -252,7 +252,10 @@ SchoolSession teacherSession() => SchoolSession(
     SchoolCapability.gradesWrite,
   },
   activePersona: SchoolPersona.teacher,
+  availablePersonas: const <SchoolPersona>{SchoolPersona.teacher},
+  locale: 'en-GB',
   tenantId: 'tenant-1',
+  timeZone: 'Asia/Dhaka',
 );
 
 TeacherAttendanceBatchCommand attendanceCommand({

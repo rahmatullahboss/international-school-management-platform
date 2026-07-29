@@ -11,9 +11,13 @@ import 'package:school_authentication/school_authentication.dart';
 import 'package:school_design_system/school_design_system.dart';
 import 'package:school_mobile_core/mobile_core.dart';
 import 'package:school_staff_domain/school_staff_domain.dart';
+import 'package:school_sync_engine/school_sync_engine.dart';
+import 'package:school_sync_storage/school_sync_storage.dart';
+import 'package:school_teacher_sync/school_teacher_sync.dart';
 
 part 'production_app.dart';
 part 'staff_journey_controller.dart';
+part 'staff_sync_controller.dart';
 part 'teacher_production_journeys.dart';
 
 void main() {
