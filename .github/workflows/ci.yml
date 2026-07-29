@@ -55,7 +55,7 @@ jobs:
   );
   return [...permitted].sort((left, right) => {
     const severityDifference = severityOrder[left.severity] - severityOrder[right.severity];
-    if (severityDifference != 0) return severityDifference;
+    if (severityDifference !== 0) return severityDifference;
     if (left.dueAt === undefined) return 1;
     if (right.dueAt === undefined) return -1;
     return left.dueAt.localeCompare(right.dueAt);
