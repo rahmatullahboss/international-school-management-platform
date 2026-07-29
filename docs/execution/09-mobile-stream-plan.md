@@ -2,7 +2,7 @@
 
 ## Status
 
-Active on 2026-07-29 after the web program reached `GATE-PILOT-READY`.
+Milestone 1 passed on 2026-07-29 after the web program reached `GATE-PILOT-READY`. Milestone 2 authentication and mobile bootstrap is next.
 
 ## Execution identity
 
@@ -11,6 +11,7 @@ Active on 2026-07-29 after the web program reached `GATE-PILOT-READY`.
 - Branch: `module/flutter-mobile-apps`
 - Fixed worktree when resumed locally: `.worktrees/mob-01-flutter`
 - Neon branch: none; MOB-01 owns no database schema
+- Draft pull request: `#41`
 - Production mutation: prohibited without separate authorization
 
 ## Objective
@@ -33,10 +34,10 @@ Any backend API, notification, identity or shared platform contract change requi
 
 ## Ordered milestones
 
-1. **Workspace and shared foundation**
+1. **Workspace and shared foundation — passed**
    - Dart pub workspace, strict analysis, shared mobile contracts, design system, API transport and CI.
    - Adaptive Family and Staff application shells.
-2. **Authentication and bootstrap**
+2. **Authentication and bootstrap — next**
    - OIDC authorization-code flow with PKCE, secure token storage, device sessions, tenant/campus/persona selection and capability bootstrap.
 3. **Family journeys**
    - Multi-child guardian context, student context, timetable, attendance, published results, fees, documents, forms, consent and communication.
@@ -51,17 +52,19 @@ Any backend API, notification, identity or shared platform contract change requi
 
 ## Checkpoint 1 evidence
 
-- Workspace initialized under `mobile/`.
+- Workspace initialized under `mobile/` with a committed root lockfile and generated state excluded.
 - `school_mobile_core` defines tenant, campus, persona, capability and sync-state contracts.
-- `school_design_system` ports the approved operational palette and adaptive navigation.
-- `school_api_client` enforces authenticated tenant/campus/persona-scoped Worker API calls.
-- Family app includes Guardian/Student switching, capability-aware fee navigation and initial read journeys.
-- Staff app includes teacher navigation and a local offline attendance draft workflow.
-- Unit/widget tests cover core contracts, design semantics, persona isolation and attendance draft state.
-- Implementation head before this evidence file: `e01748b4355685566e0ba3339a475ff936e4fbea`.
+- `school_design_system` ports the approved operational palette, accessible written statuses and adaptive navigation.
+- `school_api_client` enforces authenticated tenant/campus/persona-scoped Worker API calls and stable errors.
+- Family app includes Guardian/Student switching, capability-aware fee navigation and initial timetable, attendance, results, fees and message read journeys.
+- Staff app includes teacher navigation, gradebook/message placeholders and a recoverable local attendance draft workflow.
+- Unit/widget tests cover core contracts, design semantics, persona isolation, responsive navigation and attendance draft state.
+- Checkpoint implementation head: `0f4547f02fed2f7a009a2152515a271b15814feb`.
+- Mobile CI run `30480303165`: passed formatting, generated-state guard, five analysis targets and four test suites.
+- Root CI run `30480303673`: passed format, lint, architecture boundaries, typecheck, repository tests, migration replay, Neon driver, builds, dependency/licence/provenance checks, browser journeys and execution-artifact validation.
 - Real student data used: no.
 - Production deployment or database mutation performed: no.
 
 ## Exact next action
 
-Run mobile CI, resolve analysis/test failures, then implement milestone 2 authentication and mobile bootstrap contracts without changing frozen backend ownership silently.
+Implement milestone 2 authentication and mobile bootstrap contracts on the same branch, beginning with OIDC/PKCE session boundaries and tenant/campus/persona bootstrap without silently changing frozen backend ownership.
