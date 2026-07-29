@@ -9,5 +9,6 @@ workspace:
   - apps/family_app
   - apps/staff_app
   - packages/api_client
+  - packages/authentication
   - packages/design_system
   - packages/mobile_core
