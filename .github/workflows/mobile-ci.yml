@@ -1,0 +1,63 @@
+name: Mobile CI
+
+on:
+  pull_request:
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/mobile-ci.yml'
+  push:
+    branches:
+      - 'module/flutter-mobile-apps'
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/mobile-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify-mobile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.44.7'
+          cache: true
+      - name: Show Flutter toolchain
+        run: flutter --version
+      - name: Resolve workspace dependencies
+        working-directory: mobile
+        run: flutter pub get
+      - name: Verify formatting
+        working-directory: mobile
+        run: dart format --output=none --set-exit-if-changed .
+      - name: Analyze family app
+        working-directory: mobile/apps/family_app
+        run: flutter analyze
+      - name: Analyze staff app
+        working-directory: mobile/apps/staff_app
+        run: flutter analyze
+      - name: Analyze design system
+        working-directory: mobile/packages/design_system
+        run: flutter analyze
+      - name: Analyze mobile core
+        working-directory: mobile/packages/mobile_core
+        run: dart analyze
+      - name: Analyze API client
+        working-directory: mobile/packages/api_client
+        run: dart analyze
+      - name: Test family app
+        working-directory: mobile/apps/family_app
+        run: flutter test
+      - name: Test staff app
+        working-directory: mobile/apps/staff_app
+        run: flutter test
+      - name: Test design system
+        working-directory: mobile/packages/design_system
+        run: flutter test
+      - name: Test mobile core
+        working-directory: mobile/packages/mobile_core
+        run: dart test
