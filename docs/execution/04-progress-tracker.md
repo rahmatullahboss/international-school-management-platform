@@ -2,7 +2,7 @@
 
 **Program:** `international-school-platform-v1`
 **Updated:** 2026-07-29
-**Current repository state:** Wave 2 module implementation and review are complete. Reviewed candidates are `ACAD-01` `1d895afdf51f6d4f6323ada4b93d9ba32b244480`, `OPS-01` `fc749d7c0ece36964da8f923431bb3b7ac925e56` and `CARE-01` `9304bd6c425eca4ec69db90c1f1cab3f7a409b8d`. `INTEG-01` is ready to perform serial Wave 2 integration; `GATE-WAVE-2-INTEGRATED` remains blocked until migration composition, restricted-record boundaries and recovery rehearsal pass.
+**Current repository state:** Wave 2 serial integration is complete and `GATE-WAVE-2-INTEGRATED` passed at reviewed integration SHA `60836a8fe92f64ba581c4bde65005729d1fe14b2`. Exact reviewed `ACAD-01`, `OPS-01` and `CARE-01` candidates are integrated with coordinator-owned shared-file resolutions only. `EXP-01` is ready to execute from this exact reviewed Wave 2 base.
 
 ## Gate status
 
@@ -14,7 +14,7 @@
 | `GATE-INT-COMPLETE` | passed | Seven milestones complete; agent-branch apply `30345998526`, logical replay `30346762735` and fresh Neon branch replay `30347294967` passed |
 | `GATE-WAVE-1-INTEGRATED` | passed | Reviewed integration SHA `8cc8ee1562ade672b14c1c44af935fe7e2307976`; CI `30362743336`; integration Neon apply/recovery run `30362743167`; 22 migrations, 139/139 tenant-owned tables protected, finance invariants and six browser journeys passed |
 | `GATE-STUDENT-SUPPORT-THREAT-MODEL` | passed | [Student-support high-risk data threat model](../security/student-support-threat-model.md) approved against reviewed Wave 1 integration SHA `8cc8ee1562ade672b14c1c44af935fe7e2307976`; 40 security invariants, role/action matrix, negative tests, RLS/migration guardrails and incident controls recorded |
-| `GATE-WAVE-2-INTEGRATED` | blocked | `ACAD-01`, `OPS-01`, `CARE-01` reviewed and integrated |
+| `GATE-WAVE-2-INTEGRATED` | passed | Reviewed integration SHA `60836a8fe92f64ba581c4bde65005729d1fe14b2`; root CI `30437010804` passed full verification, fresh 40-migration PostgreSQL replay, live Neon driver and browser suites; Wave 2 Neon apply/recovery run `30437011092` passed exact branch identity, canonical apply, RLS/finance/tenant verification and disposable database replay |
 | `GATE-PILOT-READY` | blocked | `EXP-01` integrated and final system/recovery verification passed |
 
 ## Multi-agent operating decision
@@ -28,7 +28,7 @@ Owner decision recorded on 2026-07-28:
 - the foundation/program coordinator maintains shared documentation, gate state, contract-change decisions and this tracker without writing concurrently inside module-owned paths;
 - `INTEG-01` reviews and integrates module SHAs serially after they are recorded here.
 
-Current readiness: `ACAD-01`, `OPS-01` and `CARE-01` are complete and reviewed. `INTEG-01` may now consume only the exact frozen Wave 2 SHAs recorded here. `EXP-01` remains blocked until `GATE-WAVE-2-INTEGRATED` passes.
+Current readiness: `GATE-WAVE-2-INTEGRATED` has passed. `EXP-01` may now start only from reviewed Wave 2 integration SHA `60836a8fe92f64ba581c4bde65005729d1fe14b2`. `INTEG-01` waits for the reviewed `EXP-01` candidate before Wave 3 integration.
 
 ## Stream tracker
 
@@ -38,11 +38,11 @@ Current readiness: `ACAD-01`, `OPS-01` and `CARE-01` are complete and reviewed. 
 | `SIS-01` | 1 | complete; integrated to `main` | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | complete | reviewed head `5e2499018282d8296abfe093b5dd95b231829379`; main merge `9b9605aff93901eb1ad9e5b4d9ad9d6517d04aba` | none |
 | `FIN-01` | 1 | complete; integrated by `INTEG-01` | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | complete | reviewed head `5f9e1692a8fc19fc2e9789a338d028918acdeaf6`; integration merge `da3d561` | none |
 | `INT-01` | 1 | complete; integrated by `INTEG-01` | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | complete | reviewed head `bfa95a4a42025213fa7c2090a587ef5304924da7`; integration merge `0822462` | none |
-| `ACAD-01` | 2 | complete; reviewed; waiting integration | `8cc8ee1562ade672b14c1c44af935fe7e2307976` | complete | reviewed head `1d895afdf51f6d4f6323ada4b93d9ba32b244480`; PR `#7` green | none |
-| `OPS-01` | 2 | complete; reviewed; waiting integration | `8cc8ee1562ade672b14c1c44af935fe7e2307976` | complete | reviewed head `fc749d7c0ece36964da8f923431bb3b7ac925e56`; final branch CI `30419451935` green | none |
-| `CARE-01` | 2 | complete; reviewed; waiting integration | `8cc8ee1562ade672b14c1c44af935fe7e2307976` | complete | reviewed head `9304bd6c425eca4ec69db90c1f1cab3f7a409b8d`; draft PR `#19` final-head CI `30427728682` green | integration-owned conflict resolution and fresh disposable recovery rehearsal |
-| `EXP-01` | 3 | blocked | reviewed Wave 2 integration SHA | persona shells | none | `GATE-WAVE-2-INTEGRATED` |
-| `INTEG-01` | gated serial | ready for Wave 2 integration | integration branch head `ec921ea26f6980017f848bfd6646a77868bd4cb1` | serially integrate reviewed ACAD, OPS and CARE SHAs | reviewed Wave 1 integration `8cc8ee1562ade672b14c1c44af935fe7e2307976` | `GATE-WAVE-2-INTEGRATED` verification pending |
+| `ACAD-01` | 2 | complete; reviewed; integrated by `INTEG-01` | `8cc8ee1562ade672b14c1c44af935fe7e2307976` | complete | reviewed head `1d895afdf51f6d4f6323ada4b93d9ba32b244480`; integration merge `7a6dee6136721801cb5fe0758f5a65adce90da31` | none |
+| `OPS-01` | 2 | complete; reviewed; integrated by `INTEG-01` | `8cc8ee1562ade672b14c1c44af935fe7e2307976` | complete | reviewed head `fc749d7c0ece36964da8f923431bb3b7ac925e56`; integration merge `51c714c06c16e15c1ced866980b56b04e1889932` | none |
+| `CARE-01` | 2 | complete; reviewed; integrated by `INTEG-01` | `8cc8ee1562ade672b14c1c44af935fe7e2307976` | complete | reviewed head `9304bd6c425eca4ec69db90c1f1cab3f7a409b8d`; integration merge `af8a58d79053882e3e5c41610f68c9e95f5f119c`; recovery passed | none |
+| `EXP-01` | 3 | ready | `60836a8fe92f64ba581c4bde65005729d1fe14b2` | persona shells | reviewed Wave 2 gate passed | none |
+| `INTEG-01` | gated serial | Wave 2 integrated; gate passed | `ec921ea26f6980017f848bfd6646a77868bd4cb1` | wait for reviewed `EXP-01`, then perform Wave 3 integration | reviewed Wave 2 integration `60836a8fe92f64ba581c4bde65005729d1fe14b2` | `EXP-01` completion |
 
 ## Required checkpoint evidence format
 
@@ -709,3 +709,22 @@ A resumed stream must verify this tracker against Git history, the exact worktre
 ## Program completion rule
 
 Only `INTEG-01` may mark `GATE-PILOT-READY` passed, and only after all required streams are integrated, migrations/recovery are rehearsed, critical tests pass and a pilot-ready report is committed. Module completion never equals program completion.
+
+## INTEG-01 Wave 2 integration evidence
+
+Date/time: 2026-07-29T14:53:09+06:00
+Stream: INTEG-01
+Milestone completed: Wave 2 serial integration, database recovery verification and system verification
+Git branch: `integration/international-school-platform-v1`
+Worktree: `.worktrees/integ-01-release`
+Neon branch: `integration/international-school-platform-v1` (`br-shiny-silence-axznuy37`), project `lingering-brook-52999532`
+Starting base: reviewed Wave 1 integration branch head `ec921ea26f6980017f848bfd6646a77868bd4cb1`; frozen module base `8cc8ee1562ade672b14c1c44af935fe7e2307976`
+Checkpoint SHA: `60836a8fe92f64ba581c4bde65005729d1fe14b2`
+Reviewed inputs: ACAD-01 `1d895afdf51f6d4f6323ada4b93d9ba32b244480`; OPS-01 `fc749d7c0ece36964da8f923431bb3b7ac925e56`; CARE-01 `9304bd6c425eca4ec69db90c1f1cab3f7a409b8d`
+Changed integration-owned paths: serial merge/conflict resolutions, shared module TypeScript composition, canonical 40-migration manifest and verifier, Wave 2 cross-module journey tests, root CI and Neon recovery gate, release evidence; reviewed module implementations were not casually rewritten
+Focused checks and results: root CI `30437010804` PASS — format, lint, architecture boundaries, typecheck, full tests, fresh PostgreSQL replay of all 40 migrations with RLS/policy assertions, secret-backed live Neon driver, build, dependency audit, licence/provenance, Chromium browser suites including restricted student support and execution-artifact validation; cross-module journeys cover academic roster to duplicate-safe attendance, HR contract to balanced finance journal, activity enrolment to idempotent charge and masked/audited safeguarding reads
+Database and recovery evidence: Neon run `30437011092` PASS — exact project/branch identity, canonical Wave 2 apply, 40/40 migration ledger verification, tenant RLS/policy and finance invariant checks, tenant isolation probes, fresh disposable database replay from zero and safe cleanup
+Gate outcome: `GATE-WAVE-2-INTEGRATED` passed
+Exact next milestone: start `EXP-01` from exact reviewed Wave 2 integration SHA `60836a8fe92f64ba581c4bde65005729d1fe14b2`; after its reviewed completion, resume `INTEG-01` for Wave 3 integration
+Dirty/uncommitted state: no integration branch changes outside committed evidence; existing local worktrees were not reset, discarded or overwritten
+Production mutation performed: no; only the dedicated integration Neon branch and a disposable recovery database were used
