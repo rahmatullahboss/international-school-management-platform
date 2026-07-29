@@ -150,19 +150,18 @@ final class FamilyMoneyAmount {
 final class FamilyFeeReadModel {
   FamilyFeeReadModel({
     required String invoiceReference,
-    required FamilyMoneyAmount outstanding,
-    FamilyMoneyAmount? lastReceipt,
+    required this.outstanding,
+    this.lastReceipt,
     String? lastReceiptReference,
   }) : invoiceReference = _required(invoiceReference, 'invoiceReference'),
        lastReceiptReference = lastReceiptReference == null
            ? null
-           : _required(lastReceiptReference, 'lastReceiptReference'),
-       lastReceipt = lastReceipt {
-    if ((this.lastReceipt == null) != (this.lastReceiptReference == null)) {
+           : _required(lastReceiptReference, 'lastReceiptReference') {
+    if ((lastReceipt == null) != (this.lastReceiptReference == null)) {
       throw const FamilyDomainException('FAMILY_RECEIPT_PAIR_REQUIRED');
     }
-    if (this.lastReceipt != null &&
-        this.lastReceipt!.currencyCode != outstanding.currencyCode) {
+    if (lastReceipt != null &&
+        lastReceipt!.currencyCode != outstanding.currencyCode) {
       throw const FamilyDomainException('FAMILY_RECEIPT_CURRENCY_MISMATCH');
     }
   }
@@ -184,21 +183,17 @@ final class FamilyMessageReadModel {
 
 final class FamilyDashboardReadModel {
   FamilyDashboardReadModel({
-    required FamilyAttendanceReadModel? attendance,
-    required FamilyFeeReadModel? fees,
+    required this.attendance,
+    required this.fees,
     required DateTime generatedAt,
-    required FamilyMessageReadModel? messages,
-    required FamilyStudentProfile student,
+    required this.messages,
+    required this.student,
     required Iterable<FamilyPublishedResult> publishedResults,
     required Iterable<FamilyTimetableItem> timetable,
-  }) : attendance = attendance,
-       fees = fees,
-       generatedAt = generatedAt.toUtc(),
-       messages = messages,
+  }) : generatedAt = generatedAt.toUtc(),
        publishedResults = List<FamilyPublishedResult>.unmodifiable(
          publishedResults,
        ),
-       student = student,
        timetable = List<FamilyTimetableItem>.unmodifiable(timetable);
 
   final FamilyStudentProfile student;
