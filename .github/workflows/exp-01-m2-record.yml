@@ -1,0 +1,72 @@
+name: EXP-01 Record Milestone 2
+
+on:
+  push:
+    branches:
+      - module/exp-01-m2-evidence
+    paths:
+      - .github/workflows/exp-01-m2-record.yml
+
+permissions:
+  contents: write
+
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: module/exp-01-m2-evidence
+      - name: Record Milestone 2 evidence
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          board_path = Path('docs/execution/03-agent-board.json')
+          board = board_path.read_text(encoding='utf-8')
+          old_status = '      "status": "ready_for_execution",\n      "branch": "module/experience-portals-reporting",'
+          new_status = '      "status": "in_progress",\n      "branch": "module/experience-portals-reporting",'
+          if board.count(old_status) != 1:
+              raise SystemExit(f'EXP board status target count: {board.count(old_status)}')
+          board_path.write_text(board.replace(old_status, new_status), encoding='utf-8')
+
+          tracker_path = Path('docs/execution/04-progress-tracker.md')
+          tracker = tracker_path.read_text(encoding='utf-8')
+          old_row = '| `EXP-01` | 3 | ready | `60836a8fe92f64ba581c4bde65005729d1fe14b2` | persona shells | reviewed Wave 2 gate passed | none |'
+          new_row = '| `EXP-01` | 3 | in progress; milestones 1–2 complete | `60836a8fe92f64ba581c4bde65005729d1fe14b2` | teacher experience | admin checkpoint `422426b4ae47d698ab9364df254afef6948d25f9`; CI `30446100815` green | none |'
+          if tracker.count(old_row) != 1:
+              raise SystemExit(f'EXP tracker row target count: {tracker.count(old_row)}')
+          tracker = tracker.replace(old_row, new_row)
+
+          evidence = '''
+
+## EXP-01 evidence
+
+Date/time: 2026-07-29T17:07:00+06:00
+Stream: EXP-01
+Milestones completed: 1 — persona experience foundation; 2 — administration experience
+Git branch: `module/experience-portals-reporting`
+Worktree: `.worktrees/exp-01-experience`
+Neon branch: `agent/exp-01-experience` (`br-billowing-bar-axe2et95`), project `lingering-brook-52999532`
+Starting base: reviewed Wave 2 integration SHA `60836a8fe92f64ba581c4bde65005729d1fe14b2`
+Milestone 1 checkpoint: `7742a993a4959ae75c900ae1ce4b77041d991f92`; CI `30440461448` green
+Milestone 2 checkpoint: `422426b4ae47d698ab9364df254afef6948d25f9`; clean-head CI `30446100815` green
+Changed owned paths: persona shells/adapters; administration ledger, record workspace, governed search, approvals, evidence-backed metrics, strict bulk-selection safety; EXP tests and documentation
+Focused checks and results: format, lint, architecture boundaries, repository typecheck, full tests, fresh 40-migration replay, live Neon driver, build, dependency audit, licences, provenance, all Chromium suites and execution-artifact validation passed
+UI/design evidence: reviewed `PRODUCT.md` blob `5e769c75f28c0c5cc426f5b85eaf46f032a3367f`; reviewed `DESIGN.md` blob `4be926a77d501dd8f16934ad4c50672ba754d66f`; capability-aware responsive/RTL persona shells; keyboard/reduced-motion proof; Operational Ledger admin surface with metric definitions, drill-down and masked restricted records
+Security/safety evidence: no private domain-table access; restricted search results remain masked; AAL2 requirements shown before action; mixed, unknown or incompatible bulk selections are denied
+Gate outcome: Milestones 1–2 passed; `GATE-EXP-COMPLETE` remains blocked pending milestones 3–8
+Exact next milestone: 3 — teacher workflows for assigned classes, attendance, gradebook, communication and permitted student context
+Dirty/uncommitted state: none recorded on the reviewed checkpoint
+Production mutation performed: no
+'''
+          if '## EXP-01 evidence' in tracker:
+              raise SystemExit('EXP evidence heading already exists')
+          tracker_path.write_text(tracker.rstrip() + evidence + '\n', encoding='utf-8')
+          PY
+          git rm .github/workflows/exp-01-m2-record.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/execution/03-agent-board.json docs/execution/04-progress-tracker.md
+          git commit -m "docs(EXP-01): record administration checkpoint"
+          git push origin HEAD:module/exp-01-m2-evidence
