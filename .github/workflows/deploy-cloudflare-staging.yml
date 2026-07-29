@@ -106,11 +106,15 @@ jobs:
           from pathlib import Path
 
           payload = json.loads(Path('api-health.json').read_text(encoding='utf-8'))
+          index_text = Path('web-index.html').read_text(encoding='utf-8')
+          manifest_text = Path('web-manifest.json').read_text(encoding='utf-8')
+          offline_text = Path('web-offline.html').read_text(encoding='utf-8')
+
           assert payload.get('status') == 'ok', payload
           assert payload.get('environment') == 'staging', payload
-          assert 'International School Platform' in Path('web-index.html').read_text(encoding='utf-8')
-          assert 'School Platform' in Path('web-manifest.json').read_text(encoding='utf-8')
-          assert 'You are offline' in Path('web-offline.html').read_text(encoding='utf-8')
+          assert 'International School Platform' in index_text, index_text[:500]
+          assert 'School Platform' in manifest_text, manifest_text[:500]
+          assert 'You are offline' in offline_text, offline_text[:500]
           PY
 
       - name: Publish staging URLs
