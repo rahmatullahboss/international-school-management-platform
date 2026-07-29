@@ -4,11 +4,13 @@ class StaffProductionApp extends StatefulWidget {
   const StaffProductionApp({
     this.coordinator,
     this.initializeCoordinator = true,
+    this.repository,
     super.key,
   });
 
   final MobileAppCoordinator? coordinator;
   final bool initializeCoordinator;
+  final TeacherJourneyRepository? repository;
 
   @override
   State<StaffProductionApp> createState() => _StaffProductionAppState();
@@ -63,8 +65,24 @@ class _StaffProductionAppState extends State<StaffProductionApp> {
         final state = coordinator.state;
         final session = state.session;
         if (state.isReady && session != null) {
+          final repository =
+              widget.repository ??
+              (coordinator.apiClient == null
+                  ? null
+                  : TeacherMobileApi(coordinator.apiClient!));
+          if (repository == null) {
+            return MaterialApp(
+              debugShowCheckedModeBanner: false,
+              home: const MobileConfigurationFailureScreen(
+                appName: 'School Staff',
+                reasonCode: 'TEACHER_REPOSITORY_CONFIGURATION_REQUIRED',
+              ),
+              theme: SchoolTheme.light(),
+            );
+          }
           return _AuthorizedStaffApp(
             coordinator: coordinator,
+            repository: repository,
             session: session,
           );
         }
@@ -94,9 +112,14 @@ class _StaffProductionAppState extends State<StaffProductionApp> {
 }
 
 class _AuthorizedStaffApp extends StatefulWidget {
-  const _AuthorizedStaffApp({required this.coordinator, required this.session});
+  const _AuthorizedStaffApp({
+    required this.coordinator,
+    required this.repository,
+    required this.session,
+  });
 
   final MobileAppCoordinator coordinator;
+  final TeacherJourneyRepository repository;
   final SchoolSession session;
 
   @override
@@ -104,23 +127,40 @@ class _AuthorizedStaffApp extends StatefulWidget {
 }
 
 class _AuthorizedStaffAppState extends State<_AuthorizedStaffApp> {
+  late StaffJourneyController _journey;
   late GoRouter _router;
 
   @override
   void initState() {
     super.initState();
+    _journey = StaffJourneyController(
+      repository: widget.repository,
+      session: widget.session,
+    );
     _router = _createRouter();
+    unawaited(_journey.initialize());
   }
 
   @override
   void didUpdateWidget(covariant _AuthorizedStaffApp oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.session.tenantId != widget.session.tenantId ||
+    final scopeChanged =
+        oldWidget.session.tenantId != widget.session.tenantId ||
         oldWidget.session.campusId != widget.session.campusId ||
-        !setEquals(
-          oldWidget.session.capabilities,
-          widget.session.capabilities,
-        )) {
+        oldWidget.session.activePersona != widget.session.activePersona ||
+        !setEquals(oldWidget.session.capabilities, widget.session.capabilities);
+    final repositoryChanged = oldWidget.repository != widget.repository;
+    if (repositoryChanged) {
+      _journey.dispose();
+      _journey = StaffJourneyController(
+        repository: widget.repository,
+        session: widget.session,
+      );
+      unawaited(_journey.initialize());
+    } else if (scopeChanged) {
+      unawaited(_journey.updateSession(widget.session));
+    }
+    if (repositoryChanged || scopeChanged) {
       _router.dispose();
       _router = _createRouter();
     }
@@ -141,12 +181,13 @@ class _AuthorizedStaffAppState extends State<_AuthorizedStaffApp> {
             GoRoute(
               path: '/',
               builder: (context, state) =>
-                  _AuthorizedStaffHomeScreen(session: session),
+                  _TeacherTodayScreen(journey: _journey, session: session),
             ),
             if (session.can(SchoolCapability.attendanceTake))
               GoRoute(
                 path: '/attendance',
-                builder: (context, state) => const StaffAttendanceScreen(),
+                builder: (context, state) =>
+                    _TeacherRosterScreen(journey: _journey),
               ),
             if (session.can(SchoolCapability.gradesWrite))
               GoRoute(
@@ -176,6 +217,7 @@ class _AuthorizedStaffAppState extends State<_AuthorizedStaffApp> {
   @override
   void dispose() {
     _router.dispose();
+    _journey.dispose();
     super.dispose();
   }
 }

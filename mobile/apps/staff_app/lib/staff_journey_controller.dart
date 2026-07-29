@@ -12,8 +12,7 @@ final class StaffJourneyState {
     this.today,
   });
 
-  const StaffJourneyState.loading()
-    : this._(phase: StaffJourneyPhase.loading);
+  const StaffJourneyState.loading() : this._(phase: StaffJourneyPhase.loading);
 
   const StaffJourneyState.failed(String reasonCode)
     : this._(phase: StaffJourneyPhase.failed, reasonCode: reasonCode);

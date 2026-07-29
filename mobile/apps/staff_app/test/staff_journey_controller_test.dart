@@ -35,25 +35,31 @@ void main() {
     await controller.loadRoster('meeting-1');
 
     expect(controller.state.activeRoster?.meetingId, 'meeting-1');
-    expect(controller.state.activeRoster?.students.single.studentId, 'student-1');
+    expect(
+      controller.state.activeRoster?.students.single.studentId,
+      'student-1',
+    );
     expect(repository.loadedMeetingIds, ['meeting-1']);
     controller.dispose();
   });
 
-  test('rejects unassigned meeting roster requests before repository transport', () async {
-    final repository = FakeTeacherRepository(today: teacherToday());
-    final controller = StaffJourneyController(
-      repository: repository,
-      session: teacherSession(),
-    );
+  test(
+    'rejects unassigned meeting roster requests before repository transport',
+    () async {
+      final repository = FakeTeacherRepository(today: teacherToday());
+      final controller = StaffJourneyController(
+        repository: repository,
+        session: teacherSession(),
+      );
 
-    await controller.initialize();
-    await controller.loadRoster('meeting-other');
+      await controller.initialize();
+      await controller.loadRoster('meeting-other');
 
-    expect(controller.state.rosterReasonCode, 'TEACHER_MEETING_NOT_ASSIGNED');
-    expect(repository.loadedMeetingIds, isEmpty);
-    controller.dispose();
-  });
+      expect(controller.state.rosterReasonCode, 'TEACHER_MEETING_NOT_ASSIGNED');
+      expect(repository.loadedMeetingIds, isEmpty);
+      controller.dispose();
+    },
+  );
 
   test('discards a slower stale roster response', () async {
     final first = Completer<TeacherRosterReadModel>();
@@ -122,11 +128,7 @@ void main() {
 }
 
 final class FakeTeacherRepository implements TeacherJourneyRepository {
-  FakeTeacherRepository({
-    this.error,
-    this.roster,
-    required this.today,
-  });
+  FakeTeacherRepository({this.error, this.roster, required this.today});
 
   final Object? error;
   final TeacherRosterReadModel? roster;
@@ -187,9 +189,11 @@ final class SequencedTeacherRepository implements TeacherJourneyRepository {
     required String meetingId,
     required SchoolSession session,
     String correlationId = 'teacher-roster',
-  }) => rosters[meetingId] ?? Future<TeacherRosterReadModel>.error(
-    const TeacherDomainException('TEACHER_ROSTER_UNAVAILABLE'),
-  );
+  }) =>
+      rosters[meetingId] ??
+      Future<TeacherRosterReadModel>.error(
+        const TeacherDomainException('TEACHER_ROSTER_UNAVAILABLE'),
+      );
 
   @override
   Future<TeacherWriteReceipt> saveGradeDraft({

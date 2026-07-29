@@ -4,12 +4,17 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:school_api_client/school_api_client.dart';
+import 'package:school_api_client/teacher_mobile_api.dart';
 import 'package:school_app_bootstrap/school_app_bootstrap.dart';
 import 'package:school_authentication/school_authentication.dart';
 import 'package:school_design_system/school_design_system.dart';
 import 'package:school_mobile_core/mobile_core.dart';
+import 'package:school_staff_domain/school_staff_domain.dart';
 
 part 'production_app.dart';
+part 'staff_journey_controller.dart';
+part 'teacher_production_journeys.dart';
 
 void main() {
   runApp(const ProviderScope(child: StaffProductionApp()));

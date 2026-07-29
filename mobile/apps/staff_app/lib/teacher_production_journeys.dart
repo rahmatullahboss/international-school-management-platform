@@ -185,7 +185,9 @@ class _TeacherRosterScreen extends StatelessWidget {
             title: 'Attendance roster',
             child: SchoolPanel(
               child: roster.students.isEmpty
-                  ? const Text('No students are present in the authorized roster.')
+                  ? const Text(
+                      'No students are present in the authorized roster.',
+                    )
                   : Column(
                       children: [
                         for (
