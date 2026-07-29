@@ -79,21 +79,20 @@ def fix_part(app: str) -> None:
         "paths.indexOf(location).clamp(0, paths.length - 1).toInt(),",
     )
     source = source.replace(
-        "          child: child,\n          coordinator:",
-        "          coordinator:",
+        "_AuthorizedStaffShell(\n"
+        "            child: child,\n"
+        "            coordinator: widget.coordinator,\n"
+        "            location: state.uri.path,\n"
+        "            session: session,\n"
+        "            child: child,\n"
+        "          )",
+        "_AuthorizedStaffShell(\n"
+        "            coordinator: widget.coordinator,\n"
+        "            location: state.uri.path,\n"
+        "            session: session,\n"
+        "            child: child,\n"
+        "          )",
     )
-    if app == "family":
-        source = source.replace(
-            "          session: session,\n        ),",
-            "          session: session,\n          child: child,\n        ),",
-            1,
-        )
-    else:
-        source = source.replace(
-            "            session: session,\n          ),",
-            "            session: session,\n            child: child,\n          ),",
-            1,
-        )
     path.write_text(source, encoding="utf-8")
 
 
