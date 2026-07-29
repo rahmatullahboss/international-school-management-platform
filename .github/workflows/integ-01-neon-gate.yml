@@ -4,6 +4,14 @@ on:
   push:
     branches:
       - integration/international-school-platform-v1
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/integ-01-neon-gate.yml
+      - infra/database/migration-manifest.json
+      - packages/**/migrations/**
+      - scripts/integ-01-neon-gate.sh
   workflow_dispatch:
     inputs:
       operation:
@@ -75,7 +83,7 @@ jobs:
           [[ "$branch" == "$NEON_BRANCH_ID" ]]
 
       - name: Apply canonical Wave 2 migrations
-        if: github.event_name == 'push' || inputs.operation == 'apply' || inputs.operation == 'full'
+        if: github.event_name == 'push' || github.event_name == 'pull_request' || inputs.operation == 'apply' || inputs.operation == 'full'
         run: ./scripts/integ-01-neon-gate.sh apply
 
       - name: Verify canonical Wave 2 database
@@ -83,5 +91,5 @@ jobs:
         run: ./scripts/integ-01-neon-gate.sh verify
 
       - name: Replay canonical Wave 2 database
-        if: github.event_name == 'push' || inputs.operation == 'replay-database' || inputs.operation == 'full'
+        if: github.event_name == 'push' || github.event_name == 'pull_request' || inputs.operation == 'replay-database' || inputs.operation == 'full'
         run: ./scripts/integ-01-neon-gate.sh replay-database
