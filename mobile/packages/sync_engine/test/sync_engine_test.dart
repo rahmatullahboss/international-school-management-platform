@@ -42,7 +42,7 @@ void main() {
   test(
     'retry transition schedules deterministic capped exponential backoff',
     () {
-      const schedule = RetrySchedule(
+      final schedule = RetrySchedule(
         baseDelay: Duration(seconds: 5),
         maximumDelay: Duration(seconds: 20),
       );
@@ -74,7 +74,7 @@ void main() {
   test(
     'accepted, duplicate and conflict outcomes remain explicit terminals',
     () {
-      const schedule = RetrySchedule();
+      final schedule = RetrySchedule();
       final now = DateTime.parse('2026-07-30T03:30:00+06:00');
 
       final accepted = syncOperation().transition(
