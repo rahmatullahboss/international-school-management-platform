@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node", "vitest/globals"]
+  },
+  "include": [
+    "../../packages/modules/health/src/**/*.ts",
+    "../../packages/modules/behavior/src/**/*.ts",
+    "../../packages/modules/wellbeing/src/**/*.ts",
+    "../../packages/modules/safeguarding/src/**/*.ts",
+    "../../packages/modules/learning-support/src/**/*.ts",
+    "../../apps/web-admin/src/features/student-support/**/*.ts",
+    "../../apps/web-admin/src/features/student-support/**/*.tsx",
+    "./**/*.ts",
+    "./**/*.tsx"
+  ]
+}

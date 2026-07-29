@@ -482,7 +482,24 @@ No execution evidence recorded.
 
 ## CARE-01 evidence
 
-No execution evidence recorded.
+### Checkpoint 1 — security-contract
+
+Date/time: 2026-07-29T09:39:22+06:00
+Stream: CARE-01
+Milestone completed: security-contract
+Git branch: `module/student-support`
+Worktree: `.worktrees/care-01-student-support`
+Neon branch: `agent/care-01-student-support` (`br-raspy-smoke-ax0msb57`)
+Starting base: `8cc8ee1562ade672b14c1c44af935fe7e2307976`
+Approved threat-model evidence source: `1ee5ef8dd5c38234cf67acfda5b73df4602f64d4` read through Git history only; no merge/cherry-pick/import
+Changed paths: `packages/modules/safeguarding/**`, `tests/student-support/**`, `docs/modules/student-support/**`, CARE-01 tracker section
+Security evidence: all 40 `SS-TM-001` through `SS-TM-040` published; deny-by-default need-to-know, guardian release, AAL2, break-glass, immutable read evidence, exact export/connector, notification, offline, retention and incident controls implemented
+Focused checks: 14 Vitest tests PASS; CARE TypeScript no-emit typecheck PASS
+Neon checks: FND 5/5 and SIS 6/6 canonical migrations replayed on CARE branch; CARE security migration applied; no-context visible rows `0`; tenant-A visible `1`, tenant-B leak `0`; cross-tenant insert denied by RLS; access-evidence update denied by privilege
+Recovery status: FIN 4 and INT 7 canonical replay plus full fresh disposable replay deferred to final restricted-interface-verification checkpoint; no CARE dependency directly mutates those schemas
+Production mutation performed: no; Neon `main`, integration branch, ACAD-01 and OPS-01 were not modified
+Exact next milestone: health
+Dirty/uncommitted state: checkpoint evidence pending commit
 
 ## EXP-01 evidence
 
