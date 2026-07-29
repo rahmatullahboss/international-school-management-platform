@@ -13,7 +13,7 @@ on:
       - '.github/workflows/mobile-ci.yml'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   verify-mobile:
@@ -21,41 +21,21 @@ jobs:
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
           flutter-version: '3.44.7'
           cache: true
+      - name: Show Flutter toolchain
+        run: flutter --version
       - name: Resolve workspace dependencies
         working-directory: mobile
         run: flutter pub get
-      - name: Wire and format Family production journeys
-        run: |
-          python3 mobile/tool/wire_family_journeys.py
-          cd mobile
-          dart format .
-      - name: Commit canonical Family production journeys
-        if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
-        run: |
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add \
-            mobile/pubspec.lock \
-            mobile/apps/family_app/pubspec.yaml \
-            mobile/apps/family_app/lib/main.dart \
-            mobile/apps/family_app/lib/family_journey_controller.dart \
-            mobile/apps/family_app/lib/production_app.dart \
-            mobile/apps/family_app/test/family_journey_controller_test.dart \
-            mobile/packages/app_bootstrap/lib/src/coordinator.dart
-          if git diff --cached --quiet; then
-            exit 0
-          fi
-          git commit -m "feat(MOB-01): drive Family production UI from read models"
-          git push origin HEAD:module/flutter-mobile-apps
+      - name: Verify formatting
+        working-directory: mobile
+        run: dart format --output=none --set-exit-if-changed .
       - name: Verify generated files remain ignored
-        run: git diff --exit-code -- mobile ':!mobile/tool/wire_family_journeys.py'
+        run: git diff --exit-code -- mobile
       - name: Verify native application configuration
         run: python3 mobile/tool/verify_native_projects.py
       - name: Analyze family app
@@ -112,3 +92,12 @@ jobs:
       - name: Build staff Android debug APK
         working-directory: mobile/apps/staff_app
         run: flutter build apk --debug
+      - name: Upload Android debug APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: mob-01-repository-driven-family-apks
+          path: |
+            mobile/apps/family_app/build/app/outputs/flutter-apk/app-debug.apk
+            mobile/apps/staff_app/build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7
