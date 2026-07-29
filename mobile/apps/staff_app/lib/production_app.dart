@@ -136,6 +136,7 @@ class _AuthorizedStaffAppState extends State<_AuthorizedStaffApp> {
             coordinator: widget.coordinator,
             location: state.uri.path,
             session: session,
+            child: child,
           ),
           routes: [
             GoRoute(

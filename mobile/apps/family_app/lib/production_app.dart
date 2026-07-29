@@ -138,10 +138,10 @@ class _AuthorizedFamilyAppState extends State<_AuthorizedFamilyApp> {
     final routes = <RouteBase>[
       ShellRoute(
         builder: (context, state, child) => _AuthorizedFamilyShell(
-          child: child,
           coordinator: widget.coordinator,
           location: state.uri.path,
           session: session,
+          child: child,
         ),
         routes: [
           GoRoute(
