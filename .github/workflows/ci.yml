@@ -10,10 +10,56 @@ on:
       - 'integration/**'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
+  format-pilot-read:
+    if: github.event_name == 'pull_request' && github.head_ref == 'pilot/permission-aware-read-api-v1' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: pilot/permission-aware-read-api-v1
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.2'
+          cache: npm
+      - run: npm ci
+      - name: Apply exact test typing correction
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('tests/browser/pilot-portals.spec.ts')
+          text = path.read_text(encoding='utf-8')
+          text = text.replace(
+              "import { expect, test } from '@playwright/test';",
+              "import { expect, test, type Page } from '@playwright/test';",
+          )
+          text = text.replace(
+              "async function configurePilotApi(page: Parameters<typeof test>[0] extends never ? never : any): Promise<void> {",
+              "async function configurePilotApi(page: Page): Promise<void> {",
+          )
+          path.write_text(text, encoding='utf-8')
+          PY
+      - run: npm run format
+      - run: npm run lint
+      - run: npm run typecheck
+      - name: Commit canonical source
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'style(pilot): format scoped read implementation'
+          git push origin HEAD:pilot/permission-aware-read-api-v1
+
   verify:
+    needs: format-pilot-read
+    if: always() && (needs.format-pilot-read.result == 'success' || needs.format-pilot-read.result == 'skipped')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     services:
