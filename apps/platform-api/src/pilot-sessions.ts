@@ -67,11 +67,14 @@ function encodeBase64Url(value: Uint8Array | string): string {
   return btoa(binary).replace(/\+/gu, '-').replace(/\//gu, '_').replace(/=+$/gu, '');
 }
 
-function decodeBase64Url(value: string): Uint8Array {
+function decodeBase64Url(value: string): ArrayBuffer {
   const normalized = value.replace(/-/gu, '+').replace(/_/gu, '/');
   const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
   const binary = atob(padded);
-  return Uint8Array.from(binary, (character) => character.charCodeAt(0));
+  const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+  const copy = new Uint8Array(bytes.byteLength);
+  copy.set(bytes);
+  return copy.buffer;
 }
 
 function decodeJson(value: string): unknown {
@@ -183,8 +186,8 @@ export async function verifyPilotSession(
     return invalidVerificationConfiguration();
   }
 
-  const match = authorization?.match(/^Bearer\s+([^\s]+)$/u);
-  if (!match) {
+  const token = authorization?.match(/^Bearer\s+([^\s]+)$/u)?.[1];
+  if (token === undefined) {
     return {
       ok: false,
       status: 401,
@@ -193,9 +196,14 @@ export async function verifyPilotSession(
     };
   }
 
-  const token = match[1];
-  const parts = token.split('.');
-  if (parts.length !== 2 || parts[0] === '' || parts[1] === '') {
+  const [encodedClaims, encodedSignature, ...extraParts] = token.split('.');
+  if (
+    encodedClaims === undefined ||
+    encodedClaims === '' ||
+    encodedSignature === undefined ||
+    encodedSignature === '' ||
+    extraParts.length > 0
+  ) {
     return {
       ok: false,
       status: 401,
@@ -209,10 +217,10 @@ export async function verifyPilotSession(
     const verified = await crypto.subtle.verify(
       'HMAC',
       key,
-      decodeBase64Url(parts[1]),
-      new TextEncoder().encode(parts[0]),
+      decodeBase64Url(encodedSignature),
+      new TextEncoder().encode(encodedClaims),
     );
-    const claims = verified ? parseClaims(decodeJson(parts[0])) : undefined;
+    const claims = verified ? parseClaims(decodeJson(encodedClaims)) : undefined;
     const nowSeconds = Math.floor(now / 1000);
     if (
       claims === undefined ||
