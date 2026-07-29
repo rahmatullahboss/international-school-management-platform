@@ -97,7 +97,8 @@ final class SyncOperationEnvelope {
     if (_terminalStates.contains(state) && nextAttemptAt != null) {
       throw const SyncContractException('SYNC_TERMINAL_RETRY_NOT_ALLOWED');
     }
-    if (state == SyncOperationState.waitingForNetwork && nextAttemptAt == null) {
+    if (state == SyncOperationState.waitingForNetwork &&
+        nextAttemptAt == null) {
       throw const SyncContractException('SYNC_NEXT_ATTEMPT_REQUIRED');
     }
     return SyncOperationEnvelope._(
@@ -376,15 +377,10 @@ final class SyncAttemptResult {
   factory SyncAttemptResult({
     required SyncAttemptOutcome outcome,
     String? reasonCode,
-  }) => SyncAttemptResult._(
-    outcome: outcome,
-    reasonCode: _optional(reasonCode),
-  );
+  }) =>
+      SyncAttemptResult._(outcome: outcome, reasonCode: _optional(reasonCode));
 
-  const SyncAttemptResult._({
-    required this.outcome,
-    required this.reasonCode,
-  });
+  const SyncAttemptResult._({required this.outcome, required this.reasonCode});
 
   final SyncAttemptOutcome outcome;
   final String? reasonCode;
@@ -436,10 +432,7 @@ final class OfflineSyncCoordinator {
       processed.add(transitioned);
     }
     final cursor = await _store.readCursor(session);
-    return SyncBatchReceipt(
-      nextCursor: cursor?.cursor,
-      operations: processed,
-    );
+    return SyncBatchReceipt(nextCursor: cursor?.cursor, operations: processed);
   }
 }
 
