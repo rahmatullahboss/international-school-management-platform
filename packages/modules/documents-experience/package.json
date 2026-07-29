@@ -5,7 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.tsx",
-    "./shell.css": "./src/shell.css"
+    "./shell.css": "./src/shell-authority.css"
   },
   "scripts": {
     "build": "tsc -b",
