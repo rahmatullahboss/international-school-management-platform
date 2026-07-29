@@ -34,6 +34,129 @@ void main() {
     });
   });
 
+  group('MobileBootstrap', () {
+    final bootstrap = MobileBootstrap(
+      accountId: 'account-1',
+      locale: 'en-BD',
+      schools: [
+        TenantAccess(
+          campuses: [
+            CampusAccess(
+              campusId: 'campus-1',
+              campusName: 'Primary Campus',
+              personas: [
+                PersonaAccess(
+                  capabilities: const {
+                    SchoolCapability.attendanceRead,
+                    SchoolCapability.billingRead,
+                  },
+                  persona: SchoolPersona.guardian,
+                ),
+                PersonaAccess(
+                  capabilities: const {
+                    SchoolCapability.attendanceRead,
+                    SchoolCapability.gradesReadPublished,
+                  },
+                  persona: SchoolPersona.student,
+                ),
+              ],
+            ),
+          ],
+          tenantId: 'tenant-1',
+          tenantName: 'Example School',
+        ),
+      ],
+      syncCursor: 'cursor-1',
+      timeZone: 'Asia/Dhaka',
+    );
+
+    test('activates only the selected persona capabilities', () {
+      final session = bootstrap.activate(
+        campusId: 'campus-1',
+        persona: SchoolPersona.student,
+        tenantId: 'tenant-1',
+      );
+
+      expect(session.availablePersonas, {
+        SchoolPersona.guardian,
+        SchoolPersona.student,
+      });
+      expect(session.can(SchoolCapability.gradesReadPublished), isTrue);
+      expect(session.can(SchoolCapability.billingRead), isFalse);
+    });
+
+    test('rejects unavailable tenant, campus and persona scopes', () {
+      expect(
+        () => bootstrap.activate(
+          campusId: 'campus-1',
+          persona: SchoolPersona.student,
+          tenantId: 'other-tenant',
+        ),
+        throwsA(
+          isA<BootstrapContractException>().having(
+            (error) => error.code,
+            'code',
+            'BOOTSTRAP_TENANT_NOT_AVAILABLE',
+          ),
+        ),
+      );
+      expect(
+        () => bootstrap.activate(
+          campusId: 'other-campus',
+          persona: SchoolPersona.student,
+          tenantId: 'tenant-1',
+        ),
+        throwsA(
+          isA<BootstrapContractException>().having(
+            (error) => error.code,
+            'code',
+            'BOOTSTRAP_CAMPUS_NOT_AVAILABLE',
+          ),
+        ),
+      );
+      expect(
+        () => bootstrap.activate(
+          campusId: 'campus-1',
+          persona: SchoolPersona.teacher,
+          tenantId: 'tenant-1',
+        ),
+        throwsA(
+          isA<BootstrapContractException>().having(
+            (error) => error.code,
+            'code',
+            'BOOTSTRAP_PERSONA_NOT_AVAILABLE',
+          ),
+        ),
+      );
+    });
+
+    test('rejects duplicate persona declarations', () {
+      expect(
+        () => CampusAccess(
+          campusId: 'campus-1',
+          campusName: 'Primary Campus',
+          personas: [
+            PersonaAccess(
+              capabilities: const {SchoolCapability.attendanceRead},
+              persona: SchoolPersona.guardian,
+            ),
+            PersonaAccess(
+              capabilities: const {SchoolCapability.billingRead},
+              persona: SchoolPersona.guardian,
+            ),
+          ],
+        ),
+        throwsA(
+          isA<BootstrapContractException>().having(
+            (error) => error.code,
+            'code',
+            'BOOTSTRAP_PERSONA_DUPLICATE',
+          ),
+        ),
+      );
+    });
+  });
+
   test(
     'pending operation preserves idempotency identity across status changes',
     () {
