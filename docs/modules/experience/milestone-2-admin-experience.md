@@ -32,6 +32,6 @@ This milestone turns the administration persona shell into a governed cross-modu
 - Bulk-operation readiness that preserves blockers and never silently skips invalid rows.
 - Responsive, RTL-safe, keyboard-focusable tables and forms using the root semantic palette.
 
-## Verification intent
+## Verification
 
-Focused tests must prove deterministic exception ordering, capability filtering, restricted-search masking, metric traceability, AAL2 approval labelling, blocked bulk-operation behavior and recoverable errors. Full format, lint, architecture boundaries, typecheck, unit/integration tests, build, browser suites and execution-artifact validation remain required before Milestone 2 is marked complete.
+Checkpoint commit `85b5c81d9bb76ae0e811f2db9ebdfaa901843781` passed focused ESLint, architecture boundaries, repository typecheck, the dedicated admin-command-centre Vitest suite and execution-artifact validation. The formatter also removed a decorative gradient and preserved a flat semantic blocked state. Full repository CI, build and browser suites remain required before Milestone 2 is marked complete.
