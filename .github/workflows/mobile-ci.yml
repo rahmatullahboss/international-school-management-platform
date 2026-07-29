@@ -31,8 +31,56 @@ jobs:
       - name: Resolve workspace dependencies
         working-directory: mobile
         run: flutter pub get
-      - name: Format teacher journey contracts
+      - name: Align and format teacher journey contracts
         run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('mobile/packages/staff_domain/lib/school_staff_domain.dart')
+          source = path.read_text(encoding='utf-8')
+          replacements = {
+              """  Future<TeacherTodayReadModel> loadToday(
+              SchoolSession session, {
+              String? correlationId,
+            });""": """  Future<TeacherTodayReadModel> loadToday(
+              SchoolSession session, {
+              String correlationId = 'teacher-today',
+            });""",
+              """  Future<TeacherRosterReadModel> loadRoster({
+              required String meetingId,
+              required SchoolSession session,
+              String? correlationId,
+            });""": """  Future<TeacherRosterReadModel> loadRoster({
+              required String meetingId,
+              required SchoolSession session,
+              String correlationId = 'teacher-roster',
+            });""",
+              """  Future<TeacherWriteReceipt> submitAttendance({
+              required TeacherAttendanceBatchCommand command,
+              required SchoolSession session,
+              String? correlationId,
+            });""": """  Future<TeacherWriteReceipt> submitAttendance({
+              required TeacherAttendanceBatchCommand command,
+              required SchoolSession session,
+              String correlationId = 'teacher-attendance-batch',
+            });""",
+              """  Future<TeacherWriteReceipt> saveGradeDraft({
+              required TeacherGradeDraftCommand command,
+              required SchoolSession session,
+              String? correlationId,
+            });""": """  Future<TeacherWriteReceipt> saveGradeDraft({
+              required TeacherGradeDraftCommand command,
+              required SchoolSession session,
+              String correlationId = 'teacher-grade-draft',
+            });""",
+          }
+          for old, new in replacements.items():
+              if old in source:
+                  source = source.replace(old, new, 1)
+              elif new not in source:
+                  raise SystemExit('Unexpected teacher repository declaration shape')
+          path.write_text(source, encoding='utf-8')
+          PY
           dart format \
             mobile/packages/staff_domain/lib/school_staff_domain.dart \
             mobile/packages/staff_domain/test/staff_domain_test.dart \
@@ -53,7 +101,7 @@ jobs:
           if git diff --cached --quiet; then
             exit 0
           fi
-          git commit -m "feat(MOB-01): canonicalize teacher journey contracts"
+          git commit -m "feat(MOB-01): align teacher repository contracts"
           git push origin HEAD:module/flutter-mobile-apps
       - name: Verify generated files remain ignored
         run: git diff --exit-code -- mobile
