@@ -47,7 +47,8 @@ jobs:
             mobile/apps/family_app/lib/main.dart \
             mobile/apps/family_app/lib/family_journey_controller.dart \
             mobile/apps/family_app/lib/production_app.dart \
-            mobile/apps/family_app/test/family_journey_controller_test.dart
+            mobile/apps/family_app/test/family_journey_controller_test.dart \
+            mobile/packages/app_bootstrap/lib/src/coordinator.dart
           if git diff --cached --quiet; then
             exit 0
           fi
