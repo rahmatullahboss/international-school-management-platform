@@ -130,9 +130,9 @@ describe('EXP-01 admin command centre', () => {
       'bank-reconciliation',
       'attendance-late',
     ]);
-    expect(filterAdminExperienceItems(exceptions, ['finance.read']).map((item) => item.id)).toEqual([
-      'bank-reconciliation',
-    ]);
+    expect(filterAdminExperienceItems(exceptions, ['finance.read']).map((item) => item.id)).toEqual(
+      ['bank-reconciliation'],
+    );
   });
 
   it('renders defined metrics, scoped exceptions, governed search and approval assurance', () => {

@@ -300,7 +300,7 @@ tr:is([data-severity='blocked'], [data-severity='critical']) .admin-centre__stat
 }
 
 .admin-centre__bulk > li[data-ready='false'] {
-  background: linear-gradient(to inline-end, var(--admin-error-surface), transparent 45%);
+  background: var(--admin-error-surface);
 }
 
 .admin-centre__bulk ul {

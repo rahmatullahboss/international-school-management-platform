@@ -18,12 +18,7 @@ export interface AdminMetric {
 export interface AdminException {
   readonly id: string;
   readonly domain:
-    | 'people'
-    | 'academics'
-    | 'finance'
-    | 'operations'
-    | 'student-support'
-    | 'integrations';
+    'people' | 'academics' | 'finance' | 'operations' | 'student-support' | 'integrations';
   readonly severity: Exclude<AdminAttention, 'stable'>;
   readonly title: string;
   readonly detail: string;
@@ -249,7 +244,12 @@ export function AdminCommandCentre(props: AdminCommandCentreProps): ReactElement
             detail="No authorised queue currently needs intervention."
           />
         ) : (
-          <div className="admin-centre__table-frame" role="region" aria-label="School exceptions" tabIndex={0}>
+          <div
+            className="admin-centre__table-frame"
+            role="region"
+            aria-label="School exceptions"
+            tabIndex={0}
+          >
             <table>
               <caption>Highest-risk authorised exceptions first</caption>
               <thead>
@@ -264,11 +264,26 @@ export function AdminCommandCentre(props: AdminCommandCentreProps): ReactElement
               <tbody>
                 {visibleExceptions.map((item) => (
                   <tr key={item.id} data-severity={item.severity}>
-                    <td><span className="admin-centre__status">{item.severity}</span></td>
-                    <td><strong>{item.title}</strong><span>{item.domain} · {item.detail}</span></td>
+                    <td>
+                      <span className="admin-centre__status">{item.severity}</span>
+                    </td>
+                    <td>
+                      <strong>{item.title}</strong>
+                      <span>
+                        {item.domain} · {item.detail}
+                      </span>
+                    </td>
                     <td>{item.owner ?? 'Unassigned'}</td>
-                    <td>{item.dueAt === undefined ? 'No deadline' : <time dateTime={item.dueAt}>{item.dueAt}</time>}</td>
-                    <td><a href={item.href}>Open record</a></td>
+                    <td>
+                      {item.dueAt === undefined ? (
+                        'No deadline'
+                      ) : (
+                        <time dateTime={item.dueAt}>{item.dueAt}</time>
+                      )}
+                    </td>
+                    <td>
+                      <a href={item.href}>Open record</a>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -296,7 +311,8 @@ export function AdminCommandCentre(props: AdminCommandCentreProps): ReactElement
             </div>
             <small>Restricted record existence is not disclosed through results or counts.</small>
           </form>
-          {props.searchQuery === undefined || props.searchQuery.trim() === '' ? null : visibleSearchResults.length === 0 ? (
+          {props.searchQuery === undefined ||
+          props.searchQuery.trim() === '' ? null : visibleSearchResults.length === 0 ? (
             <EmptyState
               title="No authorised results"
               detail="No matching record is available in your current scope."
@@ -306,7 +322,9 @@ export function AdminCommandCentre(props: AdminCommandCentreProps): ReactElement
               {visibleSearchResults.map((result) => (
                 <li key={result.id}>
                   <a href={result.href}>{result.title}</a>
-                  <span>{result.category} · {result.scopeLabel}</span>
+                  <span>
+                    {result.category} · {result.scopeLabel}
+                  </span>
                   <p>{result.description}</p>
                 </li>
               ))}
@@ -320,14 +338,19 @@ export function AdminCommandCentre(props: AdminCommandCentreProps): ReactElement
             <p>Assurance requirements are visible before an administrator opens the task.</p>
           </header>
           {visibleApprovals.length === 0 ? (
-            <EmptyState title="No pending approvals" detail="Your authorised approval queue is clear." />
+            <EmptyState
+              title="No pending approvals"
+              detail="Your authorised approval queue is clear."
+            />
           ) : (
             <ol className="admin-centre__approvals">
               {visibleApprovals.map((approval) => (
                 <li key={approval.id}>
                   <div>
                     <strong>{approval.subject}</strong>
-                    <span>{approval.kind} · requested by {approval.requestedBy}</span>
+                    <span>
+                      {approval.kind} · requested by {approval.requestedBy}
+                    </span>
                     <time dateTime={approval.requestedAt}>{approval.requestedAt}</time>
                   </div>
                   <a href={approval.href} data-assurance={approval.assurance}>
@@ -359,10 +382,14 @@ export function AdminCommandCentre(props: AdminCommandCentreProps): ReactElement
                   <div>
                     <strong>{operation.label}</strong>
                     <span>{operation.description}</span>
-                    <small>{new Intl.NumberFormat(props.locale).format(operation.selectedCount)} selected</small>
+                    <small>
+                      {new Intl.NumberFormat(props.locale).format(operation.selectedCount)} selected
+                    </small>
                     {blockedReasons.length === 0 ? null : (
                       <ul aria-label={`${operation.label} blockers`}>
-                        {blockedReasons.map((reason) => <li key={reason}>{reason}</li>)}
+                        {blockedReasons.map((reason) => (
+                          <li key={reason}>{reason}</li>
+                        ))}
                       </ul>
                     )}
                   </div>
