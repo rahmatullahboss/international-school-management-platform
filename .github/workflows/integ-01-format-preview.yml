@@ -1,0 +1,32 @@
+name: INTEG-01 Format Preview
+
+on:
+  push:
+    branches:
+      - integration/international-school-platform-v1
+    paths:
+      - .github/workflows/integ-01-format-preview.yml
+      - tests/integration/wave1-migration-manifest.test.ts
+      - tests/integration/wave2-cross-module-journeys.test.ts
+
+permissions:
+  contents: read
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+          cache: npm
+      - run: npm ci
+      - name: Render canonical Prettier diff
+        run: |
+          npx prettier --write \
+            tests/integration/wave1-migration-manifest.test.ts \
+            tests/integration/wave2-cross-module-journeys.test.ts
+          git diff -- \
+            tests/integration/wave1-migration-manifest.test.ts \
+            tests/integration/wave2-cross-module-journeys.test.ts
