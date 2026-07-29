@@ -4,7 +4,7 @@
 
 ## Platform
 
-web
+web and planned native mobile applications
 
 ## Users
 
@@ -22,6 +22,8 @@ The International School Management Platform is a governed K–12 school operati
 
 Success means each principal persona can complete the full daily job through permission-aware interfaces, every operational or financial total can be traced to its definition and source, historical records remain stable, and the platform remains usable across campuses, countries, languages, devices and weak-network conditions.
 
+The governed native mobile portfolio uses one Flutter workspace to produce a School Family application for guardian/student personas and a School Staff application for teacher-first workflows. Administration, finance, admissions, HR, operations and broad reporting remain web/PWA first unless a reviewed use case approves native delivery.
+
 ## Positioning
 
 The product combines relationship-aware student and guardian access, finance-grade immutable accounting, international country/curriculum configuration, open integration and migration tooling, and stricter controls for sensitive student-support records. Reporting is evidence-led: metrics must define their meaning, scope, timestamp and drill-down path rather than appearing as disconnected dashboard numbers.
@@ -32,6 +34,7 @@ The product combines relationship-aware student and guardian access, finance-gra
 - Attendance entry is high-frequency and time-concentrated; offline capture and duplicate-safe replay are required.
 - Teachers move between classes and need touch-friendly, small-screen workflows.
 - Guardians and students may have intermittent connectivity, limited data plans and shared or low-cost devices.
+- Native mobile runs under operating-system lifecycle, notification, background-work, secure-storage and app-store constraints; critical correctness cannot depend on uninterrupted background execution.
 - Names, identifiers, addresses, calendars, curricula, currencies, grading systems, documents and writing direction vary by country.
 - Health, wellbeing, safeguarding and learning-support records require purpose-bound authorization, masked denials, read evidence and controlled disclosure.
 - Financial and academic history uses amendment, reversal, versioning and publication controls rather than destructive edits.
@@ -39,17 +42,21 @@ The product combines relationship-aware student and guardian access, finance-gra
 ## Capabilities and Constraints
 
 - Cloudflare Workers-backed TypeScript web applications with responsive PWA behavior and Neon PostgreSQL.
+- Flutter Android/iOS applications consume versioned, permission-aware application APIs and generated contract clients; they never connect directly to Neon PostgreSQL or reproduce authoritative domain rules.
+- One governed Flutter workspace produces separate School Family and School Staff binaries so shared architecture is reused while family/staff security, navigation, rollout and device policies remain distinct.
+- Mobile offline behavior is feature-specific and allowlisted. Encrypted local data is a cache/draft/command queue; the server remains authoritative and every queued command has documented idempotency/conflict behavior.
 - Multi-tenant and multi-campus operation with forced row-level security, deny-by-default authorization, scoped permissions and assurance step-up.
 - Modular domains communicate through versioned application contracts, commands, events and bounded read models; interfaces never read another module’s private tables directly.
 - Country packs, localization, RTL, long-content, CJK, date/number/currency formatting and multilingual templates are first-class constraints.
 - Every relevant workflow accounts for first-run, empty, loading, slow/offline, validation, server error, unauthorized, masked, read-only, partial-success, reconciliation, duplicate-submission and concurrent-update states.
-- Production deployment, destructive production mutation and use of real student data in development require separate authorization.
+- Production deployment, destructive production mutation, mobile store publication/signing mutation and use of real student data in development require separate authorization.
 - A final public brand identity, logo system, custom typeface and marketing visual language are not yet approved. Product UI uses the documented incumbent operational design baseline until those decisions are explicitly reviewed.
 
 ## Evidence on Hand
 
 - Approved product-design facts: `docs/design/01-product-design-input.md`.
 - Architecture, ownership and execution contracts: `docs/execution/`.
+- Native mobile architecture, security, sync, testing and execution baseline: `docs/mobile/` and `docs/adr/ADR-007-flutter-mobile-product-strategy.md`.
 - Implemented and verified Wave 1 and Wave 2 domain modules, migrations, application services, feature interfaces and browser evidence.
 - No approved customer testimonials, market benchmarks, regulatory certification claims, production screenshots or public brand assets are present; future work must not fabricate them.
 
@@ -60,7 +67,8 @@ The product combines relationship-aware student and guardian access, finance-gra
 3. **Protect context and history.** Tenant, relationship, permission, purpose and assurance rules are visible in behavior; corrections preserve evidence rather than silently replacing records.
 4. **Design for the real school day.** Keyboard, touch, mobile, dense records, morning bursts, low bandwidth and recoverable offline work are normal conditions.
 5. **International by configuration.** Localization and country variation extend through governed packs and contracts, not core-domain forks.
+6. **One authority, many clients.** Web and native applications share versioned platform contracts; no client becomes a second business-rule or data authority.
 
 ## Accessibility & Inclusion
 
-WCAG 2.2 AA is the minimum web target. Critical workflows support keyboard and screen-reader use, visible focus, touch-sized targets, 200% zoom/text scaling, reduced-motion alternatives, long translations, RTL and non-colour status cues. Child-facing experiences are age-appropriate, direct and privacy-preserving.
+WCAG 2.2 AA is the minimum web target. Critical workflows support keyboard and screen-reader use, visible focus, touch-sized targets, 200% zoom/text scaling, reduced-motion alternatives, long translations, RTL and non-colour status cues. Native applications apply the same functional intent through Android/iOS accessibility APIs, TalkBack/VoiceOver, adaptive layouts, large-text reflow and platform input conventions. Child-facing experiences are age-appropriate, direct and privacy-preserving.
