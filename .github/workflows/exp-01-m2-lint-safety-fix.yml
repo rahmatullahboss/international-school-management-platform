@@ -1,0 +1,135 @@
+name: EXP-01 Milestone 2 Lint and Safety Fix
+
+on:
+  push:
+    branches:
+      - module/exp-01-m2-ci-fix
+    paths:
+      - .github/workflows/exp-01-m2-lint-safety-fix.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: exp-01-m2-lint-safety-fix
+  cancel-in-progress: true
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: module/exp-01-m2-ci-fix
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.2
+          cache: npm
+      - run: npm ci
+      - name: Apply typed sorting and strict bulk-selection safety
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          source_path = Path('apps/web-admin/src/features/experience/AdminOperationsHome.tsx')
+          source = source_path.read_text(encoding='utf-8')
+          old_sort = """  return exceptions
+    .filter((item) => hasCapability(capabilities, item.capability))
+    .toSorted((left, right) => {
+      const severityDifference = severityOrder[left.severity] - severityOrder[right.severity];
+      if (severityDifference !== 0) return severityDifference;
+      if (left.dueAt === undefined) return 1;
+      if (right.dueAt === undefined) return -1;
+      return left.dueAt.localeCompare(right.dueAt);
+    });
+"""
+          new_sort = """  const permitted = exceptions.filter((item) =>
+    hasCapability(capabilities, item.capability),
+  );
+  return [...permitted].sort((left, right) => {
+    const severityDifference = severityOrder[left.severity] - severityOrder[right.severity];
+    if (severityDifference !== 0) return severityDifference;
+    if (left.dueAt === undefined) return 1;
+    if (right.dueAt === undefined) return -1;
+    return left.dueAt.localeCompare(right.dueAt);
+  });
+"""
+          if source.count(old_sort) != 1:
+              raise SystemExit('selectAdminExceptions target missing or ambiguous')
+          source = source.replace(old_sort, new_sort)
+
+          old_bulk = """  if (actions === undefined || selectedIds === undefined || selectedIds.length === 0) return [];
+  const selected = exceptions.filter((item) => selectedIds.includes(item.id));
+  const selectedGroups = new Set(selected.map((item) => item.bulkGroup).filter(Boolean));
+  return actions.filter(
+    (action) =>
+      selectedGroups.size === 1 &&
+      selectedGroups.has(action.group) &&
+      capabilities.includes(action.capability),
+  );
+"""
+          new_bulk = """  if (actions === undefined || selectedIds === undefined || selectedIds.length === 0) return [];
+  const selected = exceptions.filter((item) => selectedIds.includes(item.id));
+  if (selected.length !== selectedIds.length) return [];
+
+  return actions.filter(
+    (action) =>
+      capabilities.includes(action.capability) &&
+      selected.every(
+        (item) =>
+          item.bulkGroup === action.group && item.bulkCapability === action.capability,
+      ),
+  );
+"""
+          if source.count(old_bulk) != 1:
+              raise SystemExit('selectAdminBulkActions target missing or ambiguous')
+          source_path.write_text(source.replace(old_bulk, new_bulk), encoding='utf-8')
+
+          test_path = Path('tests/experience/admin-workflows.test.tsx')
+          tests = test_path.read_text(encoding='utf-8')
+          old_test = """    expect(
+      selectAdminBulkActions(actions, exceptions, ['care-1'], ['attendance.bulk-remind']),
+    ).toEqual([]);
+  });
+"""
+          new_test = """    expect(
+      selectAdminBulkActions(actions, exceptions, ['care-1'], ['attendance.bulk-remind']),
+    ).toEqual([]);
+    expect(
+      selectAdminBulkActions(
+        actions,
+        exceptions,
+        ['attendance-1', 'care-1'],
+        ['attendance.bulk-remind'],
+      ),
+    ).toEqual([]);
+    expect(
+      selectAdminBulkActions(actions, exceptions, ['attendance-1', 'missing-id'], [
+        'attendance.bulk-remind',
+      ]),
+    ).toEqual([]);
+  });
+"""
+          if tests.count(old_test) != 1:
+              raise SystemExit('bulk safety test target missing or ambiguous')
+          test_path.write_text(tests.replace(old_test, new_test), encoding='utf-8')
+          PY
+          npx prettier --write \
+            apps/web-admin/src/features/experience/AdminOperationsHome.tsx \
+            tests/experience/admin-workflows.test.tsx
+      - name: Run focused verification
+        run: |
+          npx eslint apps/web-admin/src/features/experience/AdminOperationsHome.tsx tests/experience/admin-workflows.test.tsx
+          npx vitest run tests/experience/admin-workflows.test.tsx
+          npm run typecheck
+      - name: Commit fix and remove one-shot workflow
+        run: |
+          git rm .github/workflows/exp-01-m2-lint-safety-fix.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            apps/web-admin/src/features/experience/AdminOperationsHome.tsx \
+            tests/experience/admin-workflows.test.tsx
+          git commit -m "fix(EXP-01): harden admin sorting and bulk selection"
+          git push origin HEAD:module/exp-01-m2-ci-fix
