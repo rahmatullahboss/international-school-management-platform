@@ -12,4 +12,5 @@ workspace:
   - packages/app_bootstrap
   - packages/authentication
   - packages/design_system
+  - packages/family_domain
   - packages/mobile_core
