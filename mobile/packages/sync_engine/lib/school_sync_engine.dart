@@ -45,28 +45,30 @@ final class EncryptedSyncPayload {
       throw const SyncContractException('SYNC_CIPHERTEXT_REQUIRED');
     }
     return EncryptedSyncPayload._(
-      ciphertext: Uint8List.unmodifiable(ciphertext),
+      ciphertext: Uint8List.fromList(ciphertext),
       contentType: _required(contentType, 'contentType'),
       keyAlias: _required(keyAlias, 'keyAlias'),
       schemaVersion: _required(schemaVersion, 'schemaVersion'),
     );
   }
 
-  const EncryptedSyncPayload._({
-    required this.ciphertext,
+  EncryptedSyncPayload._({
+    required Uint8List ciphertext,
     required this.contentType,
     required this.keyAlias,
     required this.schemaVersion,
-  });
+  }) : _ciphertext = ciphertext;
 
-  final Uint8List ciphertext;
+  final Uint8List _ciphertext;
   final String contentType;
   final String keyAlias;
   final String schemaVersion;
 
+  Uint8List get ciphertext => Uint8List.fromList(_ciphertext);
+
   @override
   String toString() =>
-      'EncryptedSyncPayload(contentType: $contentType, schemaVersion: $schemaVersion, bytes: ${ciphertext.length})';
+      'EncryptedSyncPayload(contentType: $contentType, schemaVersion: $schemaVersion, bytes: ${_ciphertext.length})';
 }
 
 final class SyncOperationEnvelope {
@@ -257,11 +259,19 @@ final class SyncOperationEnvelope {
 }
 
 final class RetrySchedule {
-  const RetrySchedule({
-    this.baseDelay = const Duration(seconds: 5),
-    this.maximumDelay = const Duration(minutes: 15),
-  }) : assert(!baseDelay.isNegative),
-       assert(!maximumDelay.isNegative);
+  factory RetrySchedule({
+    Duration baseDelay = const Duration(seconds: 5),
+    Duration maximumDelay = const Duration(minutes: 15),
+  }) {
+    if (baseDelay.isNegative ||
+        maximumDelay.isNegative ||
+        maximumDelay < baseDelay) {
+      throw const SyncContractException('SYNC_RETRY_SCHEDULE_INVALID');
+    }
+    return RetrySchedule._(baseDelay: baseDelay, maximumDelay: maximumDelay);
+  }
+
+  const RetrySchedule._({required this.baseDelay, required this.maximumDelay});
 
   final Duration baseDelay;
   final Duration maximumDelay;

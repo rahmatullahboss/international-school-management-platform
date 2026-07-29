@@ -16,7 +16,9 @@ void main() {
     source[0] = 9;
 
     expect(payload.ciphertext, <int>[1, 2, 3]);
-    expect(() => payload.ciphertext[0] = 8, throwsUnsupportedError);
+    final exposed = payload.ciphertext;
+    exposed[0] = 8;
+    expect(payload.ciphertext, <int>[1, 2, 3]);
     expect(payload.toString(), isNot(contains('[1, 2, 3]')));
     expect(payload.toString(), contains('bytes: 3'));
   });
@@ -149,7 +151,7 @@ void main() {
       SyncAttemptResult(outcome: SyncAttemptOutcome.accepted),
     );
     final coordinator = OfflineSyncCoordinator(
-      retrySchedule: const RetrySchedule(),
+      retrySchedule: RetrySchedule(),
       store: store,
       transport: transport,
     );
@@ -162,7 +164,7 @@ void main() {
     expect(receipt.operations.single.state, SyncOperationState.synced);
     expect(
       store.history.map((item) => item.state),
-      containsInOrder(<Object?>[
+      orderedEquals(<Object?>[
         SyncOperationState.inFlight,
         SyncOperationState.synced,
       ]),
@@ -176,7 +178,7 @@ void main() {
       final original = syncOperation();
       final store = MemoryEncryptedSyncStore(<SyncOperationEnvelope>[original]);
       final coordinator = OfflineSyncCoordinator(
-        retrySchedule: const RetrySchedule(baseDelay: Duration(seconds: 5)),
+        retrySchedule: RetrySchedule(baseDelay: Duration(seconds: 5)),
         store: store,
         transport: ThrowingSyncTransport(),
       );
