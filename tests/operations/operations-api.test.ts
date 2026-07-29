@@ -59,10 +59,9 @@ describe('OPS HTTP API', () => {
       headers: authHeaders,
     });
     expect(trip.status).toBe(400);
-    const valid = await app.request(
-      '/operations/reports/trip?asOf=2026-07-29&resourceId=trip-1',
-      { headers: authHeaders },
-    );
+    const valid = await app.request('/operations/reports/trip?asOf=2026-07-29&resourceId=trip-1', {
+      headers: authHeaders,
+    });
     expect(valid.status).toBe(200);
     expect(await valid.json()).toMatchObject({
       data: { report: 'trip', resourceId: 'trip-1' },
@@ -116,9 +115,12 @@ describe('OPS HTTP API', () => {
     deps.getSummary = vi.fn(() => {
       throw new Error('OPS_PERMISSION_DENIED:operations.hr.report.read');
     });
-    const response = await createOperationsApi(deps).request('/operations/summary?asOf=2026-07-29', {
-      headers: authHeaders,
-    });
+    const response = await createOperationsApi(deps).request(
+      '/operations/summary?asOf=2026-07-29',
+      {
+        headers: authHeaders,
+      },
+    );
     expect(response.status).toBe(403);
     const body = await response.json();
     expect(body).toMatchObject({ error: { code: 'OPS_PERMISSION_DENIED' } });
