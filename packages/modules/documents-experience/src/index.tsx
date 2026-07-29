@@ -89,9 +89,7 @@ export function filterExperienceNavigation(
   capabilities: readonly string[],
 ): ExperienceNavigationItem[] {
   const granted = new Set(capabilities);
-  return navigation.filter(
-    (item) => item.capability === undefined || granted.has(item.capability),
-  );
+  return navigation.filter((item) => item.capability === undefined || granted.has(item.capability));
 }
 
 export function filterExperienceActions(
@@ -123,7 +121,8 @@ function StatusLine(props: { connectivity: ExperienceConnectivity }): ReactEleme
           Last synced {props.connectivity.lastSyncedAt}
         </time>
       )}
-      {props.connectivity.retryHref === undefined || props.connectivity.state === 'online' ? null : (
+      {props.connectivity.retryHref === undefined ||
+      props.connectivity.state === 'online' ? null : (
         <a href={props.connectivity.retryHref}>Retry sync</a>
       )}
     </div>
@@ -136,7 +135,10 @@ function LoadingSurface(): ReactElement {
       <strong>Preparing your workspace</strong>
       <span>Loading current permissions, tasks and school context.</span>
       <div className="experience-loading__line" aria-hidden="true" />
-      <div className="experience-loading__line experience-loading__line--short" aria-hidden="true" />
+      <div
+        className="experience-loading__line experience-loading__line--short"
+        aria-hidden="true"
+      />
     </div>
   );
 }
@@ -174,7 +176,10 @@ export function ExperienceShell(props: ExperienceShellProps): ReactElement {
           <ul>
             {navigation.map((item) => (
               <li key={item.id}>
-                <a href={item.href} aria-current={item.href === props.activeHref ? 'page' : undefined}>
+                <a
+                  href={item.href}
+                  aria-current={item.href === props.activeHref ? 'page' : undefined}
+                >
                   <span>
                     <strong>{item.label}</strong>
                     <small>{item.description}</small>
@@ -224,7 +229,9 @@ export function ExperienceShell(props: ExperienceShellProps): ReactElement {
         {props.connectivity.state === 'offline' ? (
           <div className="experience-notice" role="status">
             <strong>You are working offline.</strong>
-            <span>Approved changes will stay on this device and sync when the connection returns.</span>
+            <span>
+              Approved changes will stay on this device and sync when the connection returns.
+            </span>
           </div>
         ) : null}
 
@@ -238,7 +245,11 @@ export function ExperienceShell(props: ExperienceShellProps): ReactElement {
         <main id="experience-main" className="experience-main" tabIndex={-1}>
           {state === 'loading' ? <LoadingSurface /> : null}
           {state === 'error' ? (
-            <section className="experience-error" role="alert" aria-labelledby="experience-error-title">
+            <section
+              className="experience-error"
+              role="alert"
+              aria-labelledby="experience-error-title"
+            >
               <h2 id="experience-error-title">{props.errorTitle ?? 'Workspace unavailable'}</h2>
               <p>
                 {props.errorDetail ??
