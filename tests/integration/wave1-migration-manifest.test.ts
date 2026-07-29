@@ -6,14 +6,8 @@ import { describe, expect, it } from 'vitest';
 interface ManifestMigration {
   readonly order: number;
   readonly id: string;
-  readonly stream:
-    | 'FND-01'
-    | 'SIS-01'
-    | 'FIN-01'
-    | 'INT-01'
-    | 'ACAD-01'
-    | 'OPS-01'
-    | 'CARE-01';
+  // prettier-ignore
+  readonly stream: 'FND-01' | 'SIS-01' | 'FIN-01' | 'INT-01' | 'ACAD-01' | 'OPS-01' | 'CARE-01';
   readonly path: string;
 }
 

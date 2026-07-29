@@ -31,10 +31,12 @@
     "test:browser:sis": "tsc -p tests/sis/tsconfig.ui-build.json && playwright test -c tests/sis/playwright.config.mjs",
     "test:browser:finance": "playwright test -c tests/finance/playwright.config.ts",
     "test:browser:integrations": "npm run test:browser --workspace=@school/integrations",
-    "test:browser": "npm run test:browser:platform && npm run test:browser:sis && npm run test:browser:finance && npm run test:browser:integrations",
+    "test:browser:student-support": "playwright test -c tests/student-support/playwright.config.ts",
+    "test:browser": "npm run test:browser:platform && npm run test:browser:sis && npm run test:browser:finance && npm run test:browser:integrations && npm run test:browser:student-support",
     "test:coverage": "vitest run --coverage --coverage.reporter=text",
     "typecheck": "tsc -b",
     "validate:artifacts": "python3 scripts/validate_execution_artifacts.py",
+    "verify:migrations": "bash tests/integration/verify-wave2-migrations.sh",
     "verify": "npm run format:check && npm run lint && npm run check:boundaries && npm run typecheck && npm run test && npm run build && npm run validate:artifacts"
   },
   "devDependencies": {
