@@ -17,7 +17,7 @@ When documents conflict, use this order:
 2. `docs/execution/05-module-ownership-and-integration-contracts.md`.
 3. Module-owned API/event/read-model contracts.
 4. `DESIGN.md` and repository design governance.
-5. This mobile documentation pack.
+5. This mobile documentation pack and approved mobile threat model.
 6. Implementation notes and generated code.
 
 A mobile agent must stop and raise a contract-change request rather than inventing a conflicting rule.
@@ -29,13 +29,14 @@ A mobile agent must stop and raise a contract-change request rather than inventi
 3. [Flutter system architecture](02-flutter-system-architecture.md)
 4. [API, contracts and backend coordination](03-api-contracts-and-backend-coordination.md)
 5. [Identity, device and mobile security](04-identity-device-and-security.md)
-6. [Offline synchronization and local data](05-offline-sync-and-local-data.md)
-7. [Design system, accessibility and localization](06-design-accessibility-and-localization.md)
-8. [Testing, CI, observability and release](07-testing-ci-observability-and-release.md)
-9. [Delivery sequence and parallel execution](08-delivery-and-parallel-execution.md)
-10. [MOB-01 whole-module workpack](MOB-01-WORKPACK.md)
-11. [Machine-readable mobile program board](mobile-program-board.json)
-12. [Architecture decisions and open questions](09-decision-register.md)
+6. [Native mobile threat model](../security/native-mobile-threat-model.md)
+7. [Offline synchronization and local data](05-offline-sync-and-local-data.md)
+8. [Design system, accessibility and localization](06-design-accessibility-and-localization.md)
+9. [Testing, CI, observability and release](07-testing-ci-observability-and-release.md)
+10. [Delivery sequence and parallel execution](08-delivery-and-parallel-execution.md)
+11. [MOB-01 whole-module workpack](MOB-01-WORKPACK.md)
+12. [Machine-readable mobile program board](mobile-program-board.json)
+13. [Architecture decisions and open questions](09-decision-register.md)
 
 ## Application portfolio
 
