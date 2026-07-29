@@ -14,3 +14,4 @@ workspace:
   - packages/design_system
   - packages/family_domain
   - packages/mobile_core
+  - packages/staff_domain
