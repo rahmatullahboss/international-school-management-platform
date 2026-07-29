@@ -59,7 +59,8 @@ describe('CARE-01 security contract', () => {
 
   test('fails closed for missing context, tenant mismatch, broad roles and machine credentials', () => {
     const security = new CareSecurityService({ now: () => now });
-    const { tenantId: _tenantId, ...withoutTenant } = context;
+    const withoutTenant = { ...context };
+    delete withoutTenant.tenantId;
     expect(security.authorize(accessRequest({ context: withoutTenant })).reason).toBe(
       'tenant-context-required',
     );

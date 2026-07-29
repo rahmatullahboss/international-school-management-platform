@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
+import type { WellbeingDomainError } from '../../packages/modules/wellbeing/src/index.js';
 import {
-  WellbeingDomainError,
   WellbeingService,
   buildWellbeingOperationalReport,
   type WellbeingAccessScope,

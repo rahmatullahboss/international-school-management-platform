@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
+import type { HealthDomainError } from '../../packages/modules/health/src/index.js';
 import {
-  HealthDomainError,
   HealthService,
   buildHealthOperationalReport,
   type HealthAccessScope,

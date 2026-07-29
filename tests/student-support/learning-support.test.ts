@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
+import type { LearningSupportDomainError } from '../../packages/modules/learning-support/src/index.js';
 import {
-  LearningSupportDomainError,
   LearningSupportService,
   buildLearningSupportOperationalReport,
   type LearningSupportAccessScope,

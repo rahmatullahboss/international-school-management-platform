@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
+import type { BehaviorDomainError } from '../../packages/modules/behavior/src/index.js';
 import {
-  BehaviorDomainError,
   BehaviorService,
   buildBehaviorOperationalReport,
   type BehaviorAccessScope,

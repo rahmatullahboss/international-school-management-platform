@@ -1,5 +1,5 @@
+import type { CareSecurityService } from './security.js';
 import {
-  CareSecurityService,
   type CareAction,
   type CareCaseMembership,
   type CarePurpose,

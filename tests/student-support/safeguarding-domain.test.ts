@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'vitest';
 
+import type { SafeguardingDomainError } from '../../packages/modules/safeguarding/src/index.js';
 import {
   CareSecurityService,
-  SafeguardingDomainError,
   SafeguardingService,
   buildSafeguardingOperationalReport,
   type CareRequestContext,

@@ -1,5 +1,5 @@
+import type { CareSecurityService } from '../../safeguarding/src/security.js';
 import {
-  CareSecurityService,
   type BreakGlassGrant,
   type CareAuthorizationDecision,
   type CarePublicationDecision,
