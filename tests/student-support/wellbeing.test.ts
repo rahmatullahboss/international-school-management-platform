@@ -292,8 +292,8 @@ describe('CARE-01 wellbeing and counselling domain', () => {
       publication.publicationId,
     );
     expect(view.supportSummary).toBe('Approved support is active.');
-    expect(JSON.stringify(view)).not.toContain('counselling');
-    expect(JSON.stringify(view)).not.toContain('risk');
+    expect(JSON.stringify(view)).not.toContain('Restricted synthetic pastoral referral summary');
+    expect(JSON.stringify(view)).not.toContain('riskLevel');
   });
 
   test('suppresses small operational cohorts and excludes restricted fields', () => {
