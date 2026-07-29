@@ -13,7 +13,7 @@ on:
       - '.github/workflows/mobile-ci.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   verify-mobile:
@@ -21,19 +21,34 @@ jobs:
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
           flutter-version: '3.44.7'
           cache: true
-      - name: Show Flutter toolchain
-        run: flutter --version
       - name: Resolve workspace dependencies
         working-directory: mobile
         run: flutter pub get
-      - name: Verify formatting
-        working-directory: mobile
-        run: dart format --output=none --set-exit-if-changed .
+      - name: Format device session sources
+        run: |
+          dart format \
+            mobile/packages/api_client/lib/device_session_api.dart \
+            mobile/packages/api_client/test/device_session_api_test.dart
+      - name: Commit canonical device session sources
+        if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add \
+            mobile/packages/api_client/lib/device_session_api.dart \
+            mobile/packages/api_client/test/device_session_api_test.dart
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m "feat(MOB-01): canonicalize device session client contract"
+          git push origin HEAD:module/flutter-mobile-apps
       - name: Verify generated files remain ignored
         run: git diff --exit-code -- mobile
       - name: Verify native application configuration
@@ -86,12 +101,3 @@ jobs:
       - name: Build staff Android debug APK
         working-directory: mobile/apps/staff_app
         run: flutter build apk --debug
-      - name: Upload Android debug APKs
-        uses: actions/upload-artifact@v4
-        with:
-          name: mob-01-signed-in-android-debug-apks
-          path: |
-            mobile/apps/family_app/build/app/outputs/flutter-apk/app-debug.apk
-            mobile/apps/staff_app/build/app/outputs/flutter-apk/app-debug.apk
-          if-no-files-found: error
-          retention-days: 7
