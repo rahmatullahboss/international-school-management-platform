@@ -78,9 +78,9 @@ describe('EXP-01 persona experience foundation', () => {
       />,
     );
 
-    expect(markup).toContain('Finance');
-    expect(markup).toContain('Reports');
-    expect(markup).not.toContain('Student support');
+    expect(markup).toContain('Fees &amp; accounting');
+    expect(markup).toContain('Reports &amp; exports');
+    expect(markup).not.toContain('Health &amp; support');
     expect(markup).toContain('Verified session');
     expect(markup).toContain('aria-current="page"');
   });
@@ -97,8 +97,8 @@ describe('EXP-01 persona experience foundation', () => {
 
     expect(markup).toContain('Working offline');
     expect(markup).toContain('Approved changes will stay on this device');
-    expect(markup).toContain('Attendance');
-    expect(markup).not.toContain('Student context');
+    expect(markup).toContain('Take attendance');
+    expect(markup).not.toContain('My students');
   });
 
   it('keeps guardian and student portals separate and purpose-bound', () => {
@@ -118,11 +118,11 @@ describe('EXP-01 persona experience foundation', () => {
     );
 
     expect(guardian).toContain('My children');
-    expect(guardian).toContain('Fees and payments');
-    expect(guardian).not.toContain('Gradebook');
-    expect(student).toContain('Results');
+    expect(guardian).toContain('Fees &amp; payments');
+    expect(guardian).not.toContain('Grades &amp; assessments');
+    expect(student).toContain('Results &amp; reports');
     expect(student).toContain('Timetable');
-    expect(student).not.toContain('Fees and payments');
+    expect(student).not.toContain('Fees &amp; payments');
   });
 
   it('renders loading and recoverable error states with explicit copy', () => {
@@ -137,7 +137,8 @@ describe('EXP-01 persona experience foundation', () => {
       />,
     );
 
-    expect(loading).toContain('Preparing your workspace');
+    expect(loading).toContain('Updating this section');
+    expect(loading).toContain('Your current workspace stays available');
     expect(error).toContain('Published results could not be loaded');
     expect(error).toContain('Your saved requests are unchanged.');
     expect(error).toContain('Try again');
