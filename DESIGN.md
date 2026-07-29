@@ -194,6 +194,35 @@ The system is flat by default. Canvas, paper, borders and dark mastheads establi
 - Navigation is capability-aware; unavailable destinations are omitted or presented as read-only only when that distinction is useful and safe.
 - Persona shells show school/campus scope, current persona, network/sync state and the active destination without exposing unauthorized module names or counts.
 - A skip link targets the main task region on every shell.
+- Persona destinations are grouped by familiar school jobs such as Start, Students, Teaching & learning, Money, School services, Student support and Communication.
+- Long persona menus provide task search across labels, descriptions and familiar synonyms while preserving capability filtering.
+- Icons support recognition but never replace visible text.
+- Role switching remains available but visually secondary to the current role’s work.
+
+## Interaction continuity and loading
+
+The authenticated platform behaves as one continuous operational workspace rather than a collection of document-loading pages.
+
+- Eligible same-origin task links use client-side History API navigation; browser back, forward, deep links and native new-tab behaviour remain valid.
+- The current authorised screen remains visible while another role bundle or safe background request prepares.
+- In-app navigation uses a thin progress line and polite status announcement. It does not replace the full interface with a detached loading page.
+- An initial direct deep link may use a skeleton that occupies the final shell layout. Local task regions may use a skeleton only when no safe cached or previous data exists.
+- Role bundles preload on pointer intent, keyboard focus and suitable idle time without forcing constrained or data-saving clients to download unnecessary work.
+- Supported browsers may use a short View Transition to explain continuity. Reduced-motion preferences disable transition animation.
+- After navigation completes, focus moves to the current task region without stealing focus while preparation is still running.
+- Future Worker API reads retain the last successful authorised data during background revalidation. Cache keys and invalidation must include tenant, campus, persona, relationship and permission scope.
+
+**The Context-Preservation Rule.** A user who has usable authorised content must not lose it merely because navigation, permission validation or background refresh is in progress.
+
+**The Local-State Rule.** Loading, saving, error, conflict and retry feedback appears in the task region it affects; global blocking states are reserved for genuinely global security or session boundaries.
+
+## Information architecture and task discovery
+
+- Labels name the outcome or record in plain school language. Internal package names remain implementation details.
+- Long role menus provide a task finder that searches labels, descriptions and familiar synonyms while preserving capability filtering.
+- Icons are secondary recognition cues; visible text remains authoritative.
+- The current role, active destination, connection state and signed-in identity remain visible.
+- Primary actions use meaningful verbs such as Review, Take attendance, View statement or Continue application rather than a generic Open label.
 
 ## Do's and Don'ts
 
@@ -205,6 +234,8 @@ The system is flat by default. Canvas, paper, borders and dark mastheads establi
 - **Do** test keyboard, touch, RTL, long content, 200% zoom, reduced motion and slow/offline recovery.
 - **Do** reuse the semantic palette, system typography, spacing rhythm and status vocabulary.
 - **Do** keep child-facing language shorter, age-appropriate and privacy-preserving.
+- **Do** preserve the current authorised view during route preparation and background refresh.
+- **Do** use task-led labels and meaningful verbs so users recognise the next step without remembering module structure.
 
 ### Don’t:
 
@@ -215,3 +246,4 @@ The system is flat by default. Canvas, paper, borders and dark mastheads establi
 - **Don’t** communicate status only by colour or icon.
 - **Don’t** reveal restricted record existence, sensitive narratives or unauthorized counts through navigation, errors or loading states.
 - **Don’t** invent customers, benchmarks, regulatory claims, public brand assets or production data.
+- **Don’t** replace the full application with a loading page for ordinary in-app navigation.
