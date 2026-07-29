@@ -53,7 +53,12 @@ jobs:
             cp "/tmp/${app}-pubspec.yaml" "${app_dir}/pubspec.yaml"
             cp "/tmp/${app}-main.dart" "${app_dir}/lib/main.dart"
             cp "/tmp/${app}-test.dart" "${app_dir}/test/app_test.dart"
-            rm -f "${app_dir}/test/widget_test.dart"
+            rm -rf "${app_dir}/.idea"
+            rm -f \
+              "${app_dir}/test/widget_test.dart" \
+              "${app_dir}/README.md" \
+              "${app_dir}/analysis_options.yaml" \
+              "${app_dir}/school_${app}.iml"
           done
 
           python3 - <<'PY'
@@ -123,36 +128,32 @@ jobs:
 
               project = root / 'ios/Runner.xcodeproj/project.pbxproj'
               source = project.read_text()
-              block_pattern = re.compile(
-                  r'(\t\t[A-F0-9]+ /\* (Debug|Release|Profile) \*/ = \{\n'
-                  r'\t\t\tisa = XCBuildConfiguration;\n'
-                  r'\t\t\tbuildSettings = \{\n)(.*?)'
-                  r'(\n\t\t\t\};\n\t\t\tname = \2;\n\t\t\};)',
-                  re.S,
+              generated_ids = {
+                  value.strip().strip('"')
+                  for value in re.findall(r'PRODUCT_BUNDLE_IDENTIFIER = ([^;]+);', source)
+                  if 'RunnerTests' not in value and 'RunnerUITests' not in value
+              }
+              if len(generated_ids) != 1:
+                  raise SystemExit(f'Unexpected iOS application bundle identifiers for {app}: {sorted(generated_ids)}')
+              generated_id = generated_ids.pop()
+              source = source.replace(
+                  f'PRODUCT_BUNDLE_IDENTIFIER = {generated_id};',
+                  f'PRODUCT_BUNDLE_IDENTIFIER = {config["bundle"]};',
               )
-
-              def patch_block(match):
-                  prefix, configuration, body, suffix = match.groups()
-                  if 'INFOPLIST_FILE = Runner/Info.plist;' not in body:
-                      return match.group(0)
-                  body = re.sub(
-                      r'PRODUCT_BUNDLE_IDENTIFIER = [^;]+;',
-                      f'PRODUCT_BUNDLE_IDENTIFIER = {config["bundle"]};',
-                      body,
-                  )
-                  entitlement = 'Release.entitlements' if configuration == 'Release' else 'DebugProfile.entitlements'
-                  if 'CODE_SIGN_ENTITLEMENTS' not in body:
-                      body = body.replace(
-                          f'PRODUCT_BUNDLE_IDENTIFIER = {config["bundle"]};',
-                          f'CODE_SIGN_ENTITLEMENTS = Runner/{entitlement};\n\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = {config["bundle"]};',
-                          1,
-                      )
-                  return prefix + body + suffix
-
-              source, count = block_pattern.subn(patch_block, source)
-              if count == 0 or config['bundle'] not in source or 'CODE_SIGN_ENTITLEMENTS' not in source:
-                  raise SystemExit(f'iOS project configuration patch failed for {app}')
+              if source.count(f'PRODUCT_BUNDLE_IDENTIFIER = {config["bundle"]};') < 3:
+                  raise SystemExit(f'iOS bundle identifier patch failed for {app}')
               project.write_text(source)
+
+              for xcconfig_name, entitlement in (
+                  ('Debug.xcconfig', 'DebugProfile.entitlements'),
+                  ('Release.xcconfig', 'Release.entitlements'),
+              ):
+                  xcconfig = root / 'ios/Flutter' / xcconfig_name
+                  source = xcconfig.read_text()
+                  setting = f'CODE_SIGN_ENTITLEMENTS=Runner/{entitlement}'
+                  if setting not in source:
+                      source = source.rstrip() + '\n' + setting + '\n'
+                  xcconfig.write_text(source)
           PY
       - name: Commit native projects
         if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
