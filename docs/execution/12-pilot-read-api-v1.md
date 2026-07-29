@@ -59,6 +59,20 @@ Required request headers:
 7. root CI, migrations, live Neon, builds, budgets and Cloudflare smoke tests pass;
 8. progress tracker, release evidence and machine board are synchronized before reviewed merge.
 
+## Verified implementation evidence
+
+Implementation proof candidate `73be1c1eb0418c8c2f744729354bd9f1a63467b0` passed:
+
+- root CI `30495509757`, including all 21 repository gates;
+- Cloudflare deploy/smoke `30495509773`;
+- 509 repository tests, with the environment-dependent direct-Neon test passed separately against live Neon;
+- 22 browser journeys, including delayed refresh and failed-refresh preservation;
+- the canonical 40-migration replay and live Neon verification;
+- initial JavaScript 208,406 bytes, initial CSS 15,022 bytes, total JavaScript 297,916 bytes and total CSS 73,158 bytes, with no budget violation;
+- live API health, scoped admin snapshot, role routes, PWA manifest and offline page smoke checks.
+
+The implementation returns `404` for all `/pilot/*` endpoints when `APP_ENV=production`. Staging responses are private, CORS-limited and revalidated with scope-specific ETags.
+
 ## Production boundary
 
 This stream does not enable production login, real tenants, real student data, shared caches, live payments, publication, restricted-data changes, approvals or other mutations. Production still requires reviewed identity, database-backed policy enforcement, tenant-safe server caching, approved staging seed/reset tooling, negative authorization tests, monitoring, backup, rollback and owner-led UAT.
