@@ -34,6 +34,6 @@ This milestone delivers the age-appropriate student workspace for the student’
 - Secure student conversations with capability filtering.
 - Primary/secondary/senior language treatment plus loading, recoverable error and non-disclosing empty states.
 
-## Verification intent
+## Verification
 
-Focused tests must prove self-ID filtering before sorting/counting, published-only attendance/results/documents, other-student exclusion, internal-note and restricted-message masking, request state actions and recoverable errors. Full format, lint, architecture boundaries, typecheck, tests, fresh migration replay, Neon, build, browser and execution-artifact gates remain required before Milestone 5 is marked complete.
+Canonical formatter checkpoint `205c4d1e463c35320c1119b1a512ee7a5b44c29c` restored the standard repository CI and formatted the student workspace and focused tests. The clean-head full repository, migration, Neon, build, browser and artifact gate remains required before Milestone 5 is marked complete.
