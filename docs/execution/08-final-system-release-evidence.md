@@ -59,3 +59,20 @@ Pilot-ready does not authorize production deployment. Production environment cre
 ## Safe cleanup
 
 No branch, worktree or Neon branch was deleted. The prior detailed agent board and progress tracker are retained under `docs/execution/archive/`. No production deployment, production database mutation, production cache purge or destructive cleanup was performed.
+
+## Post-gate Cloudflare Pilot Composition
+
+After `GATE-PILOT-READY`, PILOT-01 converted the integrated persona packages into a browser-runnable non-production acceptance environment.
+
+- Starting Cloudflare staging merge: `41639fab433491df0395d02217a70c6eb2ddb775`.
+- Verified PILOT-01 candidate: `a50ad782489137f5afd806e30c7a3e249b5074ec`.
+- Root CI `30484622352` passed all 21 gates, including all tests, 40-migration replay, live Neon, builds, initial/total asset budgets, browser journeys and artifact validation.
+- Cloudflare run `30484622364` deployed API and web Workers and passed live smoke tests for the role chooser, admin, teacher, guardian, student, PWA manifest, offline page and API health.
+- Initial asset evidence: 203,338-byte JavaScript and 8,475-byte CSS.
+- Total lazy-route assets: 283,316-byte JavaScript and 60,355-byte CSS.
+- API Worker version: `360f923e-1518-4d1d-9540-3f02c4939216`.
+- Web Worker version: `11539129-464f-4f80-8fc1-8254f4c9e1be`.
+- Live web: `https://international-school-platform-web-staging.rahmatullahzisan.workers.dev/`.
+- Live API health: `https://international-school-platform-api-staging.rahmatullahzisan.workers.dev/health`.
+
+`GATE-PILOT-RUNTIME-COMPOSED` passes for the synthetic-data staging pilot. This does not change the production boundary: real identity, permission-aware APIs, approved staging data, safe mutation acceptance, monitoring, backup, rollback and explicit owner authorization remain required before production promotion.

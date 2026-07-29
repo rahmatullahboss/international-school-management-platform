@@ -1,10 +1,10 @@
 # Whole-Module Program Progress Tracker
 
 **Program:** `international-school-platform-v1`  
-**Updated:** 2026-07-29  
-**Current repository state:** All module streams are complete and integrated. Wave 3 reached `main` at merge commit `6093109c8c573c3b4495141ad71661d5d5ca22c1`. Final root CI and dedicated Neon recovery verification passed on the finalization candidate. `GATE-PILOT-READY` is passed; production deployment remains a separate owner-authorized action.
+**Updated:** 2026-07-30  
+**Current repository state:** All domain module streams are complete and integrated. `GATE-PILOT-READY`, `GATE-CLOUDFLARE-STAGING` and `GATE-PILOT-RUNTIME-COMPOSED` have passed. The composed admin, teacher, guardian and student pilot is deployed on non-production Cloudflare Workers with synthetic records.
 
-Historical checkpoint-by-checkpoint evidence through Wave 3 is preserved in [the archived tracker](archive/04-progress-tracker-through-wave3.md).
+Historical checkpoint-by-checkpoint evidence through Wave 3 is preserved in [the archived tracker](archive/04-progress-tracker-through-wave3.md). PILOT-01 scope, evidence and remaining production boundary are recorded in [09-pilot-runtime-composition.md](09-pilot-runtime-composition.md).
 
 ## Gate status
 
@@ -19,6 +19,8 @@ Historical checkpoint-by-checkpoint evidence through Wave 3 is preserved in [the
 | `GATE-EXP-COMPLETE` | passed | EXP implementation `5c952703c24ee9927fcf2cd480d3ce8d0d139847`; CI `30464998020` |
 | `GATE-EXP-WAVE-3-INTEGRATION` | passed | Wave 3 integration merge `6093109c8c573c3b4495141ad71661d5d5ca22c1`; integration CIs `30466466903` and `30466808450` |
 | `GATE-PILOT-READY` | passed | Final root CI `30467898523` and final Neon recovery run `30467899681` passed on PR #39 candidate ancestry |
+| `GATE-CLOUDFLARE-STAGING` | passed | Main merge `41639fab433491df0395d02217a70c6eb2ddb775`; root CI `30479347127`; deploy/smoke `30479347117` |
+| `GATE-PILOT-RUNTIME-COMPOSED` | passed | Candidate `a50ad782489137f5afd806e30c7a3e249b5074ec`; root CI `30484622352`; Cloudflare deploy/smoke `30484622364`; all role routes live |
 
 ## Stream tracker
 
@@ -33,6 +35,38 @@ Historical checkpoint-by-checkpoint evidence through Wave 3 is preserved in [the
 | `CARE-01` | 2 | complete and integrated | `9304bd6c425eca4ec69db90c1f1cab3f7a409b8d` |
 | `EXP-01` | 3 | complete and integrated | implementation `5c952703c24ee9927fcf2cd480d3ce8d0d139847`; main merge `6093109c8c573c3b4495141ad71661d5d5ca22c1` |
 | `INTEG-01` | gated serial | pilot ready | final system and recovery evidence in `docs/execution/08-final-system-release-evidence.md` |
+| `PILOT-01` | post-integration | runtime composed and staged | base `41639fab433491df0395d02217a70c6eb2ddb775`; candidate `a50ad782489137f5afd806e30c7a3e249b5074ec`; CI `30484622352`; deploy `30484622364` |
+
+## PILOT-01 gate closure
+
+Completed and verified:
+
+- role chooser at `/` with accessible skip navigation and responsive role cards;
+- admin, teacher, guardian and student runtime shells;
+- existing EXP-01 overview components mounted into role-specific composition roots;
+- deep-link route surfaces covering all integrated module families;
+- synthetic, non-sensitive read models and explicit production-mutation boundary;
+- capability-scoped navigation and role-level lazy loading;
+- new browser journeys for role selection, representative module routes and role scoping;
+- Cloudflare live smoke tests for role chooser, admin, teacher, guardian, student, manifest, offline page and API health;
+- deployment, execution, progress and release evidence documentation.
+
+Verified performance evidence:
+
+- initial JavaScript: 203,338 bytes against a 250,000-byte limit;
+- initial CSS: 8,475 bytes against a 50,000-byte limit;
+- total route JavaScript: 283,316 bytes against a 350,000-byte limit;
+- total route CSS: 60,355 bytes against an 85,000-byte limit;
+- no budget violation.
+
+## Live staging routes
+
+- Role chooser: `https://international-school-platform-web-staging.rahmatullahzisan.workers.dev/`
+- Admin: `https://international-school-platform-web-staging.rahmatullahzisan.workers.dev/admin`
+- Teacher: `https://international-school-platform-web-staging.rahmatullahzisan.workers.dev/teacher`
+- Guardian: `https://international-school-platform-web-staging.rahmatullahzisan.workers.dev/family`
+- Student: `https://international-school-platform-web-staging.rahmatullahzisan.workers.dev/student`
+- API health: `https://international-school-platform-api-staging.rahmatullahzisan.workers.dev/health`
 
 ## Reviewed integration lineage
 
@@ -41,16 +75,17 @@ Historical checkpoint-by-checkpoint evidence through Wave 3 is preserved in [the
 - Wave 2: `60836a8fe92f64ba581c4bde65005729d1fe14b2`
 - EXP implementation: `5c952703c24ee9927fcf2cd480d3ce8d0d139847`
 - Wave 3 main merge: `6093109c8c573c3b4495141ad71661d5d5ca22c1`
+- Cloudflare staging merge: `41639fab433491df0395d02217a70c6eb2ddb775`
+- PILOT-01 verified candidate: `a50ad782489137f5afd806e30c7a3e249b5074ec`
 
-## Final system verification
+## Final integrated system verification
 
 ### Application and browser evidence
 
-- Repository tests: 504 passed.
-- Browser journeys: 15/15 passed across platform, SIS, finance, integrations, student support and EXP.
-- Platform-web production budget: 201,022-byte JavaScript and 4,054-byte CSS.
-- Required PWA manifest, service worker, offline page and icons were present.
+- Repository tests: 504 passed; PILOT-01 added browser acceptance coverage without changing domain-test outcomes.
+- Browser journeys: 19 passed across platform/pilot, SIS, finance, integrations, student support and EXP suites.
 - Format, lint, architecture boundaries, typecheck, Worker build, Vite build, dependency audit, licence policy, provenance drift and execution-artifact validation passed.
+- Role bundles are lazy-loaded, keeping the initial role-chooser payload within the original production budget.
 
 ### Database and recovery evidence
 
@@ -64,11 +99,14 @@ Historical checkpoint-by-checkpoint evidence through Wave 3 is preserved in [the
 - Cross-tenant read and write probes passed.
 - Disposable database apply, verification and cleanup replay passed.
 
-### Final workflow evidence
+## Remaining production milestones
 
-- Initial finalization root CI: `30467898523` — passed.
-- Initial finalization Neon recovery: `30467899681` — passed.
-- Exact final documentation head and its rerun evidence are recorded in PR #39 before merge.
+- replace synthetic read models with permission-aware Worker APIs;
+- implement reviewed OAuth/OIDC login, renewal, logout, role, tenant and campus context;
+- provide approved staging tenant seed and reset tooling;
+- connect safe pilot mutations and live permission-negative tests;
+- add monitoring, alerting, backup evidence and rollback rehearsal;
+- complete owner-led user acceptance before production-domain consideration.
 
 ## Safe cleanup report
 
@@ -76,4 +114,4 @@ No Git branch, worktree or Neon branch was deleted. Cleanup remains owner-review
 
 ## Production boundary
 
-No production deployment, production database mutation, production cache purge or destructive cleanup was performed. `GATE-PILOT-READY` means the reviewed candidate is suitable for pilot deployment planning; deployment still requires separate authorization, environment configuration, secrets, monitoring and rollback approval.
+No production deployment, production database mutation, production cache purge or destructive cleanup was performed. Cloudflare staging and PILOT-01 use synthetic records and non-production Workers. Production promotion still requires reviewed authentication, permission-aware APIs, approved staging data, monitoring, rollback, backup rehearsal and explicit owner authorization.

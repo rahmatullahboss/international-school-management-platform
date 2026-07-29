@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "program_id": "international-school-platform-v1",
-  "updated_at": "2026-07-29",
+  "updated_at": "2026-07-30",
   "execution_mode": "whole-module-agent-ownership",
   "microtask_agents_allowed": false,
   "agent_delegation_allowed": false,
-  "program_status": "pilot_ready",
+  "program_status": "pilot_runtime_composed",
   "parallel_execution": {
     "allowed": true,
     "assignment_unit": "complete_module_stream",
@@ -62,7 +62,8 @@
     "foundation": "55114f55a375d3d79dba7ea21f984b789b5dbca1",
     "wave_1": "8cc8ee1562ade672b14c1c44af935fe7e2307976",
     "wave_2": "60836a8fe92f64ba581c4bde65005729d1fe14b2",
-    "wave_3_main": "6093109c8c573c3b4495141ad71661d5d5ca22c1"
+    "wave_3_main": "6093109c8c573c3b4495141ad71661d5d5ca22c1",
+    "cloudflare_staging": "41639fab433491df0395d02217a70c6eb2ddb775"
   },
   "reviewed_stream_shas": {
     "wave_1": {
@@ -430,5 +431,25 @@
     "requires_reviewed_integration_reachability": true,
     "eligible_resources_must_be_clean_inactive_and_reachable": true,
     "cleanup_performed": false
+  },
+  "pilot_runtime": {
+    "id": "PILOT-01",
+    "status": "gate_passed",
+    "gate": "GATE-PILOT-RUNTIME-COMPOSED",
+    "branch": "pilot/runtime-portal-composition",
+    "verified_candidate_sha": "a50ad782489137f5afd806e30c7a3e249b5074ec",
+    "root_ci_run": "30484622352",
+    "cloudflare_deploy_run": "30484622364",
+    "role_chooser": "https://international-school-platform-web-staging.rahmatullahzisan.workers.dev/",
+    "role_routes": [
+      "/admin",
+      "/teacher",
+      "/family",
+      "/student"
+    ],
+    "api_health": "https://international-school-platform-api-staging.rahmatullahzisan.workers.dev/health",
+    "synthetic_data_only": true,
+    "production_mutations_enabled": false,
+    "remaining_release_gate": "reviewed identity, permission-aware APIs, approved staging data, live negative tests, monitoring, backup, rollback and explicit owner authorization"
   }
 }
