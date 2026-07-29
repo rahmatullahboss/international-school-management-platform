@@ -280,7 +280,7 @@ export function ExperienceShell(props: ExperienceShellProps): ReactElement {
                         aria-current={item.href === props.activeHref ? 'page' : undefined}
                         aria-label={`${item.label}: ${item.description}`}
                       >
-                        <NavigationIcon name={item.icon} />
+                        {item.icon === undefined ? null : <NavigationIcon name={item.icon} />}
                         <span>
                           <strong>{item.label}</strong>
                           <small>{item.description}</small>

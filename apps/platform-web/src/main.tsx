@@ -46,15 +46,6 @@ interface NavigatorWithConnection extends Navigator {
   };
 }
 
-interface IdleWindow extends Window {
-  requestIdleCallback?: (callback: () => void, options?: { readonly timeout: number }) => number;
-  cancelIdleCallback?: (handle: number) => void;
-}
-
-interface ViewTransitionDocument extends Document {
-  startViewTransition?: (update: () => void) => { readonly finished: Promise<void> };
-}
-
 function normalisePath(pathname: string): string {
   if (pathname === '/') return pathname;
   return pathname.replace(/\/+$/u, '');
@@ -224,7 +215,9 @@ function PilotLanding(): ReactElement {
   );
 }
 
-function NavigationProgress(props: { readonly pendingPath?: string }): ReactElement | null {
+function NavigationProgress(props: {
+  readonly pendingPath: string | undefined;
+}): ReactElement | null {
   const role = props.pendingPath === undefined ? undefined : roleForPath(props.pendingPath);
   if (props.pendingPath === undefined) return null;
   const label = role === undefined ? 'role chooser' : roleDescriptions[role].title.toLowerCase();
@@ -252,11 +245,8 @@ function PilotApplication(): ReactElement {
     };
 
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const documentWithTransitions = document as ViewTransitionDocument;
-    if (!reducedMotion && documentWithTransitions.startViewTransition !== undefined) {
-      void documentWithTransitions
-        .startViewTransition(() => flushSync(commit))
-        .finished.catch(() => undefined);
+    if (!reducedMotion && typeof document.startViewTransition === 'function') {
+      void document.startViewTransition(() => flushSync(commit)).finished.catch(() => undefined);
     } else {
       startTransition(commit);
     }
@@ -349,13 +339,12 @@ function PilotApplication(): ReactElement {
     if (connectivity !== 'online') return;
     if ((navigator as NavigatorWithConnection).connection?.saveData === true) return;
 
-    const idleWindow = window as IdleWindow;
     const preloadAll = (): void => {
       for (const role of Object.keys(portalLoaders) as PilotRole[]) void preloadPortal(role);
     };
-    if (idleWindow.requestIdleCallback !== undefined) {
-      const handle = idleWindow.requestIdleCallback(preloadAll, { timeout: 2500 });
-      return () => idleWindow.cancelIdleCallback?.(handle);
+    if (typeof window.requestIdleCallback === 'function') {
+      const handle = window.requestIdleCallback(preloadAll, { timeout: 2500 });
+      return () => window.cancelIdleCallback(handle);
     }
     const handle = window.setTimeout(preloadAll, 1200);
     return () => window.clearTimeout(handle);
