@@ -7,6 +7,13 @@ const workspaceRoots = ['apps', 'packages'];
 const sourceExtensions = new Set(['.ts', '.tsx', '.js', '.jsx']);
 const importPattern = /(?:from\s+|import\s*\(|require\s*\()\s*['"]([^'"]+)['"]/gu;
 
+const compositionDependencies = new Map([
+  [
+    '@school/platform-web',
+    new Set(['@school/web-admin', '@school/web-teacher', '@school/web-family', '@school/web-student']),
+  ],
+]);
+
 function packageName(specifier) {
   const parts = specifier.split('/');
   return specifier.startsWith('@') ? parts.slice(0, 2).join('/') : parts[0];
@@ -62,6 +69,7 @@ for (const workspaceRoot of workspaceRoots) {
       ...Object.keys(manifest.devDependencies ?? {}),
       ...Object.keys(manifest.peerDependencies ?? {}),
     ]);
+    const allowedCompositionDependencies = compositionDependencies.get(manifest.name) ?? new Set();
 
     for (const file of await sourceFiles(directory)) {
       const source = await readFile(file, 'utf8');
@@ -72,7 +80,8 @@ for (const workspaceRoot of workspaceRoots) {
         if (
           specifier.startsWith('@school/') &&
           importedPackage !== manifest.name &&
-          !declared.has(importedPackage)
+          !declared.has(importedPackage) &&
+          !allowedCompositionDependencies.has(importedPackage)
         ) {
           failures.push(
             `${path.relative(root, file)} imports undeclared workspace dependency ${specifier}`,
