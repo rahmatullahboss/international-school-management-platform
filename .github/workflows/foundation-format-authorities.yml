@@ -1,0 +1,33 @@
+name: Format Foundation Authorities
+
+on:
+  push:
+    branches:
+      - program/foundation-design-authority-repair
+    paths:
+      - .github/workflows/foundation-format-authorities.yml
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: program/foundation-design-authority-repair
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+          cache: npm
+      - run: npm ci
+      - run: npx prettier --write PRODUCT.md DESIGN.md docs/execution/contract-change-requests/EXP-01-design-authority-gap.md .impeccable/config.json
+      - name: Commit canonical formatting and remove one-shot workflow
+        run: |
+          git rm .github/workflows/foundation-format-authorities.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add PRODUCT.md DESIGN.md docs/execution/contract-change-requests/EXP-01-design-authority-gap.md .impeccable/config.json
+          git commit -m "style(foundation): format product and design authorities"
+          git push origin HEAD:program/foundation-design-authority-repair
