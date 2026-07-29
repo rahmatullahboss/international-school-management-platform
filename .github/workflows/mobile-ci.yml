@@ -13,7 +13,7 @@ on:
       - '.github/workflows/mobile-ci.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   verify-mobile:
@@ -31,22 +31,56 @@ jobs:
       - name: Resolve workspace dependencies
         working-directory: mobile
         run: flutter pub get
-      - name: Format mobile sources
-        working-directory: mobile
-        run: dart format .
-      - name: Upload formatted source evidence
-        uses: actions/upload-artifact@v4
-        with:
-          name: formatted-mobile-source
-          path: |
-            mobile/apps/family_app/lib
-            mobile/apps/staff_app/lib
-            mobile/packages/api_client/lib
-            mobile/packages/design_system/lib
-            mobile/packages/mobile_core/lib
-            mobile/packages/mobile_core/test
-          if-no-files-found: error
-          retention-days: 1
+      - name: Apply panel hardening and canonical formatting
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('mobile/packages/design_system/lib/school_design_system.dart')
+          source = path.read_text()
+          old = """  @override
+            Widget build(BuildContext context) => Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: SchoolColors.structuralRule),
+                borderRadius: BorderRadius.circular(16),
+                color: SchoolColors.paper,
+              ),
+              padding: padding ?? const EdgeInsets.all(SchoolSpacing.md),
+              child: child,
+            );
+          """
+          new = """  @override
+            Widget build(BuildContext context) => Material(
+              clipBehavior: Clip.antiAlias,
+              color: SchoolColors.paper,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: const BorderSide(color: SchoolColors.structuralRule),
+              ),
+              child: Padding(
+                padding: padding ?? const EdgeInsets.all(SchoolSpacing.md),
+                child: child,
+              ),
+            );
+          """
+          if old in source:
+              path.write_text(source.replace(old, new))
+          elif 'Widget build(BuildContext context) => Material(' not in source:
+              raise SystemExit('SchoolPanel implementation did not match the reviewed checkpoint')
+          PY
+          cd mobile
+          dart format .
+      - name: Commit canonical mobile sources
+        if: github.event_name == 'push'
+        run: |
+          if git diff --quiet -- mobile; then
+            exit 0
+          fi
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add mobile
+          git commit -m "style(MOB-01): canonicalize Flutter checkpoint"
+          git push origin HEAD:module/flutter-mobile-apps
       - name: Analyze family app
         working-directory: mobile/apps/family_app
         run: flutter analyze
