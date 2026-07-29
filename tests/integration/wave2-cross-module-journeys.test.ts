@@ -314,9 +314,9 @@ describe('Wave 2 integrated module journeys', () => {
     expect(journal.sourceDocumentId).toBe(contract.id);
     expect(journal.lines.map((line) => line.amountMinor)).toEqual([125_000, 125_000]);
     expect(journal.lines[0]?.dimensions.staffId).toBe(staff.id);
-    expect(events.events.some((event) => event.eventType === 'operations.hr.contract-created.v1')).toBe(
-      true,
-    );
+    expect(
+      events.events.some((event) => event.eventType === 'operations.hr.contract-created.v1'),
+    ).toBe(true);
     expect(audit.entries.some((entry) => entry.subjectId === contract.id)).toBe(true);
   });
 
@@ -368,9 +368,7 @@ describe('Wave 2 integrated module journeys', () => {
     );
 
     expect(enrolled.status).toBe('confirmed');
-    expect(enrolled.financeDocumentRef).toBe(
-      'fin-activities:activity-fee:activity-enrolment-1',
-    );
+    expect(enrolled.financeDocumentRef).toBe('fin-activities:activity-fee:activity-enrolment-1');
     expect(waitlisted.status).toBe('waitlisted');
     expect(waitlisted.financeDocumentRef).toBeNull();
     expect(finance.documents).toEqual([
