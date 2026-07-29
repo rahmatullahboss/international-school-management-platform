@@ -1,0 +1,65 @@
+name: CARE-01 Format
+
+on:
+  push:
+    branches:
+      - module/student-support
+    paths:
+      - '.github/workflows/care-01-format.yml'
+      - 'apps/web-admin/src/features/student-support/**'
+      - 'packages/modules/behavior/src/**'
+      - 'packages/modules/health/src/**'
+      - 'packages/modules/learning-support/src/**'
+      - 'packages/modules/safeguarding/src/**'
+      - 'packages/modules/wellbeing/src/**'
+      - 'tests/student-support/**'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: care-01-format
+  cancel-in-progress: false
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: module/student-support
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.2
+          cache: npm
+      - run: npm ci
+      - name: Format CARE paths
+        run: >-
+          npx prettier --write
+          apps/web-admin/src/features/student-support
+          packages/modules/behavior/src
+          packages/modules/health/src
+          packages/modules/learning-support/src
+          packages/modules/safeguarding/src
+          packages/modules/wellbeing/src
+          tests/student-support
+      - name: Commit exact formatter output
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo "No formatting changes required."
+            exit 0
+          fi
+          git config user.name "CARE-01 Formatter"
+          git config user.email "care-01-formatter@users.noreply.github.com"
+          git add \
+            apps/web-admin/src/features/student-support \
+            packages/modules/behavior/src \
+            packages/modules/health/src \
+            packages/modules/learning-support/src \
+            packages/modules/safeguarding/src \
+            packages/modules/wellbeing/src \
+            tests/student-support
+          git commit -m "style(CARE-01): apply repository formatting"
+          git push origin HEAD:module/student-support
