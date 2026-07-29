@@ -1,0 +1,37 @@
+name: EXP-01 Evidence Format
+
+on:
+  push:
+    branches:
+      - module/experience-portals-reporting
+    paths:
+      - .github/workflows/exp-01-format-evidence.yml
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: module/experience-portals-reporting
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.2'
+          cache: npm
+      - run: npm ci
+      - name: Apply pinned Prettier output
+        run: |
+          npx prettier --write .github/workflows/exp-01-record-m1.yml
+          if git diff --quiet -- .github/workflows/exp-01-record-m1.yml; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/workflows/exp-01-record-m1.yml
+          git commit -m "style(EXP-01): format Milestone 1 evidence workflow"
+          git pull --rebase origin module/experience-portals-reporting
+          git push origin HEAD:module/experience-portals-reporting
