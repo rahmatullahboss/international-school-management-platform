@@ -31,46 +31,12 @@ jobs:
       - name: Resolve workspace dependencies
         working-directory: mobile
         run: flutter pub get
-      - name: Apply panel hardening and canonical formatting
+      - name: Canonicalize mobile sources
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-
-          path = Path('mobile/packages/design_system/lib/school_design_system.dart')
-          source = path.read_text()
-          old = """  @override
-            Widget build(BuildContext context) => Container(
-              decoration: BoxDecoration(
-                border: Border.all(color: SchoolColors.structuralRule),
-                borderRadius: BorderRadius.circular(16),
-                color: SchoolColors.paper,
-              ),
-              padding: padding ?? const EdgeInsets.all(SchoolSpacing.md),
-              child: child,
-            );
-          """
-          new = """  @override
-            Widget build(BuildContext context) => Material(
-              clipBehavior: Clip.antiAlias,
-              color: SchoolColors.paper,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: const BorderSide(color: SchoolColors.structuralRule),
-              ),
-              child: Padding(
-                padding: padding ?? const EdgeInsets.all(SchoolSpacing.md),
-                child: child,
-              ),
-            );
-          """
-          if old in source:
-              path.write_text(source.replace(old, new))
-          elif 'Widget build(BuildContext context) => Material(' not in source:
-              raise SystemExit('SchoolPanel implementation did not match the reviewed checkpoint')
-          PY
           cd mobile
           dart format .
-      - name: Commit canonical mobile sources
+          rm -rf .dart_tool apps/*/.dart_tool packages/*/.dart_tool
+      - name: Commit canonical source cleanup
         if: github.event_name == 'push'
         run: |
           if git diff --quiet -- mobile; then
@@ -78,9 +44,12 @@ jobs:
           fi
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add mobile
-          git commit -m "style(MOB-01): canonicalize Flutter checkpoint"
+          git add -A mobile
+          git commit -m "chore(MOB-01): remove generated Flutter metadata"
           git push origin HEAD:module/flutter-mobile-apps
+      - name: Restore workspace metadata for verification
+        working-directory: mobile
+        run: flutter pub get
       - name: Analyze family app
         working-directory: mobile/apps/family_app
         run: flutter analyze
