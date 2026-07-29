@@ -1,0 +1,36 @@
+name: CARE-01 Evidence Update
+
+on:
+  push:
+    branches:
+      - module/student-support
+    paths:
+      - '.github/workflows/care-01-evidence.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: module/student-support
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.2
+          cache: npm
+      - run: npm ci
+      - run: python3 scripts/care_01_finalize_evidence.py
+      - run: npx prettier --write docs/execution/03-agent-board.json docs/execution/04-progress-tracker.md
+      - run: python3 scripts/validate_execution_artifacts.py
+      - name: Commit evidence
+        shell: bash
+        run: |
+          git config user.name "CARE-01 Evidence"
+          git config user.email "care-01-evidence@users.noreply.github.com"
+          git add docs/execution/03-agent-board.json docs/execution/04-progress-tracker.md
+          git commit -m "docs(CARE-01): finalize tracker and board evidence"
+          git push origin HEAD:module/student-support
