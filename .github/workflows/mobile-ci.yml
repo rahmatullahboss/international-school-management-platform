@@ -31,23 +31,28 @@ jobs:
       - name: Resolve workspace dependencies
         working-directory: mobile
         run: flutter pub get
-      - name: Format Family domain sources
+      - name: Format Family journey sources
         run: |
           dart format \
             mobile/packages/family_domain/lib/school_family_domain.dart \
-            mobile/packages/family_domain/test/family_domain_test.dart
-      - name: Commit canonical Family domain and lockfile
+            mobile/packages/family_domain/test/family_domain_test.dart \
+            mobile/packages/api_client/lib/family_read_api.dart \
+            mobile/packages/api_client/test/family_read_api_test.dart
+      - name: Commit canonical Family journey contracts and lockfile
         if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add \
             mobile/pubspec.lock \
-            mobile/packages/family_domain
+            mobile/packages/family_domain \
+            mobile/packages/api_client/pubspec.yaml \
+            mobile/packages/api_client/lib/family_read_api.dart \
+            mobile/packages/api_client/test/family_read_api_test.dart
           if git diff --cached --quiet; then
             exit 0
           fi
-          git commit -m "feat(MOB-01): canonicalize Family journey domain"
+          git commit -m "feat(MOB-01): canonicalize Family read contracts"
           git push origin HEAD:module/flutter-mobile-apps
       - name: Verify generated files remain ignored
         run: git diff --exit-code -- mobile
