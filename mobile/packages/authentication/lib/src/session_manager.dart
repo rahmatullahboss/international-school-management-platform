@@ -1,6 +1,6 @@
-import 'appauth_gateway.dart';
-import 'auth_models.dart';
-import 'secure_token_store.dart';
+import 'package:school_authentication/src/appauth_gateway.dart';
+import 'package:school_authentication/src/auth_models.dart';
+import 'package:school_authentication/src/secure_token_store.dart';
 
 typedef AuthClock = DateTime Function();
 
