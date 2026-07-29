@@ -1,6 +1,5 @@
 import 'package:flutter_appauth/flutter_appauth.dart' as appauth;
-
-import 'auth_models.dart';
+import 'package:school_authentication/src/auth_models.dart';
 
 abstract interface class AuthorizationGateway {
   Future<AuthTokenSet> authorize(MobileOidcConfiguration configuration);
