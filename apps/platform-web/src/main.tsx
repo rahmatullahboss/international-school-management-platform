@@ -56,6 +56,9 @@ function usePilotConnectivity(): PilotConnectivity {
 function PilotLanding(): ReactElement {
   return (
     <div className="pilot-entry">
+      <a className="pilot-skip-link" href="#main-content">
+        Skip to main content
+      </a>
       <header className="pilot-entry__masthead">
         <div>
           <p className="pilot-kicker">Cloudflare staging · synthetic pilot data</p>
@@ -72,7 +75,7 @@ function PilotLanding(): ReactElement {
         </div>
       </header>
 
-      <main className="pilot-entry__main">
+      <main id="main-content" className="pilot-entry__main">
         <section aria-labelledby="pilot-role-title">
           <div className="pilot-section-heading">
             <p>Demo access</p>
@@ -81,7 +84,7 @@ function PilotLanding(): ReactElement {
               Authentication is simulated for pilot review; permissions remain role-scoped.
             </span>
           </div>
-          <div className="pilot-role-grid">
+          <nav className="pilot-role-grid" aria-label="Primary navigation">
             <a className="pilot-role-card" data-role="admin" href="/admin">
               <span>01</span>
               <h3>School administrator</h3>
@@ -108,7 +111,7 @@ function PilotLanding(): ReactElement {
               <p>Timetable, attendance, results, documents, resources, requests and messages.</p>
               <strong>Open student portal</strong>
             </a>
-          </div>
+          </nav>
         </section>
 
         <section className="pilot-coverage" aria-labelledby="pilot-coverage-title">
