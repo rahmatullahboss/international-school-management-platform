@@ -1,0 +1,108 @@
+name: Deploy Cloudflare Staging
+
+on:
+  push:
+    branches:
+      - deploy/cloudflare-staging-pilot
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-staging-pilot
+  cancel-in-progress: false
+
+jobs:
+  verify-deploy-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: cloudflare-staging
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+          cache: npm
+
+      - name: Require staging credentials
+        shell: bash
+        run: |
+          if [[ -z "$CLOUDFLARE_ACCOUNT_ID" || -z "$CLOUDFLARE_API_TOKEN" ]]; then
+            echo "Cloudflare staging requires CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN in the cloudflare-staging GitHub environment." >&2
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify repository
+        run: npm run verify
+
+      - name: Deploy staging API Worker
+        shell: bash
+        run: |
+          set -o pipefail
+          npx wrangler deploy --config apps/platform-api/wrangler.jsonc --env staging 2>&1 | tee api-deploy.log
+          api_url=$(grep -Eo 'https://[A-Za-z0-9.-]+\.workers\.dev' api-deploy.log | tail -1)
+          if [[ -z "$api_url" ]]; then
+            echo "Unable to resolve the deployed API URL from Wrangler output." >&2
+            exit 1
+          fi
+          echo "API_URL=$api_url" >> "$GITHUB_ENV"
+
+      - name: Deploy staging web Worker
+        shell: bash
+        run: |
+          set -o pipefail
+          npx wrangler deploy --config apps/platform-web/wrangler.jsonc --env staging 2>&1 | tee web-deploy.log
+          web_url=$(grep -Eo 'https://[A-Za-z0-9.-]+\.workers\.dev' web-deploy.log | tail -1)
+          if [[ -z "$web_url" ]]; then
+            echo "Unable to resolve the deployed web URL from Wrangler output." >&2
+            exit 1
+          fi
+          echo "WEB_URL=$web_url" >> "$GITHUB_ENV"
+
+      - name: Smoke test live staging services
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          for attempt in {1..12}; do
+            if curl --fail --silent --show-error "$API_URL/health" --output api-health.json; then
+              break
+            fi
+            if [[ "$attempt" == "12" ]]; then
+              echo "API health endpoint did not become ready." >&2
+              exit 1
+            fi
+            sleep 5
+          done
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          payload = json.loads(Path('api-health.json').read_text(encoding='utf-8'))
+          assert payload.get('status') == 'ok', payload
+          assert payload.get('environment') == 'staging', payload
+          PY
+
+          curl --fail --silent --show-error "$WEB_URL/" | grep -q 'International School Platform'
+          curl --fail --silent --show-error "$WEB_URL/manifest.webmanifest" | grep -q 'School Platform'
+          curl --fail --silent --show-error "$WEB_URL/offline.html" | grep -q 'You are offline'
+
+      - name: Publish staging URLs
+        shell: bash
+        run: |
+          {
+            echo '## Cloudflare staging deployment'
+            echo
+            echo "- Web: $WEB_URL"
+            echo "- API health: $API_URL/health"
+            echo '- Scope: foundation/PWA shell and API health; complete role-portal runtime composition remains pending.'
+          } >> "$GITHUB_STEP_SUMMARY"
