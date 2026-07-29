@@ -13,14 +13,6 @@ export const roleRoots: Readonly<Record<PilotRole, string>> = {
   student: '/student',
 };
 
-export const roleLinks = [
-  { label: 'Administration', href: '/admin' },
-  { label: 'Teacher workspace', href: '/teacher' },
-  { label: 'Family portal', href: '/family' },
-  { label: 'Student portal', href: '/student' },
-  { label: 'Change role', href: '/' },
-] as const;
-
 export const roleDescriptions: Readonly<
   Record<PilotRole, { readonly title: string; readonly detail: string }>
 > = {
@@ -42,11 +34,8 @@ export const roleDescriptions: Readonly<
   },
 };
 
-export function shellUtilityActions(activeRole: PilotRole) {
-  const activeRoot = roleRoots[activeRole];
-  return roleLinks
-    .filter((link) => link.href === '/' || link.href !== activeRoot)
-    .map((link) => ({ label: link.label, href: link.href }));
+export function shellUtilityActions(_activeRole: PilotRole) {
+  return [] as const;
 }
 
 export function resolvePageHeading(
