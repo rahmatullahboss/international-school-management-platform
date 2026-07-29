@@ -5,7 +5,7 @@
   "execution_mode": "whole-module-agent-ownership",
   "microtask_agents_allowed": false,
   "agent_delegation_allowed": false,
-  "program_status": "pilot_runtime_composed",
+  "program_status": "pilot_runtime_ux_refined",
   "parallel_execution": {
     "allowed": true,
     "assignment_unit": "complete_module_stream",
@@ -451,5 +451,27 @@
     "synthetic_data_only": true,
     "production_mutations_enabled": false,
     "remaining_release_gate": "reviewed identity, permission-aware APIs, approved staging data, live negative tests, monitoring, backup, rollback and explicit owner authorization"
+  },
+  "ux_continuity": {
+    "id": "UX-01",
+    "status": "gate_passed",
+    "gate": "GATE-UX-CONTINUITY-V1",
+    "branch": "ux/smooth-operational-experience-v1",
+    "verified_candidate_sha": "e74a30143eb7882e81ebd7d5b5c373d3132b309e",
+    "root_ci_run": "30490122291",
+    "cloudflare_deploy_run": "30490122337",
+    "routing": "history-api-client-navigation",
+    "full_screen_in_app_loading": false,
+    "role_bundle_prefetch": [
+      "pointer-intent",
+      "keyboard-focus",
+      "suitable-idle"
+    ],
+    "task_navigation_grouped": true,
+    "task_finder_enabled": true,
+    "browser_journeys_passed": 20,
+    "synthetic_data_only": true,
+    "production_mutations_enabled": false,
+    "remaining_release_gate": "reviewed identity, permission-aware Worker APIs and isolated cache, approved staging data, safe mutations, live negative tests, monitoring, backup, rollback, owner-led UAT and explicit production authorization"
   }
 }
