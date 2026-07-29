@@ -17,3 +17,4 @@ workspace:
   - packages/staff_domain
   - packages/sync_engine
   - packages/sync_storage
+  - packages/teacher_sync

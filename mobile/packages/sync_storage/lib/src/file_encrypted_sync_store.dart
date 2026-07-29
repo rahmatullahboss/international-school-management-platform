@@ -7,6 +7,7 @@ import 'package:cryptography/cryptography.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:school_mobile_core/mobile_core.dart';
 import 'package:school_sync_engine/school_sync_engine.dart';
+import 'package:school_sync_engine/sync_journal.dart';
 import 'package:school_sync_storage/src/sync_key_vault.dart';
 import 'package:school_sync_storage/src/sync_record_cipher.dart';
 import 'package:school_sync_storage/src/sync_storage_scope.dart';
@@ -97,7 +98,8 @@ final class PlatformEncryptedSyncStoreFactory {
       );
 }
 
-final class FileEncryptedSyncStore implements EncryptedSyncStore {
+final class FileEncryptedSyncStore
+    implements EncryptedSyncStore, SyncOperationJournal {
   FileEncryptedSyncStore({
     required SyncDirectoryProvider directoryProvider,
     required SyncKeyVault keyVault,
@@ -155,6 +157,51 @@ final class FileEncryptedSyncStore implements EncryptedSyncStore {
         throw const SyncStorageException('SYNC_OPERATION_TOKEN_MISMATCH');
       }
       return operation;
+    }),
+  );
+
+  @override
+  Future<List<SyncOperationEnvelope>> listOperations({
+    required SchoolSession session,
+    Set<SyncOperationKind>? kinds,
+    Set<SyncOperationState>? states,
+    int limit = 100,
+  }) => _serial.run(
+    () async => _guardDecryption(() async {
+      _validateSession(session);
+      if (limit < 1 || limit > 500) {
+        throw const SyncStorageException('SYNC_JOURNAL_LIMIT_INVALID');
+      }
+      final files = await _files();
+      final snapshot = await _load(files);
+      final operations = <SyncOperationEnvelope>[];
+      for (final entry in snapshot.records.entries) {
+        final operation = await _decryptOperation(
+          files,
+          entry.key,
+          entry.value,
+        );
+        if (operation.accountId != session.accountId ||
+            operation.tenantId != session.tenantId ||
+            operation.campusId != session.campusId ||
+            operation.persona != session.activePersona) {
+          continue;
+        }
+        if (kinds != null && !kinds.contains(operation.kind)) {
+          continue;
+        }
+        if (states != null && !states.contains(operation.state)) {
+          continue;
+        }
+        operations.add(operation);
+      }
+      operations.sort((first, second) {
+        final byTime = second.clientCreatedAt.compareTo(first.clientCreatedAt);
+        return byTime != 0
+            ? byTime
+            : first.operationId.compareTo(second.operationId);
+      });
+      return List<SyncOperationEnvelope>.unmodifiable(operations.take(limit));
     }),
   );
 

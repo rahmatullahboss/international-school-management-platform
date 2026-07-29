@@ -260,10 +260,7 @@ final class TeacherSyncTransport implements SyncTransport {
 }
 
 final class TeacherSyncRuntime {
-  const TeacherSyncRuntime({
-    required this.coordinator,
-    required this.queue,
-  });
+  const TeacherSyncRuntime({required this.coordinator, required this.queue});
 
   final OfflineSyncCoordinator coordinator;
   final TeacherOfflineQueue queue;
@@ -358,9 +355,7 @@ TeacherGradeDraftCommand _gradeDraftFromJson(
     entries: _objectList(json, 'entries').map(
       (entry) => TeacherGradeDraftEntry(
         scoreUnits: _optionalInteger(entry, 'scoreUnits'),
-        status: TeacherGradeEntryStatus.values.byName(
-          _string(entry, 'status'),
-        ),
+        status: TeacherGradeEntryStatus.values.byName(_string(entry, 'status')),
         studentId: _string(entry, 'studentId'),
       ),
     ),
@@ -386,20 +381,19 @@ void _requireEnvelopeIdentity({
   }
 }
 
-List<Map<String, Object?>> _objectList(
-  Map<String, Object?> json,
-  String key,
-) {
+List<Map<String, Object?>> _objectList(Map<String, Object?> json, String key) {
   final value = json[key];
   if (value is! List<Object?>) {
     throw FormatException('TEACHER_SYNC_LIST_REQUIRED:$key');
   }
-  return value.map((item) {
-    if (item is! Map<String, Object?>) {
-      throw FormatException('TEACHER_SYNC_OBJECT_REQUIRED:$key');
-    }
-    return item;
-  }).toList(growable: false);
+  return value
+      .map((item) {
+        if (item is! Map<String, Object?>) {
+          throw FormatException('TEACHER_SYNC_OBJECT_REQUIRED:$key');
+        }
+        return item;
+      })
+      .toList(growable: false);
 }
 
 String _string(Map<String, Object?> json, String key) {

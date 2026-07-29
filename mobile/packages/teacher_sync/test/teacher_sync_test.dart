@@ -30,8 +30,14 @@ void main() {
     );
     final command = attendanceCommand();
 
-    final first = await queue.enqueueAttendance(command: command, session: session);
-    final second = await queue.enqueueAttendance(command: command, session: session);
+    final first = await queue.enqueueAttendance(
+      command: command,
+      session: session,
+    );
+    final second = await queue.enqueueAttendance(
+      command: command,
+      session: session,
+    );
 
     expect(identical(first, second), isTrue);
     expect(first.kind, SyncOperationKind.attendanceBatch);
@@ -42,31 +48,34 @@ void main() {
     expect(store.operations, hasLength(1));
   });
 
-  test('operation id collision cannot overwrite another teacher command', () async {
-    final queue = TeacherOfflineQueue(
-      journal: store,
-      payloadProtector: protector,
-      store: store,
-    );
-    await queue.enqueueAttendance(
-      command: attendanceCommand(),
-      session: session,
-    );
-
-    expect(
-      () => queue.enqueueAttendance(
-        command: attendanceCommand(meetingId: 'meeting-2'),
+  test(
+    'operation id collision cannot overwrite another teacher command',
+    () async {
+      final queue = TeacherOfflineQueue(
+        journal: store,
+        payloadProtector: protector,
+        store: store,
+      );
+      await queue.enqueueAttendance(
+        command: attendanceCommand(),
         session: session,
-      ),
-      throwsA(
-        isA<TeacherSyncException>().having(
-          (error) => error.code,
-          'code',
-          'TEACHER_SYNC_OPERATION_COLLISION',
+      );
+
+      expect(
+        () => queue.enqueueAttendance(
+          command: attendanceCommand(meetingId: 'meeting-2'),
+          session: session,
         ),
-      ),
-    );
-  });
+        throwsA(
+          isA<TeacherSyncException>().having(
+            (error) => error.code,
+            'code',
+            'TEACHER_SYNC_OPERATION_COLLISION',
+          ),
+        ),
+      );
+    },
+  );
 
   test('transport decrypts attendance and maps accepted receipt', () async {
     final repository = _TeacherRepository(
@@ -124,74 +133,84 @@ void main() {
     expect(result.reasonCode, 'TEACHER_SYNC_RECEIPT_SCOPE_MISMATCH');
   });
 
-  test('retryable API failure returns operation to durable retry state', () async {
-    final repository = _TeacherRepository(
-      attendanceError: const SchoolApiException(
-        code: 'SERVER_UNAVAILABLE',
-        message: 'Unavailable',
-        statusCode: 503,
-      ),
-    );
-    final queue = TeacherOfflineQueue(
-      journal: store,
-      payloadProtector: protector,
-      store: store,
-    );
-    await queue.enqueueAttendance(command: attendanceCommand(), session: session);
-    final now = DateTime.parse('2026-07-30T05:00:00+06:00');
-
-    final receipt = await OfflineSyncCoordinator(
-      retrySchedule: RetrySchedule(baseDelay: const Duration(seconds: 10)),
-      store: store,
-      transport: TeacherSyncTransport(
+  test(
+    'retryable API failure returns operation to durable retry state',
+    () async {
+      final repository = _TeacherRepository(
+        attendanceError: const SchoolApiException(
+          code: 'SERVER_UNAVAILABLE',
+          message: 'Unavailable',
+          statusCode: 503,
+        ),
+      );
+      final queue = TeacherOfflineQueue(
+        journal: store,
         payloadProtector: protector,
-        repository: repository,
-      ),
-    ).flush(now: now, session: session);
+        store: store,
+      );
+      await queue.enqueueAttendance(
+        command: attendanceCommand(),
+        session: session,
+      );
+      final now = DateTime.parse('2026-07-30T05:00:00+06:00');
 
-    final operation = receipt.operations.single;
-    expect(operation.state, SyncOperationState.waitingForNetwork);
-    expect(operation.attemptCount, 1);
-    expect(operation.nextAttemptAt, now.add(const Duration(seconds: 10)));
-    expect(operation.lastReasonCode, 'SYNC_TRANSPORT_UNAVAILABLE');
-  });
+      final receipt = await OfflineSyncCoordinator(
+        retrySchedule: RetrySchedule(baseDelay: const Duration(seconds: 10)),
+        store: store,
+        transport: TeacherSyncTransport(
+          payloadProtector: protector,
+          repository: repository,
+        ),
+      ).flush(now: now, session: session);
 
-  test('grade draft is encrypted and duplicate receipt remains terminal', () async {
-    final repository = _TeacherRepository(
-      gradeReceipt: TeacherWriteReceipt(
-        acceptedRevision: 4,
-        operationId: 'grade-operation-1',
-        status: TeacherWriteStatus.duplicate,
-        reasonCode: 'ALREADY_APPLIED',
-      ),
-    );
-    final queue = TeacherOfflineQueue(
-      journal: store,
-      payloadProtector: protector,
-      store: store,
-    );
-    await queue.enqueueGradeDraft(
-      clientCreatedAt: DateTime.parse('2026-07-30T05:00:00+06:00'),
-      command: gradeCommand(),
-      session: session,
-    );
+      final operation = receipt.operations.single;
+      expect(operation.state, SyncOperationState.waitingForNetwork);
+      expect(operation.attemptCount, 1);
+      expect(operation.nextAttemptAt, now.add(const Duration(seconds: 10)));
+      expect(operation.lastReasonCode, 'SYNC_TRANSPORT_UNAVAILABLE');
+    },
+  );
 
-    final receipt = await OfflineSyncCoordinator(
-      retrySchedule: RetrySchedule(),
-      store: store,
-      transport: TeacherSyncTransport(
+  test(
+    'grade draft is encrypted and duplicate receipt remains terminal',
+    () async {
+      final repository = _TeacherRepository(
+        gradeReceipt: TeacherWriteReceipt(
+          acceptedRevision: 4,
+          operationId: 'grade-operation-1',
+          status: TeacherWriteStatus.duplicate,
+          reasonCode: 'ALREADY_APPLIED',
+        ),
+      );
+      final queue = TeacherOfflineQueue(
+        journal: store,
         payloadProtector: protector,
-        repository: repository,
-      ),
-    ).flush(
-      now: DateTime.parse('2026-07-30T05:01:00+06:00'),
-      session: session,
-    );
+        store: store,
+      );
+      await queue.enqueueGradeDraft(
+        clientCreatedAt: DateTime.parse('2026-07-30T05:00:00+06:00'),
+        command: gradeCommand(),
+        session: session,
+      );
 
-    expect(receipt.operations.single.state, SyncOperationState.duplicate);
-    expect(receipt.operations.single.lastReasonCode, 'ALREADY_APPLIED');
-    expect(repository.lastGradeDraft?.entries.single.scoreUnits, 7500);
-  });
+      final receipt =
+          await OfflineSyncCoordinator(
+            retrySchedule: RetrySchedule(),
+            store: store,
+            transport: TeacherSyncTransport(
+              payloadProtector: protector,
+              repository: repository,
+            ),
+          ).flush(
+            now: DateTime.parse('2026-07-30T05:01:00+06:00'),
+            session: session,
+          );
+
+      expect(receipt.operations.single.state, SyncOperationState.duplicate);
+      expect(receipt.operations.single.lastReasonCode, 'ALREADY_APPLIED');
+      expect(repository.lastGradeDraft?.entries.single.scoreUnits, 7500);
+    },
+  );
 
   test('journal filters by teacher kinds, states and current scope', () async {
     final queue = TeacherOfflineQueue(
@@ -199,7 +218,10 @@ void main() {
       payloadProtector: protector,
       store: store,
     );
-    await queue.enqueueAttendance(command: attendanceCommand(), session: session);
+    await queue.enqueueAttendance(
+      command: attendanceCommand(),
+      session: session,
+    );
     await queue.enqueueGradeDraft(
       clientCreatedAt: DateTime.parse('2026-07-30T05:00:00+06:00'),
       command: gradeCommand(),
@@ -307,13 +329,16 @@ final class _MemorySyncStore
     required SchoolSession session,
     int limit = 25,
   }) async {
-    final result = operations.values.where((operation) {
-      operation.validateSession(session);
-      return operation.state == SyncOperationState.savedOnDevice ||
-          (operation.state == SyncOperationState.waitingForNetwork &&
-              operation.nextAttemptAt != null &&
-              !operation.nextAttemptAt!.isAfter(now));
-    }).take(limit).toList(growable: false);
+    final result = operations.values
+        .where((operation) {
+          operation.validateSession(session);
+          return operation.state == SyncOperationState.savedOnDevice ||
+              (operation.state == SyncOperationState.waitingForNetwork &&
+                  operation.nextAttemptAt != null &&
+                  !operation.nextAttemptAt!.isAfter(now));
+        })
+        .take(limit)
+        .toList(growable: false);
     return List<SyncOperationEnvelope>.unmodifiable(result);
   }
 
