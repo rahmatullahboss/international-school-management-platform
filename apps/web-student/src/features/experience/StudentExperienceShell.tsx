@@ -2,6 +2,7 @@ import type { ComponentProps, ReactElement } from 'react';
 
 import { ExperienceShell, type ExperienceNavigationItem } from '@school/documents-experience';
 import '@school/documents-experience/shell.css';
+import '@school/documents-experience/shell-ux.css';
 
 const navigation: readonly ExperienceNavigationItem[] = [
   {
