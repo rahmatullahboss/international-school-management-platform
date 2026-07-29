@@ -1,10 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:school_api_client/mobile_bootstrap_api.dart';
 import 'package:school_api_client/school_api_client.dart';
+import 'package:school_app_bootstrap/src/runtime_configuration.dart';
 import 'package:school_authentication/school_authentication.dart';
 import 'package:school_mobile_core/mobile_core.dart';
-
-import 'package:school_app_bootstrap/src/runtime_configuration.dart';
 
 typedef CorrelationIdFactory = String Function();
 
@@ -145,7 +144,7 @@ final class MobileAppCoordinator extends ChangeNotifier {
       tokenStore: SecureAuthTokenStore(),
     );
     final apiClient = SchoolApiClient(
-      accessTokenProvider: () async => await authentication.validAccessToken(),
+      accessTokenProvider: authentication.validAccessToken,
       baseUri: runtime.apiBaseUri,
     );
     return MobileAppCoordinator(

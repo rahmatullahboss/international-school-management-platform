@@ -1,9 +1,7 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:school_design_system/school_design_system.dart';
-
 import 'package:school_app_bootstrap/src/coordinator.dart';
+import 'package:school_design_system/school_design_system.dart';
 
 class MobileAccessGate extends StatelessWidget {
   const MobileAccessGate({
@@ -128,7 +126,7 @@ class MobileAccessGate extends StatelessWidget {
             message: _safeReason(
               state.reasonCode ?? 'MOBILE_BOOTSTRAP_UNAVAILABLE',
             ),
-            tone: SchoolStatusTone.danger,
+            tone: SchoolStatusTone.error,
           ),
           const SizedBox(height: SchoolSpacing.md),
           FilledButton.icon(
@@ -187,7 +185,7 @@ class MobileConfigurationFailureScreen extends StatelessWidget {
           label: 'Application configuration required',
           message:
               'This build cannot connect securely. Support code: $reasonCode',
-          tone: SchoolStatusTone.danger,
+          tone: SchoolStatusTone.error,
         ),
       ),
     ),

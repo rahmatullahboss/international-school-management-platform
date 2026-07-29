@@ -185,7 +185,9 @@ void main() {
           appName: 'School Family',
           onRetry: () async {},
           onSelectAccess: (option) => selected = option,
-          onSignIn: () async => signInCount++,
+          onSignIn: () async {
+            signInCount++;
+          },
           onSignOut: () async {},
           state: const MobileApplicationState.signedOut(),
         ),
