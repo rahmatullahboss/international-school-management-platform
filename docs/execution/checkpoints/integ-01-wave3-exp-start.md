@@ -1,12 +1,14 @@
-# INTEG-01 Wave 3 — EXP-01 Integration Start
+# INTEG-01 Wave 3 — EXP-01 Integration Gate
 
-Date/time: 2026-07-29T21:34:00+06:00
+Date/time started: 2026-07-29T21:34:00+06:00
+Date/time verified: 2026-07-29T21:42:00+06:00
 
 ## Frozen inputs
 
 - Current main: `3ddfcf22a237fe3025c4c456005812641b4397af`
 - Reviewed EXP-01 implementation candidate: `5c952703c24ee9927fcf2cd480d3ce8d0d139847`
 - EXP-01 coordinator evidence-only head: `6c2ec8eec92727abeca2477820a9c7f35b2e7bbd`
+- Initial integration checkpoint: `c87e0a04be3541973b7cae42e9187b9fbbf4af71`
 - Integration branch: `integration/international-school-platform-v1`
 - Integration pull request: `#38`
 
@@ -24,19 +26,39 @@ The existing integration branch was nine commits behind current main at the prio
 - PWA shell, low-bandwidth mode, approved offline drafts, privacy-safe telemetry and support runbooks;
 - coordinator-owned EXP tracker and final handoff evidence.
 
-No reviewed EXP implementation behavior was modified during branch advancement.
+No reviewed EXP implementation behavior was modified during branch advancement or integration evidence recording.
 
-## Existing candidate evidence
+## Candidate evidence
 
 - Implementation CI `30464998020`: all 21 steps passed.
-- Final-head CI `30465524930`: all 21 steps passed.
+- EXP final-head CI `30465524930`: all 21 steps passed.
 - Repository tests: 504 passed.
 - Browser suites: 15/15 passed.
 - Fresh PostgreSQL replay: 40/40 migrations passed.
 - Live Neon driver, build, PWA budget, dependency audit, licences, provenance and artifact validation passed.
 
-## Integration gate
+## Fresh integration verification
 
-PR `#38` must pass a fresh integration-branch CI run before review readiness or merge. After CI succeeds, INTEG-01 records the exact verified head, marks the Wave 3 checkpoint ready, and merges only with expected-head protection.
+Fresh PR #38 integration CI run `30466466903` passed all 21 verification steps on checkpoint `c87e0a04be3541973b7cae42e9187b9fbbf4af71`:
 
-No production deployment or production database mutation is authorized.
+- clean npm installation;
+- canonical formatting;
+- lint and architecture boundaries;
+- TypeScript project references;
+- all 504 repository tests;
+- all 40 Wave 2 migrations on a fresh PostgreSQL database;
+- live Neon serverless driver verification;
+- Worker and Vite production builds;
+- platform-web JavaScript/CSS/PWA budget;
+- dependency audit and licence policy;
+- provenance generation with no tracked drift;
+- all 15 Chromium browser journeys;
+- execution artifact validation.
+
+## Gate outcome
+
+`GATE-EXP-WAVE-3-INTEGRATION` passes for the exact implementation candidate `5c952703c24ee9927fcf2cd480d3ce8d0d139847` and coordinator handoff ancestry `6c2ec8eec92727abeca2477820a9c7f35b2e7bbd`.
+
+The final evidence commit created from this document must pass the same CI before PR #38 is marked ready and merged with expected-head protection. After merge, main becomes the reviewed Wave 3 integration base for final database/recovery, system verification and pilot-readiness evidence.
+
+No production deployment, production database mutation, production cache purge or destructive cleanup is authorized.
