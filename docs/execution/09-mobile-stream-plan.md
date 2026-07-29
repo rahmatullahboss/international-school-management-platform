@@ -2,7 +2,7 @@
 
 ## Status
 
-Milestones 1 and 2 have passed on the client/native side. Milestone 3 Family read and interaction contracts have passed, including repository-driven multi-child production journeys, documents, forms, consent and paginated conversations. Milestone 4 Teacher read/write contracts and repository-driven Today/roster production journeys have passed. Milestone 5 now has a verified durable sync contract/state-machine foundation; encrypted on-device persistence, platform key management and live delta transport remain. All proposed mobile endpoints remain server-owned and are not live.
+Milestones 1 and 2 have passed on the client/native side. Milestone 3 Family read and interaction contracts have passed, including repository-driven multi-child production journeys and domain/API contracts for documents, forms, consent and paginated conversations. Milestone 4 Teacher read/write contracts and repository-driven Today/roster production journeys have passed. Milestone 5 now has a verified durable sync contract/state-machine foundation; encrypted on-device persistence, platform key management and live delta transport remain. All proposed mobile endpoints remain server-owned and are not live.
 
 ## Execution identity
 
@@ -40,7 +40,7 @@ Any backend API, notification, identity or shared platform contract change requi
 2. **Authentication and bootstrap — client/native passed; server activation remains**
    - OIDC authorization-code flow with PKCE, secure token storage, device sessions, tenant/campus/persona selection and capability bootstrap.
    - Android/iOS projects, reviewed redirect schemes, Android API 23 secure-storage baseline, iOS Keychain Sharing entitlements and native build verification.
-3. **Family journeys — client contracts and repository-driven journeys passed; server activation remains**
+3. **Family journeys — read production journeys and interaction contracts passed; server activation and interaction UI remain**
    - Multi-child guardian context, student context, timetable, attendance, published results, fees, receipts and message summaries.
    - Secure document metadata/download grants, forms, idempotent submission, guardian consent and paginated conversations.
    - Production failures hide unverifiable academic and financial values instead of substituting fixtures.
@@ -50,7 +50,7 @@ Any backend API, notification, identity or shared platform contract change requi
 5. **Durable offline sync — contract/state-machine foundation passed; encrypted store and transport integration remain**
    - Encrypted payload envelopes, idempotent operation queue contracts, scoped retry, delta cursor, duplicate handling, conflict, rejection and reconciliation states.
    - Platform-backed encrypted persistence and key lifecycle are not yet implemented.
-6. **Notifications and documents — Family document contracts passed; push/deep-link delivery remains**
+6. **Notifications and documents — Family document contracts passed; interaction UI and push/deep-link delivery remain**
    - Device registration contracts, safe notification payloads, push routing, secure document download and notification preferences.
 7. **Security, accessibility and release verification — pending**
    - Mobile threat model, restricted-data cache rules, step-up authentication, localization/RTL, text scaling, screen readers, performance, Android/iOS integration tests and store-release evidence.
@@ -137,4 +137,4 @@ MOB-01 may define and test clients, domain contracts and fail-closed UI states. 
 
 ## Exact next action
 
-Implement a platform-backed encrypted sync store with explicit key lifecycle and account/school purge semantics, then connect teacher attendance drafts to the operation queue and reconciliation states without granting client-side finalization authority. In parallel, submit bootstrap, Family, Teacher, device-session and sync endpoint proposals through the existing server-module ownership process before live account data is used. After encrypted persistence is verified, continue push/deep-link delivery, secure document exchange, accessibility/localization and store-release evidence.
+Implement a platform-backed encrypted sync store with explicit key lifecycle and account/school purge semantics, then connect teacher attendance drafts to the operation queue and reconciliation states without granting client-side finalization authority. In parallel, add Family document/form/consent/conversation UI on top of the verified contracts and submit bootstrap, Family, Teacher, device-session and sync endpoint proposals through the existing server-module ownership process before live account data is used. After encrypted persistence is verified, continue push/deep-link delivery, secure document exchange, accessibility/localization and store-release evidence.
