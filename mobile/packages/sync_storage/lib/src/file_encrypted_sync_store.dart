@@ -525,9 +525,9 @@ final class _StoreFiles {
 final class _EncryptedSnapshot {
   _EncryptedSnapshot({
     required this.fingerprint,
-    required Map<String, EncryptedSyncRecord> records,
+    required this.records,
     this.cursor,
-  }) : records = records;
+  });
 
   factory _EncryptedSnapshot.empty(String fingerprint) => _EncryptedSnapshot(
     fingerprint: fingerprint,

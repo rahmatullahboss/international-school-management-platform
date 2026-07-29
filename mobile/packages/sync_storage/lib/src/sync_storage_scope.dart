@@ -27,6 +27,13 @@ final class SyncStorageScope {
     required this.tenantId,
   });
 
+  factory SyncStorageScope.fromJson(Map<String, Object?> json) =>
+      SyncStorageScope(
+        accountId: _string(json, 'accountId'),
+        campusId: _string(json, 'campusId'),
+        tenantId: _string(json, 'tenantId'),
+      );
+
   final String accountId;
   final String tenantId;
   final String campusId;
@@ -50,13 +57,6 @@ final class SyncStorageScope {
     'tenantId': tenantId,
     'campusId': campusId,
   };
-
-  factory SyncStorageScope.fromJson(Map<String, Object?> json) =>
-      SyncStorageScope(
-        accountId: _string(json, 'accountId'),
-        campusId: _string(json, 'campusId'),
-        tenantId: _string(json, 'tenantId'),
-      );
 
   @override
   bool operator ==(Object other) =>

@@ -234,10 +234,14 @@ void main() {
   });
 }
 
-Future<File> activeFile(Directory directory) async => directory
-    .list()
-    .whereType<File>()
-    .firstWhere((file) => file.path.endsWith('.json'));
+Future<File> activeFile(Directory directory) async {
+  await for (final entity in directory.list()) {
+    if (entity is File && entity.path.endsWith('.json')) {
+      return entity;
+    }
+  }
+  throw StateError('Active sync store file not found.');
+}
 
 int firstRecordVersion(Map<String, Object?> document) {
   final records = document['records'] as Map<String, Object?>;

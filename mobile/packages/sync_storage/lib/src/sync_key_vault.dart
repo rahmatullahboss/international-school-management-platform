@@ -6,8 +6,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:school_sync_storage/src/sync_storage_scope.dart';
 
 final class SyncKeyMaterial {
-  SyncKeyMaterial({required SecretKey secretKey, required this.version})
-    : secretKey = secretKey {
+  SyncKeyMaterial({required this.secretKey, required this.version}) {
     if (version < 1) {
       throw const SyncStorageException('SYNC_KEY_VERSION_INVALID');
     }

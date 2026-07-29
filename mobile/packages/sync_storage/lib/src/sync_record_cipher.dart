@@ -25,16 +25,6 @@ final class EncryptedSyncRecord {
   EncryptedSyncRecord._({required Uint8List bytes, required this.keyVersion})
     : _bytes = bytes;
 
-  final Uint8List _bytes;
-  final int keyVersion;
-
-  Uint8List get bytes => Uint8List.fromList(_bytes);
-
-  Map<String, Object?> toJson() => <String, Object?>{
-    'keyVersion': keyVersion,
-    'box': base64Encode(_bytes),
-  };
-
   factory EncryptedSyncRecord.fromJson(Map<String, Object?> json) {
     final keyVersion = json['keyVersion'];
     final box = json['box'];
@@ -50,6 +40,16 @@ final class EncryptedSyncRecord {
       throw SyncStorageException('SYNC_RECORD_ENCODING_INVALID', error);
     }
   }
+
+  final Uint8List _bytes;
+  final int keyVersion;
+
+  Uint8List get bytes => Uint8List.fromList(_bytes);
+
+  Map<String, Object?> toJson() => <String, Object?>{
+    'keyVersion': keyVersion,
+    'box': base64Encode(_bytes),
+  };
 
   @override
   String toString() =>
