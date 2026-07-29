@@ -11,11 +11,7 @@ export type CommunicationPersona = 'admin' | 'teacher' | 'guardian' | 'student';
 export type CommunicationPriority = 'routine' | 'important' | 'urgent';
 export type CommunicationActionKind = 'form' | 'survey' | 'acknowledgement' | 'consent';
 export type CommunicationActionState =
-  | 'not-started'
-  | 'in-progress'
-  | 'submitted'
-  | 'complete'
-  | 'expired';
+  'not-started' | 'in-progress' | 'submitted' | 'complete' | 'expired';
 export type DeliveryChannel = 'in-app' | 'email' | 'sms' | 'push';
 export type DeliveryState = 'queued' | 'sent' | 'delivered' | 'read' | 'failed' | 'suppressed';
 export type AdapterHealthState = 'healthy' | 'degraded' | 'unavailable';
@@ -233,7 +229,9 @@ export function resolveLocalizedCopy<T extends { readonly locale: string }>(
   );
   if (languageMatch !== undefined) return languageMatch;
 
-  return copies.find((copy) => copy.locale.toLowerCase() === defaultLocale.toLowerCase()) ?? copies[0];
+  return (
+    copies.find((copy) => copy.locale.toLowerCase() === defaultLocale.toLowerCase()) ?? copies[0]
+  );
 }
 
 function interpolateTemplate(value: string, variables: Readonly<Record<string, string>>): string {
@@ -467,7 +465,8 @@ export function CommunicationsWorkspace(props: CommunicationsWorkspaceProps): Re
           <p>School communication ledger</p>
           <h2>{props.schoolName}</h2>
           <span>
-            Announcements, secure conversations, required responses and delivery evidence in one authorised scope.
+            Announcements, secure conversations, required responses and delivery evidence in one
+            authorised scope.
           </span>
         </div>
         <dl aria-label="Communication summary">
@@ -492,7 +491,10 @@ export function CommunicationsWorkspace(props: CommunicationsWorkspaceProps): Re
           <p>Only notices addressed to this account and current tenant are shown.</p>
         </header>
         {announcements.length === 0 ? (
-          <EmptyState title="No current announcements" detail="There is no authorised notice in this scope." />
+          <EmptyState
+            title="No current announcements"
+            detail="There is no authorised notice in this scope."
+          />
         ) : (
           <ol className="communications-announcements">
             {announcements.map((announcement) => {
@@ -501,7 +503,8 @@ export function CommunicationsWorkspace(props: CommunicationsWorkspaceProps): Re
                 props.locale,
                 announcement.defaultLocale,
               );
-              const acknowledged = announcement.acknowledgedBy?.includes(props.principalId) ?? false;
+              const acknowledged =
+                announcement.acknowledgedBy?.includes(props.principalId) ?? false;
               return (
                 <li key={announcement.id} data-priority={announcement.priority}>
                   <div>
@@ -513,7 +516,9 @@ export function CommunicationsWorkspace(props: CommunicationsWorkspaceProps): Re
                   <h4>{copy?.title ?? 'Announcement'}</h4>
                   <p>{copy?.body ?? 'The translated announcement is unavailable.'}</p>
                   {announcement.expiresAt === undefined ? null : (
-                    <small>Available until {formatTimestamp(props.locale, announcement.expiresAt)}</small>
+                    <small>
+                      Available until {formatTimestamp(props.locale, announcement.expiresAt)}
+                    </small>
                   )}
                   {announcement.acknowledgementRequired ? (
                     acknowledged ? (
@@ -538,19 +543,27 @@ export function CommunicationsWorkspace(props: CommunicationsWorkspaceProps): Re
             <p>Participants, reply permission and unread state remain explicit.</p>
           </header>
           {threads.length === 0 ? (
-            <EmptyState title="No authorised conversations" detail="No secure thread is available in this scope." />
+            <EmptyState
+              title="No authorised conversations"
+              detail="No secure thread is available in this scope."
+            />
           ) : (
             <ol className="communications-threads">
               {threads.map((thread) => {
                 const canReply =
-                  thread.locked !== true && hasCapability(props.capabilities, thread.replyCapability);
+                  thread.locked !== true &&
+                  hasCapability(props.capabilities, thread.replyCapability);
                 return (
                   <li key={thread.id}>
                     <div>
                       <h4>{thread.subject}</h4>
                       <span>{thread.participantLabels.join(' · ')}</span>
                     </div>
-                    <p>{thread.locked === true ? 'This conversation is read-only.' : thread.latestPreview}</p>
+                    <p>
+                      {thread.locked === true
+                        ? 'This conversation is read-only.'
+                        : thread.latestPreview}
+                    </p>
                     <footer>
                       <time dateTime={thread.lastMessageAt}>
                         {formatTimestamp(props.locale, thread.lastMessageAt)}
@@ -571,7 +584,10 @@ export function CommunicationsWorkspace(props: CommunicationsWorkspaceProps): Re
             <p>Forms, surveys, consent and acknowledgements keep their subject and due state.</p>
           </header>
           {actions.length === 0 ? (
-            <EmptyState title="No response required" detail="There is no authorised form or acknowledgement due." />
+            <EmptyState
+              title="No response required"
+              detail="There is no authorised form or acknowledgement due."
+            />
           ) : (
             <ol className="communications-actions">
               {actions.map((action) => (
@@ -584,7 +600,9 @@ export function CommunicationsWorkspace(props: CommunicationsWorkspaceProps): Re
                   {action.subjectLabel === undefined ? null : <small>{action.subjectLabel}</small>}
                   <p>{action.description}</p>
                   {action.dueAt === undefined ? null : (
-                    <time dateTime={action.dueAt}>Due {formatTimestamp(props.locale, action.dueAt)}</time>
+                    <time dateTime={action.dueAt}>
+                      Due {formatTimestamp(props.locale, action.dueAt)}
+                    </time>
                   )}
                   <a href={action.href}>
                     {action.state === 'not-started' || action.state === 'in-progress'
@@ -601,12 +619,23 @@ export function CommunicationsWorkspace(props: CommunicationsWorkspaceProps): Re
       <section className="communications-section" aria-labelledby="communications-delivery">
         <header>
           <h3 id="communications-delivery">Delivery status</h3>
-          <p>Destinations stay masked while channel, state, timestamp and recovery reason remain traceable.</p>
+          <p>
+            Destinations stay masked while channel, state, timestamp and recovery reason remain
+            traceable.
+          </p>
         </header>
         {deliveries.length === 0 ? (
-          <EmptyState title="No delivery evidence" detail="No authorised delivery record is available." />
+          <EmptyState
+            title="No delivery evidence"
+            detail="No authorised delivery record is available."
+          />
         ) : (
-          <div className="communications-table" role="region" aria-label="Notification delivery status" tabIndex={0}>
+          <div
+            className="communications-table"
+            role="region"
+            aria-label="Notification delivery status"
+            tabIndex={0}
+          >
             <table>
               <thead>
                 <tr>
@@ -625,7 +654,9 @@ export function CommunicationsWorkspace(props: CommunicationsWorkspaceProps): Re
                     <td>{delivery.destinationLabel}</td>
                     <td>
                       <strong>{deliveryLabels[delivery.state]}</strong>
-                      {delivery.failureReason === undefined ? null : <small>{delivery.failureReason}</small>}
+                      {delivery.failureReason === undefined ? null : (
+                        <small>{delivery.failureReason}</small>
+                      )}
                     </td>
                     <td>
                       <time dateTime={delivery.updatedAt}>
@@ -644,10 +675,15 @@ export function CommunicationsWorkspace(props: CommunicationsWorkspaceProps): Re
         <section className="communications-section" aria-labelledby="communications-preferences">
           <header>
             <h3 id="communications-preferences">Notification preferences</h3>
-            <p>Mandatory safety or operational notices identify why a channel cannot be disabled.</p>
+            <p>
+              Mandatory safety or operational notices identify why a channel cannot be disabled.
+            </p>
           </header>
           {preferences.length === 0 ? (
-            <EmptyState title="No editable preferences" detail="No preference record is available in this scope." />
+            <EmptyState
+              title="No editable preferences"
+              detail="No preference record is available in this scope."
+            />
           ) : (
             <ul className="communications-preferences">
               {preferences.map((preference) => (

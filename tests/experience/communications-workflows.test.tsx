@@ -56,9 +56,7 @@ const base: CommunicationsWorkspaceProps = {
       visibleToIds: ['guardian-1'],
       priority: 'urgent',
       publishedAt: '2026-07-29T08:00:00+06:00',
-      copies: [
-        { locale: 'en', title: 'Other tenant notice', body: 'Must never render.' },
-      ],
+      copies: [{ locale: 'en', title: 'Other tenant notice', body: 'Must never render.' }],
       defaultLocale: 'en',
       acknowledgementRequired: false,
     },
@@ -68,9 +66,7 @@ const base: CommunicationsWorkspaceProps = {
       visibleToIds: ['guardian-2'],
       priority: 'important',
       publishedAt: '2026-07-29T08:30:00+06:00',
-      copies: [
-        { locale: 'en', title: 'Other household notice', body: 'Must never render.' },
-      ],
+      copies: [{ locale: 'en', title: 'Other household notice', body: 'Must never render.' }],
       defaultLocale: 'en',
       acknowledgementRequired: false,
     },
@@ -223,12 +219,9 @@ const smsAdapter: NotificationAdapter = {
 
 describe('EXP-01 communications experience', () => {
   it('filters every communication record by tenant, principal and capability', () => {
-    const visible = selectScopedCommunications(
-      base.announcements,
-      'tenant-1',
-      'guardian-1',
-      ['announcements.household.read'],
-    );
+    const visible = selectScopedCommunications(base.announcements, 'tenant-1', 'guardian-1', [
+      'announcements.household.read',
+    ]);
     expect(visible.map((record) => record.id)).toEqual(['announcement-weather']);
   });
 
@@ -300,10 +293,12 @@ describe('EXP-01 communications experience', () => {
     expect(markup).not.toContain('Other tenant notice');
     expect(markup).not.toContain('Other household notice');
     expect(markup).toContain('Science fieldwork');
-    expect(markup).toContain('2 unread');
+    expect(markup).toContain('২ unread');
     expect(markup).not.toContain('Restricted safeguarding case');
     expect(markup).toContain('Science fieldwork consent');
-    expect(markup.indexOf('Science fieldwork consent')).toBeLessThan(markup.indexOf('Transport survey'));
+    expect(markup.indexOf('Science fieldwork consent')).toBeLessThan(
+      markup.indexOf('Transport survey'),
+    );
     expect(markup).toContain('•••• 0191');
     expect(markup).toContain('Mailbox rejected the message');
     expect(markup).toContain('Emergency closure notices require one verified contact channel.');
