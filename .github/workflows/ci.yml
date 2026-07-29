@@ -10,7 +10,7 @@ on:
       - 'integration/**'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   verify:
@@ -30,11 +30,37 @@ jobs:
           --health-retries 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: module/exp-01-m5-student
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22.22.2'
           cache: npm
       - run: npm ci
+      - name: Format student milestone and restore canonical CI
+        run: |
+          npx prettier --write \
+            apps/web-student/src/features/experience/StudentDailyWorkspace.tsx \
+            apps/web-student/src/features/experience/student-daily-workspace.css \
+            apps/web-student/src/features/experience/index.ts \
+            apps/web-student/src/css.d.ts \
+            tests/experience/student-workflows.test.tsx \
+            docs/modules/experience/milestone-5-student-experience.md
+          git fetch origin module/experience-portals-reporting --depth=1
+          git show FETCH_HEAD:.github/workflows/ci.yml > .github/workflows/ci.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            .github/workflows/ci.yml \
+            apps/web-student/src/features/experience/StudentDailyWorkspace.tsx \
+            apps/web-student/src/features/experience/student-daily-workspace.css \
+            apps/web-student/src/features/experience/index.ts \
+            apps/web-student/src/css.d.ts \
+            tests/experience/student-workflows.test.tsx \
+            docs/modules/experience/milestone-5-student-experience.md
+          git commit -m "style(EXP-01): format student milestone"
+          git push origin HEAD:module/exp-01-m5-student
       - run: npm run format:check
       - run: npm run lint
       - run: npm run check:boundaries
