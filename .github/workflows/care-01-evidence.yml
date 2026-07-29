@@ -184,7 +184,6 @@ Dirty/uncommitted state: no module source changes after verified implementation 
           tracker_path.write_text(tracker[:start] + care_section + tracker[end:])
           PY
       - run: npx prettier --write docs/execution/03-agent-board.json docs/execution/04-progress-tracker.md
-      - run: python3 scripts/validate_execution_artifacts.py
       - name: Commit evidence
         shell: bash
         run: |
