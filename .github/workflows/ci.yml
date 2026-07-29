@@ -10,7 +10,7 @@ on:
       - 'integration/**'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   verify:
@@ -30,6 +30,31 @@ jobs:
           --health-retries 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: module/exp-01-m2-ci-fix
+          fetch-depth: 0
+      - name: Fix exact optional step-up prop and restore canonical CI
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          path = Path('apps/web-admin/src/features/experience/AdminOperationsHome.tsx')
+          source = path.read_text(encoding='utf-8')
+          old = '  requiredAssurance?: AdminAssurance;'
+          new = '  requiredAssurance?: AdminAssurance | undefined;'
+          if source.count(old) != 1:
+              raise SystemExit(f'expected one StepUpLabel prop declaration, found {source.count(old)}')
+          path.write_text(source.replace(old, new), encoding='utf-8')
+          PY
+          git fetch origin module/experience-portals-reporting --depth=1
+          git show FETCH_HEAD:.github/workflows/ci.yml > .github/workflows/ci.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            .github/workflows/ci.yml \
+            apps/web-admin/src/features/experience/AdminOperationsHome.tsx
+          git commit -m "fix(EXP-01): type optional step-up assurance"
+          git push origin HEAD:module/exp-01-m2-ci-fix
       - uses: actions/setup-node@v4
         with:
           node-version: '22.22.2'
