@@ -16,3 +16,4 @@ workspace:
   - packages/mobile_core
   - packages/staff_domain
   - packages/sync_engine
+  - packages/sync_storage
