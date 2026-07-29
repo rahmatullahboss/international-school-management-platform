@@ -33,6 +33,8 @@ This milestone delivers the daily teacher workspace for assigned classes, attend
 - Permitted student learning context that explicitly excludes inferred health, safeguarding or counselling narratives.
 - Capability-aware loading, error and non-disclosing empty states.
 
-## Verification intent
+## Verification
 
-Focused tests must prove capability filtering before schedule ordering, assigned-only class visibility, attendance progress and offline actions, gradebook publication state, secure-conversation filtering, restricted student-context masking and recoverable errors. Full format, lint, boundaries, typecheck, tests, build, browser and execution-artifact gates remain required before Milestone 3 is marked complete.
+Formatted checkpoint `09820af3a42a3d01d8da26c9590cd75c6f1f4920` and full verification run `30447014804` passed format, lint, architecture boundaries, repository typecheck, all tests, fresh 40-migration replay, live Neon driver, build, dependency audit, licences, provenance, all Chromium suites and execution-artifact validation.
+
+Focused tests prove capability filtering before schedule ordering, assigned-only class visibility, attendance progress and offline actions, gradebook publication state, secure-conversation filtering, restricted student-context masking and recoverable errors. No production deployment or database mutation was performed.
