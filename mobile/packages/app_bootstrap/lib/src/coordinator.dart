@@ -261,9 +261,7 @@ final class MobileAppCoordinator extends ChangeNotifier {
     }
     switch (snapshot.phase) {
       case AuthSessionPhase.signedOut:
-        _set(
-          MobileApplicationState.signedOut(reasonCode: snapshot.reasonCode),
-        );
+        _set(MobileApplicationState.signedOut(reasonCode: snapshot.reasonCode));
       case AuthSessionPhase.failed:
         _set(
           MobileApplicationState.failed(
@@ -286,9 +284,7 @@ final class MobileAppCoordinator extends ChangeNotifier {
       }
       final options = _accessOptions(bootstrap);
       if (options.isEmpty) {
-        _set(
-          const MobileApplicationState.failed('BOOTSTRAP_NO_APP_ACCESS'),
-        );
+        _set(const MobileApplicationState.failed('BOOTSTRAP_NO_APP_ACCESS'));
         return;
       }
       if (options.length == 1) {
