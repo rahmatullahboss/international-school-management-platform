@@ -1,9 +1,13 @@
 name: Format UX Continuity Branch
 
 on:
-  push:
+  pull_request:
     branches:
-      - ux/smooth-operational-experience-v1
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
 
 permissions:
   contents: write
@@ -14,7 +18,7 @@ concurrency:
 
 jobs:
   format:
-    if: github.actor != 'github-actions[bot]'
+    if: github.head_ref == 'ux/smooth-operational-experience-v1' && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
