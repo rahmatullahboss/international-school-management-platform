@@ -32,6 +32,7 @@ jobs:
         run: |
           python3 mobile/tool/continue_teacher_sync.py
           python3 mobile/tool/wire_staff_sync.py
+          python3 mobile/tool/fix_staff_sync_idempotency.py
           python3 mobile/tool/fix_staff_sync_lints.py
       - name: Resolve workspace dependencies
         working-directory: mobile
@@ -48,10 +49,10 @@ jobs:
           if git diff --cached --quiet; then
             exit 0
           fi
-          git commit -m "fix(MOB-01): finalize Staff encrypted sync tests"
+          git commit -m "fix(MOB-01): canonicalize Staff encrypted sync wiring"
           git push origin HEAD:module/flutter-mobile-apps
       - name: Verify generated files remain ignored
-        run: git diff --exit-code -- mobile ':!mobile/tool/continue_teacher_sync.py' ':!mobile/tool/wire_staff_sync.py' ':!mobile/tool/fix_staff_sync_lints.py'
+        run: git diff --exit-code -- mobile ':!mobile/tool/continue_teacher_sync.py' ':!mobile/tool/wire_staff_sync.py' ':!mobile/tool/fix_staff_sync_idempotency.py' ':!mobile/tool/fix_staff_sync_lints.py'
       - name: Verify native application configuration
         run: python3 mobile/tool/verify_native_projects.py
       - name: Analyze family app
