@@ -31,13 +31,12 @@ jobs:
       - name: Resolve workspace dependencies
         working-directory: mobile
         run: flutter pub get
-      - name: Wire and format Staff production journeys
+      - name: Remove obsolete Staff view and format sources
         run: |
-          python3 mobile/tool/wire_staff_journeys.py
           python3 mobile/tool/remove_obsolete_staff_home.py
           cd mobile
           dart format .
-      - name: Commit repository-driven Staff production journeys
+      - name: Commit final Staff production cleanup
         if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
         run: |
           git config user.name github-actions[bot]
