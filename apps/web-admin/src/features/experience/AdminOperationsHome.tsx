@@ -162,15 +162,14 @@ export function selectAdminExceptions(
   exceptions: readonly AdminExceptionItem[],
   capabilities: readonly string[],
 ): AdminExceptionItem[] {
-  return exceptions
-    .filter((item) => hasCapability(capabilities, item.capability))
-    .toSorted((left, right) => {
-      const severityDifference = severityOrder[left.severity] - severityOrder[right.severity];
-      if (severityDifference !== 0) return severityDifference;
-      if (left.dueAt === undefined) return 1;
-      if (right.dueAt === undefined) return -1;
-      return left.dueAt.localeCompare(right.dueAt);
-    });
+  const permitted = exceptions.filter((item) => hasCapability(capabilities, item.capability));
+  return [...permitted].sort((left, right) => {
+    const severityDifference = severityOrder[left.severity] - severityOrder[right.severity];
+    if (severityDifference !== 0) return severityDifference;
+    if (left.dueAt === undefined) return 1;
+    if (right.dueAt === undefined) return -1;
+    return left.dueAt.localeCompare(right.dueAt);
+  });
 }
 
 export function selectAdminApprovals(
@@ -195,12 +194,14 @@ export function selectAdminBulkActions(
 ): AdminBulkAction[] {
   if (actions === undefined || selectedIds === undefined || selectedIds.length === 0) return [];
   const selected = exceptions.filter((item) => selectedIds.includes(item.id));
-  const selectedGroups = new Set(selected.map((item) => item.bulkGroup).filter(Boolean));
+  if (selected.length !== selectedIds.length) return [];
+
   return actions.filter(
     (action) =>
-      selectedGroups.size === 1 &&
-      selectedGroups.has(action.group) &&
-      capabilities.includes(action.capability),
+      capabilities.includes(action.capability) &&
+      selected.every(
+        (item) => item.bulkGroup === action.group && item.bulkCapability === action.capability,
+      ),
   );
 }
 
@@ -210,7 +211,7 @@ function formatValue(locale: string, value: string | number): string {
 
 function StepUpLabel(props: {
   assurance: AdminAssurance;
-  requiredAssurance?: AdminAssurance;
+  requiredAssurance?: AdminAssurance | undefined;
 }): ReactElement | null {
   if (assuranceMeets(props.assurance, props.requiredAssurance)) return null;
   return <span className="admin-step-up">Verify identity to continue</span>;
@@ -271,7 +272,9 @@ export function AdminOperationsHome(props: AdminOperationsHomeProps): ReactEleme
           <p>Every value states what it means, where it came from and when it was updated.</p>
         </header>
         {metrics.length === 0 ? (
-          <p className="admin-empty">No readiness measures are available for this role and scope.</p>
+          <p className="admin-empty">
+            No readiness measures are available for this role and scope.
+          </p>
         ) : (
           <dl>
             {metrics.map((metric) => (
@@ -312,7 +315,12 @@ export function AdminOperationsHome(props: AdminOperationsHomeProps): ReactEleme
         {exceptions.length === 0 ? (
           <p className="admin-empty">No permitted exceptions require action.</p>
         ) : (
-          <div className="admin-table-frame" role="region" aria-label="Priority exception queue" tabIndex={0}>
+          <div
+            className="admin-table-frame"
+            role="region"
+            aria-label="Priority exception queue"
+            tabIndex={0}
+          >
             <table>
               <caption>Cross-module administration exceptions</caption>
               <thead>
@@ -459,8 +467,12 @@ export function AdminRecordWorkspace(props: AdminRecordWorkspaceProps): ReactEle
     );
   }
 
-  const fields = props.fields.filter((field) => hasCapability(props.capabilities, field.capability));
-  const related = props.related.filter((item) => hasCapability(props.capabilities, item.capability));
+  const fields = props.fields.filter((field) =>
+    hasCapability(props.capabilities, field.capability),
+  );
+  const related = props.related.filter((item) =>
+    hasCapability(props.capabilities, item.capability),
+  );
   const actions = props.actions.filter((action) =>
     hasCapability(props.capabilities, action.capability),
   );
@@ -482,9 +494,7 @@ export function AdminRecordWorkspace(props: AdminRecordWorkspaceProps): ReactEle
                 {action.label}
               </a>
             ) : (
-              <span key={action.href}>
-                {action.label} · Verify identity to continue
-              </span>
+              <span key={action.href}>{action.label} · Verify identity to continue</span>
             ),
           )}
         </nav>

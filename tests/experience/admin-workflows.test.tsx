@@ -51,9 +51,9 @@ const exceptions: readonly AdminExceptionItem[] = [
 
 describe('EXP-01 admin experience', () => {
   it('filters before sorting so unauthorized restricted work never reaches the view', () => {
-    expect(selectAdminExceptions(exceptions, ['attendance.manage']).map((item) => item.id)).toEqual([
-      'attendance-1',
-    ]);
+    expect(selectAdminExceptions(exceptions, ['attendance.manage']).map((item) => item.id)).toEqual(
+      ['attendance-1'],
+    );
     expect(
       selectAdminExceptions(exceptions, ['attendance.manage', 'care.restricted.read']).map(
         (item) => item.id,
@@ -102,9 +102,25 @@ describe('EXP-01 admin experience', () => {
     expect(
       selectAdminBulkActions(actions, exceptions, ['attendance-1'], ['attendance.bulk-remind']),
     ).toHaveLength(1);
-    expect(selectAdminBulkActions(actions, exceptions, ['care-1'], ['attendance.bulk-remind'])).toEqual(
-      [],
-    );
+    expect(
+      selectAdminBulkActions(actions, exceptions, ['care-1'], ['attendance.bulk-remind']),
+    ).toEqual([]);
+    expect(
+      selectAdminBulkActions(
+        actions,
+        exceptions,
+        ['attendance-1', 'care-1'],
+        ['attendance.bulk-remind'],
+      ),
+    ).toEqual([]);
+    expect(
+      selectAdminBulkActions(
+        actions,
+        exceptions,
+        ['attendance-1', 'missing-id'],
+        ['attendance.bulk-remind'],
+      ),
+    ).toEqual([]);
   });
 
   it('renders evidence-backed queues, approvals, step-up state and capability-scoped search', () => {
