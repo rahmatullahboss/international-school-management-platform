@@ -234,11 +234,7 @@ describe('EXP-01 guardian household experience', () => {
   });
 
   it('filters capability and child scope before rendering counts or records', () => {
-    const visible = selectGuardianItems(
-      shared.attendance,
-      ['attendance.household.read'],
-      'nadia',
-    );
+    const visible = selectGuardianItems(shared.attendance, ['attendance.household.read'], 'nadia');
     expect(visible.map((item) => item.id)).toEqual(['attendance-nadia']);
 
     const markup = renderToStaticMarkup(<GuardianHouseholdWorkspace {...shared} />);
@@ -286,7 +282,9 @@ describe('EXP-01 guardian household experience', () => {
       <GuardianHouseholdWorkspace {...shared} activeChildId="unlinked" />,
     );
     expect(masked).toContain('This child profile is not available');
-    expect(masked).toContain('No linked child record is available in your current household scope.');
+    expect(masked).toContain(
+      'No linked child record is available in your current household scope.',
+    );
     expect(masked).not.toContain('Unlinked Student');
     expect(masked).not.toContain('Nadia Rahman');
 

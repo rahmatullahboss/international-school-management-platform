@@ -121,7 +121,9 @@ function hasCapability(capabilities: readonly string[], requiredCapability?: str
 }
 
 function isInChildScope(item: GuardianScopedItem, activeChildId?: string): boolean {
-  return activeChildId === undefined || item.childId === undefined || item.childId === activeChildId;
+  return (
+    activeChildId === undefined || item.childId === undefined || item.childId === activeChildId
+  );
 }
 
 export function selectGuardianItems<T extends GuardianScopedItem>(
@@ -131,8 +133,7 @@ export function selectGuardianItems<T extends GuardianScopedItem>(
 ): T[] {
   return items.filter(
     (item) =>
-      hasCapability(capabilities, item.requiredCapability) &&
-      isInChildScope(item, activeChildId),
+      hasCapability(capabilities, item.requiredCapability) && isInChildScope(item, activeChildId),
   );
 }
 
@@ -198,9 +199,7 @@ function statusLabel(state: GuardianTaskState | GuardianBalanceState): string {
   return state.replace('-', ' ');
 }
 
-export function GuardianHouseholdWorkspace(
-  props: GuardianHouseholdWorkspaceProps,
-): ReactElement {
+export function GuardianHouseholdWorkspace(props: GuardianHouseholdWorkspaceProps): ReactElement {
   if (props.state === 'loading') {
     return (
       <WorkspaceState
@@ -226,9 +225,11 @@ export function GuardianHouseholdWorkspace(
 
   const linkedChildren = selectGuardianChildren(props.children, props.capabilities);
   const activeChild = resolveGuardianActiveChild(linkedChildren, props.activeChildId);
-  const activeChildId = props.activeChildId === undefined ? activeChild?.childId : props.activeChildId;
+  const activeChildId =
+    props.activeChildId === undefined ? activeChild?.childId : props.activeChildId;
   const requestedChildIsLinked =
-    props.activeChildId === undefined || linkedChildren.some((child) => child.childId === props.activeChildId);
+    props.activeChildId === undefined ||
+    linkedChildren.some((child) => child.childId === props.activeChildId);
 
   if (!requestedChildIsLinked) {
     return (
@@ -280,9 +281,7 @@ export function GuardianHouseholdWorkspace(
           <div>
             <dt>Amount due</dt>
             <dd>
-              {feeCurrency === undefined
-                ? '—'
-                : formatMoney(props.locale, amountDue, feeCurrency)}
+              {feeCurrency === undefined ? '—' : formatMoney(props.locale, amountDue, feeCurrency)}
             </dd>
           </div>
           <div>
@@ -311,7 +310,9 @@ export function GuardianHouseholdWorkspace(
                     href={`/family?child=${encodeURIComponent(child.childId)}`}
                     aria-current={child.childId === activeChildId ? 'page' : undefined}
                   >
-                    <span aria-hidden="true">{child.avatarText ?? child.displayName.slice(0, 1)}</span>
+                    <span aria-hidden="true">
+                      {child.avatarText ?? child.displayName.slice(0, 1)}
+                    </span>
                     <strong>{child.preferredName ?? child.displayName}</strong>
                     <small>
                       {child.yearLabel} · {child.campusLabel}
@@ -325,7 +326,10 @@ export function GuardianHouseholdWorkspace(
         )}
       </section>
 
-      <section className="guardian-workspace__section" aria-labelledby="guardian-applications-heading">
+      <section
+        className="guardian-workspace__section"
+        aria-labelledby="guardian-applications-heading"
+      >
         <header>
           <h3 id="guardian-applications-heading">Applications and admissions</h3>
           <p>Current application state and the next required household action.</p>
@@ -358,7 +362,10 @@ export function GuardianHouseholdWorkspace(
       </section>
 
       <div className="guardian-workspace__split">
-        <section className="guardian-workspace__section" aria-labelledby="guardian-attendance-heading">
+        <section
+          className="guardian-workspace__section"
+          aria-labelledby="guardian-attendance-heading"
+        >
           <header>
             <h3 id="guardian-attendance-heading">Published attendance</h3>
             <p>School-published attendance only; draft teacher registers are never shown.</p>
@@ -380,9 +387,18 @@ export function GuardianHouseholdWorkspace(
                     </small>
                   </div>
                   <dl>
-                    <div><dt>Present</dt><dd>{formatCount(props.locale, record.presentCount)}</dd></div>
-                    <div><dt>Absent</dt><dd>{formatCount(props.locale, record.absentCount)}</dd></div>
-                    <div><dt>Late</dt><dd>{formatCount(props.locale, record.lateCount)}</dd></div>
+                    <div>
+                      <dt>Present</dt>
+                      <dd>{formatCount(props.locale, record.presentCount)}</dd>
+                    </div>
+                    <div>
+                      <dt>Absent</dt>
+                      <dd>{formatCount(props.locale, record.absentCount)}</dd>
+                    </div>
+                    <div>
+                      <dt>Late</dt>
+                      <dd>{formatCount(props.locale, record.lateCount)}</dd>
+                    </div>
                   </dl>
                   {record.notice === undefined ? null : <p>{record.notice}</p>}
                   <a href={record.href}>View attendance</a>
@@ -458,12 +474,24 @@ export function GuardianHouseholdWorkspace(
                     <td>{childName(linkedChildren, fee.childId) ?? 'Household'}</td>
                     <td>{fee.label}</td>
                     <td>{formatMoney(props.locale, fee.amountMinor, fee.currency)}</td>
-                    <td><span className="guardian-workspace__status">{statusLabel(fee.balanceState)}</span></td>
-                    <td>{fee.dueAt === undefined ? '—' : <time dateTime={fee.dueAt}>{fee.dueAt}</time>}</td>
+                    <td>
+                      <span className="guardian-workspace__status">
+                        {statusLabel(fee.balanceState)}
+                      </span>
+                    </td>
+                    <td>
+                      {fee.dueAt === undefined ? (
+                        '—'
+                      ) : (
+                        <time dateTime={fee.dueAt}>{fee.dueAt}</time>
+                      )}
+                    </td>
                     <td>
                       <a href={fee.statementHref}>View statement</a>
                       {fee.paymentHref === undefined || fee.balanceState === 'clear' ? null : (
-                        <a className="guardian-workspace__primary" href={fee.paymentHref}>Pay securely</a>
+                        <a className="guardian-workspace__primary" href={fee.paymentHref}>
+                          Pay securely
+                        </a>
                       )}
                     </td>
                   </tr>
@@ -493,17 +521,26 @@ export function GuardianHouseholdWorkspace(
                     <span className="guardian-workspace__status">{statusLabel(form.state)}</span>
                   </div>
                   <div>
-                    {form.dueAt === undefined ? null : <time dateTime={form.dueAt}>Due {form.dueAt}</time>}
-                    {form.requiresAssurance === 'aal2' ? <small>Identity verification required</small> : null}
+                    {form.dueAt === undefined ? null : (
+                      <time dateTime={form.dueAt}>Due {form.dueAt}</time>
+                    )}
+                    {form.requiresAssurance === 'aal2' ? (
+                      <small>Identity verification required</small>
+                    ) : null}
                   </div>
-                  <a href={form.href}>{form.state === 'complete' ? 'View response' : 'Open form'}</a>
+                  <a href={form.href}>
+                    {form.state === 'complete' ? 'View response' : 'Open form'}
+                  </a>
                 </li>
               ))}
             </ol>
           )}
         </section>
 
-        <section className="guardian-workspace__section" aria-labelledby="guardian-documents-heading">
+        <section
+          className="guardian-workspace__section"
+          aria-labelledby="guardian-documents-heading"
+        >
           <header>
             <h3 id="guardian-documents-heading">Authorised documents</h3>
             <p>Downloads remain linked to the current household/child authorization.</p>
