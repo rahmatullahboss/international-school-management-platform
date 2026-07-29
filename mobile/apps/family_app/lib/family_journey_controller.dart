@@ -10,8 +10,14 @@ final class FamilyJourneyState {
     this.reasonCode,
   });
 
-  const FamilyJourneyState.loading()
-    : this._(phase: FamilyJourneyPhase.loading);
+  const FamilyJourneyState.loading({
+    FamilyDashboardReadModel? dashboard,
+    FamilyProfileDirectory? directory,
+  }) : this._(
+         dashboard: dashboard,
+         directory: directory,
+         phase: FamilyJourneyPhase.loading,
+       );
 
   const FamilyJourneyState.failed(String reasonCode)
     : this._(phase: FamilyJourneyPhase.failed, reasonCode: reasonCode);
@@ -52,6 +58,7 @@ final class FamilyJourneyController extends ChangeNotifier {
     try {
       final directory = await _repository.loadProfiles(_session);
       if (!_isCurrent(generation)) return;
+      _set(FamilyJourneyState.loading(directory: directory));
       await _loadDashboard(directory, generation);
     } on Object catch (error) {
       _failIfCurrent(generation, error);
@@ -64,7 +71,12 @@ final class FamilyJourneyController extends ChangeNotifier {
     final generation = ++_generation;
     try {
       final selected = current.select(studentId);
-      _set(const FamilyJourneyState.loading());
+      _set(
+        FamilyJourneyState.loading(
+          dashboard: _state.dashboard,
+          directory: selected,
+        ),
+      );
       await _loadDashboard(selected, generation);
     } on Object catch (error) {
       _failIfCurrent(generation, error);
