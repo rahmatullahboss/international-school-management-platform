@@ -113,7 +113,10 @@ void main() {
     expect(body['studentId'], 'student-1');
     expect(body['schemaVersion'], 2);
     expect(body['baseVersion'], 3);
-    expect((body['answers'] as Map<String, Object?>)['transport.mode'], 'School bus');
+    expect(
+      (body['answers'] as Map<String, Object?>)['transport.mode'],
+      'School bus',
+    );
     expect(revision, 4);
     client.close();
   });
@@ -215,25 +218,28 @@ void main() {
     client.close();
   });
 
-  test('rejects missing capabilities and invalid page limits before transport', () async {
-    var called = false;
-    final client = clientFor((request) {
-      called = true;
-      return const <String, Object?>{};
-    });
+  test(
+    'rejects missing capabilities and invalid page limits before transport',
+    () async {
+      var called = false;
+      final client = clientFor((request) {
+        called = true;
+        return const <String, Object?>{};
+      });
 
-    expect(
-      () => FamilyInteractionApi(client).listDocuments(
-        correlationId: 'documents-3',
-        limit: 0,
-        session: familySession(capabilities: const <String>{}),
-        studentId: 'student-1',
-      ),
-      throwsA(isA<FamilyInteractionException>()),
-    );
-    expect(called, isFalse);
-    client.close();
-  });
+      expect(
+        () => FamilyInteractionApi(client).listDocuments(
+          correlationId: 'documents-3',
+          limit: 0,
+          session: familySession(capabilities: const <String>{}),
+          studentId: 'student-1',
+        ),
+        throwsA(isA<FamilyInteractionException>()),
+      );
+      expect(called, isFalse);
+      client.close();
+    },
+  );
 }
 
 SchoolApiClient clientFor(

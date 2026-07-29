@@ -24,18 +24,21 @@ void main() {
     );
   });
 
-  test('download grants do not expose transport credentials in diagnostics', () {
-    final grant = FamilyDocumentDownloadGrant(
-      documentId: 'document-1',
-      expiresAt: DateTime.utc(2026, 7, 30, 2),
-      grantId: 'opaque-download-reference',
-      requiresStepUp: true,
-      singleUse: true,
-    );
+  test(
+    'download grants do not expose transport credentials in diagnostics',
+    () {
+      final grant = FamilyDocumentDownloadGrant(
+        documentId: 'document-1',
+        expiresAt: DateTime.utc(2026, 7, 30, 2),
+        grantId: 'opaque-download-reference',
+        requiresStepUp: true,
+        singleUse: true,
+      );
 
-    expect(grant.toString(), isNot(contains('opaque-download-reference')));
-    expect(grant.toString(), contains('[REDACTED]'));
-  });
+      expect(grant.toString(), isNot(contains('opaque-download-reference')));
+      expect(grant.toString(), contains('[REDACTED]'));
+    },
+  );
 
   test('form definitions enforce schema and choice invariants', () {
     final definition = FamilyFormDefinition(
@@ -96,7 +99,9 @@ void main() {
     );
     expect(
       () => FamilyFormSubmissionCommand(
-        answers: <String, Object?>{'unsafe': <String, Object?>{'nested': true}},
+        answers: <String, Object?>{
+          'unsafe': <String, Object?>{'nested': true},
+        },
         baseVersion: 0,
         formId: 'form-1',
         idempotencyKey: 'form-1-invalid',
@@ -143,47 +148,50 @@ void main() {
     );
   });
 
-  test('conversation pages reject duplicates and message bodies are bounded', () {
-    expect(
-      () => FamilyConversationPage(
-        conversations: [
-          FamilyConversationSummary(
-            conversationId: 'conversation-1',
-            latestMessageAt: DateTime.utc(2026, 7, 30),
-            subject: 'Class update',
-            unreadCount: 1,
-          ),
-          FamilyConversationSummary(
-            conversationId: 'conversation-1',
-            latestMessageAt: DateTime.utc(2026, 7, 30),
-            subject: 'Duplicate',
-            unreadCount: 0,
-          ),
-        ],
-      ),
-      throwsA(
-        isA<FamilyInteractionException>().having(
-          (error) => error.code,
-          'code',
-          'FAMILY_CONVERSATION_DUPLICATE',
+  test(
+    'conversation pages reject duplicates and message bodies are bounded',
+    () {
+      expect(
+        () => FamilyConversationPage(
+          conversations: [
+            FamilyConversationSummary(
+              conversationId: 'conversation-1',
+              latestMessageAt: DateTime.utc(2026, 7, 30),
+              subject: 'Class update',
+              unreadCount: 1,
+            ),
+            FamilyConversationSummary(
+              conversationId: 'conversation-1',
+              latestMessageAt: DateTime.utc(2026, 7, 30),
+              subject: 'Duplicate',
+              unreadCount: 0,
+            ),
+          ],
         ),
-      ),
-    );
-    expect(
-      () => FamilySendMessageCommand(
-        body: '   ',
-        conversationId: 'conversation-1',
-        idempotencyKey: 'message-1',
-      ),
-      throwsA(
-        isA<FamilyInteractionException>().having(
-          (error) => error.code,
-          'code',
-          'FAMILY_MESSAGE_BODY_INVALID',
+        throwsA(
+          isA<FamilyInteractionException>().having(
+            (error) => error.code,
+            'code',
+            'FAMILY_CONVERSATION_DUPLICATE',
+          ),
         ),
-      ),
-    );
-  });
+      );
+      expect(
+        () => FamilySendMessageCommand(
+          body: '   ',
+          conversationId: 'conversation-1',
+          idempotencyKey: 'message-1',
+        ),
+        throwsA(
+          isA<FamilyInteractionException>().having(
+            (error) => error.code,
+            'code',
+            'FAMILY_MESSAGE_BODY_INVALID',
+          ),
+        ),
+      );
+    },
+  );
 }
 
 SchoolSession session({

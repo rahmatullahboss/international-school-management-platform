@@ -116,14 +116,9 @@ final class FamilyFormFieldDefinition {
       );
     }
     if (type != FamilyFormFieldType.singleChoice && this.options.isNotEmpty) {
-      throw const FamilyInteractionException(
-        'FAMILY_FORM_OPTIONS_NOT_ALLOWED',
-      );
+      throw const FamilyInteractionException('FAMILY_FORM_OPTIONS_NOT_ALLOWED');
     }
-    _requireUniqueInteraction(
-      this.options,
-      'FAMILY_FORM_OPTION_DUPLICATE',
-    );
+    _requireUniqueInteraction(this.options, 'FAMILY_FORM_OPTION_DUPLICATE');
   }
 
   final String fieldId;
@@ -174,10 +169,7 @@ final class FamilyFormSubmissionCommand {
        ),
        baseVersion = _nonNegativeInteraction(baseVersion, 'baseVersion'),
        formId = _requiredInteraction(formId, 'formId'),
-       idempotencyKey = _requiredInteraction(
-         idempotencyKey,
-         'idempotencyKey',
-       ),
+       idempotencyKey = _requiredInteraction(idempotencyKey, 'idempotencyKey'),
        schemaVersion = _positiveInteraction(schemaVersion, 'schemaVersion'),
        studentId = _requiredInteraction(studentId, 'studentId');
 
@@ -223,10 +215,7 @@ final class FamilyConsentDecisionCommand {
     required String policyVersion,
     required String studentId,
   }) : consentId = _requiredInteraction(consentId, 'consentId'),
-       idempotencyKey = _requiredInteraction(
-         idempotencyKey,
-         'idempotencyKey',
-       ),
+       idempotencyKey = _requiredInteraction(idempotencyKey, 'idempotencyKey'),
        policyVersion = _requiredInteraction(policyVersion, 'policyVersion'),
        studentId = _requiredInteraction(studentId, 'studentId');
 
@@ -252,10 +241,7 @@ final class FamilyConversationSummary {
     required DateTime latestMessageAt,
     required String subject,
     required int unreadCount,
-  }) : conversationId = _requiredInteraction(
-         conversationId,
-         'conversationId',
-       ),
+  }) : conversationId = _requiredInteraction(conversationId, 'conversationId'),
        latestMessageAt = latestMessageAt.toUtc(),
        subject = _requiredInteraction(subject, 'subject'),
        unreadCount = _nonNegativeInteraction(unreadCount, 'unreadCount');
@@ -306,10 +292,7 @@ final class FamilyConversationMessagePage {
     required String conversationId,
     required Iterable<FamilyConversationMessage> messages,
     String? nextCursor,
-  }) : conversationId = _requiredInteraction(
-         conversationId,
-         'conversationId',
-       ),
+  }) : conversationId = _requiredInteraction(conversationId, 'conversationId'),
        messages = List<FamilyConversationMessage>.unmodifiable(messages),
        nextCursor = _optionalInteraction(nextCursor, 'nextCursor') {
     _requireUniqueInteraction(
@@ -329,14 +312,8 @@ final class FamilySendMessageCommand {
     required String conversationId,
     required String idempotencyKey,
   }) : body = _boundedMessage(body),
-       conversationId = _requiredInteraction(
-         conversationId,
-         'conversationId',
-       ),
-       idempotencyKey = _requiredInteraction(
-         idempotencyKey,
-         'idempotencyKey',
-       );
+       conversationId = _requiredInteraction(conversationId, 'conversationId'),
+       idempotencyKey = _requiredInteraction(idempotencyKey, 'idempotencyKey');
 
   final String conversationId;
   final String body;
@@ -370,7 +347,9 @@ Object? _validatedAnswerValue(Object? value, String path) {
   }
   if (value is List<Object?>) {
     if (value.length > 100) {
-      throw FamilyInteractionException('FAMILY_FORM_ANSWER_LIST_TOO_LONG:$path');
+      throw FamilyInteractionException(
+        'FAMILY_FORM_ANSWER_LIST_TOO_LONG:$path',
+      );
     }
     return List<Object?>.unmodifiable(
       value.indexed.map(

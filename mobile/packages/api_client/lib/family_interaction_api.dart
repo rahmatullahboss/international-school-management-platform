@@ -91,9 +91,10 @@ final class FamilyInteractionApi {
       ),
     );
     try {
-      final forms = _objectList(response, 'forms').map(_formSummary).toList(
-        growable: false,
-      );
+      final forms = _objectList(
+        response,
+        'forms',
+      ).map(_formSummary).toList(growable: false);
       _requireUnique(forms.map((form) => form.formId), 'FAMILY_FORM_DUPLICATE');
       return List<FamilyFormSummary>.unmodifiable(forms);
     } on Object catch (error) {
@@ -170,9 +171,10 @@ final class FamilyInteractionApi {
       ),
     );
     try {
-      final consents = _objectList(response, 'consents')
-          .map(_consent)
-          .toList(growable: false);
+      final consents = _objectList(
+        response,
+        'consents',
+      ).map(_consent).toList(growable: false);
       _requireUnique(
         consents.map((consent) => consent.consentId),
         'FAMILY_CONSENT_DUPLICATE',
@@ -242,10 +244,7 @@ final class FamilyInteractionApi {
     int limit = 50,
   }) async {
     _requireCapability(session, SchoolCapability.messagesRead);
-    final normalizedId = _requiredStringValue(
-      conversationId,
-      'conversationId',
-    );
+    final normalizedId = _requiredStringValue(conversationId, 'conversationId');
     final response = await _client.getJson(
       '/v1/mobile/family/conversations/${Uri.encodeComponent(normalizedId)}/messages',
       context: ApiRequestContext(
@@ -318,9 +317,7 @@ final class FamilyInteractionApi {
 
   FamilyDocumentSummary _document(Map<String, Object?> json) =>
       FamilyDocumentSummary(
-        cachePolicy: _documentCachePolicy(
-          _requiredString(json, 'cachePolicy'),
-        ),
+        cachePolicy: _documentCachePolicy(_requiredString(json, 'cachePolicy')),
         classification: _documentClassification(
           _requiredString(json, 'classification'),
         ),
@@ -388,7 +385,9 @@ final class FamilyInteractionApi {
       switch (value) {
         'noStore' => FamilyDocumentCachePolicy.noStore,
         'encryptedTemporary' => FamilyDocumentCachePolicy.encryptedTemporary,
-        _ => throw const FormatException('FAMILY_DOCUMENT_CACHE_POLICY_UNKNOWN'),
+        _ => throw const FormatException(
+          'FAMILY_DOCUMENT_CACHE_POLICY_UNKNOWN',
+        ),
       };
 
   FamilyFormStatus _formStatus(String value) => switch (value) {
@@ -433,10 +432,7 @@ final class FamilyInteractionApi {
       );
 }
 
-Map<String, Object?> _requiredObject(
-  Map<String, Object?> json,
-  String key,
-) {
+Map<String, Object?> _requiredObject(Map<String, Object?> json, String key) {
   final value = json[key];
   if (value is! Map<String, Object?>) {
     throw FormatException('FAMILY_OBJECT_REQUIRED:$key');
@@ -444,10 +440,7 @@ Map<String, Object?> _requiredObject(
   return value;
 }
 
-List<Map<String, Object?>> _objectList(
-  Map<String, Object?> json,
-  String key,
-) {
+List<Map<String, Object?>> _objectList(Map<String, Object?> json, String key) {
   final value = json[key];
   if (value is! List<Object?>) {
     throw FormatException('FAMILY_LIST_REQUIRED:$key');
@@ -467,12 +460,14 @@ List<String> _stringList(Map<String, Object?> json, String key) {
   if (value is! List<Object?>) {
     throw FormatException('FAMILY_STRING_LIST_REQUIRED:$key');
   }
-  return value.map((item) {
-    if (item is! String || item.trim().isEmpty) {
-      throw FormatException('FAMILY_STRING_LIST_VALUE_INVALID:$key');
-    }
-    return item.trim();
-  }).toList(growable: false);
+  return value
+      .map((item) {
+        if (item is! String || item.trim().isEmpty) {
+          throw FormatException('FAMILY_STRING_LIST_VALUE_INVALID:$key');
+        }
+        return item.trim();
+      })
+      .toList(growable: false);
 }
 
 String _requiredString(Map<String, Object?> json, String key) {
