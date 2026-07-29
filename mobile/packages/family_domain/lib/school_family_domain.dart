@@ -12,10 +12,7 @@ final class FamilyStudentProfile {
   }) : campusId = _required(campusId, 'campusId'),
        displayName = _required(displayName, 'displayName'),
        gradeLabel = _required(gradeLabel, 'gradeLabel'),
-       relationshipLabel = _required(
-         relationshipLabel,
-         'relationshipLabel',
-       ),
+       relationshipLabel = _required(relationshipLabel, 'relationshipLabel'),
        studentId = _required(studentId, 'studentId');
 
   final String studentId;
@@ -177,11 +174,9 @@ final class FamilyFeeReadModel {
 }
 
 final class FamilyMessageReadModel {
-  FamilyMessageReadModel({
-    DateTime? latestMessageAt,
-    required int unreadCount,
-  }) : latestMessageAt = latestMessageAt?.toUtc(),
-       unreadCount = _nonNegative(unreadCount, 'unreadCount');
+  FamilyMessageReadModel({DateTime? latestMessageAt, required int unreadCount})
+    : latestMessageAt = latestMessageAt?.toUtc(),
+      unreadCount = _nonNegative(unreadCount, 'unreadCount');
 
   final int unreadCount;
   final DateTime? latestMessageAt;

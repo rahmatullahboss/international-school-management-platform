@@ -74,34 +74,37 @@ void main() {
     });
   });
 
-  test('attendance keeps the authoritative summary instead of recalculating', () {
-    final attendance = FamilyAttendanceReadModel(
-      absentSessions: 1,
-      lateSessions: 1,
-      presentSessions: 48,
-      summaryLabel: 'Published attendance · 96%',
-      totalSessions: 50,
-    );
+  test(
+    'attendance keeps the authoritative summary instead of recalculating',
+    () {
+      final attendance = FamilyAttendanceReadModel(
+        absentSessions: 1,
+        lateSessions: 1,
+        presentSessions: 48,
+        summaryLabel: 'Published attendance · 96%',
+        totalSessions: 50,
+      );
 
-    expect(attendance.summaryLabel, 'Published attendance · 96%');
-    expect(attendance.totalSessions, 50);
-    expect(
-      () => FamilyAttendanceReadModel(
-        absentSessions: 3,
-        lateSessions: 3,
-        presentSessions: 5,
-        summaryLabel: 'Invalid source',
-        totalSessions: 10,
-      ),
-      throwsA(
-        isA<FamilyDomainException>().having(
-          (error) => error.code,
-          'code',
-          'FAMILY_ATTENDANCE_COUNTS_INVALID',
+      expect(attendance.summaryLabel, 'Published attendance · 96%');
+      expect(attendance.totalSessions, 50);
+      expect(
+        () => FamilyAttendanceReadModel(
+          absentSessions: 3,
+          lateSessions: 3,
+          presentSessions: 5,
+          summaryLabel: 'Invalid source',
+          totalSessions: 10,
         ),
-      ),
-    );
-  });
+        throwsA(
+          isA<FamilyDomainException>().having(
+            (error) => error.code,
+            'code',
+            'FAMILY_ATTENDANCE_COUNTS_INVALID',
+          ),
+        ),
+      );
+    },
+  );
 
   test('money remains exact integer minor units with currency consistency', () {
     final fees = FamilyFeeReadModel(
@@ -116,14 +119,8 @@ void main() {
     expect(
       () => FamilyFeeReadModel(
         invoiceReference: 'INV-2026-0719',
-        outstanding: FamilyMoneyAmount(
-          currencyCode: 'BDT',
-          minorUnits: 450000,
-        ),
-        lastReceipt: FamilyMoneyAmount(
-          currencyCode: 'USD',
-          minorUnits: 1000,
-        ),
+        outstanding: FamilyMoneyAmount(currencyCode: 'BDT', minorUnits: 450000),
+        lastReceipt: FamilyMoneyAmount(currencyCode: 'USD', minorUnits: 1000),
         lastReceiptReference: 'RCPT-1042',
       ),
       throwsA(
@@ -171,7 +168,10 @@ void main() {
     expect(snapshot.timetable, hasLength(1));
     expect(snapshot.publishedResults, hasLength(1));
     expect(snapshot.messages?.unreadCount, 2);
-    expect(() => snapshot.timetable.add(snapshot.timetable.single), throwsUnsupportedError);
+    expect(
+      () => snapshot.timetable.add(snapshot.timetable.single),
+      throwsUnsupportedError,
+    );
   });
 
   test('repository boundary requires an activated school session', () {
