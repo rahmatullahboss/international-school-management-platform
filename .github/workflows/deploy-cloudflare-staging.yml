@@ -85,7 +85,7 @@ jobs:
             local output="$2"
             local label="$3"
             for attempt in {1..12}; do
-              if curl --fail --silent --show-error "$url" --output "$output"; then
+              if curl --location --fail --silent --show-error "$url" --output "$output"; then
                 return 0
               fi
               if [[ "$attempt" == "12" ]]; then
