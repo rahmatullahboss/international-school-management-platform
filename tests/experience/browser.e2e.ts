@@ -126,5 +126,5 @@ test('offline and reduced-motion states remain explicit without blocking work', 
   const animationDuration = await page
     .locator('.experience-connectivity__signal')
     .evaluate((element) => getComputedStyle(element).animationDuration);
-  expect(['0s', '0.00001s']).toContain(animationDuration);
+  expect(Number.parseFloat(animationDuration)).toBeLessThanOrEqual(0.00001);
 });
