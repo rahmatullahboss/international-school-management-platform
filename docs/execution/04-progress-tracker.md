@@ -1,8 +1,8 @@
 # Whole-Module Program Progress Tracker
 
 **Program:** `international-school-platform-v1`
-**Updated:** 2026-07-28
-**Current repository state:** `GATE-WAVE-1-INTEGRATED` passed. Reviewed `SIS-01`, `FIN-01` and `INT-01` are serially integrated from exact base `042b75990f9cd819239c584a370687042393f6a7`; reviewed Wave 1 integration SHA is `8cc8ee1562ade672b14c1c44af935fe7e2307976`.
+**Updated:** 2026-07-29
+**Current repository state:** `GATE-WAVE-1-INTEGRATED` and `GATE-STUDENT-SUPPORT-THREAT-MODEL` passed. Reviewed `SIS-01`, `FIN-01` and `INT-01` are serially integrated from exact base `042b75990f9cd819239c584a370687042393f6a7`; reviewed Wave 1 integration SHA is `8cc8ee1562ade672b14c1c44af935fe7e2307976`.
 
 ## Gate status
 
@@ -13,7 +13,7 @@
 | `GATE-REVIEWED-SHAS-AVAILABLE` | passed | `SIS-01` `5e2499018282d8296abfe093b5dd95b231829379`; `FIN-01` `5f9e1692a8fc19fc2e9789a338d028918acdeaf6`; `INT-01` `bfa95a4a42025213fa7c2090a587ef5304924da7` |
 | `GATE-INT-COMPLETE` | passed | Seven milestones complete; agent-branch apply `30345998526`, logical replay `30346762735` and fresh Neon branch replay `30347294967` passed |
 | `GATE-WAVE-1-INTEGRATED` | passed | Reviewed integration SHA `8cc8ee1562ade672b14c1c44af935fe7e2307976`; CI `30362743336`; integration Neon apply/recovery run `30362743167`; 22 migrations, 139/139 tenant-owned tables protected, finance invariants and six browser journeys passed |
-| `GATE-STUDENT-SUPPORT-THREAT-MODEL` | blocked | Wave 1 integrated plus approved student-support threat model |
+| `GATE-STUDENT-SUPPORT-THREAT-MODEL` | passed | [Student-support high-risk data threat model](../security/student-support-threat-model.md) approved against reviewed Wave 1 integration SHA `8cc8ee1562ade672b14c1c44af935fe7e2307976`; 40 security invariants, role/action matrix, negative tests, RLS/migration guardrails and incident controls recorded |
 | `GATE-WAVE-2-INTEGRATED` | blocked | `ACAD-01`, `OPS-01`, `CARE-01` reviewed and integrated |
 | `GATE-PILOT-READY` | blocked | `EXP-01` integrated and final system/recovery verification passed |
 
@@ -28,7 +28,7 @@ Owner decision recorded on 2026-07-28:
 - the foundation/program coordinator maintains shared documentation, gate state, contract-change decisions and this tracker without writing concurrently inside module-owned paths;
 - `INTEG-01` reviews and integrates module SHAs serially after they are recorded here.
 
-Current readiness: Wave 2 may use exact reviewed Wave 1 integration SHA `8cc8ee1562ade672b14c1c44af935fe7e2307976`. `ACAD-01` and `OPS-01` are ready; `CARE-01` remains blocked only by its required threat-model gate.
+Current readiness: Wave 2 may use exact reviewed Wave 1 integration SHA `8cc8ee1562ade672b14c1c44af935fe7e2307976`. `ACAD-01`, `OPS-01` and `CARE-01` are ready to start; CARE-01 must implement the approved student-support threat-model invariants beginning with its security-contract milestone.
 
 ## Stream tracker
 
@@ -40,7 +40,7 @@ Current readiness: Wave 2 may use exact reviewed Wave 1 integration SHA `8cc8ee1
 | `INT-01` | 1 | complete; integrated by `INTEG-01` | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | complete | reviewed head `bfa95a4a42025213fa7c2090a587ef5304924da7`; integration merge `0822462` | none |
 | `ACAD-01` | 2 | ready to start | `8cc8ee1562ade672b14c1c44af935fe7e2307976` | academic structure | none | none |
 | `OPS-01` | 2 | ready to start | `8cc8ee1562ade672b14c1c44af935fe7e2307976` | HR/staff | none | none |
-| `CARE-01` | 2 | blocked | `8cc8ee1562ade672b14c1c44af935fe7e2307976` | security contract | none | `GATE-STUDENT-SUPPORT-THREAT-MODEL` |
+| `CARE-01` | 2 | ready to start | `8cc8ee1562ade672b14c1c44af935fe7e2307976` | security contract | threat-model gate passed; evidence commit recorded below | none |
 | `EXP-01` | 3 | blocked | reviewed Wave 2 integration SHA | persona shells | none | `GATE-WAVE-2-INTEGRATED` |
 | `INTEG-01` | gated serial | Wave 1 gate passed | `042b75990f9cd819239c584a370687042393f6a7` | release Wave 2 from reviewed integration SHA | `8cc8ee1562ade672b14c1c44af935fe7e2307976` | none |
 
@@ -482,7 +482,26 @@ No execution evidence recorded.
 
 ## CARE-01 evidence
 
-No execution evidence recorded.
+### Student-support threat-model gate
+
+Date/time: 2026-07-29T02:18:00+06:00
+Stream: CARE-01 entry-gate prerequisite, maintained by the program coordinator
+Milestone completed: `GATE-STUDENT-SUPPORT-THREAT-MODEL` approved; CARE-01 released to milestone `security-contract`
+Git branch: `gate/student-support-threat-model`
+Worktree: `.worktrees/gate-student-support-threat-model`
+Neon branch: no database branch created for this documentation-only gate; CARE-01 must create/verify `agent/care-01-student-support` when implementation starts
+Starting base: integrated `origin/main` `11f4536224b1bd31eb1c79bbb7c571e6e7fb470b`, proven descendant of reviewed Wave 1 integration SHA `8cc8ee1562ade672b14c1c44af935fe7e2307976`
+Checkpoint SHA: `f97895ce8e2736699b0bd664b8a5a9eec452da3e`
+Changed coordinator-owned paths: `docs/security/student-support-threat-model.md`, `docs/execution/03-agent-board.json`, `docs/execution/04-progress-tracker.md`; no CARE-01 implementation path and no active OPS-01 path changed
+Threat-model evidence: complete data classification; least-privilege/need-to-know model; guardian/student visibility; consent/legal-basis rules; break-glass and AAL2 approvals; read/disclosure logging and immutable audit; retention/legal hold/deletion; export/integration/notification/offline-device safety; cross-tenant controls; incident response; abuse cases; role/action matrix; 40 security invariants; mandatory negative tests; migration/RLS requirements; CARE-01 implementation guardrails
+Focused checks and results: `npm ci` PASS with 0 vulnerabilities; threat-model contract validation PASS with 40 unique invariants and required sections; `python3 scripts/validate_execution_artifacts.py` PASS; full `npm run verify` PASS including formatting, lint, architecture boundaries, typecheck, 254 tests passed with the existing credential-dependent Neon direct test skipped, Worker dry-run build, Vite build and artifact validation
+Migration/replay evidence: no schema or database mutation in this gate; CARE-01 migration and fresh-Neon replay requirements are specified as implementation acceptance criteria
+Security/tenant outcome: gate requires forced RLS, missing-context denial, case/purpose/relationship authorization, AAL2 separation of duties, fail-closed sensitive read logging, no broad admin/report-builder inheritance and exhaustive negative isolation tests
+Documentation authority observation: current integrated repository does not contain the board-referenced `PRODUCT.md` or `DESIGN.md`; factual product-design input was reviewed, and CARE-01 must resolve this drift before UI completion evidence
+Gate outcome: `GATE-STUDENT-SUPPORT-THREAT-MODEL` PASS; CARE-01 status is `ready_to_start`
+Exact next milestone: create/verify declared CARE-01 Git worktree and Neon branch from exact reviewed Wave 1 SHA, then implement the threat-model security contract before broad domain/UI work
+Dirty/uncommitted state: tracker evidence update only after the gate checkpoint commit
+Production mutation performed: no
 
 ## EXP-01 evidence
 
