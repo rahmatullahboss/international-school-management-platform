@@ -29,24 +29,12 @@
   "design_baseline": {
     "skill": "impeccable",
     "skill_version": "4.0.2",
-    "providers": [
-      "codex",
-      "github"
-    ],
+    "providers": ["codex", "github"],
     "product_authority": "PRODUCT.md",
     "visual_authority": "DESIGN.md",
     "whole_module_agent_owns_ui": true,
     "microtask_design_agents_allowed": false,
-    "required_ui_evidence": [
-      "shape-or-approved-brief",
-      "critique",
-      "audit",
-      "detector",
-      "accessibility",
-      "responsive-rtl",
-      "harden",
-      "polish"
-    ]
+    "required_ui_evidence": ["shape-or-approved-brief", "critique", "audit", "detector", "accessibility", "responsive-rtl", "harden", "polish"]
   },
   "base_rules": {
     "FND-01": "resolve latest reviewed origin/main in rahmatullahboss/international-school-management-platform, create or resume the fixed foundation branch/worktree and record the exact base SHA",
@@ -56,7 +44,8 @@
     "integration": "accept only reviewed checkpoint/final SHAs recorded in the progress tracker"
   },
   "reviewed_bases": {
-    "foundation": "55114f55a375d3d79dba7ea21f984b789b5dbca1"
+    "foundation": "55114f55a375d3d79dba7ea21f984b789b5dbca1",
+    "wave_1": "8cc8ee1562ade672b14c1c44af935fe7e2307976"
   },
   "reviewed_stream_shas": {
     "wave_1": {
@@ -64,10 +53,13 @@
       "FIN-01": "5f9e1692a8fc19fc2e9789a338d028918acdeaf6",
       "INT-01": "bfa95a4a42025213fa7c2090a587ef5304924da7"
     },
-    "wave_1_integration_base": "9b9605aff93901eb1ad9e5b4d9ad9d6517d04aba",
     "wave_2": {
-      "OPS-01": "d2a09f4619cf308fa9e0eeded44f5ba3f4ea4a69"
-    }
+      "ACAD-01": "1d895afdf51f6d4f6323ada4b93d9ba32b244480",
+      "OPS-01": "fc749d7c0ece36964da8f923431bb3b7ac925e56",
+      "CARE-01": "9304bd6c425eca4ec69db90c1f1cab3f7a409b8d"
+    },
+    "wave_1_integration_base": "042b75990f9cd819239c584a370687042393f6a7",
+    "wave_1_integration": "8cc8ee1562ade672b14c1c44af935fe7e2307976"
   },
   "streams": [
     {
@@ -80,36 +72,9 @@
       "neon_branch": "agent/fnd-01-foundation",
       "dependencies": [],
       "entry_gate": "GATE-DOCUMENTS-APPROVED",
-      "full_prompt_section": "FND-01 \u2014 Platform Foundation",
-      "owned_paths": [
-        "apps/platform/**",
-        "packages/platform/**",
-        "packages/database/**",
-        "packages/policy/**",
-        "packages/events/**",
-        "packages/localization/**",
-        "packages/ui/**",
-        "infra/**",
-        "scripts/**",
-        ".agents/skills/impeccable/**",
-        ".codex/hooks.json",
-        ".github/**",
-        "docs/design/**",
-        "PRODUCT.md",
-        "DESIGN.md",
-        ".impeccable/config.json",
-        "root configuration files"
-      ],
-      "milestones": [
-        "repository-bootstrap",
-        "neon-data-platform",
-        "tenancy-routing",
-        "identity-policy",
-        "audit-outbox-idempotency",
-        "localization-documents-workflows",
-        "shared-experience-boundaries",
-        "foundation-verification-freeze"
-      ],
+      "full_prompt_section": "FND-01 — Platform Foundation",
+      "owned_paths": ["apps/platform/**", "packages/platform/**", "packages/database/**", "packages/policy/**", "packages/events/**", "packages/localization/**", "packages/ui/**", "infra/**", "scripts/**", ".agents/skills/impeccable/**", ".codex/hooks.json", ".github/**", "docs/design/**", "PRODUCT.md", "DESIGN.md", ".impeccable/config.json", "root configuration files"],
+      "milestones": ["repository-bootstrap", "neon-data-platform", "tenancy-routing", "identity-policy", "audit-outbox-idempotency", "localization-documents-workflows", "shared-experience-boundaries", "foundation-verification-freeze"],
       "completion_gate": "GATE-FOUNDATION-READY"
     },
     {
@@ -124,7 +89,7 @@
         "FND-01"
       ],
       "entry_gate": "GATE-FOUNDATION-READY",
-      "full_prompt_section": "SIS-01 \u2014 Core SIS and Admissions",
+      "full_prompt_section": "SIS-01 — Core SIS and Admissions",
       "owned_paths": [
         "packages/modules/people/**",
         "packages/modules/admissions/**",
@@ -157,7 +122,7 @@
         "FND-01"
       ],
       "entry_gate": "GATE-FOUNDATION-READY",
-      "full_prompt_section": "FIN-01 \u2014 Billing and Accounting",
+      "full_prompt_section": "FIN-01 — Billing and Accounting",
       "owned_paths": [
         "packages/modules/billing/**",
         "packages/modules/ledger/**",
@@ -181,7 +146,7 @@
       "id": "INT-01",
       "name": "Internationalization and Integration Platform",
       "wave": 1,
-      "status": "gate_passed_integration_in_progress",
+      "status": "complete_and_integrated",
       "branch": "module/international-integrations",
       "worktree": ".worktrees/int-01-integrations",
       "neon_branch": "agent/int-01-integrations",
@@ -189,7 +154,7 @@
         "FND-01"
       ],
       "entry_gate": "GATE-FOUNDATION-READY",
-      "full_prompt_section": "INT-01 \u2014 Internationalization and Integration Platform",
+      "full_prompt_section": "INT-01 — Internationalization and Integration Platform",
       "owned_paths": [
         "packages/modules/country-packs/**",
         "packages/modules/integrations/**",
@@ -213,7 +178,8 @@
       "id": "ACAD-01",
       "name": "Academics Attendance and Records",
       "wave": 2,
-      "status": "blocked_by_wave_1",
+      "status": "complete_reviewed_waiting_integration",
+      "reviewed_sha": "1d895afdf51f6d4f6323ada4b93d9ba32b244480",
       "branch": "module/academics-attendance-records",
       "worktree": ".worktrees/acad-01-academics",
       "neon_branch": "agent/acad-01-academics",
@@ -224,7 +190,7 @@
         "INTEG-01:wave-1"
       ],
       "entry_gate": "GATE-WAVE-1-INTEGRATED",
-      "full_prompt_section": "ACAD-01 \u2014 Academics, Attendance and Records",
+      "full_prompt_section": "ACAD-01 — Academics, Attendance and Records",
       "owned_paths": [
         "packages/modules/academics/**",
         "packages/modules/scheduling/**",
@@ -251,7 +217,8 @@
       "id": "OPS-01",
       "name": "School Operations ERP",
       "wave": 2,
-      "status": "gate_passed",
+      "status": "complete_reviewed_waiting_integration",
+      "reviewed_sha": "fc749d7c0ece36964da8f923431bb3b7ac925e56",
       "branch": "module/school-operations",
       "worktree": ".worktrees/ops-01-operations",
       "neon_branch": "agent/ops-01-operations",
@@ -262,7 +229,7 @@
         "INTEG-01:wave-1"
       ],
       "entry_gate": "GATE-WAVE-1-INTEGRATED",
-      "full_prompt_section": "OPS-01 \u2014 School Operations ERP",
+      "full_prompt_section": "OPS-01 — School Operations ERP",
       "owned_paths": [
         "packages/modules/hr/**",
         "packages/modules/procurement/**",
@@ -292,7 +259,8 @@
       "id": "CARE-01",
       "name": "Health Wellbeing and Safeguarding",
       "wave": 2,
-      "status": "blocked_by_wave_1_and_threat_model",
+      "status": "complete_reviewed_waiting_integration",
+      "reviewed_sha": "9304bd6c425eca4ec69db90c1f1cab3f7a409b8d",
       "branch": "module/student-support",
       "worktree": ".worktrees/care-01-student-support",
       "neon_branch": "agent/care-01-student-support",
@@ -302,7 +270,7 @@
         "INTEG-01:wave-1"
       ],
       "entry_gate": "GATE-STUDENT-SUPPORT-THREAT-MODEL",
-      "full_prompt_section": "CARE-01 \u2014 Health, Wellbeing and Safeguarding",
+      "full_prompt_section": "CARE-01 — Health, Wellbeing and Safeguarding",
       "owned_paths": [
         "packages/modules/health/**",
         "packages/modules/behavior/**",
@@ -339,7 +307,7 @@
         "INTEG-01:wave-2"
       ],
       "entry_gate": "GATE-WAVE-2-INTEGRATED",
-      "full_prompt_section": "EXP-01 \u2014 Portals, Communications and Reporting Experience",
+      "full_prompt_section": "EXP-01 — Portals, Communications and Reporting Experience",
       "owned_paths": [
         "apps/web-admin/**",
         "apps/web-teacher/**",
@@ -367,7 +335,7 @@
       "id": "INTEG-01",
       "name": "Serial Integration and Release Verification",
       "wave": "continuous-gated",
-      "status": "wave_1_fin_integrated_int_pending",
+      "status": "ready_for_wave_2_integration",
       "branch": "integration/international-school-platform-v1",
       "worktree": ".worktrees/integ-01-release",
       "neon_branch": "integration/international-school-platform-v1",
@@ -382,7 +350,7 @@
         "EXP-01"
       ],
       "entry_gate": "GATE-REVIEWED-SHAS-AVAILABLE",
-      "full_prompt_section": "INTEG-01 \u2014 Serial Integration and Release Verification",
+      "full_prompt_section": "INTEG-01 — Serial Integration and Release Verification",
       "owned_paths": [
         "integration-only conflict resolutions",
         "migration ordering manifests",
