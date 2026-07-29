@@ -154,12 +154,9 @@ describe('OPS HTTP API', () => {
       getSummary: () =>
         Promise.reject(new Error('OPS_PERMISSION_DENIED:operations.hr.report.read')),
     };
-    const response = await createOperationsApi(api).request(
-      '/operations/summary?asOf=2026-07-29',
-      {
-        headers: authHeaders,
-      },
-    );
+    const response = await createOperationsApi(api).request('/operations/summary?asOf=2026-07-29', {
+      headers: authHeaders,
+    });
     expect(response.status).toBe(403);
     const body = await responseBody(response);
     expect(body).toMatchObject({ error: { code: 'OPS_PERMISSION_DENIED' } });
