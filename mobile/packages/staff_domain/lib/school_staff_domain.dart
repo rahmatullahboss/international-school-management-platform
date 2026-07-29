@@ -370,25 +370,25 @@ final class TeacherWriteReceipt {
 abstract interface class TeacherJourneyRepository {
   Future<TeacherTodayReadModel> loadToday(
     SchoolSession session, {
-    String? correlationId,
+    String correlationId = 'teacher-today',
   });
 
   Future<TeacherRosterReadModel> loadRoster({
     required String meetingId,
     required SchoolSession session,
-    String? correlationId,
+    String correlationId = 'teacher-roster',
   });
 
   Future<TeacherWriteReceipt> submitAttendance({
     required TeacherAttendanceBatchCommand command,
     required SchoolSession session,
-    String? correlationId,
+    String correlationId = 'teacher-attendance-batch',
   });
 
   Future<TeacherWriteReceipt> saveGradeDraft({
     required TeacherGradeDraftCommand command,
     required SchoolSession session,
-    String? correlationId,
+    String correlationId = 'teacher-grade-draft',
   });
 }
 
