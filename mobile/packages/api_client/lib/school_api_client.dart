@@ -10,8 +10,11 @@ typedef AccessTokenProvider = Future<String?> Function();
 final class ApiRequestContext {
   const ApiRequestContext({required this.correlationId, required this.session});
 
+  const ApiRequestContext.accountScoped({required this.correlationId})
+    : session = null;
+
   final String correlationId;
-  final SchoolSession session;
+  final SchoolSession? session;
 }
 
 final class SchoolApiException implements Exception {
@@ -77,16 +80,28 @@ final class SchoolApiClient {
         message: 'Sign in is required before this request can be sent.',
       );
     }
+    if (context.correlationId.trim().isEmpty) {
+      throw const SchoolApiException(
+        code: 'CORRELATION_ID_REQUIRED',
+        message: 'A request correlation identifier is required.',
+      );
+    }
 
-    return <String, String>{
+    final headers = <String, String>{
       'Accept': 'application/json',
       'Authorization': 'Bearer $token',
       'Content-Type': 'application/json',
-      'X-Campus-Id': context.session.campusId,
       'X-Correlation-Id': context.correlationId,
-      'X-Persona': context.session.activePersona.name,
-      'X-Tenant-Id': context.session.tenantId,
     };
+    final session = context.session;
+    if (session != null) {
+      headers.addAll(<String, String>{
+        'X-Campus-Id': session.campusId,
+        'X-Persona': session.activePersona.name,
+        'X-Tenant-Id': session.tenantId,
+      });
+    }
+    return headers;
   }
 
   Map<String, Object?> _decode(http.Response response) {
