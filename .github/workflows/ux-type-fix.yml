@@ -1,0 +1,87 @@
+name: Fix UX Continuity Types
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ux-continuity-type-fix
+  cancel-in-progress: true
+
+jobs:
+  fix:
+    if: github.head_ref == 'ux/smooth-operational-experience-v1' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ux/smooth-operational-experience-v1
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+          cache: npm
+
+      - run: npm ci
+
+      - name: Apply exact optional and platform API corrections
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          main = Path('apps/platform-web/src/main.tsx')
+          text = main.read_text(encoding='utf-8')
+          text = text.replace(
+              "interface IdleWindow extends Window {\n  requestIdleCallback?: (callback: () => void, options?: { readonly timeout: number }) => number;\n  cancelIdleCallback?: (handle: number) => void;\n}\n\ninterface ViewTransitionDocument extends Document {\n  startViewTransition?: (update: () => void) => { readonly finished: Promise<void> };\n}\n\n",
+              "",
+          )
+          text = text.replace(
+              "function NavigationProgress(props: { readonly pendingPath?: string }): ReactElement | null {",
+              "function NavigationProgress(props: { readonly pendingPath: string | undefined }): ReactElement | null {",
+          )
+          text = text.replace(
+              "    const documentWithTransitions = document as ViewTransitionDocument;\n    if (!reducedMotion && documentWithTransitions.startViewTransition !== undefined) {\n      void documentWithTransitions\n        .startViewTransition(() => flushSync(commit))\n        .finished.catch(() => undefined);",
+              "    if (!reducedMotion && typeof document.startViewTransition === 'function') {\n      void document\n        .startViewTransition(() => flushSync(commit))\n        .finished.catch(() => undefined);",
+          )
+          text = text.replace(
+              "    const idleWindow = window as IdleWindow;\n    const preloadAll = (): void => {",
+              "    const preloadAll = (): void => {",
+          )
+          text = text.replace(
+              "    if (idleWindow.requestIdleCallback !== undefined) {\n      const handle = idleWindow.requestIdleCallback(preloadAll, { timeout: 2500 });\n      return () => idleWindow.cancelIdleCallback?.(handle);",
+              "    if (typeof window.requestIdleCallback === 'function') {\n      const handle = window.requestIdleCallback(preloadAll, { timeout: 2500 });\n      return () => window.cancelIdleCallback(handle);",
+          )
+          main.write_text(text, encoding='utf-8')
+
+          shell = Path('packages/modules/documents-experience/src/index.tsx')
+          shell_text = shell.read_text(encoding='utf-8')
+          shell_text = shell_text.replace(
+              "                        <NavigationIcon name={item.icon} />",
+              "                        {item.icon === undefined ? null : (\n                          <NavigationIcon name={item.icon} />\n                        )}",
+          )
+          shell.write_text(shell_text, encoding='utf-8')
+          PY
+
+      - run: npm run format
+      - run: npm run lint
+      - run: npm run typecheck
+
+      - name: Commit typed UX source
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'fix(ux): satisfy typed navigation contracts'
+          git push origin HEAD:ux/smooth-operational-experience-v1
