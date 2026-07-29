@@ -9,7 +9,9 @@ import {
   studentCapabilities,
   studentOverview,
 } from '../pilot-data';
+import { usePilotResource } from '../pilot-resource';
 import {
+  PilotDataStatus,
   PilotModuleSurface,
   UnknownRoute,
   resolvePageHeading,
@@ -31,6 +33,14 @@ export default function StudentPortal(props: StudentPortalProps): ReactElement {
     'Student portal',
     'Published student services',
   );
+  const resource = usePilotResource(
+    'student',
+    studentOverview,
+    studentCapabilities,
+    pilotTimestamp,
+    props.connectivity,
+  );
+  const overview = resource.data;
 
   return (
     <StudentExperienceShell
@@ -40,7 +50,7 @@ export default function StudentPortal(props: StudentPortalProps): ReactElement {
       pageTitle={heading.title}
       pageDescription={heading.description}
       activeHref={props.path}
-      capabilities={studentCapabilities}
+      capabilities={resource.capabilities}
       session={{
         assurance: 'aal1',
         deviceLabel: 'Pilot browser',
@@ -49,11 +59,18 @@ export default function StudentPortal(props: StudentPortalProps): ReactElement {
       connectivity={{
         state: props.connectivity,
         pendingChanges: 0,
-        lastSyncedAt: pilotTimestamp,
+        lastSyncedAt: resource.updatedAt,
         retryHref: props.path,
       }}
       utilityActions={shellUtilityActions('student')}
     >
+      <PilotDataStatus
+        state={resource.state}
+        apiConfigured={resource.apiConfigured}
+        updatedAt={resource.updatedAt}
+        message={resource.message}
+        onRefresh={resource.refresh}
+      />
       {props.path === '/student' ? (
         <StudentDailyWorkspace
           studentId="student-1"
@@ -61,16 +78,16 @@ export default function StudentPortal(props: StudentPortalProps): ReactElement {
           schoolName={schoolName}
           yearLabel="Year 8"
           locale="en-BD"
-          date={pilotTimestamp}
+          date={resource.updatedAt}
           ageBand="secondary"
-          capabilities={studentCapabilities}
-          lessons={studentOverview.lessons}
-          attendance={studentOverview.attendance}
-          results={studentOverview.results}
-          resources={studentOverview.resources}
-          requests={studentOverview.requests}
-          documents={studentOverview.documents}
-          conversations={studentOverview.conversations}
+          capabilities={resource.capabilities}
+          lessons={overview.lessons}
+          attendance={overview.attendance}
+          results={overview.results}
+          resources={overview.resources}
+          requests={overview.requests}
+          documents={overview.documents}
+          conversations={overview.conversations}
         />
       ) : page === undefined ? (
         <UnknownRoute homeHref="/student" />
