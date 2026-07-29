@@ -1,0 +1,21 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node", "vitest/globals"]
+  },
+  "include": [
+    "../../packages/modules/documents-experience/src/**/*.ts",
+    "../../packages/modules/documents-experience/src/**/*.tsx",
+    "../../apps/web-admin/src/features/experience/**/*.ts",
+    "../../apps/web-admin/src/features/experience/**/*.tsx",
+    "../../apps/web-teacher/src/features/experience/**/*.ts",
+    "../../apps/web-teacher/src/features/experience/**/*.tsx",
+    "../../apps/web-family/src/features/experience/**/*.ts",
+    "../../apps/web-family/src/features/experience/**/*.tsx",
+    "../../apps/web-student/src/features/experience/**/*.ts",
+    "../../apps/web-student/src/features/experience/**/*.tsx",
+    "./**/*.ts",
+    "./**/*.tsx"
+  ]
+}
