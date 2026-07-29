@@ -1,8 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-
-import 'auth_models.dart';
+import 'package:school_authentication/src/auth_models.dart';
 
 abstract interface class AuthTokenStore {
   Future<AuthTokenSet?> read();
