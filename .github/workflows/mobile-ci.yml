@@ -37,23 +37,21 @@ jobs:
           from pathlib import Path
 
           path = Path('mobile/packages/api_client/lib/family_interaction_api.dart')
-          source = path.read_text()
-          block = """Map<String, Object?> _requiredObject(
-            Map<String, Object?> json,
-            String key,
-          ) {
+          source = path.read_text(encoding='utf-8')
+          block = """
+          Map<String, Object?> _requiredObject(Map<String, Object?> json, String key) {
             final value = json[key];
             if (value is! Map<String, Object?>) {
               throw FormatException('FAMILY_OBJECT_REQUIRED:$key');
             }
             return value;
           }
-
           """
-          if block in source:
-              path.write_text(source.replace(block, '', 1))
-          elif '_requiredObject(' in source:
-              raise SystemExit('Unexpected _requiredObject declaration shape')
+          if block not in source:
+              if '_requiredObject(' in source:
+                  raise SystemExit('Unexpected _requiredObject declaration shape')
+          else:
+              path.write_text(source.replace(block, '\n', 1), encoding='utf-8')
           PY
           dart format \
             mobile/packages/family_domain/lib/family_interactions.dart \
