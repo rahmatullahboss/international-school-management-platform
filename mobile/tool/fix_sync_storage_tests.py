@@ -59,5 +59,65 @@ if 'keyVault.read(SyncStorageScope.fromSession(secondSession), 1)' not in source
     if count != 1:
         raise SystemExit('Unexpected account purge assertion shape')
 
+find_old = """      expect(
+        () => store.find('operation-1'),
+        throwsA(
+          isA<SyncStorageException>().having(
+            (error) => error.code,
+            'code',
+            'SYNC_STORE_QUARANTINED',
+          ),
+        ),
+      );
+"""
+find_new = """      await expectLater(
+        store.find('operation-1'),
+        throwsA(
+          isA<SyncStorageException>().having(
+            (error) => error.code,
+            'code',
+            'SYNC_STORE_QUARANTINED',
+          ),
+        ),
+      );
+"""
+if find_old in source:
+    source = source.replace(find_old, find_new, 1)
+elif find_new not in source:
+    raise SystemExit('Unexpected quarantine find assertion shape')
+
+ready_old = """      expect(
+        () => store.ready(
+          now: DateTime.parse('2026-07-30T04:00:00+06:00'),
+          session: session,
+        ),
+        throwsA(
+          isA<SyncStorageException>().having(
+            (error) => error.code,
+            'code',
+            'SYNC_STORE_QUARANTINED',
+          ),
+        ),
+      );
+"""
+ready_new = """      await expectLater(
+        store.ready(
+          now: DateTime.parse('2026-07-30T04:00:00+06:00'),
+          session: session,
+        ),
+        throwsA(
+          isA<SyncStorageException>().having(
+            (error) => error.code,
+            'code',
+            'SYNC_STORE_QUARANTINED',
+          ),
+        ),
+      );
+"""
+if ready_old in source:
+    source = source.replace(ready_old, ready_new, 1)
+elif ready_new not in source:
+    raise SystemExit('Unexpected quarantined ready assertion shape')
+
 path.write_text(source, encoding='utf-8')
 print('Encrypted sync storage lifecycle assertions strengthened.')
