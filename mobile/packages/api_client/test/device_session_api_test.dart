@@ -102,35 +102,38 @@ void main() {
     );
   });
 
-  test('revokes a device session using an encoded path and idempotency', () async {
-    late http.Request capturedRequest;
-    final client = SchoolApiClient(
-      accessTokenProvider: () async => 'access-token',
-      baseUri: Uri.parse('https://api.school.example/'),
-      client: MockClient((request) async {
-        capturedRequest = request;
-        return http.Response('{}', 200);
-      }),
-    );
+  test(
+    'revokes a device session using an encoded path and idempotency',
+    () async {
+      late http.Request capturedRequest;
+      final client = SchoolApiClient(
+        accessTokenProvider: () async => 'access-token',
+        baseUri: Uri.parse('https://api.school.example/'),
+        client: MockClient((request) async {
+          capturedRequest = request;
+          return http.Response('{}', 200);
+        }),
+      );
 
-    await DeviceSessionApi(client).revoke(
-      correlationId: 'correlation-device-2',
-      deviceSessionId: 'device/session 1',
-      idempotencyKey: 'revoke-device-session-1',
-    );
+      await DeviceSessionApi(client).revoke(
+        correlationId: 'correlation-device-2',
+        deviceSessionId: 'device/session 1',
+        idempotencyKey: 'revoke-device-session-1',
+      );
 
-    expect(
-      capturedRequest.url.path,
-      '${DeviceSessionApi.registrationPath}/device%2Fsession%201/revoke',
-    );
-    expect(
-      capturedRequest.headers['idempotency-key'],
-      'revoke-device-session-1',
-    );
-    expect(capturedRequest.headers, isNot(contains('x-tenant-id')));
+      expect(
+        capturedRequest.url.path,
+        '${DeviceSessionApi.registrationPath}/device%2Fsession%201/revoke',
+      );
+      expect(
+        capturedRequest.headers['idempotency-key'],
+        'revoke-device-session-1',
+      );
+      expect(capturedRequest.headers, isNot(contains('x-tenant-id')));
 
-    client.close();
-  });
+      client.close();
+    },
+  );
 
   test('rejects malformed registration responses', () async {
     final client = SchoolApiClient(

@@ -16,9 +16,7 @@ enum SchoolPushEnvironment { development, production }
 final class SchoolPushToken {
   SchoolPushToken(String value) : value = value.trim() {
     if (this.value.isEmpty || this.value.length > 4096) {
-      throw const DeviceSessionContractException(
-        'DEVICE_PUSH_TOKEN_INVALID',
-      );
+      throw const DeviceSessionContractException('DEVICE_PUSH_TOKEN_INVALID');
     }
   }
 
@@ -131,9 +129,7 @@ final class DeviceSessionApi {
   }) async {
     final normalizedId = deviceSessionId.trim();
     if (normalizedId.isEmpty || normalizedId.length > 256) {
-      throw const DeviceSessionContractException(
-        'DEVICE_SESSION_ID_INVALID',
-      );
+      throw const DeviceSessionContractException('DEVICE_SESSION_ID_INVALID');
     }
     final encodedId = Uri.encodeComponent(normalizedId);
     await _client.postJson(
@@ -146,7 +142,9 @@ final class DeviceSessionApi {
 
   RegisteredDeviceSession _decode(Map<String, Object?> json) {
     try {
-      final registeredAt = DateTime.parse(_requiredString(json, 'registeredAt'));
+      final registeredAt = DateTime.parse(
+        _requiredString(json, 'registeredAt'),
+      );
       final revision = json['revision'];
       if (revision is! int || revision < 1) {
         throw const FormatException('DEVICE_SESSION_REVISION_INVALID');
