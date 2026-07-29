@@ -6,17 +6,23 @@ from pathlib import Path
 path = Path(__file__).resolve().parents[1] / 'apps/family_app/lib/main.dart'
 source = path.read_text(encoding='utf-8')
 
-imports = [
+managed_imports = [
     "import 'package:school_api_client/family_read_api.dart';",
     "import 'package:school_api_client/school_api_client.dart';",
+    "import 'package:school_app_bootstrap/school_app_bootstrap.dart';",
+    "import 'package:school_authentication/school_authentication.dart';",
+    "import 'package:school_design_system/school_design_system.dart';",
     "import 'package:school_family_domain/school_family_domain.dart';",
+    "import 'package:school_mobile_core/mobile_core.dart';",
 ]
-anchor = "import 'package:school_app_bootstrap/school_app_bootstrap.dart';\n"
-if anchor not in source:
+lines = source.splitlines()
+lines = [line for line in lines if line not in set(managed_imports)]
+anchor = "import 'package:go_router/go_router.dart';"
+if anchor not in lines:
     raise SystemExit('FAMILY_IMPORT_ANCHOR_REQUIRED')
-for directive in reversed(imports):
-    source = source.replace(directive + '\n', '')
-    source = source.replace(anchor, anchor + directive + '\n', 1)
+index = lines.index(anchor) + 1
+lines[index:index] = managed_imports
+source = '\n'.join(lines) + '\n'
 
 part = "part 'family_journey_controller.dart';"
 source = source.replace(part + '\n', '')
