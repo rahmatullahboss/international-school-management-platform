@@ -89,6 +89,7 @@ class _StaffProductionAppState extends State<StaffProductionApp> {
             syncRuntimeLoader: widget.syncRuntimeLoader,
             syncRuntimeLoader: widget.syncRuntimeLoader,
             syncRuntimeLoader: widget.syncRuntimeLoader,
+            syncRuntimeLoader: widget.syncRuntimeLoader,
           );
         }
         return MaterialApp(
@@ -137,8 +138,6 @@ class _AuthorizedStaffAppState extends State<_AuthorizedStaffApp> {
   late StaffJourneyController _journey;
   late GoRouter _router;
   late StaffAttendanceSyncController _sync;
-  late StaffAttendanceSyncController _sync;
-  late StaffAttendanceSyncController _sync;
 
   @override
   void initState() {
@@ -152,20 +151,8 @@ class _AuthorizedStaffAppState extends State<_AuthorizedStaffApp> {
       runtimeLoader: widget.syncRuntimeLoader,
       session: widget.session,
     );
-    _sync = StaffAttendanceSyncController(
-      repository: widget.repository,
-      runtimeLoader: widget.syncRuntimeLoader,
-      session: widget.session,
-    );
-    _sync = StaffAttendanceSyncController(
-      repository: widget.repository,
-      runtimeLoader: widget.syncRuntimeLoader,
-      session: widget.session,
-    );
     _router = _createRouter();
     unawaited(_journey.initialize());
-    unawaited(_sync.initialize());
-    unawaited(_sync.initialize());
     unawaited(_sync.initialize());
   }
 

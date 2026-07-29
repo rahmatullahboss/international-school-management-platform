@@ -16,7 +16,7 @@ void main() {
       final repository = _TeacherRepository(
         status: TeacherWriteStatus.accepted,
       );
-      final runtime = _teacherRuntime(
+      final runtime = __teacherRuntime(
         repository: repository,
         session: session,
         store: store,
@@ -60,7 +60,7 @@ void main() {
     final session = teacherSession();
     final store = _MemorySyncStore();
     final repository = _TeacherRepository(status: TeacherWriteStatus.conflict);
-    final runtime = _teacherRuntime(
+    final runtime = __teacherRuntime(
       repository: repository,
       session: session,
       store: store,
@@ -102,7 +102,7 @@ void main() {
         repository: repository,
         runtimeLoader: ({required repository, required session}) async {
           loads++;
-          return _teacherRuntime(
+          return __teacherRuntime(
             repository: repository,
             session: session,
             store: _MemorySyncStore(),
@@ -123,7 +123,7 @@ void main() {
   );
 }
 
-TeacherSyncRuntime _teacherRuntime({
+TeacherSyncRuntime __teacherRuntime({
   required TeacherJourneyRepository repository,
   required SchoolSession session,
   required _MemorySyncStore store,
