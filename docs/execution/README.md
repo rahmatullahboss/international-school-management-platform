@@ -1,7 +1,7 @@
 # Whole-Module Multi-Agent Execution System
 
-**Status:** Active execution policy
-**Date:** 2026-07-28
+**Status:** Pilot runtime composed; production promotion gated  
+**Date:** 2026-07-30  
 **Operating rule:** one agent owns one complete large module; internal milestones are not separate agent assignments.
 
 ## 1. Purpose
@@ -20,7 +20,9 @@ Owner operating decision: separate agents are used only for complete module stre
 6. [Ownership and integration contracts](05-module-ownership-and-integration-contracts.md)
 7. [Open-source clean-room policy](06-open-source-clean-room-policy.md)
 8. [Artifact contract](artifact-contract.md)
-9. Validation script: `scripts/validate_execution_artifacts.py`
+9. [Final system release evidence](08-final-system-release-evidence.md)
+10. [PILOT-01 runtime composition](09-pilot-runtime-composition.md)
+11. Validation script: `scripts/validate_execution_artifacts.py`
 
 ## 3. Repository baseline
 
@@ -73,6 +75,10 @@ After the APIs/read models from the previous waves are stable:
 - `INTEG-01` — Reviews and integrates each completed wave, orders migrations, resolves contract mismatches without violating ownership, runs cross-module verification and prepares release evidence.
 
 `INTEG-01` is one continuous integration program. When a later wave is not yet complete, waiting for required reviewed SHAs is a documented gate, not permission to start unrelated work.
+
+### Post-integration pilot
+
+- `PILOT-01` — Composes reviewed persona packages into the Cloudflare staging runtime, adds synthetic acceptance data and records the boundary before production authentication/API work.
 
 ## 5. Whole-module completion boundary
 
