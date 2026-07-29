@@ -53,20 +53,20 @@ test('same-role navigation keeps the document and shell alive', async ({ page })
   await expect(page.getByText('BDT 2.84m')).toBeVisible();
   await expect(page.getByText('Match seven verified receipts')).toBeVisible();
   await expect(page.getByText('Your workspace is almost ready')).toHaveCount(0);
-  await expect(
-    page.evaluate(
+  expect(
+    await page.evaluate(
       () => (window as typeof window & { __uxNavigationMarker?: string }).__uxNavigationMarker,
     ),
-  ).resolves.toBe('kept');
+  ).toBe('kept');
 
   await page.goBack();
   await expect(page).toHaveURL(/\/admin$/u);
   await expect(page.getByRole('heading', { name: 'School operations overview' })).toBeVisible();
-  await expect(
-    page.evaluate(
+  expect(
+    await page.evaluate(
       () => (window as typeof window & { __uxNavigationMarker?: string }).__uxNavigationMarker,
     ),
-  ).resolves.toBe('kept');
+  ).toBe('kept');
 });
 
 test('teacher portal exposes daily work and assigned tasks', async ({ page }) => {
