@@ -4,6 +4,13 @@ on:
   push:
     branches:
       - deploy/cloudflare-staging-pilot
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
   workflow_dispatch:
 
 permissions:
@@ -15,6 +22,7 @@ concurrency:
 
 jobs:
   verify-deploy-smoke:
+    if: github.event_name == 'workflow_dispatch' || github.ref_name == 'deploy/cloudflare-staging-pilot' || github.head_ref == 'deploy/cloudflare-staging-pilot'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     environment: cloudflare-staging
