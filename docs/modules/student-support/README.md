@@ -3,6 +3,15 @@
 CARE-01 owns the restricted student-support domains and the controls that prevent ordinary school
 administration roles from inheriting sensitive access.
 
+## Review state
+
+The verified implementation is recorded at
+`d257a9af11b03d573c4bb2165f934397be8e7fbe`; full CI run `30426849884` passed. Draft PR `#19`
+targets the Wave 1 integration branch. Central status and checkpoint evidence are maintained in the
+agent board and progress tracker. The integration-owned disposable recovery rehearsal remains pending
+because the Neon project is at its 10/10 branch limit; no active branch was deleted to manufacture
+capacity.
+
 ## Implemented domains
 
 - [Security contract](./security.md) — 40 mandatory threat-model invariants, need-to-know access,
