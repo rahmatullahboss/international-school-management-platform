@@ -149,8 +149,10 @@ class MobileAccessGate extends StatelessWidget {
   };
 
   String _safeReason(String code) => switch (code) {
-    'OIDC_USER_CANCELLED' => 'Sign-in was cancelled. No account changes were made.',
-    'OIDC_SESSION_EXPIRED' => 'Your secure session expired. Sign in again to continue.',
+    'OIDC_USER_CANCELLED' =>
+      'Sign-in was cancelled. No account changes were made.',
+    'OIDC_SESSION_EXPIRED' =>
+      'Your secure session expired. Sign in again to continue.',
     'BOOTSTRAP_NO_APP_ACCESS' =>
       'This account does not currently have access to this mobile application.',
     'MOBILE_API_BASE_CONFIGURATION_REQUIRED' ||
@@ -158,8 +160,10 @@ class MobileAccessGate extends StatelessWidget {
     'MOBILE_REDIRECT_SCHEME_MISMATCH' ||
     'MOBILE_LOGOUT_REDIRECT_SCHEME_MISMATCH' =>
       'This application build is not configured for the school identity service.',
-    'AUTHENTICATION_REQUIRED' => 'Sign in again to refresh your account access.',
-    _ => 'The school access service is unavailable. Try again or contact school support.',
+    'AUTHENTICATION_REQUIRED' =>
+      'Sign in again to refresh your account access.',
+    _ =>
+      'The school access service is unavailable. Try again or contact school support.',
   };
 }
 

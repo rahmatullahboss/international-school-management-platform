@@ -94,10 +94,7 @@ class _StaffProductionAppState extends State<StaffProductionApp> {
 }
 
 class _AuthorizedStaffApp extends StatefulWidget {
-  const _AuthorizedStaffApp({
-    required this.coordinator,
-    required this.session,
-  });
+  const _AuthorizedStaffApp({required this.coordinator, required this.session});
 
   final MobileAppCoordinator coordinator;
   final SchoolSession session;
@@ -252,7 +249,7 @@ class _AuthorizedStaffShell extends ConsumerWidget {
       body: child,
       destinations: destinations,
       onDestinationSelected: (index) => context.go(paths[index]),
-      selectedIndex: paths.indexOf(location).clamp(0, paths.length - 1),
+      selectedIndex: paths.indexOf(location).clamp(0, paths.length - 1).toInt(),
       status: pendingCount == 0
           ? const SchoolStatusBanner(
               label: 'Authorized session',

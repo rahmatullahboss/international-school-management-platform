@@ -67,10 +67,7 @@ final class MobileApplicationState {
     : this._(phase: MobileApplicationPhase.restoring);
 
   const MobileApplicationState.signedOut({String? reasonCode})
-    : this._(
-        phase: MobileApplicationPhase.signedOut,
-        reasonCode: reasonCode,
-      );
+    : this._(phase: MobileApplicationPhase.signedOut, reasonCode: reasonCode);
 
   const MobileApplicationState.authenticating()
     : this._(phase: MobileApplicationPhase.authenticating);
@@ -102,10 +99,7 @@ final class MobileApplicationState {
     : this._(phase: MobileApplicationPhase.signingOut);
 
   const MobileApplicationState.failed(String reasonCode)
-    : this._(
-        phase: MobileApplicationPhase.failed,
-        reasonCode: reasonCode,
-      );
+    : this._(phase: MobileApplicationPhase.failed, reasonCode: reasonCode);
 
   final MobileApplicationPhase phase;
   final MobileBootstrap? bootstrap;
@@ -113,8 +107,7 @@ final class MobileApplicationState {
   final List<MobileAccessOption> accessOptions;
   final String? reasonCode;
 
-  bool get isReady =>
-      phase == MobileApplicationPhase.ready && session != null;
+  bool get isReady => phase == MobileApplicationPhase.ready && session != null;
 }
 
 final class MobileAppCoordinator extends ChangeNotifier {
@@ -152,16 +145,13 @@ final class MobileAppCoordinator extends ChangeNotifier {
       tokenStore: SecureAuthTokenStore(),
     );
     final apiClient = SchoolApiClient(
-      accessTokenProvider: () async =>
-          await authentication.validAccessToken(),
+      accessTokenProvider: () async => await authentication.validAccessToken(),
       baseUri: runtime.apiBaseUri,
     );
     return MobileAppCoordinator(
       allowedPersonas: allowedPersonas,
       authentication: authentication,
-      bootstrapLoader: ApiMobileBootstrapLoader(
-        MobileBootstrapApi(apiClient),
-      ),
+      bootstrapLoader: ApiMobileBootstrapLoader(MobileBootstrapApi(apiClient)),
       ownedApiClient: apiClient,
     );
   }
@@ -208,20 +198,12 @@ final class MobileAppCoordinator extends ChangeNotifier {
       if (!_isCurrent(operation)) {
         return;
       }
-      _set(
-        MobileApplicationState.signedOut(
-          reasonCode: snapshot.reasonCode,
-        ),
-      );
+      _set(MobileApplicationState.signedOut(reasonCode: snapshot.reasonCode));
     } on Object catch (error) {
       if (!_isCurrent(operation)) {
         return;
       }
-      _set(
-        MobileApplicationState.signedOut(
-          reasonCode: _reasonCode(error),
-        ),
-      );
+      _set(MobileApplicationState.signedOut(reasonCode: _reasonCode(error)));
     }
   }
 
@@ -235,9 +217,7 @@ final class MobileAppCoordinator extends ChangeNotifier {
       );
       return;
     }
-    final option = _state.accessOptions
-        .where(selected.matches)
-        .firstOrNull;
+    final option = _state.accessOptions.where(selected.matches).firstOrNull;
     if (option == null) {
       _set(
         const MobileApplicationState.failed(
@@ -276,11 +256,7 @@ final class MobileAppCoordinator extends ChangeNotifier {
     }
     switch (snapshot.phase) {
       case AuthSessionPhase.signedOut:
-        _set(
-          MobileApplicationState.signedOut(
-            reasonCode: snapshot.reasonCode,
-          ),
-        );
+        _set(MobileApplicationState.signedOut(reasonCode: snapshot.reasonCode));
       case AuthSessionPhase.failed:
         _set(
           MobileApplicationState.failed(
@@ -303,11 +279,7 @@ final class MobileAppCoordinator extends ChangeNotifier {
       }
       final options = _accessOptions(bootstrap);
       if (options.isEmpty) {
-        _set(
-          const MobileApplicationState.failed(
-            'BOOTSTRAP_NO_APP_ACCESS',
-          ),
-        );
+        _set(const MobileApplicationState.failed('BOOTSTRAP_NO_APP_ACCESS'));
         return;
       }
       if (options.length == 1) {

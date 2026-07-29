@@ -1,10 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:school_app_bootstrap/school_app_bootstrap.dart';
+import 'package:school_authentication/school_authentication.dart';
 import 'package:school_design_system/school_design_system.dart';
+import 'package:school_mobile_core/mobile_core.dart';
+
+part 'production_app.dart';
 
 void main() {
-  runApp(const ProviderScope(child: StaffApp()));
+  runApp(const ProviderScope(child: StaffProductionApp()));
 }
 
 enum AttendanceMark { present, absent, late }

@@ -106,8 +106,7 @@ class _AuthorizedFamilyApp extends StatefulWidget {
   final SchoolSession session;
 
   @override
-  State<_AuthorizedFamilyApp> createState() =>
-      _AuthorizedFamilyAppState();
+  State<_AuthorizedFamilyApp> createState() => _AuthorizedFamilyAppState();
 }
 
 class _AuthorizedFamilyAppState extends State<_AuthorizedFamilyApp> {
@@ -298,7 +297,7 @@ class _AuthorizedFamilyShell extends StatelessWidget {
       body: child,
       destinations: destinations,
       onDestinationSelected: (index) => context.go(paths[index]),
-      selectedIndex: paths.indexOf(location).clamp(0, paths.length - 1),
+      selectedIndex: paths.indexOf(location).clamp(0, paths.length - 1).toInt(),
       status: const SchoolStatusBanner(
         label: 'Authorized session',
         message: 'Published information follows the selected school access.',

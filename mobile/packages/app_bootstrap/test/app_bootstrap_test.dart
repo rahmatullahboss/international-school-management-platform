@@ -59,10 +59,7 @@ void main() {
       await coordinator.signIn();
 
       expect(coordinator.state.phase, MobileApplicationPhase.ready);
-      expect(
-        coordinator.state.session?.activePersona,
-        SchoolPersona.guardian,
-      );
+      expect(coordinator.state.session?.activePersona, SchoolPersona.guardian);
       expect(
         coordinator.state.session?.can(SchoolCapability.billingRead),
         isTrue,
@@ -70,44 +67,41 @@ void main() {
       coordinator.dispose();
     });
 
-    test('offers multiple authorized accesses and activates a selection', () async {
-      final store = MemoryAuthTokenStore();
-      await store.write(tokenSet(now));
-      final coordinator = coordinatorFor(
-        allowedPersonas: const {
-          SchoolPersona.guardian,
-          SchoolPersona.student,
-        },
-        bootstrap: familyBootstrap(),
-        oidc: oidc,
-        now: now,
-        store: store,
-      );
+    test(
+      'offers multiple authorized accesses and activates a selection',
+      () async {
+        final store = MemoryAuthTokenStore();
+        await store.write(tokenSet(now));
+        final coordinator = coordinatorFor(
+          allowedPersonas: const {
+            SchoolPersona.guardian,
+            SchoolPersona.student,
+          },
+          bootstrap: familyBootstrap(),
+          oidc: oidc,
+          now: now,
+          store: store,
+        );
 
-      await coordinator.initialize();
+        await coordinator.initialize();
 
-      expect(
-        coordinator.state.phase,
-        MobileApplicationPhase.choosingAccess,
-      );
-      expect(coordinator.state.accessOptions, hasLength(2));
+        expect(coordinator.state.phase, MobileApplicationPhase.choosingAccess);
+        expect(coordinator.state.accessOptions, hasLength(2));
 
-      final student = coordinator.state.accessOptions.singleWhere(
-        (option) => option.persona == SchoolPersona.student,
-      );
-      coordinator.selectAccess(student);
+        final student = coordinator.state.accessOptions.singleWhere(
+          (option) => option.persona == SchoolPersona.student,
+        );
+        coordinator.selectAccess(student);
 
-      expect(coordinator.state.phase, MobileApplicationPhase.ready);
-      expect(
-        coordinator.state.session?.activePersona,
-        SchoolPersona.student,
-      );
-      expect(
-        coordinator.state.session?.can(SchoolCapability.billingRead),
-        isFalse,
-      );
-      coordinator.dispose();
-    });
+        expect(coordinator.state.phase, MobileApplicationPhase.ready);
+        expect(coordinator.state.session?.activePersona, SchoolPersona.student);
+        expect(
+          coordinator.state.session?.can(SchoolCapability.billingRead),
+          isFalse,
+        );
+        coordinator.dispose();
+      },
+    );
 
     test('filters family personas out of the staff application', () async {
       final store = MemoryAuthTokenStore();
@@ -123,45 +117,42 @@ void main() {
       await coordinator.initialize();
 
       expect(coordinator.state.phase, MobileApplicationPhase.ready);
-      expect(
-        coordinator.state.session?.activePersona,
-        SchoolPersona.teacher,
-      );
+      expect(coordinator.state.session?.activePersona, SchoolPersona.teacher);
       coordinator.dispose();
     });
 
-    test('switches persona through the original bootstrap capabilities', () async {
-      final store = MemoryAuthTokenStore();
-      await store.write(tokenSet(now));
-      final coordinator = coordinatorFor(
-        allowedPersonas: const {
-          SchoolPersona.guardian,
-          SchoolPersona.student,
-        },
-        bootstrap: familyBootstrap(),
-        oidc: oidc,
-        now: now,
-        store: store,
-      );
-      await coordinator.initialize();
-      coordinator.selectAccess(
-        coordinator.state.accessOptions.singleWhere(
-          (option) => option.persona == SchoolPersona.guardian,
-        ),
-      );
+    test(
+      'switches persona through the original bootstrap capabilities',
+      () async {
+        final store = MemoryAuthTokenStore();
+        await store.write(tokenSet(now));
+        final coordinator = coordinatorFor(
+          allowedPersonas: const {
+            SchoolPersona.guardian,
+            SchoolPersona.student,
+          },
+          bootstrap: familyBootstrap(),
+          oidc: oidc,
+          now: now,
+          store: store,
+        );
+        await coordinator.initialize();
+        coordinator.selectAccess(
+          coordinator.state.accessOptions.singleWhere(
+            (option) => option.persona == SchoolPersona.guardian,
+          ),
+        );
 
-      coordinator.switchPersona(SchoolPersona.student);
+        coordinator.switchPersona(SchoolPersona.student);
 
-      expect(
-        coordinator.state.session?.activePersona,
-        SchoolPersona.student,
-      );
-      expect(
-        coordinator.state.session?.can(SchoolCapability.billingRead),
-        isFalse,
-      );
-      coordinator.dispose();
-    });
+        expect(coordinator.state.session?.activePersona, SchoolPersona.student);
+        expect(
+          coordinator.state.session?.can(SchoolCapability.billingRead),
+          isFalse,
+        );
+        coordinator.dispose();
+      },
+    );
   });
 
   testWidgets('access gate exposes sign-in and authorized access actions', (
@@ -258,47 +249,48 @@ AuthTokenSet tokenSet(DateTime now) => AuthTokenSet(
   refreshToken: 'refresh-token',
 );
 
-MobileBootstrap familyBootstrap({bool includeTeacher = false}) => MobileBootstrap(
-  accountId: 'account-1',
-  locale: 'en-BD',
-  schools: [
-    TenantAccess(
-      campuses: [
-        CampusAccess(
-          campusId: 'campus-1',
-          campusName: 'Main Campus',
-          personas: [
-            PersonaAccess(
-              capabilities: const {
-                SchoolCapability.attendanceRead,
-                SchoolCapability.billingRead,
-              },
-              persona: SchoolPersona.guardian,
+MobileBootstrap familyBootstrap({bool includeTeacher = false}) =>
+    MobileBootstrap(
+      accountId: 'account-1',
+      locale: 'en-BD',
+      schools: [
+        TenantAccess(
+          campuses: [
+            CampusAccess(
+              campusId: 'campus-1',
+              campusName: 'Main Campus',
+              personas: [
+                PersonaAccess(
+                  capabilities: const {
+                    SchoolCapability.attendanceRead,
+                    SchoolCapability.billingRead,
+                  },
+                  persona: SchoolPersona.guardian,
+                ),
+                PersonaAccess(
+                  capabilities: const {
+                    SchoolCapability.attendanceRead,
+                    SchoolCapability.gradesReadPublished,
+                  },
+                  persona: SchoolPersona.student,
+                ),
+                if (includeTeacher)
+                  PersonaAccess(
+                    capabilities: const {
+                      SchoolCapability.attendanceTake,
+                      SchoolCapability.gradesWrite,
+                    },
+                    persona: SchoolPersona.teacher,
+                  ),
+              ],
             ),
-            PersonaAccess(
-              capabilities: const {
-                SchoolCapability.attendanceRead,
-                SchoolCapability.gradesReadPublished,
-              },
-              persona: SchoolPersona.student,
-            ),
-            if (includeTeacher)
-              PersonaAccess(
-                capabilities: const {
-                  SchoolCapability.attendanceTake,
-                  SchoolCapability.gradesWrite,
-                },
-                persona: SchoolPersona.teacher,
-              ),
           ],
+          tenantId: 'tenant-1',
+          tenantName: 'International School',
         ),
       ],
-      tenantId: 'tenant-1',
-      tenantName: 'International School',
-    ),
-  ],
-  timeZone: 'Asia/Dhaka',
-);
+      timeZone: 'Asia/Dhaka',
+    );
 
 final class FakeBootstrapLoader implements MobileBootstrapLoader {
   const FakeBootstrapLoader(this.bootstrap);
