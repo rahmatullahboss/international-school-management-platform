@@ -121,8 +121,7 @@ export function selectStudentItems<T extends StudentScopedItem>(
   capabilities: readonly string[],
 ): T[] {
   return items.filter(
-    (item) =>
-      item.studentId === studentId && hasCapability(capabilities, item.requiredCapability),
+    (item) => item.studentId === studentId && hasCapability(capabilities, item.requiredCapability),
   );
 }
 
@@ -180,7 +179,8 @@ function EmptyState(props: { readonly title: string; readonly detail: string }):
 
 function pageIntroduction(ageBand: StudentDailyWorkspaceProps['ageBand']): string {
   if (ageBand === 'primary') return 'See what is next, what is ready and where to ask for help.';
-  if (ageBand === 'senior') return 'Review today’s schedule, published progress and your current actions.';
+  if (ageBand === 'senior')
+    return 'Review today’s schedule, published progress and your current actions.';
   return 'Follow today’s lessons, published progress and the next task you can complete.';
 }
 
@@ -297,7 +297,10 @@ export function StudentDailyWorkspace(props: StudentDailyWorkspaceProps): ReactE
       </section>
 
       <div className="student-workspace__split">
-        <section className="student-workspace__section" aria-labelledby="student-attendance-heading">
+        <section
+          className="student-workspace__section"
+          aria-labelledby="student-attendance-heading"
+        >
           <header>
             <h3 id="student-attendance-heading">My published attendance</h3>
             <p>Only school-published attendance summaries are shown.</p>
@@ -319,9 +322,18 @@ export function StudentDailyWorkspace(props: StudentDailyWorkspaceProps): ReactE
                     </small>
                   </div>
                   <dl>
-                    <div><dt>Present</dt><dd>{formatCount(props.locale, record.presentCount)}</dd></div>
-                    <div><dt>Absent</dt><dd>{formatCount(props.locale, record.absentCount)}</dd></div>
-                    <div><dt>Late</dt><dd>{formatCount(props.locale, record.lateCount)}</dd></div>
+                    <div>
+                      <dt>Present</dt>
+                      <dd>{formatCount(props.locale, record.presentCount)}</dd>
+                    </div>
+                    <div>
+                      <dt>Absent</dt>
+                      <dd>{formatCount(props.locale, record.absentCount)}</dd>
+                    </div>
+                    <div>
+                      <dt>Late</dt>
+                      <dd>{formatCount(props.locale, record.lateCount)}</dd>
+                    </div>
                   </dl>
                   {record.explanationStatus === undefined ? null : (
                     <p>{record.explanationStatus}</p>
@@ -381,11 +393,16 @@ export function StudentDailyWorkspace(props: StudentDailyWorkspaceProps): ReactE
               <li key={resource.id} data-type={resource.resourceType}>
                 <div>
                   <strong>{resource.title}</strong>
-                  <span>{resource.subjectLabel} · {resource.resourceType}</span>
+                  <span>
+                    {resource.subjectLabel} · {resource.resourceType}
+                  </span>
                 </div>
                 <p>{resource.description}</p>
                 {resource.availableUntil === undefined ? null : (
-                  <small>Available until <time dateTime={resource.availableUntil}>{resource.availableUntil}</time></small>
+                  <small>
+                    Available until{' '}
+                    <time dateTime={resource.availableUntil}>{resource.availableUntil}</time>
+                  </small>
                 )}
                 <a href={resource.href}>Open resource</a>
               </li>

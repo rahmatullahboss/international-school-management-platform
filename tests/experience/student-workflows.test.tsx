@@ -205,11 +205,7 @@ const shared: StudentDailyWorkspaceProps = {
 
 describe('EXP-01 student experience', () => {
   it('filters self-only records before sorting and counting', () => {
-    const visible = selectStudentItems(
-      shared.lessons,
-      'student-1',
-      ['timetable.self.read'],
-    );
+    const visible = selectStudentItems(shared.lessons, 'student-1', ['timetable.self.read']);
     expect(visible.map((lesson) => lesson.id)).toEqual(['lesson-math', 'lesson-science']);
     expect(sortStudentLessons(visible).map((lesson) => lesson.id)).toEqual([
       'lesson-science',
@@ -250,10 +246,7 @@ describe('EXP-01 student experience', () => {
 
   it('uses non-disclosing empty states when a capability is absent', () => {
     const markup = renderToStaticMarkup(
-      <StudentDailyWorkspace
-        {...shared}
-        capabilities={['timetable.self.read']}
-      />,
+      <StudentDailyWorkspace {...shared} capabilities={['timetable.self.read']} />,
     );
     expect(markup).toContain('No published attendance');
     expect(markup).toContain('No published results');
