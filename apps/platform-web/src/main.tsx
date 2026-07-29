@@ -34,6 +34,13 @@ interface NavigatorWithConnection extends Navigator {
   };
 }
 
+const roleRoots: Readonly<Record<PilotRole, string>> = {
+  admin: '/admin',
+  teacher: '/teacher',
+  guardian: '/family',
+  student: '/student',
+};
+
 const roleLinks = [
   { label: 'Admin', href: '/admin' },
   { label: 'Teacher', href: '/teacher' },
@@ -253,9 +260,27 @@ function UnknownRoute(props: { readonly homeHref: string }): ReactElement {
 }
 
 function shellUtilityActions(activeRole: PilotRole) {
+  const activeRoot = roleRoots[activeRole];
   return roleLinks
-    .filter((link) => link.href === '/' || !link.href.startsWith(`/${activeRole}`))
+    .filter((link) => link.href === '/' || link.href !== activeRoot)
     .map((link) => ({ label: link.label, href: link.href }));
+}
+
+function resolvePageHeading(
+  role: PilotRole,
+  path: string,
+  page: PilotModulePage | undefined,
+  fallbackTitle: string,
+  fallbackDescription: string,
+): { readonly title: string; readonly description: string } {
+  if (path === roleRoots[role]) {
+    const roleDescription = roleDescriptions[role];
+    return { title: roleDescription.title, description: roleDescription.detail };
+  }
+  return {
+    title: page?.title ?? fallbackTitle,
+    description: page?.description ?? fallbackDescription,
+  };
 }
 
 function AdminPortal(props: {
@@ -263,17 +288,21 @@ function AdminPortal(props: {
   readonly connectivity: PilotConnectivity;
 }): ReactElement {
   const page = modulePages[props.path];
-  const heading = props.path === '/admin' ? roleDescriptions.admin : page;
+  const heading = resolvePageHeading(
+    'admin',
+    props.path,
+    page,
+    'Administration',
+    'Integrated administration workspace',
+  );
 
   return (
     <AdminExperienceShell
       schoolName={schoolName}
       userName="Amina Chowdhury · Principal"
       locale="en-BD"
-      pageTitle={heading?.title ?? 'Administration'}
-      pageDescription={
-        heading?.detail ?? heading?.description ?? 'Integrated administration workspace'
-      }
+      pageTitle={heading.title}
+      pageDescription={heading.description}
       activeHref={props.path}
       capabilities={adminCapabilities}
       session={{
@@ -319,15 +348,21 @@ function TeacherPortal(props: {
   readonly connectivity: PilotConnectivity;
 }): ReactElement {
   const page = modulePages[props.path];
-  const heading = props.path === '/teacher' ? roleDescriptions.teacher : page;
+  const heading = resolvePageHeading(
+    'teacher',
+    props.path,
+    page,
+    'Teacher workspace',
+    'Assigned teaching work',
+  );
 
   return (
     <TeacherExperienceShell
       schoolName={schoolName}
       userName="Nusrat Rahman · Mathematics"
       locale="en-BD"
-      pageTitle={heading?.title ?? 'Teacher workspace'}
-      pageDescription={heading?.detail ?? heading?.description ?? 'Assigned teaching work'}
+      pageTitle={heading.title}
+      pageDescription={heading.description}
       activeHref={props.path}
       capabilities={teacherCapabilities}
       session={{
@@ -372,15 +407,21 @@ function GuardianPortal(props: {
   readonly connectivity: PilotConnectivity;
 }): ReactElement {
   const page = modulePages[props.path];
-  const heading = props.path === '/family' ? roleDescriptions.guardian : page;
+  const heading = resolvePageHeading(
+    'guardian',
+    props.path,
+    page,
+    'Family portal',
+    'Household school services',
+  );
 
   return (
     <GuardianExperienceShell
       schoolName={schoolName}
       userName="Farhana Noor · Guardian"
       locale="en-BD"
-      pageTitle={heading?.title ?? 'Family portal'}
-      pageDescription={heading?.detail ?? heading?.description ?? 'Household school services'}
+      pageTitle={heading.title}
+      pageDescription={heading.description}
       activeHref={props.path}
       capabilities={guardianCapabilities}
       session={{
@@ -426,15 +467,21 @@ function StudentPortal(props: {
   readonly connectivity: PilotConnectivity;
 }): ReactElement {
   const page = modulePages[props.path];
-  const heading = props.path === '/student' ? roleDescriptions.student : page;
+  const heading = resolvePageHeading(
+    'student',
+    props.path,
+    page,
+    'Student portal',
+    'Published student services',
+  );
 
   return (
     <StudentExperienceShell
       schoolName={schoolName}
       userName="Samira Noor · Year 8"
       locale="en-BD"
-      pageTitle={heading?.title ?? 'Student portal'}
-      pageDescription={heading?.detail ?? heading?.description ?? 'Published student services'}
+      pageTitle={heading.title}
+      pageDescription={heading.description}
       activeHref={props.path}
       capabilities={studentCapabilities}
       session={{
