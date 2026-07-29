@@ -83,10 +83,44 @@ const adminSnapshot = {
   },
 };
 
+const subjectByRole = {
+  admin: 'principal-1',
+  teacher: 'teacher-1',
+  guardian: 'guardian-1',
+  student: 'student-1',
+} as const;
+
+type BrowserPilotRole = keyof typeof subjectByRole;
+
 async function configurePilotApi(page: Page): Promise<void> {
   await page.addInitScript(() => {
     window.__PLATFORM_API_URL__ = 'https://pilot-api.test';
   });
+}
+
+async function mockPilotSession(page: Page, role: BrowserPilotRole): Promise<string> {
+  const token = `browser-signed-${role}-session-token-with-more-than-thirty-two-characters`;
+  await page.route(`https://pilot-api.test/pilot/v1/sessions/${role}`, async (route) => {
+    expect(route.request().method()).toBe('POST');
+    await route.fulfill({
+      status: 201,
+      headers: { 'access-control-allow-origin': '*' },
+      contentType: 'application/json',
+      body: JSON.stringify({
+        schemaVersion: 1,
+        tokenType: 'Bearer',
+        accessToken: token,
+        expiresAt: '2099-07-30T04:15:00.000Z',
+        scope: {
+          tenantId: 'tenant-pilot-001',
+          campusId: 'campus-main',
+          role,
+          subjectId: subjectByRole[role],
+        },
+      }),
+    });
+  });
+  return token;
 }
 
 test('pilot role chooser explains every role workspace', async ({ page }) => {
@@ -187,16 +221,16 @@ test('guardian and student portals remain scoped to their own records', async ({
   await expect(page.getByText('Nabil Noor')).toHaveCount(0);
 });
 
-test('background revalidation keeps current content visible and accepts only the scoped response', async ({
+test('background revalidation keeps current content visible and accepts only a signed scoped response', async ({
   page,
 }) => {
   await configurePilotApi(page);
+  const token = await mockPilotSession(page, 'admin');
   await page.route('https://pilot-api.test/pilot/v1/snapshots/admin', async (route) => {
     const headers = route.request().headers();
-    expect(headers['x-school-tenant-id']).toBe('tenant-pilot-001');
-    expect(headers['x-school-campus-id']).toBe('campus-main');
-    expect(headers['x-school-role']).toBe('admin');
-    expect(headers['x-school-subject-id']).toBe('principal-1');
+    expect(headers.authorization).toBe(`Bearer ${token}`);
+    expect(headers['x-school-tenant-id']).toBeUndefined();
+    expect(headers['x-school-role']).toBeUndefined();
     await new Promise((resolve) => setTimeout(resolve, 350));
     await route.fulfill({
       status: 200,
@@ -220,10 +254,11 @@ test('background revalidation keeps current content visible and accepts only the
   await expect(page.getByText('Three registers are not finalised')).toHaveCount(0);
 });
 
-test('a failed refresh keeps the last safe role data instead of showing a loading page', async ({
+test('a failed signed refresh keeps the last safe role data instead of showing a loading page', async ({
   page,
 }) => {
   await configurePilotApi(page);
+  await mockPilotSession(page, 'student');
   await page.route('https://pilot-api.test/pilot/v1/snapshots/student', async (route) => {
     await route.abort('failed');
   });
