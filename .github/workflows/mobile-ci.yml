@@ -34,6 +34,7 @@ jobs:
       - name: Wire and format Staff production journeys
         run: |
           python3 mobile/tool/wire_staff_journeys.py
+          python3 mobile/tool/remove_obsolete_staff_home.py
           cd mobile
           dart format .
       - name: Commit repository-driven Staff production journeys
@@ -55,10 +56,13 @@ jobs:
           if git diff --cached --quiet; then
             exit 0
           fi
-          git commit -m "feat(MOB-01): drive Staff production UI from teacher read models"
+          git commit -m "feat(MOB-01): finalize repository-driven Staff journeys"
           git push origin HEAD:module/flutter-mobile-apps
       - name: Verify generated files remain ignored
-        run: git diff --exit-code -- mobile ':!mobile/tool/wire_staff_journeys.py'
+        run: >-
+          git diff --exit-code -- mobile
+          ':!mobile/tool/wire_staff_journeys.py'
+          ':!mobile/tool/remove_obsolete_staff_home.py'
       - name: Verify native application configuration
         run: python3 mobile/tool/verify_native_projects.py
       - name: Analyze family app
