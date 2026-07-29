@@ -29,24 +29,12 @@
   "design_baseline": {
     "skill": "impeccable",
     "skill_version": "4.0.2",
-    "providers": [
-      "codex",
-      "github"
-    ],
+    "providers": ["codex", "github"],
     "product_authority": "PRODUCT.md",
     "visual_authority": "DESIGN.md",
     "whole_module_agent_owns_ui": true,
     "microtask_design_agents_allowed": false,
-    "required_ui_evidence": [
-      "shape-or-approved-brief",
-      "critique",
-      "audit",
-      "detector",
-      "accessibility",
-      "responsive-rtl",
-      "harden",
-      "polish"
-    ]
+    "required_ui_evidence": ["shape-or-approved-brief", "critique", "audit", "detector", "accessibility", "responsive-rtl", "harden", "polish"]
   },
   "base_rules": {
     "FND-01": "resolve latest reviewed origin/main in rahmatullahboss/international-school-management-platform, create or resume the fixed foundation branch/worktree and record the exact base SHA",
@@ -56,7 +44,8 @@
     "integration": "accept only reviewed checkpoint/final SHAs recorded in the progress tracker"
   },
   "reviewed_bases": {
-    "foundation": "55114f55a375d3d79dba7ea21f984b789b5dbca1"
+    "foundation": "55114f55a375d3d79dba7ea21f984b789b5dbca1",
+    "wave_1": "8cc8ee1562ade672b14c1c44af935fe7e2307976"
   },
   "reviewed_stream_shas": {
     "wave_1": {
@@ -64,7 +53,13 @@
       "FIN-01": "5f9e1692a8fc19fc2e9789a338d028918acdeaf6",
       "INT-01": "bfa95a4a42025213fa7c2090a587ef5304924da7"
     },
-    "wave_1_integration_base": "9b9605aff93901eb1ad9e5b4d9ad9d6517d04aba"
+    "wave_2": {
+      "ACAD-01": "1d895afdf51f6d4f6323ada4b93d9ba32b244480",
+      "OPS-01": "fc749d7c0ece36964da8f923431bb3b7ac925e56",
+      "CARE-01": "9304bd6c425eca4ec69db90c1f1cab3f7a409b8d"
+    },
+    "wave_1_integration_base": "042b75990f9cd819239c584a370687042393f6a7",
+    "wave_1_integration": "8cc8ee1562ade672b14c1c44af935fe7e2307976"
   },
   "streams": [
     {
@@ -78,35 +73,8 @@
       "dependencies": [],
       "entry_gate": "GATE-DOCUMENTS-APPROVED",
       "full_prompt_section": "FND-01 — Platform Foundation",
-      "owned_paths": [
-        "apps/platform/**",
-        "packages/platform/**",
-        "packages/database/**",
-        "packages/policy/**",
-        "packages/events/**",
-        "packages/localization/**",
-        "packages/ui/**",
-        "infra/**",
-        "scripts/**",
-        ".agents/skills/impeccable/**",
-        ".codex/hooks.json",
-        ".github/**",
-        "docs/design/**",
-        "PRODUCT.md",
-        "DESIGN.md",
-        ".impeccable/config.json",
-        "root configuration files"
-      ],
-      "milestones": [
-        "repository-bootstrap",
-        "neon-data-platform",
-        "tenancy-routing",
-        "identity-policy",
-        "audit-outbox-idempotency",
-        "localization-documents-workflows",
-        "shared-experience-boundaries",
-        "foundation-verification-freeze"
-      ],
+      "owned_paths": ["apps/platform/**", "packages/platform/**", "packages/database/**", "packages/policy/**", "packages/events/**", "packages/localization/**", "packages/ui/**", "infra/**", "scripts/**", ".agents/skills/impeccable/**", ".codex/hooks.json", ".github/**", "docs/design/**", "PRODUCT.md", "DESIGN.md", ".impeccable/config.json", "root configuration files"],
+      "milestones": ["repository-bootstrap", "neon-data-platform", "tenancy-routing", "identity-policy", "audit-outbox-idempotency", "localization-documents-workflows", "shared-experience-boundaries", "foundation-verification-freeze"],
       "completion_gate": "GATE-FOUNDATION-READY"
     },
     {
@@ -178,7 +146,7 @@
       "id": "INT-01",
       "name": "Internationalization and Integration Platform",
       "wave": 1,
-      "status": "gate_passed_integration_in_progress",
+      "status": "complete_and_integrated",
       "branch": "module/international-integrations",
       "worktree": ".worktrees/int-01-integrations",
       "neon_branch": "agent/int-01-integrations",
@@ -210,7 +178,8 @@
       "id": "ACAD-01",
       "name": "Academics Attendance and Records",
       "wave": 2,
-      "status": "blocked_by_wave_1",
+      "status": "complete_reviewed_waiting_integration",
+      "reviewed_sha": "1d895afdf51f6d4f6323ada4b93d9ba32b244480",
       "branch": "module/academics-attendance-records",
       "worktree": ".worktrees/acad-01-academics",
       "neon_branch": "agent/acad-01-academics",
@@ -248,7 +217,8 @@
       "id": "OPS-01",
       "name": "School Operations ERP",
       "wave": 2,
-      "status": "blocked_by_wave_1",
+      "status": "complete_reviewed_waiting_integration",
+      "reviewed_sha": "fc749d7c0ece36964da8f923431bb3b7ac925e56",
       "branch": "module/school-operations",
       "worktree": ".worktrees/ops-01-operations",
       "neon_branch": "agent/ops-01-operations",
@@ -289,7 +259,8 @@
       "id": "CARE-01",
       "name": "Health Wellbeing and Safeguarding",
       "wave": 2,
-      "status": "complete_review_ready_recovery_rehearsal_pending",
+      "status": "complete_reviewed_waiting_integration",
+      "reviewed_sha": "9304bd6c425eca4ec69db90c1f1cab3f7a409b8d",
       "branch": "module/student-support",
       "worktree": ".worktrees/care-01-student-support",
       "neon_branch": "agent/care-01-student-support",
@@ -319,45 +290,7 @@
         "learning-support",
         "restricted-interface-verification"
       ],
-      "completion_gate": "GATE-CARE-COMPLETE",
-      "starting_base_sha": "8cc8ee1562ade672b14c1c44af935fe7e2307976",
-      "threat_model_sha": "1ee5ef8dd5c38234cf67acfda5b73df4602f64d4",
-      "verified_implementation_sha": "d257a9af11b03d573c4bb2165f934397be8e7fbe",
-      "draft_pull_request": 19,
-      "ci": {
-        "run_id": 30426849884,
-        "status": "success",
-        "gates": [
-          "format",
-          "lint",
-          "architecture-boundaries",
-          "typecheck",
-          "unit-tests",
-          "fresh-postgresql",
-          "live-neon-driver",
-          "build",
-          "audit",
-          "licenses",
-          "provenance",
-          "chromium-browser",
-          "execution-artifacts"
-        ]
-      },
-      "neon_branch_id": "br-raspy-smoke-ax0msb57",
-      "module_migrations": [
-        "202607290201_CARE-01_security_contract",
-        "202607290202_CARE-01_health",
-        "202607290203_CARE-01_behavior",
-        "202607290204_CARE-01_wellbeing",
-        "202607290205_CARE-01_safeguarding_domain",
-        "202607290206_CARE-01_learning_support"
-      ],
-      "remaining_integration_gate": {
-        "gate": "fresh-disposable-wave1-to-care-recovery-rehearsal",
-        "status": "pending_external_capacity",
-        "reason": "Neon project branch limit is 10/10; satisfying the gate would require deleting or resetting another active agent branch, which CARE-01 did not do.",
-        "owner": "INTEG-01"
-      }
+      "completion_gate": "GATE-CARE-COMPLETE"
     },
     {
       "id": "EXP-01",
@@ -402,7 +335,7 @@
       "id": "INTEG-01",
       "name": "Serial Integration and Release Verification",
       "wave": "continuous-gated",
-      "status": "wave_1_fin_integrated_int_pending",
+      "status": "ready_for_wave_2_integration",
       "branch": "integration/international-school-platform-v1",
       "worktree": ".worktrees/integ-01-release",
       "neon_branch": "integration/international-school-platform-v1",

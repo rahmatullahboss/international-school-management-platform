@@ -1,8 +1,8 @@
 # Whole-Module Program Progress Tracker
 
 **Program:** `international-school-platform-v1`
-**Updated:** 2026-07-28
-**Current repository state:** `INTEG-01` is executing Wave 1 serial integration from `042b75990f9cd819239c584a370687042393f6a7`. `SIS-01` is present from `main`; reviewed `FIN-01` SHA `5f9e1692a8fc19fc2e9789a338d028918acdeaf6` is integrated at merge checkpoint `da3d561`; reviewed `INT-01` SHA `bfa95a4a42025213fa7c2090a587ef5304924da7` is being integrated after its `GATE-INT-COMPLETE` evidence passed.
+**Updated:** 2026-07-29
+**Current repository state:** Wave 2 module implementation and review are complete. Reviewed candidates are `ACAD-01` `1d895afdf51f6d4f6323ada4b93d9ba32b244480`, `OPS-01` `fc749d7c0ece36964da8f923431bb3b7ac925e56` and `CARE-01` `9304bd6c425eca4ec69db90c1f1cab3f7a409b8d`. `INTEG-01` is ready to perform serial Wave 2 integration; `GATE-WAVE-2-INTEGRATED` remains blocked until migration composition, restricted-record boundaries and recovery rehearsal pass.
 
 ## Gate status
 
@@ -10,10 +10,10 @@
 |---|---|---|
 | `GATE-DOCUMENTS-APPROVED` | passed | Owner authorized FND-01 execution; `python3 scripts/validate_execution_artifacts.py` passed on 2026-07-28 |
 | `GATE-FOUNDATION-READY` | passed | Milestones 1–8 implemented; owner review approved; Neon SQL/RLS proof passed; secret-backed `npm run test:neon` passed 1/1 on 2026-07-28 |
-| `GATE-REVIEWED-SHAS-AVAILABLE` | passed | `SIS-01` `5e2499018282d8296abfe093b5dd95b231829379`; `FIN-01` `5f9e1692a8fc19fc2e9789a338d028918acdeaf6`; `INT-01` `bfa95a4a42025213fa7c2090a587ef5304924da7` |
+| `GATE-REVIEWED-SHAS-AVAILABLE` | passed | Wave 1: `SIS-01` `5e2499018282d8296abfe093b5dd95b231829379`, `FIN-01` `5f9e1692a8fc19fc2e9789a338d028918acdeaf6`, `INT-01` `bfa95a4a42025213fa7c2090a587ef5304924da7`; Wave 2: `ACAD-01` `1d895afdf51f6d4f6323ada4b93d9ba32b244480`, `OPS-01` `fc749d7c0ece36964da8f923431bb3b7ac925e56`, `CARE-01` `9304bd6c425eca4ec69db90c1f1cab3f7a409b8d` |
 | `GATE-INT-COMPLETE` | passed | Seven milestones complete; agent-branch apply `30345998526`, logical replay `30346762735` and fresh Neon branch replay `30347294967` passed |
-| `GATE-WAVE-1-INTEGRATED` | blocked | `SIS-01`, `FIN-01`, `INT-01` reviewed and serially integrated |
-| `GATE-STUDENT-SUPPORT-THREAT-MODEL` | blocked | Wave 1 integrated plus approved student-support threat model |
+| `GATE-WAVE-1-INTEGRATED` | passed | Reviewed integration SHA `8cc8ee1562ade672b14c1c44af935fe7e2307976`; CI `30362743336`; integration Neon apply/recovery run `30362743167`; 22 migrations, 139/139 tenant-owned tables protected, finance invariants and six browser journeys passed |
+| `GATE-STUDENT-SUPPORT-THREAT-MODEL` | passed | [Student-support high-risk data threat model](../security/student-support-threat-model.md) approved against reviewed Wave 1 integration SHA `8cc8ee1562ade672b14c1c44af935fe7e2307976`; 40 security invariants, role/action matrix, negative tests, RLS/migration guardrails and incident controls recorded |
 | `GATE-WAVE-2-INTEGRATED` | blocked | `ACAD-01`, `OPS-01`, `CARE-01` reviewed and integrated |
 | `GATE-PILOT-READY` | blocked | `EXP-01` integrated and final system/recovery verification passed |
 
@@ -28,7 +28,7 @@ Owner decision recorded on 2026-07-28:
 - the foundation/program coordinator maintains shared documentation, gate state, contract-change decisions and this tracker without writing concurrently inside module-owned paths;
 - `INTEG-01` reviews and integrates module SHAs serially after they are recorded here.
 
-Current readiness: `INTEG-01` is active from exact current `main` SHA `042b75990f9cd819239c584a370687042393f6a7`; FIN integration is verified and reviewed INT integration is in progress.
+Current readiness: `ACAD-01`, `OPS-01` and `CARE-01` are complete and reviewed. `INTEG-01` may now consume only the exact frozen Wave 2 SHAs recorded here. `EXP-01` remains blocked until `GATE-WAVE-2-INTEGRATED` passes.
 
 ## Stream tracker
 
@@ -37,12 +37,12 @@ Current readiness: `INTEG-01` is active from exact current `main` SHA `042b75990
 | `FND-01` | 0 | complete; gate passed | `4038081bc122c41d4a312bd75d01c784e3f4eee1` | Wave 1 released | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | none |
 | `SIS-01` | 1 | complete; integrated to `main` | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | complete | reviewed head `5e2499018282d8296abfe093b5dd95b231829379`; main merge `9b9605aff93901eb1ad9e5b4d9ad9d6517d04aba` | none |
 | `FIN-01` | 1 | complete; integrated by `INTEG-01` | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | complete | reviewed head `5f9e1692a8fc19fc2e9789a338d028918acdeaf6`; integration merge `da3d561` | none |
-| `INT-01` | 1 | complete; gate passed; integration in progress | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | serial integration verification | reviewed head `bfa95a4a42025213fa7c2090a587ef5304924da7`; module gate evidence `ae88d8e` | none |
-| `ACAD-01` | 2 | blocked | reviewed Wave 1 integration SHA | academic structure | none | `GATE-WAVE-1-INTEGRATED` |
-| `OPS-01` | 2 | blocked | reviewed Wave 1 integration SHA | HR/staff | none | `GATE-WAVE-1-INTEGRATED` |
-| `CARE-01` | 2 | blocked | reviewed Wave 1 integration SHA | security contract | none | threat-model and Wave 1 gates |
+| `INT-01` | 1 | complete; integrated by `INTEG-01` | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | complete | reviewed head `bfa95a4a42025213fa7c2090a587ef5304924da7`; integration merge `0822462` | none |
+| `ACAD-01` | 2 | complete; reviewed; waiting integration | `8cc8ee1562ade672b14c1c44af935fe7e2307976` | complete | reviewed head `1d895afdf51f6d4f6323ada4b93d9ba32b244480`; PR `#7` green | none |
+| `OPS-01` | 2 | complete; reviewed; waiting integration | `8cc8ee1562ade672b14c1c44af935fe7e2307976` | complete | reviewed head `fc749d7c0ece36964da8f923431bb3b7ac925e56`; final branch CI `30419451935` green | none |
+| `CARE-01` | 2 | complete; reviewed; waiting integration | `8cc8ee1562ade672b14c1c44af935fe7e2307976` | complete | reviewed head `9304bd6c425eca4ec69db90c1f1cab3f7a409b8d`; draft PR `#19` final-head CI `30427728682` green | integration-owned conflict resolution and fresh disposable recovery rehearsal |
 | `EXP-01` | 3 | blocked | reviewed Wave 2 integration SHA | persona shells | none | `GATE-WAVE-2-INTEGRATED` |
-| `INTEG-01` | gated serial | Wave 1 integration in progress | `042b75990f9cd819239c584a370687042393f6a7` | integrate reviewed `INT-01` | FIN merge checkpoint `da3d561` | none |
+| `INTEG-01` | gated serial | ready for Wave 2 integration | integration branch head `ec921ea26f6980017f848bfd6646a77868bd4cb1` | serially integrate reviewed ACAD, OPS and CARE SHAs | reviewed Wave 1 integration `8cc8ee1562ade672b14c1c44af935fe7e2307976` | `GATE-WAVE-2-INTEGRATED` verification pending |
 
 ## Required checkpoint evidence format
 
@@ -191,6 +191,17 @@ Coordinator review: current `main` CI PASS at `9b9605aff93901eb1ad9e5b4d9ad9d651
 Reviewed stream SHAs: `SIS-01` `5e2499018282d8296abfe093b5dd95b231829379`; `FIN-01` `5f9e1692a8fc19fc2e9789a338d028918acdeaf6`; `INT-01` `bfa95a4a42025213fa7c2090a587ef5304924da7`
 Integration preview: `FIN-01` and `INT-01` both conflict with current `main` in shared workspace/package/tracker files; no module branch was rewritten, reset or merged during review
 Gate outcome: `GATE-REVIEWED-SHAS-AVAILABLE` passed; `INTEG-01` is ready for Wave 1 serial integration
+Production mutation performed: no
+
+### Wave 2 reviewed-SHA freeze checkpoint
+
+Date/time: 2026-07-29T12:29:00+06:00
+Coordinator review: current `main` SHA `783be43f734178ec65b4c72b7527f4902fd0f0a6` has green CI run `30418088440`; every reviewed Wave 2 candidate descends from exact reviewed Wave 1 integration SHA `8cc8ee1562ade672b14c1c44af935fe7e2307976`
+Reviewed stream SHAs: `ACAD-01` `1d895afdf51f6d4f6323ada4b93d9ba32b244480`; `OPS-01` `fc749d7c0ece36964da8f923431bb3b7ac925e56`; `CARE-01` `9304bd6c425eca4ec69db90c1f1cab3f7a409b8d`
+Review evidence: ACAD PR `#7` is green and mergeable; OPS final module-branch CI `30419451935` passed after verification PR `#10`; CARE draft PR `#19` final-head CI `30427728682` passed and changes after verified implementation SHA `d257a9af11b03d573c4bb2165f934397be8e7fbe` are documentation/board/tracker only
+Integration preview: CARE PR `#19` conflicts with the advanced integration base by design; ACAD, OPS and CARE must not be merged independently. The CARE fixed local worktree remains at checkpoint `e619555955bdcdd2e6dc63d1880018a553bca581` with preserved uncommitted work and must not be reset, discarded or used as the integration source; the exact remote reviewed SHA above is authoritative
+Recovery constraint: Neon is at the 10/10 branch limit, so the fresh disposable FND→SIS→FIN→INT→CARE rehearsal remains an explicit `INTEG-01` responsibility. No existing active or unreviewed Git/Neon branch may be deleted merely to create capacity
+Gate outcome: `GATE-REVIEWED-SHAS-AVAILABLE` remains passed with Wave 2 candidates frozen; `INTEG-01` is ready for serial Wave 2 integration
 Production mutation performed: no
 
 ## SIS-01 evidence
@@ -474,7 +485,127 @@ Production mutation performed: no; the generic `DATABASE_URL`/Neon `main` databa
 
 ## ACAD-01 evidence
 
-No execution evidence recorded.
+### Milestone 1 — academic structure
+
+Date/time: 2026-07-28T23:35:09+06:00
+Stream: ACAD-01
+Milestone completed: 1 — academic years/terms, instructional calendars, bell schedules, curriculum/program/course versions, standards, class sections, staff assignments and rosters
+Git branch: `module/academics-attendance-records`
+Worktree: `.worktrees/acad-01-academics`
+Neon branch: `agent/acad-01-academics` (`br-gentle-waterfall-axcl7l8z`), connector-created parent `main` (`br-cool-wildflower-axsot8l1`); reviewed Wave 1 schema replay remains required before completion
+Starting base: `8cc8ee1562ade672b14c1c44af935fe7e2307976`
+Checkpoint SHA: `224ba1c2ec23e0861ac1f432b08d797d90640347`
+Changed owned paths: `packages/modules/academics/**`; `tests/academics/academic-structure.test.ts`; `docs/modules/academics/contracts.md`; compatible append-only TypeScript include registration
+Focused checks and results: dependency install/audit PASS with 0 vulnerabilities; module TypeScript project-reference build PASS; focused ESLint PASS; academic structure Vitest 5/5 PASS; migration contract asserts 13 tenant-owned tables, forced RLS, opaque SIS/INT references and published-version immutability
+Cross-module contract outcome: SIS student/staff/enrollment, tenancy campus and INT country-pack identifiers remain opaque references; no foreign key or write into another module schema; FIN not coupled
+UI/design evidence: not applicable to this backend/domain checkpoint; Impeccable 4.0.2 loaded; reviewed base does not contain foundation-owned `PRODUCT.md` or `DESIGN.md`, recorded in module contract without recreating them
+Gate outcome: milestone 1 passed; `GATE-ACAD-COMPLETE` remains blocked pending milestones 2–7 and reviewed-base Neon replay
+Exact next milestone: 2 — timetable versions, meetings, rooms, conflict detection, substitutions, publish/unpublish and student/teacher schedule views
+Dirty/uncommitted state: tracker evidence only
+Production mutation performed: no
+
+### Milestone 2 — timetable and scheduling
+
+Date/time: 2026-07-28T23:38:55+06:00
+Stream: ACAD-01
+Milestone completed: 2 — versioned timetables, meeting patterns/instances, teacher-room-student conflict detection, publication, substitutions and schedule views
+Git branch/worktree: `module/academics-attendance-records` / `.worktrees/acad-01-academics`
+Neon branch: `agent/acad-01-academics` (`br-gentle-waterfall-axcl7l8z`)
+Starting base: `8cc8ee1562ade672b14c1c44af935fe7e2307976`
+Checkpoint SHA: `48e17eafba473cae544fbef99e7edf6a7e808d06`
+Changed owned paths: `packages/modules/scheduling/**`; `tests/academics/timetable.test.ts`; `docs/modules/academics/timetable.md`; append-only TypeScript include registration
+Focused checks and results: focused ESLint PASS; module TypeScript project-reference build PASS; cumulative academic Vitest 10/10 PASS; idempotent materialization, local timezone intent, conflict blocking, immutable publication, dated teacher/room substitution and tenant-scoped student/teacher views verified
+Gate outcome: milestone 2 passed; live reviewed-base migration replay remains pending final database gate
+Exact next milestone: 3 — attendance policies/codes/sessions, low-latency roster capture, offline sync, amendments, finalization, notices, alerts and reports
+Dirty/uncommitted state: tracker evidence only
+Production mutation performed: no
+
+### Milestone 3 — attendance and offline synchronization
+
+Date/time: 2026-07-28T23:44:29+06:00
+Stream: ACAD-01
+Milestone completed: 3 — versioned policies/codes, meeting-resolved sessions, roster capture, offline batch idempotency, reconciliation, finalization, approved amendments, guardian notices and attendance summaries/alerts
+Git branch/worktree: `module/academics-attendance-records` / `.worktrees/acad-01-academics`
+Neon branch: `agent/acad-01-academics` (`br-gentle-waterfall-axcl7l8z`)
+Starting base: `8cc8ee1562ade672b14c1c44af935fe7e2307976`
+Checkpoint SHA: `f2005a19fadf4e9149b78aa24c781cbce1736dc4`
+Changed owned paths: `packages/modules/attendance/**`; `tests/academics/attendance.test.ts`; `docs/modules/academics/attendance.md`; append-only TypeScript include registration
+Focused checks and results: focused ESLint PASS; module TypeScript project-reference build PASS; cumulative academic Vitest 15/15 PASS; identical offline retries replay, changed payload IDs conflict, invalid rows isolate, one-current-result invariant, incomplete finalization guard, approved historical amendment and chronic-absence calculation verified
+Gate outcome: milestone 3 passed; live reviewed-base migration replay remains pending final database gate
+Exact next milestone: 4 — grading policy/scales/categories, assessments/rubrics, score states, explainable calculations, moderation, locks, publication windows and grade-change approvals
+Dirty/uncommitted state: tracker evidence only
+Production mutation performed: no
+
+### Milestone 4 — gradebook, moderation and publication
+
+Date/time: 2026-07-28T23:50:28+06:00
+Stream: ACAD-01
+Milestone completed: 4 — versioned grading policies/scales/categories, rubrics/outcomes, assessments, raw result states, explainable calculations, moderation, locks, publication windows and approved grade changes
+Git branch/worktree: `module/academics-attendance-records` / `.worktrees/acad-01-academics`
+Neon branch: `agent/acad-01-academics` (`br-gentle-waterfall-axcl7l8z`)
+Starting base: `8cc8ee1562ade672b14c1c44af935fe7e2307976`
+Checkpoint SHA: `42a354f51b29e4154b56becebf9e4c41f7d171a1`
+Changed owned paths: `packages/modules/gradebook/**`; `tests/academics/gradebook.test.ts`; `docs/modules/academics/gradebook.md`; append-only TypeScript include registration
+Focused checks and results: focused ESLint PASS; module TypeScript project-reference build PASS; cumulative academic Vitest 20/20 PASS; category/scale validation, raw-score/state separation, standards evidence, weighted calculation inputs/formula, moderation-before-lock, publication windows and approved locked-grade changes verified
+Gate outcome: milestone 4 passed; live reviewed-base migration replay remains pending final database gate
+Exact next milestone: 5 — reporting periods/templates, report-card snapshots/approval, promotion/retention, credits/GPA and immutable transcript issue/amend/reissue
+Dirty/uncommitted state: tracker evidence only
+Production mutation performed: no
+
+### Milestone 5 — report cards, credits/GPA and transcripts
+
+Date/time: 2026-07-28T23:55:42+06:00
+Stream: ACAD-01
+Milestone completed: 5 — reporting periods/templates, report-card snapshots/approval/publication, promotion/retention decisions, versioned credit/GPA calculations and immutable transcript issue/amend/reissue history
+Git branch/worktree: `module/academics-attendance-records` / `.worktrees/acad-01-academics`
+Neon branch: `agent/acad-01-academics` (`br-gentle-waterfall-axcl7l8z`)
+Starting base: `8cc8ee1562ade672b14c1c44af935fe7e2307976`
+Checkpoint SHA: `2e8464e95dec7d25841463c922d0ac0b07fa2b78`
+Changed owned paths: `packages/modules/records/**`; `tests/academics/records.test.ts`; `docs/modules/academics/records.md`; append-only TypeScript include registration
+Focused checks and results: focused ESLint PASS; module TypeScript project-reference build PASS; cumulative academic Vitest 25/25 PASS; closed-period/template validation, approval-separated publication, promotion evidence/decision, explainable credit/GPA snapshot, independent transcript amendment approval and immutable version history verified
+Gate outcome: milestone 5 passed; live reviewed-base migration replay remains pending final database gate
+Exact next milestone: 6 — permission-scoped application APIs, reports/import-export, admin/teacher academic UI and Impeccable accessibility/responsive/RTL hardening evidence
+Dirty/uncommitted state: tracker evidence only
+Production mutation performed: no
+
+### Milestone 6 — application APIs, reports and academic workspaces
+
+Date/time: 2026-07-29T00:21:15+06:00
+Stream: ACAD-01
+Milestone completed: 6 — deny-by-default application facade, external SIS/INT reference validation, scoped attendance/grade/records APIs, attendance reporting, safe CSV export, validated import staging, admin control room and teacher academic workspace
+Git branch/worktree: `module/academics-attendance-records` / `.worktrees/acad-01-academics`
+Neon branch: `agent/acad-01-academics` (`br-gentle-waterfall-axcl7l8z`)
+Starting base: `8cc8ee1562ade672b14c1c44af935fe7e2307976`
+Checkpoint SHA: `0950a95222daba35301fde65e31f9dd30b9fc492`
+Changed owned paths: `packages/modules/academics/src/application.ts`; academic public export; `apps/web-admin/src/features/academics/**`; `apps/web-teacher/src/features/academics/**`; `tests/academics/application-service.test.ts`; `tests/academics/academic-ui.test.tsx`; application/UI and workflow evidence docs
+Focused checks and results: focused Prettier/ESLint PASS; module and admin TypeScript project-reference builds PASS; standalone teacher strict TypeScript PASS; application-service tests 6/6 PASS; SSR UI tests 6/6 PASS; cumulative ACAD Vitest 37/37 PASS; Impeccable detector 0 findings; manual critique/audit resolved skip navigation, locale-aware counts, loading/error recovery, scoped tokens, long-content wrapping and invalid empty grade-state option; responsive/RTL, forced-colour and reduced-motion assertions PASS
+Cross-module outcome: SIS/tenancy/INT identifiers validated only through public external contracts; no writes to active Wave 2 branches or other module schemas; ordinary academic flows remain uncoupled from FIN
+UI authority note: exact reviewed base lacks foundation-owned `PRODUCT.md` and `DESIGN.md`; ACAD did not recreate them and documented repository-design/Operate workflow substitution
+Gate outcome: milestone 6 passed; final complete gate requires root verification, reviewed-base Neon migration replay/isolation probes, recovery evidence, final docs and handoff
+Exact next milestone: 7 — full repository verification, migration composition on isolated Neon, RLS/immutability/recovery probes, observability/release documentation and final PR handoff
+Dirty/uncommitted state: tracker evidence only
+Production mutation performed: no
+
+### Milestone 7 — verification, recovery and release handoff
+
+Date/time: 2026-07-29T00:39:35+06:00
+Stream: ACAD-01
+Milestone completed: 7 — ordered migration manifest, observability/readiness, isolated Neon replay, forced-RLS/immutability/recovery probes, root verification, operational runbook, release handoff and integration PR
+Git branch/worktree: `module/academics-attendance-records` / `.worktrees/acad-01-academics`
+Neon branch: `agent/acad-01-academics` (`br-gentle-waterfall-axcl7l8z`) in project `lingering-brook-52999532`; PostgreSQL 17.10; no production endpoint used
+Starting base: `8cc8ee1562ade672b14c1c44af935fe7e2307976`
+Checkpoint SHA: `baa62b906194deea2cafc3eb43e388c980e78d0b`
+Pull request: #7 — https://github.com/rahmatullahboss/international-school-management-platform/pull/7 targeting `integration/international-school-platform-v1`
+Database evidence: exact reviewed-base SQL migrations extracted from the reviewed SHA and replayed before ACAD migrations in one `ON_ERROR_STOP` transaction; second full replay retained the same ledger count and exactly 5 ACAD rows; 5 schemas and 53 ACAD tables verified; all 53 tables have RLS enabled, forced RLS and `tenant_policy`; required publication/finalisation/lock/transcript immutability triggers verified
+Recovery evidence: rollback-only `app_runtime` probe confirmed tenant A could not see tenant B, an unrelated tenant saw zero rows, published academic-version mutation was rejected, and a post-rollback owner query found zero `ACAD-PROBE-%` rows
+Focused/module checks: ACAD Vitest 42/42 PASS; module/admin TypeScript PASS; standalone teacher strict TypeScript PASS; focused ESLint/Prettier PASS; Impeccable detector 0 findings; npm production dependency audit PASS with 0 vulnerabilities; ACAD static hygiene/private-schema dependency checks PASS
+Root checks: `format:check` PASS; `lint` PASS; `typecheck` PASS; `test` PASS; `build` PASS; `verify:boundaries` PASS; `verify:artifacts` PASS
+Known coordinator-owned blocker: root `verify:migrations` and `verify:rollbacks` fail before verification because reviewed base `package.json` references missing `scripts/verify-migrations.mjs`; ACAD did not recreate shared tooling outside ownership and supplies module manifest, assertion-only schema verifier, rollback-only probe and live Neon evidence
+Documentation: contracts, timetable, attendance, gradebook, records, application/UI, Impeccable evidence, operations, runbook, migration evidence and release handoff complete
+Gate outcome: ACAD implementation and module-owned verification complete; `GATE-ACAD-COMPLETE` is READY FOR INTEGRATION REVIEW but global migration/rollback gate remains BLOCKED solely on restoration of coordinator-owned root verifier
+Exact integration next step: restore the shared migration verifier, replay reviewed-base + ACAD on a fresh equivalent Neon branch, run all root gates, review PR #7 and merge through the integration stream; do not deploy from the module branch
+Dirty/uncommitted state: tracker evidence only
+Production mutation performed: no
 
 ## OPS-01 evidence
 
@@ -482,119 +613,26 @@ No execution evidence recorded.
 
 ## CARE-01 evidence
 
-### Stream summary
+### Student-support threat-model gate
 
-Status: complete and review-ready; integration-owned fresh disposable recovery rehearsal pending
-Git branch: `module/student-support`
-Fixed worktree: `.worktrees/care-01-student-support`
-Neon branch: `agent/care-01-student-support` (`br-raspy-smoke-ax0msb57`)
-Exact starting base: `8cc8ee1562ade672b14c1c44af935fe7e2307976`
-Approved threat-model evidence: `1ee5ef8dd5c38234cf67acfda5b73df4602f64d4`, read through Git history only
-Verified implementation SHA: `d257a9af11b03d573c4bb2165f934397be8e7fbe`
-Draft integration PR: `#19`
-CI evidence: run `30426849884` SUCCESS
-Production/default Neon mutation: none
-ACAD-01/OPS-01 unmerged code or worktree touched: no
-
-### Checkpoint 1 — security-contract
-
-Checkpoint SHA: `3e82c6598e8e4aae4b93d39de5d2c7e20fda8c70`
-Completed: 2026-07-29
-Evidence:
-
-- all 40 `SS-TM-001` through `SS-TM-040` invariants published and tested;
-- deny-by-default need-to-know authorization, guardian release, AAL2, break-glass, immutable read evidence, exact export/connector, safe notification, offline emergency, retention and incident controls;
-- security migration applied on the CARE Neon branch;
-- no-context rows `0`, tenant-A isolation clean, cross-tenant write denied, access-evidence mutation denied.
-
-### Checkpoint 2 — health
-
-Checkpoint SHA: `88a1e3a`
-Completed: 2026-07-29
-Evidence:
-
-- health profiles, conditions, allergies, medication orders, AAL2 administration, contraindication checks, immutable corrections, immunizations, care plans, clinic encounters and emergency-minimum projection;
-- `202607290202_CARE-01_health` applied;
-- 12/12 health tables force RLS;
-- no-context `0`, tenant-B leak `0`, cross-tenant write denied and medication-administration rewrite denied;
-- events/reports exclude narrative and small cohorts are suppressed.
-
-### Checkpoint 3 — behavior
-
-Checkpoint SHA: `cc26e80`
-Completed: 2026-07-29
-Evidence:
-
-- relationship-scoped intake, idempotency, controlled transitions, append-only status history, actions, restorative plans, restricted follow-up, corrections and independently approved publication;
-- `202607290203_CARE-01_behavior` applied;
-- 8/8 behavior tables force RLS;
-- no-context `0`, tenant-B leak `0`, cross-tenant write denied and source rewrite denied;
-- teacher access does not inherit restricted follow-up.
-
-### Checkpoint 4 — wellbeing
-
-Checkpoint SHA: `e619555955bdcdd2e6dc63d1880018a553bca581`
-Completed: 2026-07-29
-Evidence:
-
-- pastoral referrals, active legal basis, assigned-counselor cases/sessions, append-only corrections, AAL2 risk/escalation, support plans/reviews and minimized publication;
-- `202607290204_CARE-01_wellbeing` applied;
-- 10/10 wellbeing tables force RLS;
-- no-context `0`, tenant-B leak `0`, cross-tenant write denied and counselling-session rewrite denied;
-- events exclude narrative/factors/actions and small cohorts are suppressed.
-
-### Checkpoint 5 — safeguarding-domain
-
-Completed: 2026-07-29
-Evidence:
-
-- write-only idempotent concern intake and opaque receipt;
-- narrow AAL2 case bootstrap, authoritative principal/case/purpose membership and immediate revocation;
-- immutable chronology, independently reviewed assessments/safety plans, mandatory reports, exact expiring disclosures, C4 document references and independently approved closure;
-- no default student/guardian safeguarding publication;
-- `202607290205_CARE-01_safeguarding_domain` applied;
-- 16/16 safeguarding tables force RLS;
-- no-context concern rows `0`, teacher concern reads `0`, AAL2 lead tenant-A `1` with tenant-B leak `0`, unrelated principal case rows `0`, cross-tenant intake denied and chronology rewrite denied.
-
-### Checkpoint 6 — learning-support
-
-Completed: 2026-07-29
-Evidence:
-
-- legal-basis and relationship-scoped referrals, restricted assessments, independently approved accommodations/plans, goals/reviews, classroom-safe academic projection and versioned portal publication;
-- no ACAD-01 unmerged code or table dependency;
-- `202607290206_CARE-01_learning_support` applied;
-- 11/11 learning-support tables force RLS;
-- no-context `0`, tenant-B leak `0`, cross-tenant insert denied and plan-review rewrite denied.
-
-### Checkpoint 7 — restricted-interface-verification
-
-Verified implementation SHA: `d257a9af11b03d573c4bb2165f934397be8e7fbe`
-Completed: 2026-07-29
-Evidence:
-
-- versioned bounded `/v1/care` API registry with exact permission/purpose/AAL and masked errors;
-- accessible responsive RTL-aware admin surfaces for clinic, behavior, wellbeing, safeguarding, learning support, break-glass review and exact disclosure approval;
-- permission/role matrix, API, events/notifications, retention/export/disclosure, incident-response, interface and recovery documentation;
-- draft PR `#19` targets `integration/international-school-platform-v1` and remains draft;
-- CI run `30426849884` passed format, lint, architecture boundaries, typecheck, full tests, fresh PostgreSQL migration validation, live Neon driver, build, audit, license, provenance, Chromium browser suite and execution-artifact validator.
-
-### Migration and recovery status
-
-CARE ledger contains migrations `201` through `206`. The reviewed integration Neon branch
-`br-shiny-silence-axznuy37` was compared and contains the authoritative FND 5, SIS 6, FIN 4 and INT 7
-ledger. CARE does not mutate FIN/INT schemas and consumes their reviewed public contracts.
-
-A new disposable branch could not be created because the Neon project is at its 10/10 branch limit.
-Creating capacity would require deleting or resetting another active agent branch, which is destructive
-and prohibited for this stream. Therefore CARE-01 does not claim a fresh FND→SIS→FIN→INT→CARE replay.
-The exact integration-owned recovery procedure is documented in
-`docs/modules/student-support/recovery.md`. This pending integration gate does not weaken CARE RLS,
-authorization, audit or negative-test evidence and does not mark any program/pilot gate passed.
-
-Exact next action: INTEG-01 reviews PR `#19`, provisions a disposable branch slot without destroying
-active work, executes the documented Wave 1→CARE replay, and records the integration gate result.
-Dirty/uncommitted state: no module source changes after verified implementation SHA; tracker/board evidence only
+Date/time: 2026-07-29T02:18:00+06:00
+Stream: CARE-01 entry-gate prerequisite, maintained by the program coordinator
+Milestone completed: `GATE-STUDENT-SUPPORT-THREAT-MODEL` approved; CARE-01 released to milestone `security-contract`
+Git branch: `gate/student-support-threat-model`
+Worktree: `.worktrees/gate-student-support-threat-model`
+Neon branch: no database branch created for this documentation-only gate; CARE-01 must create/verify `agent/care-01-student-support` when implementation starts
+Starting base: integrated `origin/main` `11f4536224b1bd31eb1c79bbb7c571e6e7fb470b`, proven descendant of reviewed Wave 1 integration SHA `8cc8ee1562ade672b14c1c44af935fe7e2307976`
+Checkpoint SHA: `f97895ce8e2736699b0bd664b8a5a9eec452da3e`
+Changed coordinator-owned paths: `docs/security/student-support-threat-model.md`, `docs/execution/03-agent-board.json`, `docs/execution/04-progress-tracker.md`; no CARE-01 implementation path and no active OPS-01 path changed
+Threat-model evidence: complete data classification; least-privilege/need-to-know model; guardian/student visibility; consent/legal-basis rules; break-glass and AAL2 approvals; read/disclosure logging and immutable audit; retention/legal hold/deletion; export/integration/notification/offline-device safety; cross-tenant controls; incident response; abuse cases; role/action matrix; 40 security invariants; mandatory negative tests; migration/RLS requirements; CARE-01 implementation guardrails
+Focused checks and results: `npm ci` PASS with 0 vulnerabilities; threat-model contract validation PASS with 40 unique invariants and required sections; `python3 scripts/validate_execution_artifacts.py` PASS; full `npm run verify` PASS including formatting, lint, architecture boundaries, typecheck, 254 tests passed with the existing credential-dependent Neon direct test skipped, Worker dry-run build, Vite build and artifact validation
+Migration/replay evidence: no schema or database mutation in this gate; CARE-01 migration and fresh-Neon replay requirements are specified as implementation acceptance criteria
+Security/tenant outcome: gate requires forced RLS, missing-context denial, case/purpose/relationship authorization, AAL2 separation of duties, fail-closed sensitive read logging, no broad admin/report-builder inheritance and exhaustive negative isolation tests
+Documentation authority observation: current integrated repository does not contain the board-referenced `PRODUCT.md` or `DESIGN.md`; factual product-design input was reviewed, and CARE-01 must resolve this drift before UI completion evidence
+Gate outcome: `GATE-STUDENT-SUPPORT-THREAT-MODEL` PASS; CARE-01 status is `ready_to_start`
+Exact next milestone: create/verify declared CARE-01 Git worktree and Neon branch from exact reviewed Wave 1 SHA, then implement the threat-model security contract before broad domain/UI work
+Dirty/uncommitted state: tracker evidence update only after the gate checkpoint commit
+Production mutation performed: no
 
 ## EXP-01 evidence
 
@@ -619,6 +657,49 @@ Conflict resolution: SIS exports and app surfaces retained; FIN root/ledger expo
 Gate outcome: FIN checkpoint passed; `GATE-WAVE-1-INTEGRATED` remains blocked pending reviewed INT-01 integration, migration composition and cross-module verification
 Exact next milestone: integrate reviewed INT-01 SHA `bfa95a4a42025213fa7c2090a587ef5304924da7`
 Dirty/uncommitted state: tracker/agent-board checkpoint evidence only
+Production mutation performed: no
+
+### Wave 1 checkpoint 2 — INT-01 integrated and shared contracts composed
+
+Date/time: 2026-07-28T19:09:00+06:00
+Stream: INTEG-01
+Milestone completed: Wave 1 serial integration — reviewed INT-01 accepted
+Git branch: `integration/international-school-platform-v1`
+Worktree: `.worktrees/integ-01-release`
+Neon branch: `integration/international-school-platform-v1` (`br-shiny-silence-axznuy37`)
+Starting base: `042b75990f9cd819239c584a370687042393f6a7`
+Accepted module SHA: INT-01 `bfa95a4a42025213fa7c2090a587ef5304924da7`
+Checkpoint SHA: `0822462`
+Changed integration paths: shared workspace/package manifests; root and app TypeScript references; package lock; admin integration surface; nested module discovery; combined platform/SIS/finance/integration browser scripts; tracker conflict reconciliation
+Focused checks and results: typecheck PASS; 251 tests PASS with one secret-backed Neon test skipped; full `npm run verify` PASS; platform/SIS/finance/integration browser suites PASS 6/6
+Conflict resolution: SIS and FIN package exports, admin/family surfaces and reviewed behavior were retained while INT country-pack, integration, migration-studio, admin UI, CI and evidence were added; no frozen contract was redesigned
+Gate outcome: INT integration checkpoint passed; final migration composition, integration Neon replay and recovery verification remained
+Exact next milestone: execute canonical Wave 1 database/recovery and system verification
+Dirty/uncommitted state: none after checkpoint commit
+Production mutation performed: no
+
+### Wave 1 checkpoint 3 — `GATE-WAVE-1-INTEGRATED` passed
+
+Date/time: 2026-07-28T19:24:32+06:00
+Stream: INTEG-01
+Milestone completed: Wave 1 integration, database/recovery verification, system verification and release evidence
+Git branch: `integration/international-school-platform-v1`
+Worktree: `.worktrees/integ-01-release`
+Neon branch: `integration/international-school-platform-v1` (`br-shiny-silence-axznuy37`), parent `main` (`br-cool-wildflower-axsot8l1`)
+Starting base: `042b75990f9cd819239c584a370687042393f6a7`
+Accepted reviewed module SHAs: SIS-01 `5e2499018282d8296abfe093b5dd95b231829379`; FIN-01 `5f9e1692a8fc19fc2e9789a338d028918acdeaf6`; INT-01 `bfa95a4a42025213fa7c2090a587ef5304924da7`
+Reviewed Wave 1 integration SHA: `8cc8ee1562ade672b14c1c44af935fe7e2307976`
+Integration checkpoints: FIN merge `da3d561`; INT merge `0822462`; migration/journey gate `5d5f017`; branch-scoped Neon gate `e380ad5`; RLS verifier correction `8cc8ee1`
+Database and recovery evidence: canonical manifest contains 22 migrations in Foundation 5 → SIS 6 → FIN 4 → INT 7 order; integration Neon apply/recovery run `30362743167` PASS; rerun skipped already-applied migrations safely; disposable fresh-database replay PASS; live branch identity independently verified; 139/139 tenant-owned tables have forced RLS and `app_runtime` policies with zero failures
+Finance evidence: journal posting function present; posted-entry and posted-line immutability triggers present; no unbalanced posted journals; reconciliation and trial-balance journeys PASS
+Cross-module evidence: applicant → reviewed offer/contract → enrollment conversion → family billing account → invoice → settled payment → allocation → receivable reconciliation → safe CSV export journey PASS
+System evidence: local full `npm run verify` PASS with 254 tests passed and one secret-backed Neon test skipped; browser suites PASS 6/6; GitHub CI run `30362743336` PASS including clean install, fresh PostgreSQL SIS replay, live Neon serverless driver, audit, licence, provenance, browser and artifact validation
+Security/tenant outcome: no unresolved tenant-isolation, authorization, secret-handling or migration failure
+Known non-blocking risk: GitHub reports Node.js 20 deprecation for `actions/checkout@v4` and `actions/setup-node@v4`, while runners forced those actions onto Node.js 24; execution passed and this should be upgraded during routine CI maintenance
+Safe cleanup outcome: no existing Git branch, worktree or Neon branch was deleted; all active module and integration resources were retained
+Gate outcome: `GATE-WAVE-1-INTEGRATED` PASS; Wave 2 reviewed base is `8cc8ee1562ade672b14c1c44af935fe7e2307976`
+Exact next milestone: start `ACAD-01` and `OPS-01` from the reviewed Wave 1 integration SHA; complete the required threat model before `CARE-01`
+Dirty/uncommitted state: release evidence and board/tracker update only
 Production mutation performed: no
 
 ## Resume rule
