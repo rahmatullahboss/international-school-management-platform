@@ -147,8 +147,8 @@ void main() {
       record['box'] = base64Encode(bytes);
       await file.writeAsString(jsonEncode(document), flush: true);
 
-      expect(
-        () => store.find('operation-1'),
+      await expectLater(
+        store.find('operation-1'),
         throwsA(
           isA<SyncStorageException>().having(
             (error) => error.code,
@@ -169,8 +169,8 @@ void main() {
           .toList();
       expect(await blocked.exists(), isTrue);
       expect(names.any((name) => name.contains('.quarantine.')), isTrue);
-      expect(
-        () => store.ready(
+      await expectLater(
+        store.ready(
           now: DateTime.parse('2026-07-30T04:00:00+06:00'),
           session: session,
         ),
