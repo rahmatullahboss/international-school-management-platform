@@ -6,8 +6,10 @@
   "exports": {
     ".": "./src/index.tsx",
     "./communications": "./src/communications.tsx",
+    "./reporting": "./src/reporting.tsx",
     "./shell.css": "./src/shell.css",
-    "./communications.css": "./src/communications.css"
+    "./communications.css": "./src/communications.css",
+    "./reporting.css": "./src/reporting.css"
   },
   "scripts": {
     "build": "tsc -b",

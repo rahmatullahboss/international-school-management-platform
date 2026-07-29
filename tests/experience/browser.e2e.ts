@@ -9,6 +9,10 @@ const communicationsCss = readFileSync(
   new URL('../../packages/modules/documents-experience/src/communications.css', import.meta.url),
   'utf8',
 );
+const reportingCss = readFileSync(
+  new URL('../../packages/modules/documents-experience/src/reporting.css', import.meta.url),
+  'utf8',
+);
 
 function shellFixture(options: { direction?: 'ltr' | 'rtl'; offline?: boolean } = {}): string {
   const direction = options.direction ?? 'ltr';
@@ -92,6 +96,38 @@ function communicationsFixture(direction: 'ltr' | 'rtl' = 'ltr'): string {
         <div class="communications-table" role="region" aria-label="Notification delivery status" tabindex="0">
           <table><thead><tr><th scope="col">Notification</th><th scope="col">Channel</th><th scope="col">Destination</th><th scope="col">Status</th><th scope="col">Updated</th></tr></thead><tbody><tr data-state="failed"><th scope="row">Campus closes early</th><td>email</td><td>r••••@example.test</td><td><strong>Failed</strong><small>Verify the saved address.</small></td><td><time datetime="2026-07-29T07:03:00+06:00">29 Jul 2026</time></td></tr></tbody></table>
         </div>
+      </section>
+    </main>
+  </body>
+</html>`;
+}
+
+function reportingFixture(direction: 'ltr' | 'rtl' = 'ltr'): string {
+  return `<!doctype html>
+<html lang="${direction === 'rtl' ? 'ar' : 'en'}" dir="${direction}">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>EXP-01 reporting proof</title>
+    <style>${reportingCss}</style>
+  </head>
+  <body>
+    <main class="reporting-workspace" data-persona="admin">
+      <header class="reporting-masthead">
+        <div><p>Evidence and document ledger</p><h2>International Community School</h2><span>Reproducible metrics, bounded reports and authorised documents.</span></div>
+        <dl aria-label="Reporting summary"><div><dt>Metrics needing attention</dt><dd>1</dd></div><div><dt>Active report jobs</dt><dd>1</dd></div><div><dt>Documents ready</dt><dd>1</dd></div></dl>
+      </header>
+      <section class="reporting-section" aria-labelledby="reporting-metrics">
+        <header><h3 id="reporting-metrics">Governed dashboard</h3><p>Every value names its definition and source.</p></header>
+        <ol class="reporting-metrics"><li data-state="exception"><div><span>exception</span><time datetime="2026-07-29T11:45:00+06:00">As of 29 Jul 2026</time></div><h4>Registers awaiting finalisation</h4><strong>3</strong><p>Three registers remain open.</p><dl><div><dt>Definition</dt><dd>Open register after timetable end v2</dd></div><div><dt>Source</dt><dd>Attendance published read model</dd></div></dl><a href="/admin/reports/attendance/open-registers">Open governed drill-down</a></li></ol>
+      </section>
+      <section class="reporting-section" aria-labelledby="reporting-jobs">
+        <header><h3 id="reporting-jobs">Asynchronous report jobs</h3><p>Current lifecycle state remains visible.</p></header>
+        <div class="reporting-table" role="region" aria-label="Report job status" tabindex="0"><table><thead><tr><th scope="col">Report</th><th scope="col">Format</th><th scope="col">Status</th><th scope="col">Updated</th><th scope="col">Result</th></tr></thead><tbody><tr data-state="running"><th scope="row">Attendance readiness report</th><td>csv</td><td><strong>Running</strong><span>65%</span></td><td><time datetime="2026-07-29T10:05:00+06:00">29 Jul 2026</time></td><td><span>Not available</span></td></tr></tbody></table></div>
+      </section>
+      <section class="reporting-section" aria-labelledby="reporting-documents">
+        <header><h3 id="reporting-documents">Authorised documents</h3><p>Publication and security scanning determine availability.</p></header>
+        <ol class="reporting-documents"><li data-ready="true"><div><span>personal</span><strong>Ready to download</strong></div><h4>Term attendance evidence</h4><p>Attendance evidence</p><dl><div><dt>Generated</dt><dd><time datetime="2026-07-29T08:00:00+06:00">29 Jul 2026</time></dd></div><div><dt>Evidence</dt><dd>SHA-256 verified</dd></div></dl><a href="/admin/documents/document-ready/request">Request secure download</a></li></ol>
       </section>
     </main>
   </body>
@@ -187,6 +223,44 @@ test('communications ledger is responsive, RTL-aware and keyboard reachable', as
   });
 
   expect(layout.mastheadColumns.split(' ')).toHaveLength(1);
+  expect(['auto', 'scroll']).toContain(layout.tableOverflow);
+  expect(layout.bodyWidth).toBeLessThanOrEqual(layout.viewportWidth);
+});
+
+test('reporting ledger contains provenance, responsive overflow and keyboard access', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.setContent(reportingFixture('rtl'));
+
+  await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+  await expect(
+    page.getByRole('heading', { name: 'Registers awaiting finalisation' }),
+  ).toBeVisible();
+  await expect(page.getByText('Open register after timetable end v2')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Open governed drill-down' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Request secure download' })).toBeVisible();
+
+  const jobRegion = page.getByRole('region', { name: 'Report job status' });
+  await expect(jobRegion).toBeVisible();
+  await jobRegion.focus();
+  await expect(jobRegion).toBeFocused();
+
+  const layout = await page.evaluate(() => {
+    const masthead = document.querySelector<HTMLElement>('.reporting-masthead')!;
+    const metrics = document.querySelector<HTMLElement>('.reporting-metrics')!;
+    const tableRegion = document.querySelector<HTMLElement>('.reporting-table')!;
+    return {
+      mastheadColumns: getComputedStyle(masthead).gridTemplateColumns,
+      metricColumns: getComputedStyle(metrics).gridTemplateColumns,
+      tableOverflow: getComputedStyle(tableRegion).overflowX,
+      bodyWidth: document.body.scrollWidth,
+      viewportWidth: window.innerWidth,
+    };
+  });
+
+  expect(layout.mastheadColumns.split(' ')).toHaveLength(1);
+  expect(layout.metricColumns.split(' ')).toHaveLength(1);
   expect(['auto', 'scroll']).toContain(layout.tableOverflow);
   expect(layout.bodyWidth).toBeLessThanOrEqual(layout.viewportWidth);
 });
