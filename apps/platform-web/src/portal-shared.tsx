@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 
 import type { PilotModulePage } from './pilot-data';
+import './pilot-resource.css';
 import './pilot-ux.css';
 
 export type PilotRole = 'admin' | 'teacher' | 'guardian' | 'student';
