@@ -158,9 +158,6 @@ jobs:
       - name: Commit native projects
         if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
         run: |
-          if git diff --quiet -- mobile/apps/family_app/android mobile/apps/family_app/ios mobile/apps/family_app/.metadata mobile/apps/family_app/.gitignore mobile/apps/staff_app/android mobile/apps/staff_app/ios mobile/apps/staff_app/.metadata mobile/apps/staff_app/.gitignore; then
-            exit 0
-          fi
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add \
@@ -172,6 +169,9 @@ jobs:
             mobile/apps/staff_app/ios \
             mobile/apps/staff_app/.metadata \
             mobile/apps/staff_app/.gitignore
+          if git diff --cached --quiet; then
+            exit 0
+          fi
           git commit -m "build(MOB-01): add Android and iOS application projects"
           git push origin HEAD:module/flutter-mobile-apps
       - name: Verify formatting
