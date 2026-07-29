@@ -34,8 +34,9 @@ jobs:
       - name: Fix and format encrypted sync storage
         run: |
           python3 mobile/tool/fix_sync_storage.py
+          python3 mobile/tool/fix_sync_storage_tests.py
           dart format mobile/packages/sync_storage
-      - name: Commit encrypted sync storage compatibility fixes
+      - name: Commit encrypted sync storage lifecycle fixes
         if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
         run: |
           git config user.name github-actions[bot]
@@ -47,10 +48,13 @@ jobs:
           if git diff --cached --quiet; then
             exit 0
           fi
-          git commit -m "fix(MOB-01): finalize encrypted sync storage contracts"
+          git commit -m "test(MOB-01): finalize encrypted sync storage lifecycle"
           git push origin HEAD:module/flutter-mobile-apps
       - name: Verify generated files remain ignored
-        run: git diff --exit-code -- mobile ':!mobile/tool/fix_sync_storage.py'
+        run: >-
+          git diff --exit-code -- mobile
+          ':!mobile/tool/fix_sync_storage.py'
+          ':!mobile/tool/fix_sync_storage_tests.py'
       - name: Verify native application configuration
         run: python3 mobile/tool/verify_native_projects.py
       - name: Analyze family app
