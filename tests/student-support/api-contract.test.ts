@@ -23,6 +23,12 @@ function context(overrides: Partial<CareRequestContext> = {}): CareRequestContex
   };
 }
 
+function contextWithoutTenant(): CareRequestContext {
+  const value = context();
+  delete value.tenantId;
+  return value;
+}
+
 describe('CARE restricted API v1', () => {
   test('publishes unique versioned routes with bounded sensitive queries', () => {
     expect(new Set(CARE_API_V1_ROUTES.map((route) => route.id)).size).toBe(
@@ -51,7 +57,7 @@ describe('CARE restricted API v1', () => {
     expect(
       authorizeCareApiRoute({
         routeId: 'learning-support.assessment.read',
-        context: context({ tenantId: undefined }),
+        context: contextWithoutTenant(),
       }),
     ).toMatchObject({ allowed: false, status: 404, code: 'CARE_API_CONTEXT_REQUIRED', masked: true });
     expect(
