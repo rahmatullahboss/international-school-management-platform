@@ -1,0 +1,141 @@
+name: Fix PILOT-01 Lint
+
+on:
+  push:
+    branches:
+      - pilot/runtime-portal-composition
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pilot-runtime-lint-fix
+  cancel-in-progress: true
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: pilot/runtime-portal-composition
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.2
+          cache: npm
+
+      - run: npm ci
+
+      - name: Apply typed heading resolution
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('apps/platform-web/src/main.tsx')
+          text = path.read_text(encoding='utf-8')
+
+          text = text.replace(
+              "const roleLinks = [\n",
+              "const roleRoots: Readonly<Record<PilotRole, string>> = {\n"
+              "  admin: '/admin',\n"
+              "  teacher: '/teacher',\n"
+              "  guardian: '/family',\n"
+              "  student: '/student',\n"
+              "};\n\n"
+              "const roleLinks = [\n",
+              1,
+          )
+
+          old_utility = """function shellUtilityActions(activeRole: PilotRole) {
+            return roleLinks
+              .filter((link) => link.href === '/' || !link.href.startsWith(`/${activeRole}`))
+              .map((link) => ({ label: link.label, href: link.href }));
+          }
+          """
+          new_utility = """function shellUtilityActions(activeRole: PilotRole) {
+            const activeRoot = roleRoots[activeRole];
+            return roleLinks
+              .filter((link) => link.href === '/' || link.href !== activeRoot)
+              .map((link) => ({ label: link.label, href: link.href }));
+          }
+
+          function resolvePageHeading(
+            role: PilotRole,
+            path: string,
+            page: PilotModulePage | undefined,
+            fallbackTitle: string,
+            fallbackDescription: string,
+          ): { readonly title: string; readonly description: string } {
+            if (path === roleRoots[role]) {
+              const roleDescription = roleDescriptions[role];
+              return { title: roleDescription.title, description: roleDescription.detail };
+            }
+            return {
+              title: page?.title ?? fallbackTitle,
+              description: page?.description ?? fallbackDescription,
+            };
+          }
+          """
+          if old_utility not in text:
+              raise SystemExit('utility block not found')
+          text = text.replace(old_utility, new_utility, 1)
+
+          replacements = [
+              (
+                  "const heading = props.path === '/admin' ? roleDescriptions.admin : page;",
+                  "const heading = resolvePageHeading(\n    'admin',\n    props.path,\n    page,\n    'Administration',\n    'Integrated administration workspace',\n  );",
+              ),
+              (
+                  "pageTitle={heading?.title ?? 'Administration'}\n      pageDescription={\n        heading?.detail ?? heading?.description ?? 'Integrated administration workspace'\n      }",
+                  "pageTitle={heading.title}\n      pageDescription={heading.description}",
+              ),
+              (
+                  "const heading = props.path === '/teacher' ? roleDescriptions.teacher : page;",
+                  "const heading = resolvePageHeading(\n    'teacher',\n    props.path,\n    page,\n    'Teacher workspace',\n    'Assigned teaching work',\n  );",
+              ),
+              (
+                  "pageTitle={heading?.title ?? 'Teacher workspace'}\n      pageDescription={heading?.detail ?? heading?.description ?? 'Assigned teaching work'}",
+                  "pageTitle={heading.title}\n      pageDescription={heading.description}",
+              ),
+              (
+                  "const heading = props.path === '/family' ? roleDescriptions.guardian : page;",
+                  "const heading = resolvePageHeading(\n    'guardian',\n    props.path,\n    page,\n    'Family portal',\n    'Household school services',\n  );",
+              ),
+              (
+                  "pageTitle={heading?.title ?? 'Family portal'}\n      pageDescription={heading?.detail ?? heading?.description ?? 'Household school services'}",
+                  "pageTitle={heading.title}\n      pageDescription={heading.description}",
+              ),
+              (
+                  "const heading = props.path === '/student' ? roleDescriptions.student : page;",
+                  "const heading = resolvePageHeading(\n    'student',\n    props.path,\n    page,\n    'Student portal',\n    'Published student services',\n  );",
+              ),
+              (
+                  "pageTitle={heading?.title ?? 'Student portal'}\n      pageDescription={heading?.detail ?? heading?.description ?? 'Published student services'}",
+                  "pageTitle={heading.title}\n      pageDescription={heading.description}",
+              ),
+          ]
+
+          for old, new in replacements:
+              if old not in text:
+                  raise SystemExit(f'replacement not found: {old[:80]}')
+              text = text.replace(old, new, 1)
+
+          path.write_text(text, encoding='utf-8')
+          PY
+
+      - run: npm run format
+      - run: npm run lint
+
+      - name: Commit lint fixes
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add apps/platform-web/src/main.tsx
+          git commit -m 'fix(pilot): resolve typed portal headings'
+          git push origin HEAD:pilot/runtime-portal-composition
