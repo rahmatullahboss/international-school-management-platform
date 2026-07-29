@@ -16,13 +16,6 @@
     "attendance/src/**/*.ts",
     "gradebook/src/**/*.ts",
     "records/src/**/*.ts",
-    "hr/src/**/*.ts",
-    "procurement/src/**/*.ts",
-    "inventory-assets/src/**/*.ts",
-    "library/src/**/*.ts",
-    "transport/src/**/*.ts",
-    "residential-catering/src/**/*.ts",
-    "activities-trips/src/**/*.ts",
     "billing/src/**/*.ts",
     "ledger/src/**/*.ts"
   ],
