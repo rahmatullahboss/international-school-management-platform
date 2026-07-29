@@ -1,29 +1,41 @@
-import React, { useEffect, useState } from 'react';
+import { StrictMode, useEffect, useState, type ReactElement } from 'react';
 import { createRoot } from 'react-dom/client';
 
+import { AdminExperienceShell, AdminOperationsHome } from '@school/web-admin/experience';
 import {
-  ExperienceResiliencePanel,
-  ExperienceTelemetryBuffer,
-  type BandwidthMode,
-  type ConnectivityState,
-} from '@school/documents-experience/resilience';
-import '@school/documents-experience/resilience.css';
-import { ModuleRegistry } from '@school/platform';
-import { AppShell } from '@school/ui';
+  GuardianExperienceShell,
+  GuardianHouseholdWorkspace,
+} from '@school/web-family/experience';
+import {
+  StudentDailyWorkspace,
+  StudentExperienceShell,
+} from '@school/web-student/experience';
+import {
+  TeacherDailyWorkspace,
+  TeacherExperienceShell,
+} from '@school/web-teacher/experience';
 
-import { registerPlatformServiceWorker, resolveSavedBandwidthMode } from './pwa';
+import { registerPlatformServiceWorker } from './pwa';
+import {
+  adminCapabilities,
+  adminOverview,
+  campusName,
+  guardianCapabilities,
+  guardianOverview,
+  modulePages,
+  pilotTimestamp,
+  schoolName,
+  studentCapabilities,
+  studentOverview,
+  teacherCapabilities,
+  teacherOverview,
+  type PilotModulePage,
+} from './pilot-data';
+import './pilot.css';
 import './styles.css';
 
-const modules = new ModuleRegistry();
-modules.register({
-  moduleId: 'platform',
-  routes: ['/'],
-  capabilities: ['platform.dashboard.read'],
-});
-modules.register({ moduleId: 'sis', routes: ['/students'], capabilities: ['student.read'] });
-
-const telemetry = new ExperienceTelemetryBuffer(100);
-const bandwidthStorageKey = 'school-platform:bandwidth-mode:v1';
+type PilotRole = 'admin' | 'teacher' | 'guardian' | 'student';
+type PilotConnectivity = 'online' | 'degraded' | 'offline';
 
 interface NavigatorWithConnection extends Navigator {
   readonly connection?: {
@@ -31,124 +43,425 @@ interface NavigatorWithConnection extends Navigator {
   };
 }
 
-function saveDataEnabled(): boolean {
-  return (navigator as NavigatorWithConnection).connection?.saveData === true;
+const roleLinks = [
+  { label: 'Admin', href: '/admin' },
+  { label: 'Teacher', href: '/teacher' },
+  { label: 'Guardian', href: '/family' },
+  { label: 'Student', href: '/student' },
+  { label: 'Role chooser', href: '/' },
+] as const;
+
+const roleDescriptions: Readonly<Record<PilotRole, { readonly title: string; readonly detail: string }>> = {
+  admin: {
+    title: 'School operations overview',
+    detail: 'Exceptions, approvals and governed cross-module readiness.',
+  },
+  teacher: {
+    title: 'Today’s teaching workspace',
+    detail: 'Assigned classes, attendance, gradebook work and permitted student context.',
+  },
+  guardian: {
+    title: 'Family home',
+    detail: 'Applications, children, attendance, results, fees, forms and messages.',
+  },
+  student: {
+    title: 'Today',
+    detail: 'Lessons, published progress, resources, requests and secure messages.',
+  },
+};
+
+function normalisePath(pathname: string): string {
+  if (pathname === '/') return pathname;
+  return pathname.replace(/\/+$/u, '');
 }
 
-function initialBandwidthMode(): BandwidthMode {
-  return resolveSavedBandwidthMode(localStorage.getItem(bandwidthStorageKey), saveDataEnabled());
+function roleForPath(path: string): PilotRole | undefined {
+  if (path.startsWith('/admin')) return 'admin';
+  if (path.startsWith('/teacher')) return 'teacher';
+  if (path.startsWith('/family')) return 'guardian';
+  if (path.startsWith('/student')) return 'student';
+  return undefined;
 }
 
-function initialConnectivity(): ConnectivityState {
+function initialConnectivity(): PilotConnectivity {
   if (!navigator.onLine) return 'offline';
-  return saveDataEnabled() ? 'degraded' : 'online';
+  return (navigator as NavigatorWithConnection).connection?.saveData === true ? 'degraded' : 'online';
 }
 
-function FoundationDashboard(): React.JSX.Element {
-  const [bandwidthMode, setBandwidthMode] = useState<BandwidthMode>(initialBandwidthMode);
-  const [connectivity, setConnectivity] = useState<ConnectivityState>(initialConnectivity);
-  const [updateAvailable, setUpdateAvailable] = useState(false);
+function usePilotConnectivity(): PilotConnectivity {
+  const [connectivity, setConnectivity] = useState<PilotConnectivity>(initialConnectivity);
 
   useEffect(() => {
-    document.documentElement.dataset.bandwidth = bandwidthMode;
-    localStorage.setItem(bandwidthStorageKey, bandwidthMode);
-  }, [bandwidthMode]);
-
-  useEffect(() => {
-    const updateConnectivity = (): void => {
-      const next: ConnectivityState = navigator.onLine
-        ? bandwidthMode === 'low' || saveDataEnabled()
-          ? 'degraded'
-          : 'online'
-        : 'offline';
-      setConnectivity(next);
-      telemetry.record({
-        name: 'connectivity.changed',
-        timestamp: new Date().toISOString(),
-        outcome: next === 'offline' ? 'pending' : 'success',
-        routeTemplate: '/',
-        attributes: {
-          connectivity: next,
-          bandwidthMode,
-          persona: 'platform',
-        },
-      });
-    };
-
-    updateConnectivity();
-    window.addEventListener('online', updateConnectivity);
-    window.addEventListener('offline', updateConnectivity);
+    const update = (): void => setConnectivity(initialConnectivity());
+    window.addEventListener('online', update);
+    window.addEventListener('offline', update);
     return () => {
-      window.removeEventListener('online', updateConnectivity);
-      window.removeEventListener('offline', updateConnectivity);
-    };
-  }, [bandwidthMode]);
-
-  useEffect(() => {
-    if (!import.meta.env.PROD) return undefined;
-    let active = true;
-    void registerPlatformServiceWorker({
-      onUpdateAvailable: () => {
-        if (active) setUpdateAvailable(true);
-      },
-    }).then((result) => {
-      telemetry.record({
-        name: 'pwa.service_worker',
-        timestamp: new Date().toISOString(),
-        outcome: result.status === 'failed' ? 'failure' : 'success',
-        routeTemplate: '/',
-        attributes: {
-          reasonCode: result.status === 'failed' ? result.reasonCode.toLowerCase() : result.status,
-          persona: 'platform',
-        },
-      });
-    });
-    return () => {
-      active = false;
+      window.removeEventListener('online', update);
+      window.removeEventListener('offline', update);
     };
   }, []);
 
+  return connectivity;
+}
+
+function PilotLanding(): ReactElement {
   return (
-    <AppShell
-      title="International School Platform"
-      navigation={[
-        { label: 'Dashboard', href: '/' },
-        { label: 'Students', href: '/students' },
-      ]}
-    >
-      <ExperienceResiliencePanel
-        locale={navigator.language || 'en-GB'}
-        connectivity={connectivity}
-        bandwidthMode={bandwidthMode}
-        pendingActionCount={0}
-        updateAvailable={updateAvailable}
-        retryHref={connectivity === 'online' ? undefined : '/?retry-sync=1'}
-        supportHref="/offline.html"
-        onBandwidthModeChange={setBandwidthMode}
-      />
-      <h1>Dashboard</h1>
-      <p>Foundation workspace initialized with tenant-safe platform contracts.</p>
-      <dl>
+    <div className="pilot-entry">
+      <header className="pilot-entry__masthead">
         <div>
-          <dt>Dashboard owner</dt>
-          <dd>{modules.ownerOfRoute('/')}</dd>
+          <p className="pilot-kicker">Cloudflare staging · synthetic pilot data</p>
+          <h1>International School Platform</h1>
+          <p>
+            Open a role workspace to review the integrated SIS, academics, finance, operations,
+            student-support, communication, reporting and integration modules.
+          </p>
         </div>
-        <div>
-          <dt>Student capability owner</dt>
-          <dd>{modules.ownerOfCapability('student.read')}</dd>
+        <div className="pilot-entry__status" role="status">
+          <strong>Staging environment</strong>
+          <span>No production data</span>
+          <a href="/offline.html">Offline support</a>
         </div>
-      </dl>
-    </AppShell>
+      </header>
+
+      <main className="pilot-entry__main">
+        <section aria-labelledby="pilot-role-title">
+          <div className="pilot-section-heading">
+            <p>Demo access</p>
+            <h2 id="pilot-role-title">Choose a role</h2>
+            <span>Authentication is simulated for pilot review; permissions remain role-scoped.</span>
+          </div>
+          <div className="pilot-role-grid">
+            <a className="pilot-role-card" data-role="admin" href="/admin">
+              <span>01</span>
+              <h3>School administrator</h3>
+              <p>SIS, admissions, academics, finance, operations, support, reports and integrations.</p>
+              <strong>Open admin workspace</strong>
+            </a>
+            <a className="pilot-role-card" data-role="teacher" href="/teacher">
+              <span>02</span>
+              <h3>Teacher</h3>
+              <p>Classes, timetable, attendance, gradebook, students, messages and resources.</p>
+              <strong>Open teacher workspace</strong>
+            </a>
+            <a className="pilot-role-card" data-role="guardian" href="/family">
+              <span>03</span>
+              <h3>Guardian</h3>
+              <p>Admissions, children, attendance, grades, fees, forms, documents and messages.</p>
+              <strong>Open family portal</strong>
+            </a>
+            <a className="pilot-role-card" data-role="student" href="/student">
+              <span>04</span>
+              <h3>Student</h3>
+              <p>Timetable, attendance, results, documents, resources, requests and messages.</p>
+              <strong>Open student portal</strong>
+            </a>
+          </div>
+        </section>
+
+        <section className="pilot-coverage" aria-labelledby="pilot-coverage-title">
+          <div className="pilot-section-heading">
+            <p>Integrated scope</p>
+            <h2 id="pilot-coverage-title">Module coverage</h2>
+          </div>
+          <div className="pilot-coverage__grid">
+            {[
+              ['Core SIS', 'People, households, admissions and enrolment lifecycle'],
+              ['Academics', 'Curriculum, timetable, attendance, gradebook and records'],
+              ['Finance', 'Billing, payments, ledger, reconciliation and reports'],
+              ['Operations', 'HR, procurement, assets, library, transport and services'],
+              ['Student support', 'Health, wellbeing, safeguarding and learning support'],
+              ['Experience', 'Portals, communications, documents, reporting and resilient PWA'],
+              ['Integrations', 'Country packs, imports, OneRoster, LTI, SSO and webhooks'],
+              ['Governance', 'Tenant isolation, permissions, audit events and recovery evidence'],
+            ].map(([title, detail]) => (
+              <article key={title}>
+                <h3>{title}</h3>
+                <p>{detail}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      </main>
+    </div>
   );
 }
 
-const root = document.getElementById('root');
-if (!root) {
-  throw new Error('Root element not found');
+function PilotModuleSurface(props: { readonly page: PilotModulePage }): ReactElement {
+  return (
+    <div className="pilot-module">
+      <header className="pilot-module__heading">
+        <p>{props.page.eyebrow}</p>
+        <h2>{props.page.title}</h2>
+        <span>{props.page.description}</span>
+      </header>
+
+      <section className="pilot-metrics" aria-label={`${props.page.title} summary`}>
+        {props.page.metrics.map((metric) => (
+          <article key={metric.label}>
+            <span>{metric.label}</span>
+            <strong>{metric.value}</strong>
+            <p>{metric.detail}</p>
+          </article>
+        ))}
+      </section>
+
+      <section className="pilot-work-queue" aria-labelledby="pilot-queue-title">
+        <div>
+          <p>Current work</p>
+          <h3 id="pilot-queue-title">Priority queue</h3>
+        </div>
+        <ol>
+          {props.page.queue.map((item) => (
+            <li key={item.title}>
+              <div>
+                <strong>{item.title}</strong>
+                <span>{item.detail}</span>
+              </div>
+              <span className="pilot-status">{item.status}</span>
+              <a href={item.href}>Open</a>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <nav className="pilot-actions" aria-label={`${props.page.title} actions`}>
+        {props.page.actions.map((action) => (
+          <a href={action.href} key={action.label}>
+            {action.label}
+          </a>
+        ))}
+      </nav>
+
+      <aside className="pilot-demo-note">
+        <strong>Pilot data</strong>
+        <span>
+          This route is composed from the integrated module contracts with synthetic staging records.
+          Mutating production actions remain disabled.
+        </span>
+      </aside>
+    </div>
+  );
 }
 
+function UnknownRoute(props: { readonly homeHref: string }): ReactElement {
+  return (
+    <section className="pilot-unknown" role="alert">
+      <p>Route not available in this pilot</p>
+      <h2>The requested workspace is not composed yet.</h2>
+      <a href={props.homeHref}>Return to role home</a>
+    </section>
+  );
+}
+
+function shellUtilityActions(activeRole: PilotRole) {
+  return roleLinks
+    .filter((link) => link.href === '/' || !link.href.startsWith(`/${activeRole}`))
+    .map((link) => ({ label: link.label, href: link.href }));
+}
+
+function AdminPortal(props: {
+  readonly path: string;
+  readonly connectivity: PilotConnectivity;
+}): ReactElement {
+  const page = modulePages[props.path];
+  const heading = props.path === '/admin' ? roleDescriptions.admin : page;
+
+  return (
+    <AdminExperienceShell
+      schoolName={schoolName}
+      userName="Amina Chowdhury · Principal"
+      locale="en-BD"
+      pageTitle={heading?.title ?? 'Administration'}
+      pageDescription={heading?.detail ?? heading?.description ?? 'Integrated administration workspace'}
+      activeHref={props.path}
+      capabilities={adminCapabilities}
+      session={{ assurance: 'aal2', deviceLabel: 'Pilot browser', expiresAt: '2026-07-30T08:00:00+06:00' }}
+      connectivity={{ state: props.connectivity, pendingChanges: 0, lastSyncedAt: pilotTimestamp, retryHref: props.path }}
+      utilityActions={shellUtilityActions('admin')}
+    >
+      {props.path === '/admin' ? (
+        <AdminOperationsHome
+          schoolName={schoolName}
+          campusName={campusName}
+          locale="en-BD"
+          asOf={pilotTimestamp}
+          assurance="aal2"
+          capabilities={adminCapabilities}
+          metrics={adminOverview.metrics}
+          exceptions={adminOverview.exceptions}
+          approvals={adminOverview.approvals}
+          searchQuery="Samira"
+          searchResults={adminOverview.searchResults}
+          selectedExceptionIds={['attendance-1']}
+          bulkActions={adminOverview.bulkActions}
+        />
+      ) : page === undefined ? (
+        <UnknownRoute homeHref="/admin" />
+      ) : (
+        <PilotModuleSurface page={page} />
+      )}
+    </AdminExperienceShell>
+  );
+}
+
+function TeacherPortal(props: {
+  readonly path: string;
+  readonly connectivity: PilotConnectivity;
+}): ReactElement {
+  const page = modulePages[props.path];
+  const heading = props.path === '/teacher' ? roleDescriptions.teacher : page;
+
+  return (
+    <TeacherExperienceShell
+      schoolName={schoolName}
+      userName="Nusrat Rahman · Mathematics"
+      locale="en-BD"
+      pageTitle={heading?.title ?? 'Teacher workspace'}
+      pageDescription={heading?.detail ?? heading?.description ?? 'Assigned teaching work'}
+      activeHref={props.path}
+      capabilities={teacherCapabilities}
+      session={{ assurance: 'aal1', deviceLabel: 'Pilot browser', expiresAt: '2026-07-30T08:00:00+06:00' }}
+      connectivity={{ state: props.connectivity, pendingChanges: 0, lastSyncedAt: pilotTimestamp, retryHref: props.path }}
+      utilityActions={shellUtilityActions('teacher')}
+    >
+      {props.path === '/teacher' ? (
+        <TeacherDailyWorkspace
+          teacherName="Nusrat Rahman"
+          schoolName={schoolName}
+          locale="en-BD"
+          date={pilotTimestamp}
+          connectivity={props.connectivity}
+          pendingChanges={0}
+          capabilities={teacherCapabilities}
+          sessions={teacherOverview.sessions}
+          attendance={teacherOverview.attendance}
+          gradebook={teacherOverview.gradebook}
+          studentContext={teacherOverview.studentContext}
+          conversations={teacherOverview.conversations}
+        />
+      ) : page === undefined ? (
+        <UnknownRoute homeHref="/teacher" />
+      ) : (
+        <PilotModuleSurface page={page} />
+      )}
+    </TeacherExperienceShell>
+  );
+}
+
+function GuardianPortal(props: {
+  readonly path: string;
+  readonly connectivity: PilotConnectivity;
+}): ReactElement {
+  const page = modulePages[props.path];
+  const heading = props.path === '/family' ? roleDescriptions.guardian : page;
+
+  return (
+    <GuardianExperienceShell
+      schoolName={schoolName}
+      userName="Farhana Noor · Guardian"
+      locale="en-BD"
+      pageTitle={heading?.title ?? 'Family portal'}
+      pageDescription={heading?.detail ?? heading?.description ?? 'Household school services'}
+      activeHref={props.path}
+      capabilities={guardianCapabilities}
+      session={{ assurance: 'aal1', deviceLabel: 'Pilot browser', expiresAt: '2026-07-30T08:00:00+06:00' }}
+      connectivity={{ state: props.connectivity, pendingChanges: 0, lastSyncedAt: pilotTimestamp, retryHref: props.path }}
+      utilityActions={shellUtilityActions('guardian')}
+    >
+      {props.path === '/family' ? (
+        <GuardianHouseholdWorkspace
+          guardianName="Farhana Noor"
+          householdLabel="Noor household"
+          locale="en-BD"
+          activeChildId="student-1"
+          capabilities={guardianCapabilities}
+          children={guardianOverview.children}
+          applications={guardianOverview.applications}
+          attendance={guardianOverview.attendance}
+          grades={guardianOverview.grades}
+          fees={guardianOverview.fees}
+          forms={guardianOverview.forms}
+          documents={guardianOverview.documents}
+          conversations={guardianOverview.conversations}
+        />
+      ) : page === undefined ? (
+        <UnknownRoute homeHref="/family" />
+      ) : (
+        <PilotModuleSurface page={page} />
+      )}
+    </GuardianExperienceShell>
+  );
+}
+
+function StudentPortal(props: {
+  readonly path: string;
+  readonly connectivity: PilotConnectivity;
+}): ReactElement {
+  const page = modulePages[props.path];
+  const heading = props.path === '/student' ? roleDescriptions.student : page;
+
+  return (
+    <StudentExperienceShell
+      schoolName={schoolName}
+      userName="Samira Noor · Year 8"
+      locale="en-BD"
+      pageTitle={heading?.title ?? 'Student portal'}
+      pageDescription={heading?.detail ?? heading?.description ?? 'Published student services'}
+      activeHref={props.path}
+      capabilities={studentCapabilities}
+      session={{ assurance: 'aal1', deviceLabel: 'Pilot browser', expiresAt: '2026-07-30T08:00:00+06:00' }}
+      connectivity={{ state: props.connectivity, pendingChanges: 0, lastSyncedAt: pilotTimestamp, retryHref: props.path }}
+      utilityActions={shellUtilityActions('student')}
+    >
+      {props.path === '/student' ? (
+        <StudentDailyWorkspace
+          studentId="student-1"
+          studentName="Samira Noor"
+          schoolName={schoolName}
+          yearLabel="Year 8"
+          locale="en-BD"
+          date={pilotTimestamp}
+          ageBand="secondary"
+          capabilities={studentCapabilities}
+          lessons={studentOverview.lessons}
+          attendance={studentOverview.attendance}
+          results={studentOverview.results}
+          resources={studentOverview.resources}
+          requests={studentOverview.requests}
+          documents={studentOverview.documents}
+          conversations={studentOverview.conversations}
+        />
+      ) : page === undefined ? (
+        <UnknownRoute homeHref="/student" />
+      ) : (
+        <PilotModuleSurface page={page} />
+      )}
+    </StudentExperienceShell>
+  );
+}
+
+function PilotApplication(): ReactElement {
+  const path = normalisePath(window.location.pathname);
+  const role = roleForPath(path);
+  const connectivity = usePilotConnectivity();
+
+  useEffect(() => {
+    if (!import.meta.env.PROD) return;
+    void registerPlatformServiceWorker({ onUpdateAvailable: () => window.location.reload() });
+  }, []);
+
+  if (role === undefined) return <PilotLanding />;
+  if (role === 'admin') return <AdminPortal path={path} connectivity={connectivity} />;
+  if (role === 'teacher') return <TeacherPortal path={path} connectivity={connectivity} />;
+  if (role === 'guardian') return <GuardianPortal path={path} connectivity={connectivity} />;
+  return <StudentPortal path={path} connectivity={connectivity} />;
+}
+
+const root = document.getElementById('root');
+if (root === null) throw new Error('Root element not found');
+
 createRoot(root).render(
-  <React.StrictMode>
-    <FoundationDashboard />
-  </React.StrictMode>,
+  <StrictMode>
+    <PilotApplication />
+  </StrictMode>,
 );
