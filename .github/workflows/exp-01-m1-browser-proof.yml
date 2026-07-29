@@ -1,0 +1,70 @@
+name: EXP-01 Milestone 1 Browser Proof
+
+on:
+  push:
+    branches:
+      - module/exp-01-m1-harden
+    paths:
+      - .github/workflows/exp-01-m1-browser-proof.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: exp-01-m1-browser-proof
+  cancel-in-progress: false
+
+jobs:
+  prove:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: module/exp-01-m1-harden
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+          cache: npm
+      - run: npm ci
+      - name: Apply canonical formatting
+        run: |
+          npx prettier --write \
+            packages/modules/documents-experience/src/shell-authority.css \
+            packages/modules/documents-experience/package.json \
+            tests/experience/playwright.config.ts \
+            tests/experience/tsconfig.json \
+            tests/experience/browser.e2e.ts \
+            docs/modules/experience/milestone-1-persona-foundation.md
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run persona shell browser proof
+        run: npx playwright test --config tests/experience/playwright.config.ts
+      - name: Record evidence and remove one-shot workflow
+        run: |
+          cat > docs/modules/experience/milestone-1-browser-evidence.md <<EOF
+          # EXP-01 Milestone 1 Browser Evidence
+
+          - Workflow run: \`${GITHUB_RUN_ID}\`
+          - Commit under test: \`${GITHUB_SHA}\`
+          - Browser: Chromium, headless
+          - Desktop viewport: 1280 × 900
+          - Mobile viewport: 360 × 800
+          - Assertions: semantic persona navigation, active task and session context; keyboard skip-link entry and exact focus treatment; flat authority-aligned loading surface; contained horizontal mobile navigation with no page overflow; RTL logical border placement; reduced-motion removal of pulse and shimmer animation.
+          - Result: passed.
+
+          No production deployment, database mutation or customer data was used.
+          EOF
+          git rm .github/workflows/exp-01-m1-browser-proof.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            packages/modules/documents-experience/src/shell-authority.css \
+            packages/modules/documents-experience/package.json \
+            tests/experience/playwright.config.ts \
+            tests/experience/tsconfig.json \
+            tests/experience/browser.e2e.ts \
+            docs/modules/experience/milestone-1-persona-foundation.md \
+            docs/modules/experience/milestone-1-browser-evidence.md
+          git commit -m "test(EXP-01): pass persona shell browser proof"
+          git push origin HEAD:module/exp-01-m1-harden
