@@ -518,6 +518,25 @@ Neon checks: `202607290202_CARE-01_health` applied on CARE branch; 12/12 health 
 Security/privacy evidence: current legal basis required independently of authorization; broad principal denied; emergency source narrative and allergy reaction excluded; events contain no narrative; aggregate cohorts below five suppressed
 Production mutation performed: no; Neon `main`, integration branch, ACAD-01 and OPS-01 were not modified
 Exact next milestone: behavior
+Checkpoint SHA: `88a1e3a`
+Dirty/uncommitted state: clean after checkpoint commit and push
+
+### Checkpoint 3 — behavior
+
+Date/time: 2026-07-29T10:01:26+06:00
+Stream: CARE-01
+Milestone completed: behavior
+Git branch: `module/student-support`
+Worktree: `.worktrees/care-01-student-support`
+Neon branch: `agent/care-01-student-support` (`br-raspy-smoke-ax0msb57`)
+Starting checkpoint SHA: `88a1e3a`
+Changed paths: `packages/modules/behavior/**`, `tests/student-support/behavior*.test.ts`, `docs/modules/student-support/behavior.md`, CARE-01 tracker section
+Domain evidence: relationship-scoped incident intake, idempotency, controlled transitions, append-only status history, actions, restorative plans, restricted follow-up, corrections, AAL2 independently approved portal publication and safe events/reports implemented
+Focused checks: 6 Vitest tests PASS; CARE TypeScript no-emit typecheck PASS
+Neon checks: `202607290203_CARE-01_behavior` applied on CARE branch; 8/8 behavior tables FORCE RLS; no-context visible rows `0`; tenant-A visible `1`, tenant-B leak `0`; cross-tenant insert denied; source incident rewrite denied with correction-only trigger
+Security/privacy evidence: teacher may submit scoped CARE-C2 incident but cannot read CARE-C3 follow-up; guardian projection requires verified authority and excludes source narrative; events exclude narrative/action detail; aggregate cohorts below five suppressed
+Production mutation performed: no; Neon `main`, integration branch, ACAD-01 and OPS-01 were not modified
+Exact next milestone: wellbeing
 Dirty/uncommitted state: checkpoint evidence pending commit
 
 ## EXP-01 evidence
