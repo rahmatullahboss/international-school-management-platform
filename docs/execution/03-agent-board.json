@@ -5,7 +5,7 @@
   "execution_mode": "whole-module-agent-ownership",
   "microtask_agents_allowed": false,
   "agent_delegation_allowed": false,
-  "program_status": "pilot_runtime_ux_refined",
+  "program_status": "pilot_runtime_scoped_read_api",
   "parallel_execution": {
     "allowed": true,
     "assignment_unit": "complete_module_stream",
@@ -473,5 +473,33 @@
     "synthetic_data_only": true,
     "production_mutations_enabled": false,
     "remaining_release_gate": "reviewed identity, permission-aware Worker APIs and isolated cache, approved staging data, safe mutations, live negative tests, monitoring, backup, rollback, owner-led UAT and explicit production authorization"
+  },
+  "pilot_read_api": {
+    "id": "PILOT-02",
+    "status": "gate_passed",
+    "gate": "GATE-PILOT-READ-API-V1",
+    "branch": "pilot/permission-aware-read-api-v1",
+    "implementation_proof_sha": "73be1c1eb0418c8c2f744729354bd9f1a63467b0",
+    "root_ci_run": "30495509757",
+    "cloudflare_deploy_run": "30495509773",
+    "api_route": "/pilot/v1/snapshots/:role",
+    "scope_dimensions": [
+      "api-origin",
+      "tenant",
+      "campus",
+      "role",
+      "subject"
+    ],
+    "server_resolved_capabilities": true,
+    "etag_revalidation": true,
+    "private_cache_control": true,
+    "current_view_preserved_during_refresh": true,
+    "last_safe_snapshot_preserved_on_failure": true,
+    "production_endpoint_enabled": false,
+    "repository_tests_passed": 509,
+    "browser_journeys_passed": 22,
+    "synthetic_data_only": true,
+    "production_mutations_enabled": false,
+    "remaining_release_gate": "reviewed OAuth/OIDC and tenant/campus context, database-backed policy evaluation, tenant-safe server cache isolation, approved staging seed/reset tooling, safe mutations, live negative tests, monitoring, backup, rollback, owner-led UAT and explicit production authorization"
   }
 }

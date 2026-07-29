@@ -9,7 +9,9 @@ import {
   teacherCapabilities,
   teacherOverview,
 } from '../pilot-data';
+import { usePilotResource } from '../pilot-resource';
 import {
+  PilotDataStatus,
   PilotModuleSurface,
   UnknownRoute,
   resolvePageHeading,
@@ -31,6 +33,14 @@ export default function TeacherPortal(props: TeacherPortalProps): ReactElement {
     'Teacher workspace',
     'Assigned teaching work',
   );
+  const resource = usePilotResource(
+    'teacher',
+    teacherOverview,
+    teacherCapabilities,
+    pilotTimestamp,
+    props.connectivity,
+  );
+  const overview = resource.data;
 
   return (
     <TeacherExperienceShell
@@ -40,7 +50,7 @@ export default function TeacherPortal(props: TeacherPortalProps): ReactElement {
       pageTitle={heading.title}
       pageDescription={heading.description}
       activeHref={props.path}
-      capabilities={teacherCapabilities}
+      capabilities={resource.capabilities}
       session={{
         assurance: 'aal1',
         deviceLabel: 'Pilot browser',
@@ -49,25 +59,32 @@ export default function TeacherPortal(props: TeacherPortalProps): ReactElement {
       connectivity={{
         state: props.connectivity,
         pendingChanges: 0,
-        lastSyncedAt: pilotTimestamp,
+        lastSyncedAt: resource.updatedAt,
         retryHref: props.path,
       }}
       utilityActions={shellUtilityActions('teacher')}
     >
+      <PilotDataStatus
+        state={resource.state}
+        apiConfigured={resource.apiConfigured}
+        updatedAt={resource.updatedAt}
+        message={resource.message}
+        onRefresh={resource.refresh}
+      />
       {props.path === '/teacher' ? (
         <TeacherDailyWorkspace
           teacherName="Nusrat Rahman"
           schoolName={schoolName}
           locale="en-BD"
-          date={pilotTimestamp}
+          date={resource.updatedAt}
           connectivity={props.connectivity}
           pendingChanges={0}
-          capabilities={teacherCapabilities}
-          sessions={teacherOverview.sessions}
-          attendance={teacherOverview.attendance}
-          gradebook={teacherOverview.gradebook}
-          studentContext={teacherOverview.studentContext}
-          conversations={teacherOverview.conversations}
+          capabilities={resource.capabilities}
+          sessions={overview.sessions}
+          attendance={overview.attendance}
+          gradebook={overview.gradebook}
+          studentContext={overview.studentContext}
+          conversations={overview.conversations}
         />
       ) : page === undefined ? (
         <UnknownRoute homeHref="/teacher" />

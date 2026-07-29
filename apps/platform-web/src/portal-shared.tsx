@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 
 import type { PilotModulePage } from './pilot-data';
+import './pilot-resource.css';
 import './pilot-ux.css';
 
 export type PilotRole = 'admin' | 'teacher' | 'guardian' | 'student';
@@ -37,6 +38,59 @@ export const roleDescriptions: Readonly<
 export function shellUtilityActions(activeRole: PilotRole) {
   void activeRole;
   return [] as const;
+}
+
+export function PilotDataStatus(props: {
+  readonly state: 'seed' | 'cached' | 'refreshing' | 'current' | 'stale';
+  readonly apiConfigured: boolean;
+  readonly updatedAt: string;
+  readonly message: string | undefined;
+  readonly onRefresh: () => void;
+}): ReactElement | null {
+  if (!props.apiConfigured) return null;
+
+  const copy =
+    props.state === 'refreshing'
+      ? {
+          label: 'Checking for updates',
+          detail: 'Current data stays visible while the staging API is revalidated.',
+        }
+      : props.state === 'stale'
+        ? {
+            label: 'Using saved data',
+            detail: props.message ?? 'Fresh data is temporarily unavailable.',
+          }
+        : props.state === 'cached'
+          ? {
+              label: 'Saved scoped data',
+              detail: 'This role’s last verified snapshot is available while an update is checked.',
+            }
+          : props.state === 'current'
+            ? {
+                label: 'Current from staging API',
+                detail: 'Tenant, campus, role and subject scope were verified by the Worker.',
+              }
+            : {
+                label: 'Pilot seed data',
+                detail:
+                  'A scoped staging snapshot will replace this seed without blocking the page.',
+              };
+
+  return (
+    <aside className="pilot-data-status" data-state={props.state} role="status" aria-live="polite">
+      <span aria-hidden="true" />
+      <div>
+        <strong>{copy.label}</strong>
+        <p>{copy.detail}</p>
+        <time dateTime={props.updatedAt}>Evidence current at {props.updatedAt}</time>
+      </div>
+      {props.state === 'refreshing' ? null : (
+        <button type="button" onClick={props.onRefresh}>
+          Check again
+        </button>
+      )}
+    </aside>
+  );
 }
 
 export function resolvePageHeading(

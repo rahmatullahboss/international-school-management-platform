@@ -2,9 +2,9 @@
 
 **Program:** `international-school-platform-v1`  
 **Updated:** 2026-07-30  
-**Current repository state:** All domain module streams are complete and integrated. `GATE-PILOT-READY`, `GATE-CLOUDFLARE-STAGING`, `GATE-PILOT-RUNTIME-COMPOSED` and `GATE-UX-CONTINUITY-V1` have passed. The non-production Cloudflare pilot now provides continuous client navigation, task-led role menus and synthetic records without enabling production mutations.
+**Current repository state:** All domain module streams are complete and integrated. `GATE-PILOT-READY`, `GATE-CLOUDFLARE-STAGING`, `GATE-PILOT-RUNTIME-COMPOSED`, `GATE-UX-CONTINUITY-V1` and `GATE-PILOT-READ-API-V1` have passed. The non-production Cloudflare pilot now uses private, scope-checked synthetic Worker snapshots and keeps current role data visible during background revalidation without enabling production identity or mutations.
 
-Historical checkpoint-by-checkpoint evidence through Wave 3 is preserved in [the archived tracker](archive/04-progress-tracker-through-wave3.md). PILOT-01 scope is recorded in [09-pilot-runtime-composition.md](09-pilot-runtime-composition.md), while the UX continuity contract and evidence are recorded in [10-ux-continuity-v1.md](10-ux-continuity-v1.md) and [11-ux-continuity-release-evidence.md](11-ux-continuity-release-evidence.md).
+Historical checkpoint-by-checkpoint evidence through Wave 3 is preserved in [the archived tracker](archive/04-progress-tracker-through-wave3.md). PILOT-01 scope is recorded in [09-pilot-runtime-composition.md](09-pilot-runtime-composition.md), UX continuity in [10-ux-continuity-v1.md](10-ux-continuity-v1.md) and [11-ux-continuity-release-evidence.md](11-ux-continuity-release-evidence.md), and the scoped read API in [12-pilot-read-api-v1.md](12-pilot-read-api-v1.md) and [13-pilot-read-api-release-evidence.md](13-pilot-read-api-release-evidence.md).
 
 ## Gate status
 
@@ -22,6 +22,7 @@ Historical checkpoint-by-checkpoint evidence through Wave 3 is preserved in [the
 | `GATE-CLOUDFLARE-STAGING` | passed | Main merge `41639fab433491df0395d02217a70c6eb2ddb775`; root CI `30479347127`; deploy/smoke `30479347117` |
 | `GATE-PILOT-RUNTIME-COMPOSED` | passed | Candidate `a50ad782489137f5afd806e30c7a3e249b5074ec`; root CI `30484622352`; Cloudflare deploy/smoke `30484622364`; all role routes live |
 | `GATE-UX-CONTINUITY-V1` | passed | Candidate `e74a30143eb7882e81ebd7d5b5c373d3132b309e`; root CI `30490122291`; Cloudflare deploy/smoke `30490122337`; continuous navigation and task discovery verified |
+| `GATE-PILOT-READ-API-V1` | passed | Implementation proof candidate `73be1c1eb0418c8c2f744729354bd9f1a63467b0`; root CI `30495509757`; Cloudflare deploy/smoke `30495509773`; scope denial, ETag revalidation and current-view preservation verified |
 
 ## Stream tracker
 
@@ -38,6 +39,7 @@ Historical checkpoint-by-checkpoint evidence through Wave 3 is preserved in [the
 | `INTEG-01` | gated serial | pilot ready | final system and recovery evidence in `docs/execution/08-final-system-release-evidence.md` |
 | `PILOT-01` | post-integration | runtime composed and staged | base `41639fab433491df0395d02217a70c6eb2ddb775`; candidate `a50ad782489137f5afd806e30c7a3e249b5074ec`; CI `30484622352`; deploy `30484622364` |
 | `UX-01` | post-integration | continuity gate passed and staged | candidate `e74a30143eb7882e81ebd7d5b5c373d3132b309e`; CI `30490122291`; deploy `30490122337` |
+| `PILOT-02` | post-integration | scoped read API gate passed and staged | implementation proof `73be1c1eb0418c8c2f744729354bd9f1a63467b0`; CI `30495509757`; deploy `30495509773` |
 
 ## PILOT-01 gate closure
 
@@ -86,6 +88,32 @@ Verification evidence:
 - total route CSS: 71,650 bytes against an 85,000-byte limit;
 - no build-budget violation.
 
+## PILOT-02 scoped read API gate closure
+
+Completed and verified on implementation proof candidate `73be1c1eb0418c8c2f744729354bd9f1a63467b0`:
+
+- the staging Worker serves role snapshots only when tenant, campus, role and subject scope match;
+- capabilities are resolved by the Worker instead of trusted from browser input;
+- incomplete, cross-role, cross-subject, unknown-role and unrelated-origin requests are denied;
+- all synthetic `/pilot/*` endpoints return generic `404` responses in production runtime;
+- responses are private and support scope-specific `ETag`/`If-None-Match` revalidation;
+- browser cache identity includes API origin, tenant, campus, role and subject;
+- returned scope is validated before data is accepted;
+- current role content remains visible during delayed refresh and after refresh failure;
+- memory and local-storage fallback never crosses role or subject scope;
+- Cloudflare deploy builds the web bundle with the API Worker URL from the same run;
+- live smoke validates API health, a scope-checked snapshot, role routes, PWA manifest and offline page.
+
+Verification evidence:
+
+- repository tests: 509 passed, with one environment-dependent direct-Neon test skipped in the ordinary suite and passed separately against live Neon;
+- browser journeys: 22 passed across platform/PILOT-02, SIS, finance, integrations, student support and EXP suites;
+- initial JavaScript: 208,406 bytes against a 250,000-byte limit;
+- initial CSS: 15,022 bytes against a 50,000-byte limit;
+- total route JavaScript: 297,916 bytes against a 350,000-byte limit;
+- total route CSS: 73,158 bytes against an 85,000-byte limit;
+- no build-budget violation.
+
 ## Live staging routes
 
 - Role chooser: `https://international-school-platform-web-staging.rahmatullahzisan.workers.dev/`
@@ -94,6 +122,7 @@ Verification evidence:
 - Guardian: `https://international-school-platform-web-staging.rahmatullahzisan.workers.dev/family`
 - Student: `https://international-school-platform-web-staging.rahmatullahzisan.workers.dev/student`
 - API health: `https://international-school-platform-api-staging.rahmatullahzisan.workers.dev/health`
+- Scoped snapshot pattern: `https://international-school-platform-api-staging.rahmatullahzisan.workers.dev/pilot/v1/snapshots/:role` — required scope headers; not a public page
 
 ## Reviewed integration lineage
 
@@ -105,15 +134,16 @@ Verification evidence:
 - Cloudflare staging merge: `41639fab433491df0395d02217a70c6eb2ddb775`
 - PILOT-01 verified candidate: `a50ad782489137f5afd806e30c7a3e249b5074ec`
 - UX-01 verified candidate: `e74a30143eb7882e81ebd7d5b5c373d3132b309e`
+- PILOT-02 implementation proof: `73be1c1eb0418c8c2f744729354bd9f1a63467b0`
 
 ## Final integrated system verification
 
 ### Application and browser evidence
 
-- Repository tests: 504 passed; UX-01 changed navigation and copy contracts without changing domain-test outcomes.
-- Browser journeys: 20 passed across platform/UX, SIS, finance, integrations, student support and EXP suites.
+- Repository tests: 509 passed; PILOT-02 adds scope, revalidation and production-boundary coverage without changing domain invariants.
+- Browser journeys: 22 passed across platform/PILOT-02, SIS, finance, integrations, student support and EXP suites.
 - Format, lint, architecture boundaries, typecheck, Worker build, Vite build, dependency audit, licence policy, provenance drift and execution-artifact validation passed.
-- Role bundles remain lazy-loaded and intent-prefetched, keeping the initial payload within the approved production budget.
+- Role bundles remain lazy-loaded and intent-prefetched; the scoped resource layer remains within the approved initial and total asset budgets.
 
 ### Database and recovery evidence
 
@@ -129,8 +159,9 @@ Verification evidence:
 
 ## Remaining production milestones
 
-- replace synthetic read models with permission-aware Worker APIs and a tenant-safe stale-while-revalidate cache;
+- replace synthetic Worker snapshots with database-backed permission-aware read models and server-side policy evaluation;
 - implement reviewed OAuth/OIDC login, renewal, logout, role, tenant and campus context;
+- add tenant-safe server cache isolation and invalidation tests under real identity context;
 - provide approved staging tenant seed and reset tooling;
 - connect safe pilot mutations and live permission-negative tests;
 - add monitoring, alerting, backup evidence and rollback rehearsal;
@@ -142,4 +173,4 @@ No Git branch, worktree or Neon branch was deleted. Cleanup remains owner-review
 
 ## Production boundary
 
-No production deployment, production database mutation, production cache purge or destructive cleanup was performed. Cloudflare staging and UX-01 use synthetic records and non-production Workers. Production promotion still requires reviewed authentication, permission-aware APIs and cache isolation, approved staging data, monitoring, rollback, backup rehearsal and explicit owner authorization.
+No production deployment, production database mutation, production cache purge or destructive cleanup was performed. Cloudflare staging and PILOT-02 use synthetic identities and role snapshots on non-production Workers. Production promotion still requires reviewed authentication, database-backed permission enforcement, tenant-safe server caching, approved staging data, monitoring, rollback, backup rehearsal and explicit owner authorization.

@@ -1,0 +1,98 @@
+.pilot-data-status {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.7rem;
+  align-items: center;
+  margin-block-end: 1rem;
+  padding: 0.72rem 0.85rem;
+  border: 1px solid #cbd6de;
+  border-radius: 0.7rem;
+  background: #f8fafb;
+  color: #12263a;
+}
+
+.pilot-data-status > span {
+  inline-size: 0.65rem;
+  block-size: 0.65rem;
+  border-radius: 50%;
+  background: #006d77;
+}
+
+.pilot-data-status[data-state='refreshing'] > span {
+  border: 2px solid #9fbfc3;
+  border-block-start-color: #006d77;
+  background: transparent;
+  animation: pilot-data-spin 700ms linear infinite;
+}
+
+.pilot-data-status[data-state='stale'] > span {
+  background: #9b5d00;
+}
+
+.pilot-data-status > div {
+  min-inline-size: 0;
+}
+
+.pilot-data-status strong,
+.pilot-data-status p,
+.pilot-data-status time {
+  display: block;
+}
+
+.pilot-data-status strong {
+  font-size: 0.83rem;
+}
+
+.pilot-data-status p,
+.pilot-data-status time {
+  margin: 0.12rem 0 0;
+  color: #4c6275;
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.pilot-data-status button {
+  min-block-size: 2.35rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid #9fb9b3;
+  border-radius: 0.5rem;
+  background: white;
+  color: #004f57;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.pilot-data-status button:hover {
+  border-color: #006d77;
+  background: #e7f3f1;
+}
+
+.pilot-data-status button:focus-visible {
+  outline: 3px solid #0b63ce;
+  outline-offset: 2px;
+}
+
+@keyframes pilot-data-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 38rem) {
+  .pilot-data-status {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .pilot-data-status button {
+    grid-column: 1 / -1;
+    inline-size: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pilot-data-status[data-state='refreshing'] > span {
+    animation: none;
+  }
+}

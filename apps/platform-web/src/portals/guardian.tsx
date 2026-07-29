@@ -9,7 +9,9 @@ import {
   pilotTimestamp,
   schoolName,
 } from '../pilot-data';
+import { usePilotResource } from '../pilot-resource';
 import {
+  PilotDataStatus,
   PilotModuleSurface,
   UnknownRoute,
   resolvePageHeading,
@@ -31,6 +33,14 @@ export default function GuardianPortal(props: GuardianPortalProps): ReactElement
     'Family portal',
     'Household school services',
   );
+  const resource = usePilotResource(
+    'guardian',
+    guardianOverview,
+    guardianCapabilities,
+    pilotTimestamp,
+    props.connectivity,
+  );
+  const overview = resource.data;
 
   return (
     <GuardianExperienceShell
@@ -40,7 +50,7 @@ export default function GuardianPortal(props: GuardianPortalProps): ReactElement
       pageTitle={heading.title}
       pageDescription={heading.description}
       activeHref={props.path}
-      capabilities={guardianCapabilities}
+      capabilities={resource.capabilities}
       session={{
         assurance: 'aal1',
         deviceLabel: 'Pilot browser',
@@ -49,26 +59,33 @@ export default function GuardianPortal(props: GuardianPortalProps): ReactElement
       connectivity={{
         state: props.connectivity,
         pendingChanges: 0,
-        lastSyncedAt: pilotTimestamp,
+        lastSyncedAt: resource.updatedAt,
         retryHref: props.path,
       }}
       utilityActions={shellUtilityActions('guardian')}
     >
+      <PilotDataStatus
+        state={resource.state}
+        apiConfigured={resource.apiConfigured}
+        updatedAt={resource.updatedAt}
+        message={resource.message}
+        onRefresh={resource.refresh}
+      />
       {props.path === '/family' ? (
         <GuardianHouseholdWorkspace
           guardianName="Farhana Noor"
           householdLabel="Noor household"
           locale="en-BD"
           activeChildId="student-1"
-          capabilities={guardianCapabilities}
-          children={guardianOverview.children}
-          applications={guardianOverview.applications}
-          attendance={guardianOverview.attendance}
-          grades={guardianOverview.grades}
-          fees={guardianOverview.fees}
-          forms={guardianOverview.forms}
-          documents={guardianOverview.documents}
-          conversations={guardianOverview.conversations}
+          capabilities={resource.capabilities}
+          children={overview.children}
+          applications={overview.applications}
+          attendance={overview.attendance}
+          grades={overview.grades}
+          fees={overview.fees}
+          forms={overview.forms}
+          documents={overview.documents}
+          conversations={overview.conversations}
         />
       ) : page === undefined ? (
         <UnknownRoute homeHref="/family" />
