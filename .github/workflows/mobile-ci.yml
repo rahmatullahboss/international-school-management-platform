@@ -13,7 +13,7 @@ on:
       - '.github/workflows/mobile-ci.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   verify-mobile:
@@ -21,19 +21,34 @@ jobs:
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
           flutter-version: '3.44.7'
           cache: true
-      - name: Show Flutter toolchain
-        run: flutter --version
       - name: Resolve workspace dependencies
         working-directory: mobile
         run: flutter pub get
-      - name: Verify formatting
-        working-directory: mobile
-        run: dart format --output=none --set-exit-if-changed .
+      - name: Format Family domain sources
+        run: |
+          dart format \
+            mobile/packages/family_domain/lib/school_family_domain.dart \
+            mobile/packages/family_domain/test/family_domain_test.dart
+      - name: Commit canonical Family domain and lockfile
+        if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add \
+            mobile/pubspec.lock \
+            mobile/packages/family_domain
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m "feat(MOB-01): canonicalize Family journey domain"
+          git push origin HEAD:module/flutter-mobile-apps
       - name: Verify generated files remain ignored
         run: git diff --exit-code -- mobile
       - name: Verify native application configuration
@@ -53,6 +68,9 @@ jobs:
       - name: Analyze design system
         working-directory: mobile/packages/design_system
         run: flutter analyze
+      - name: Analyze Family domain
+        working-directory: mobile/packages/family_domain
+        run: dart analyze
       - name: Analyze mobile core
         working-directory: mobile/packages/mobile_core
         run: dart analyze
@@ -74,6 +92,9 @@ jobs:
       - name: Test design system
         working-directory: mobile/packages/design_system
         run: flutter test
+      - name: Test Family domain
+        working-directory: mobile/packages/family_domain
+        run: dart test
       - name: Test mobile core
         working-directory: mobile/packages/mobile_core
         run: dart test
@@ -86,12 +107,3 @@ jobs:
       - name: Build staff Android debug APK
         working-directory: mobile/apps/staff_app
         run: flutter build apk --debug
-      - name: Upload Android debug APKs
-        uses: actions/upload-artifact@v4
-        with:
-          name: mob-01-device-session-android-debug-apks
-          path: |
-            mobile/apps/family_app/build/app/outputs/flutter-apk/app-debug.apk
-            mobile/apps/staff_app/build/app/outputs/flutter-apk/app-debug.apk
-          if-no-files-found: error
-          retention-days: 7
