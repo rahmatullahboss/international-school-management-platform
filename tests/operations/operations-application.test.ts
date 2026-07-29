@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import {
   OperationsApplication,
@@ -23,24 +23,25 @@ function provider(
   return {
     report,
     requiredPermission,
-    load: vi.fn(() => ({
-      report,
-      metrics: [
-        {
-          id: `${report}-metric`,
-          domain: report,
-          label: `${report} metric`,
-          value: 1,
-          context: 'Current scoped value',
-          source: `${report} report`,
-          tone: 'neutral',
-        },
-      ],
-      exceptions: [],
-      queues: [],
-      data: { report },
-      ...overrides,
-    })),
+    load: () =>
+      Promise.resolve({
+        report,
+        metrics: [
+          {
+            id: `${report}-metric`,
+            domain: report,
+            label: `${report} metric`,
+            value: 1,
+            context: 'Current scoped value',
+            source: `${report} report`,
+            tone: 'neutral',
+          },
+        ],
+        exceptions: [],
+        queues: [],
+        data: { report },
+        ...overrides,
+      }),
   };
 }
 
@@ -54,7 +55,7 @@ function handler(
     requiredPermission,
     stepUpRequired: false,
     idempotencyRequired: true,
-    execute: vi.fn((input) => ({ accepted: true, command: input.command })),
+    execute: (input) => Promise.resolve({ accepted: true, command: input.command }),
     ...overrides,
   };
 }
@@ -149,7 +150,11 @@ describe('OPS API application composition', () => {
   });
 
   it('enforces command permission, AAL2 and idempotency before dispatch', async () => {
-    const execute = vi.fn(() => ({ status: 'approved' }));
+    let executeCalls = 0;
+    const execute: OperationsCommandHandler['execute'] = () => {
+      executeCalls += 1;
+      return Promise.resolve({ status: 'approved' });
+    };
     const application = new OperationsApplication(
       [],
       [
@@ -207,7 +212,7 @@ describe('OPS API application composition', () => {
         idempotencyKey: 'payable-1',
       }),
     ).resolves.toEqual({ status: 'approved' });
-    expect(execute).toHaveBeenCalledTimes(1);
+    expect(executeCalls).toBe(1);
   });
 
   it('rejects duplicate provider and handler registrations deterministically', () => {
