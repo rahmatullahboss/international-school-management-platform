@@ -271,7 +271,9 @@ export function AdminOperationsHome(props: AdminOperationsHomeProps): ReactEleme
           <p>Every value states what it means, where it came from and when it was updated.</p>
         </header>
         {metrics.length === 0 ? (
-          <p className="admin-empty">No readiness measures are available for this role and scope.</p>
+          <p className="admin-empty">
+            No readiness measures are available for this role and scope.
+          </p>
         ) : (
           <dl>
             {metrics.map((metric) => (
@@ -312,7 +314,12 @@ export function AdminOperationsHome(props: AdminOperationsHomeProps): ReactEleme
         {exceptions.length === 0 ? (
           <p className="admin-empty">No permitted exceptions require action.</p>
         ) : (
-          <div className="admin-table-frame" role="region" aria-label="Priority exception queue" tabIndex={0}>
+          <div
+            className="admin-table-frame"
+            role="region"
+            aria-label="Priority exception queue"
+            tabIndex={0}
+          >
             <table>
               <caption>Cross-module administration exceptions</caption>
               <thead>
@@ -459,8 +466,12 @@ export function AdminRecordWorkspace(props: AdminRecordWorkspaceProps): ReactEle
     );
   }
 
-  const fields = props.fields.filter((field) => hasCapability(props.capabilities, field.capability));
-  const related = props.related.filter((item) => hasCapability(props.capabilities, item.capability));
+  const fields = props.fields.filter((field) =>
+    hasCapability(props.capabilities, field.capability),
+  );
+  const related = props.related.filter((item) =>
+    hasCapability(props.capabilities, item.capability),
+  );
   const actions = props.actions.filter((action) =>
     hasCapability(props.capabilities, action.capability),
   );
@@ -482,9 +493,7 @@ export function AdminRecordWorkspace(props: AdminRecordWorkspaceProps): ReactEle
                 {action.label}
               </a>
             ) : (
-              <span key={action.href}>
-                {action.label} · Verify identity to continue
-              </span>
+              <span key={action.href}>{action.label} · Verify identity to continue</span>
             ),
           )}
         </nav>
