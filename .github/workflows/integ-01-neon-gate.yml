@@ -1,4 +1,4 @@
-name: INTEG-01 Wave 1 Neon Gate
+name: INTEG-01 Wave 2 Neon Gate
 
 on:
   push:
@@ -21,11 +21,11 @@ permissions:
   contents: read
 
 concurrency:
-  group: integ-01-wave-1-neon-gate
+  group: integ-01-wave-2-neon-gate
   cancel-in-progress: false
 
 jobs:
-  wave-1-neon-gate:
+  wave-2-neon-gate:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
@@ -74,14 +74,14 @@ jobs:
           [[ "$project" == "$NEON_PROJECT_ID" ]]
           [[ "$branch" == "$NEON_BRANCH_ID" ]]
 
-      - name: Apply canonical Wave 1 migrations
+      - name: Apply canonical Wave 2 migrations
         if: github.event_name == 'push' || inputs.operation == 'apply' || inputs.operation == 'full'
         run: ./scripts/integ-01-neon-gate.sh apply
 
-      - name: Verify canonical Wave 1 database
+      - name: Verify canonical Wave 2 database
         if: github.event_name == 'workflow_dispatch' && inputs.operation == 'verify'
         run: ./scripts/integ-01-neon-gate.sh verify
 
-      - name: Replay canonical Wave 1 database
+      - name: Replay canonical Wave 2 database
         if: github.event_name == 'push' || inputs.operation == 'replay-database' || inputs.operation == 'full'
         run: ./scripts/integ-01-neon-gate.sh replay-database
