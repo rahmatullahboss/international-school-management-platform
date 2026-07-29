@@ -1,0 +1,84 @@
+name: CARE-01 Lint Fix
+
+on:
+  push:
+    branches:
+      - module/student-support
+    paths:
+      - '.github/workflows/care-01-lint-fix.yml'
+      - 'packages/modules/behavior/src/**'
+      - 'packages/modules/health/src/**'
+      - 'packages/modules/learning-support/src/**'
+      - 'packages/modules/safeguarding/src/**'
+      - 'packages/modules/wellbeing/src/**'
+      - 'tests/student-support/**'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: care-01-lint-fix
+  cancel-in-progress: false
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: module/student-support
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.2
+          cache: npm
+      - run: npm ci
+      - name: Remove unused test binding
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('tests/student-support/security-contract.test.ts')
+          text = path.read_text()
+          old = "    const { tenantId: _tenantId, ...withoutTenant } = context;\n"
+          new = "    const withoutTenant = { ...context };\n    delete withoutTenant.tenantId;\n"
+          if old not in text:
+              raise SystemExit('expected lint replacement target missing')
+          path.write_text(text.replace(old, new, 1))
+          PY
+      - name: Apply ESLint safe fixes
+        run: >-
+          npx eslint --fix
+          packages/modules/behavior/src
+          packages/modules/health/src
+          packages/modules/learning-support/src
+          packages/modules/safeguarding/src
+          packages/modules/wellbeing/src
+          tests/student-support
+      - name: Preserve repository formatting
+        run: >-
+          npx prettier --write
+          packages/modules/behavior/src
+          packages/modules/health/src
+          packages/modules/learning-support/src
+          packages/modules/safeguarding/src
+          packages/modules/wellbeing/src
+          tests/student-support
+      - name: Commit exact lint output
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo "No lint changes required."
+            exit 0
+          fi
+          git config user.name "CARE-01 Lint Fix"
+          git config user.email "care-01-lint-fix@users.noreply.github.com"
+          git add \
+            packages/modules/behavior/src \
+            packages/modules/health/src \
+            packages/modules/learning-support/src \
+            packages/modules/safeguarding/src \
+            packages/modules/wellbeing/src \
+            tests/student-support
+          git commit -m "fix(CARE-01): satisfy repository lint rules"
+          git push origin HEAD:module/student-support
