@@ -46,6 +46,8 @@ jobs:
           path.write_text(text, encoding='utf-8')
           PY
       - run: npm run format
+      - run: npm run lint -- --fix
+      - run: npm run format
       - run: npm run lint
       - run: npm run typecheck
       - name: Commit canonical source
