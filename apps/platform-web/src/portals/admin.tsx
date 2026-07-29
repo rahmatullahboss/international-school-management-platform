@@ -10,7 +10,9 @@ import {
   pilotTimestamp,
   schoolName,
 } from '../pilot-data';
+import { usePilotResource } from '../pilot-resource';
 import {
+  PilotDataStatus,
   PilotModuleSurface,
   UnknownRoute,
   resolvePageHeading,
@@ -32,6 +34,14 @@ export default function AdminPortal(props: AdminPortalProps): ReactElement {
     'Administration',
     'Integrated administration workspace',
   );
+  const resource = usePilotResource(
+    'admin',
+    adminOverview,
+    adminCapabilities,
+    pilotTimestamp,
+    props.connectivity,
+  );
+  const overview = resource.data;
 
   return (
     <AdminExperienceShell
@@ -41,7 +51,7 @@ export default function AdminPortal(props: AdminPortalProps): ReactElement {
       pageTitle={heading.title}
       pageDescription={heading.description}
       activeHref={props.path}
-      capabilities={adminCapabilities}
+      capabilities={resource.capabilities}
       session={{
         assurance: 'aal2',
         deviceLabel: 'Pilot browser',
@@ -50,26 +60,33 @@ export default function AdminPortal(props: AdminPortalProps): ReactElement {
       connectivity={{
         state: props.connectivity,
         pendingChanges: 0,
-        lastSyncedAt: pilotTimestamp,
+        lastSyncedAt: resource.updatedAt,
         retryHref: props.path,
       }}
       utilityActions={shellUtilityActions('admin')}
     >
+      <PilotDataStatus
+        state={resource.state}
+        apiConfigured={resource.apiConfigured}
+        updatedAt={resource.updatedAt}
+        message={resource.message}
+        onRefresh={resource.refresh}
+      />
       {props.path === '/admin' ? (
         <AdminOperationsHome
           schoolName={schoolName}
           campusName={campusName}
           locale="en-BD"
-          asOf={pilotTimestamp}
+          asOf={resource.updatedAt}
           assurance="aal2"
-          capabilities={adminCapabilities}
-          metrics={adminOverview.metrics}
-          exceptions={adminOverview.exceptions}
-          approvals={adminOverview.approvals}
+          capabilities={resource.capabilities}
+          metrics={overview.metrics}
+          exceptions={overview.exceptions}
+          approvals={overview.approvals}
           searchQuery="Samira"
-          searchResults={adminOverview.searchResults}
+          searchResults={overview.searchResults}
           selectedExceptionIds={['attendance-1']}
-          bulkActions={adminOverview.bulkActions}
+          bulkActions={overview.bulkActions}
         />
       ) : page === undefined ? (
         <UnknownRoute homeHref="/admin" />
