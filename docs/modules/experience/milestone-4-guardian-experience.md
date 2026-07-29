@@ -37,4 +37,6 @@ This milestone delivers the guardian household and multi-child portal for linked
 
 ## Verification
 
-Canonical formatter checkpoint `d2ae2fd7ea19283add735cbd8929142abe1d3b1e` restored the standard repository CI and formatted the guardian workspace and focused tests. The clean-head full repository, migration, Neon, build, browser and artifact gate remains required before Milestone 4 is marked complete.
+Canonical formatter checkpoint `d2ae2fd7ea19283add735cbd8929142abe1d3b1e` restored the standard repository CI and formatted the guardian workspace and focused tests. CSS side-effect declaration checkpoint `51439c9e906b866b7284662d61c6d12dc581d0cf` restored web-family type coverage.
+
+Full verification run `30448315662` passed format, lint, architecture boundaries, repository typecheck, all tests, fresh 40-migration replay, live Neon driver, build, dependency audit, licences, provenance, all Chromium suites and execution-artifact validation. Focused tests prove relationship filtering, all-section child switching, published-only grades, child/household fee attribution, AAL2 consent visibility, authorised downloads/messages and unlinked/restricted non-disclosure. No production deployment or database mutation was performed.
