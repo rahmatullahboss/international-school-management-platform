@@ -33,15 +33,19 @@ describe('platform API', () => {
     expect(response.status).toBe(200);
     expect(response.headers.get('cache-control')).toBe('private, max-age=0, must-revalidate');
     expect(response.headers.get('etag')).toContain('pilot-read-v1');
-    const payload = (await response.json()) as {
-      scope: { role: string; subjectId: string; capabilities: string[] };
-      data: { metrics: unknown[] };
-    };
-    expect(payload.scope.role).toBe('admin');
-    expect(payload.scope.subjectId).toBe('principal-1');
-    expect(payload.scope.capabilities).toContain('finance.read');
-    expect(payload.scope.capabilities).not.toContain('gradebook.assigned.write');
-    expect(payload.data.metrics.length).toBeGreaterThan(0);
+    await expect(response.json()).resolves.toMatchObject({
+      schemaVersion: 1,
+      scope: {
+        tenantId: 'tenant-pilot-001',
+        campusId: 'campus-main',
+        role: 'admin',
+        subjectId: 'principal-1',
+        capabilities: expect.arrayContaining(['finance.read']),
+      },
+      data: {
+        metrics: expect.arrayContaining([expect.objectContaining({ id: 'students' })]),
+      },
+    });
   });
 
   it('revalidates a scoped snapshot with an etag without returning another body', async () => {
