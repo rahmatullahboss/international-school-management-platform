@@ -18,6 +18,19 @@ app.use('*', async (context, next) => {
 });
 
 app.use('/pilot/*', async (context, next) => {
+  const runtime = parseRuntimeEnvironment(context.env);
+  if (runtime.environment === 'production') {
+    return context.json(
+      {
+        error: {
+          code: 'not_found',
+          message: 'The requested resource was not found.',
+        },
+      },
+      404,
+    );
+  }
+
   const origin = context.req.header('origin');
   const isAllowedOrigin = isAllowedPilotWebOrigin(origin);
 
