@@ -89,22 +89,14 @@ No OPS migration references FIN-owned tables. This keeps the source-document bou
 
 ## Verification state
 
-- HR focused tests: 8 passing
-- Procurement focused tests: 9 passing
-- Inventory/assets focused tests: 10 passing
-- Library focused tests: 9 passing
-- Transport focused tests: 9 passing
-- Hostel/cafeteria focused tests: 11 passing
-- Activities/trips focused tests: 11 passing
-- Previously executed combined OPS domain tests: 67 passing
-- Previously executed API/admin UI focused tests before the workspace runner became unavailable: 10 passing
-- Finalization guard tests added: API 6, application 4, admin UI 5, permissions 4, events 3 and migration manifest 3
-- Final OPS test inventory: 92 tests; the 25 finalization tests require one clean external run before `GATE-OPS-COMPLETE`
-- TypeScript, ESLint and architecture boundaries were passing before the final API/permission/event files; a clean rerun is still required
-- Dependency audit last verified at 0 vulnerabilities
-- GitHub repository has no PR-triggered workflow/status check configured for this branch
-- Neon migration application remains pending foundation/Wave 1 schema composition on the isolated OPS branch; prior attempts rolled back atomically and persisted no schema/data mutation
+- OPS focused suite: 20 files, 92 tests passing
+- Formatting, TypeScript, ESLint, architecture boundaries and deterministic build: passing
+- Execution artifact validation and dependency audit: passing
+- Full repository CI, PostgreSQL migration verification, live Neon driver, browser tests, licenses and provenance: passing
+- Node `22.22.0` baseline and Node `24` LTS compatibility: passing
+- Isolated Neon OPS replay: seven migrations, 58 tables, 58 forced-RLS tables, 58 tenant policies and 232 CRUD grants verified
+- Production/main mutation: none
 
-## Exact next checkpoint
+## Completion
 
-Run `npm ci`, the 92 OPS tests, TypeScript, ESLint, architecture boundaries, deterministic build and migration replay on a workspace/CI runner. Resolve any failures, then record the final SHA and mark the module completion gate.
+`GATE-OPS-COMPLETE` is passed. OPS-01 is frozen for owner review and serial integration.

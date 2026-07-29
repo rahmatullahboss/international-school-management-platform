@@ -182,7 +182,9 @@ export const operationsRoleBundles = Object.freeze({
   ),
   residentialManager: Object.freeze([
     ...operationsPermissionKeys.filter((permission) => permission.startsWith('operations.hostel.')),
-    ...operationsPermissionKeys.filter((permission) => permission.startsWith('operations.cafeteria.')),
+    ...operationsPermissionKeys.filter((permission) =>
+      permission.startsWith('operations.cafeteria.'),
+    ),
   ]),
   activitiesCoordinator: Object.freeze([
     'operations.activities.catalog.write',

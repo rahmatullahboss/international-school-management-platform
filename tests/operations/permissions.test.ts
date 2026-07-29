@@ -72,7 +72,9 @@ describe('OPS permission catalogue', () => {
   it('provides read-only reporting permissions to the auditor bundle', () => {
     expect(operationsRoleBundles.operationsAuditor.length).toBeGreaterThan(0);
     expect(
-      operationsRoleBundles.operationsAuditor.every((permission) => permission.endsWith('.report.read')),
+      operationsRoleBundles.operationsAuditor.every((permission) =>
+        permission.endsWith('.report.read'),
+      ),
     ).toBe(true);
   });
 });

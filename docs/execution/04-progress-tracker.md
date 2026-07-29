@@ -39,7 +39,7 @@ Current readiness: `INTEG-01` is active from exact current `main` SHA `042b75990
 | `FIN-01` | 1 | complete; integrated by `INTEG-01` | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | complete | reviewed head `5f9e1692a8fc19fc2e9789a338d028918acdeaf6`; integration merge `da3d561` | none |
 | `INT-01` | 1 | complete; gate passed; integration in progress | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | serial integration verification | reviewed head `bfa95a4a42025213fa7c2090a587ef5304924da7`; module gate evidence `ae88d8e` | none |
 | `ACAD-01` | 2 | blocked | reviewed Wave 1 integration SHA | academic structure | none | `GATE-WAVE-1-INTEGRATED` |
-| `OPS-01` | 2 | in progress | `8cc8ee1562ade672b14c1c44af935fe7e2307976` | API, admin UI and hardening | activities/trips `2e1d830` | none; root `PRODUCT.md`/`DESIGN.md` absent from reviewed history |
+| `OPS-01` | 2 | complete; gate passed | `8cc8ee1562ade672b14c1c44af935fe7e2307976` | complete; owner/integration review | verified head `d2a09f4619cf308fa9e0eeded44f5ba3f4ea4a69`; PR `#10` | none; root `PRODUCT.md`/`DESIGN.md` absence recorded as a foundation-owned contract gap |
 | `CARE-01` | 2 | blocked | reviewed Wave 1 integration SHA | security contract | none | threat-model and Wave 1 gates |
 | `EXP-01` | 3 | blocked | reviewed Wave 2 integration SHA | persona shells | none | `GATE-WAVE-2-INTEGRATED` |
 | `INTEG-01` | gated serial | Wave 1 integration in progress | `042b75990f9cd819239c584a370687042393f6a7` | integrate reviewed `INT-01` | FIN merge checkpoint `da3d561` | none |
@@ -610,6 +610,29 @@ Neon result: schema replay deferred until isolated foundation/Wave 1 composition
 Production mutation performed: no
 Exact next milestone: typed APIs, operations admin UI, permissions/events/report contract hardening, migration replay and unified verification
 Dirty/uncommitted state: tracker checkpoint evidence only
+
+### Checkpoint 8 — Unified verification and GATE-OPS-COMPLETE
+
+Date/time: 2026-07-29T09:15:00+06:00
+Stream: OPS-01
+Milestone completed: unified verification and module completion gate
+Git branch: `module/school-operations`
+Worktree: `.worktrees/ops-01-operations`
+Neon branch: `agent/ops-01-operations` (`br-polished-voice-ax2fsdfg`)
+Starting base: `8cc8ee1562ade672b14c1c44af935fe7e2307976`
+Verified implementation head: `d2a09f4619cf308fa9e0eeded44f5ba3f4ea4a69`
+Verification PR: `#10`
+Delivered: typed operations APIs, exception-first admin command centre, central permissions and separation-of-duties bundles, enforced versioned event envelopes, ordered migration manifest, accessibility/responsive/RTL/security hardening and complete HR, procurement, inventory/assets, library, transport, hostel/cafeteria and activities/trips workflows
+Focused verification: 20 OPS test files and 92 tests PASS; format, ESLint, architecture boundaries, TypeScript, deterministic build, execution artifact validation and dependency audit PASS
+Full repository verification: CI run `30418782402` PASS including all repository tests, fresh PostgreSQL migration verification, live Neon driver, browser tests, licenses, provenance and generated-artifact consistency
+Runtime compatibility: Node `22.22.0` baseline PASS and Node `24` LTS compatibility PASS for install, TypeScript, all OPS tests and build in run `30418782452`
+Neon replay: reviewed foundation prerequisites `202607280001` and `202607280002` plus all seven ordered OPS migrations applied successfully to the isolated OPS branch; 58 OPS tables created, all 58 have RLS enabled and forced, 58 tenant policies exist, 232 CRUD grants exist and `app_runtime` has USAGE on all nine OPS schemas
+Recovery evidence: the initial unsupported multi-command prepared statement failed before mutation; state was verified unchanged before retrying with atomic statement transactions
+Gate outcome: `GATE-OPS-COMPLETE` passed
+Integration boundary: SIS, CARE and FIN references remain opaque/versioned; no dependent module-owned table was imported or referenced
+Production mutation performed: no; Neon `main` and production deployment were untouched
+Exact next milestone: freeze the reviewed OPS-01 SHA and hand the stream to owner review / `INTEG-01` for serial Wave 2 integration
+Dirty/uncommitted state: final gate evidence only
 
 ## CARE-01 evidence
 

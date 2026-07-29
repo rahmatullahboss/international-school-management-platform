@@ -7,7 +7,9 @@ import {
   type OperationsCommandCentreInput,
 } from '../../apps/web-admin/src/features/operations/operations-command-centre.js';
 
-function input(overrides: Partial<OperationsCommandCentreInput> = {}): OperationsCommandCentreInput {
+function input(
+  overrides: Partial<OperationsCommandCentreInput> = {},
+): OperationsCommandCentreInput {
   return {
     locale: 'en-GB',
     direction: 'ltr',

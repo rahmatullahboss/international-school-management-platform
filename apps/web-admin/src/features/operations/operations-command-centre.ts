@@ -67,8 +67,10 @@ export interface OperationsCommandCentreInput {
   readonly quickActions: readonly OperationsQuickActionInput[];
 }
 
-export interface OperationsCommandCentreModel
-  extends Omit<OperationsCommandCentreInput, 'metrics' | 'exceptions' | 'queues' | 'modules' | 'quickActions'> {
+export interface OperationsCommandCentreModel extends Omit<
+  OperationsCommandCentreInput,
+  'metrics' | 'exceptions' | 'queues' | 'modules' | 'quickActions'
+> {
   readonly metrics: readonly OperationsMetricInput[];
   readonly exceptions: readonly OperationsExceptionInput[];
   readonly queues: readonly OperationsQueueInput[];
