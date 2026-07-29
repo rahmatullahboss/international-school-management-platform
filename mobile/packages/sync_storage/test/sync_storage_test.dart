@@ -157,11 +157,17 @@ void main() {
           ),
         ),
       );
+      final fingerprint = await SyncStorageScope.fromSession(
+        session,
+      ).fingerprint();
+      final blocked = File(
+        '${directory.path}${Platform.pathSeparator}school-sync-$fingerprint.v1.blocked',
+      );
       final names = await directory
           .list()
           .map((entity) => entity.path.split(Platform.pathSeparator).last)
           .toList();
-      expect(names.any((name) => name.endsWith('.blocked')), isTrue);
+      expect(await blocked.exists(), isTrue);
       expect(names.any((name) => name.contains('.quarantine.')), isTrue);
       expect(
         () => store.ready(
@@ -208,12 +214,15 @@ void main() {
     );
 
     await factory.purgeAccount(firstSession.accountId);
-
     expect(await directory.list().isEmpty, isTrue);
     expect(await catalog.scopesForAccount(firstSession.accountId), isEmpty);
     expect(
-      () => keyVault.current(SyncStorageScope.fromSession(firstSession)),
-      completes,
+      () => keyVault.read(SyncStorageScope.fromSession(firstSession), 1),
+      throwsA(isA<SyncStorageException>()),
+    );
+    expect(
+      () => keyVault.read(SyncStorageScope.fromSession(secondSession), 1),
+      throwsA(isA<SyncStorageException>()),
     );
   });
 
