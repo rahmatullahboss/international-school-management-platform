@@ -11,4 +11,14 @@
     "APP_ENV": "development",
     "APP_REGION": "local",
   },
+  "env": {
+    "staging": {
+      "name": "international-school-platform-api-staging",
+      "workers_dev": true,
+      "vars": {
+        "APP_ENV": "staging",
+        "APP_REGION": "global",
+      },
+    },
+  },
 }
