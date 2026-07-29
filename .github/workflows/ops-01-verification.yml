@@ -1,0 +1,66 @@
+name: OPS-01 verification
+
+on:
+  pull_request:
+    branches:
+      - module/school-operations
+    paths:
+      - 'apps/platform-api/**'
+      - 'apps/web-admin/**'
+      - 'packages/modules/**'
+      - 'tests/operations/**'
+      - 'docs/modules/operations/**'
+      - 'docs/execution/checkpoints/OPS-01-finalization.md'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig*.json'
+      - '.github/workflows/ops-01-verification.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ops-01-verification-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.0'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Formatting
+        run: npm run format:check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Architecture boundaries
+        run: npm run check:boundaries
+
+      - name: TypeScript
+        run: npm run typecheck
+
+      - name: OPS-01 tests
+        run: npx vitest run tests/operations
+
+      - name: Deterministic build
+        run: npm run build
+
+      - name: Execution artifacts
+        run: npm run validate:artifacts
+
+      - name: Dependency audit
+        run: npm audit --audit-level=high
