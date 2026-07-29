@@ -61,7 +61,7 @@ export interface OperationsSummary {
 export interface OperationsReportProvider {
   readonly report: OperationsReportName;
   readonly requiredPermission: string;
-  load(input: OperationsReportInput): OperationsDomainSnapshot | Promise<OperationsDomainSnapshot>;
+  readonly load: (input: OperationsReportInput) => Promise<OperationsDomainSnapshot>;
 }
 
 export interface OperationsCommandHandler {
@@ -69,7 +69,7 @@ export interface OperationsCommandHandler {
   readonly requiredPermission: string;
   readonly stepUpRequired: boolean;
   readonly idempotencyRequired: boolean;
-  execute(input: OperationsCommandInput): unknown | Promise<unknown>;
+  readonly execute: (input: OperationsCommandInput) => Promise<unknown>;
 }
 
 export interface OperationsApplicationCoverage {
@@ -207,6 +207,6 @@ export class OperationsApplication implements OperationsApiDependencies {
     if (handler.idempotencyRequired && input.idempotencyKey === null) {
       throw new Error('OPS_IDEMPOTENCY_KEY_REQUIRED');
     }
-    return handler.execute(input);
+    return await handler.execute(input);
   }
 }
