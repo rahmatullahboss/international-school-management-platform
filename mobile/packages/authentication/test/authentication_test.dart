@@ -74,55 +74,61 @@ void main() {
   });
 
   group('AuthSessionManager', () {
-    test('restores a still-valid access token without a network call', () async {
-      final gateway = FakeAuthorizationGateway();
-      final store = MemoryAuthTokenStore();
-      await store.write(tokenSet(now: now, accessToken: 'cached'));
-      final manager = AuthSessionManager(
-        gateway: gateway,
-        configuration: configuration,
-        tokenStore: store,
-        clock: () => now,
-      );
+    test(
+      'restores a still-valid access token without a network call',
+      () async {
+        final gateway = FakeAuthorizationGateway();
+        final store = MemoryAuthTokenStore();
+        await store.write(tokenSet(now: now, accessToken: 'cached'));
+        final manager = AuthSessionManager(
+          gateway: gateway,
+          configuration: configuration,
+          tokenStore: store,
+          clock: () => now,
+        );
 
-      final session = await manager.restore();
+        final session = await manager.restore();
 
-      expect(session.phase, AuthSessionPhase.authenticated);
-      expect(session.tokens?.accessToken, 'cached');
-      expect(gateway.refreshCalls, 0);
-    });
+        expect(session.phase, AuthSessionPhase.authenticated);
+        expect(session.tokens?.accessToken, 'cached');
+        expect(gateway.refreshCalls, 0);
+      },
+    );
 
-    test('refreshes an expiring token and preserves a rotated-or-existing refresh token', () async {
-      final gateway = FakeAuthorizationGateway(
-        refreshedTokens: tokenSet(
-          now: now,
-          accessToken: 'refreshed',
-          refreshToken: null,
-        ),
-      );
-      final store = MemoryAuthTokenStore();
-      await store.write(
-        tokenSet(
-          now: now.subtract(const Duration(hours: 2)),
-          accessToken: 'expired',
-          refreshToken: 'existing-refresh',
-        ),
-      );
-      final manager = AuthSessionManager(
-        gateway: gateway,
-        configuration: configuration,
-        tokenStore: store,
-        clock: () => now,
-      );
+    test(
+      'refreshes an expiring token and preserves a rotated-or-existing refresh token',
+      () async {
+        final gateway = FakeAuthorizationGateway(
+          refreshedTokens: tokenSet(
+            now: now,
+            accessToken: 'refreshed',
+            refreshToken: null,
+          ),
+        );
+        final store = MemoryAuthTokenStore();
+        await store.write(
+          tokenSet(
+            now: now.subtract(const Duration(hours: 2)),
+            accessToken: 'expired',
+            refreshToken: 'existing-refresh',
+          ),
+        );
+        final manager = AuthSessionManager(
+          gateway: gateway,
+          configuration: configuration,
+          tokenStore: store,
+          clock: () => now,
+        );
 
-      final session = await manager.restore();
-      final persisted = await store.read();
+        final session = await manager.restore();
+        final persisted = await store.read();
 
-      expect(session.tokens?.accessToken, 'refreshed');
-      expect(session.tokens?.refreshToken, 'existing-refresh');
-      expect(persisted?.accessToken, 'refreshed');
-      expect(gateway.refreshCalls, 1);
-    });
+        expect(session.tokens?.accessToken, 'refreshed');
+        expect(session.tokens?.refreshToken, 'existing-refresh');
+        expect(persisted?.accessToken, 'refreshed');
+        expect(gateway.refreshCalls, 1);
+      },
+    );
 
     test('coalesces concurrent restore refreshes', () async {
       final release = Completer<void>();
@@ -180,45 +186,51 @@ void main() {
       expect(await store.read(), isNull);
     });
 
-    test('treats browser cancellation as signed out rather than failed', () async {
-      final manager = AuthSessionManager(
-        gateway: FakeAuthorizationGateway(
-          authorizeError: const AuthUserCancelledException(),
-        ),
-        configuration: configuration,
-        tokenStore: MemoryAuthTokenStore(),
-        clock: () => now,
-      );
-
-      final session = await manager.signIn();
-
-      expect(session.phase, AuthSessionPhase.signedOut);
-      expect(session.reasonCode, 'OIDC_USER_CANCELLED');
-    });
-
-    test('clears local credentials before remote end-session completes', () async {
-      final store = MemoryAuthTokenStore();
-      await store.write(tokenSet(now: now, accessToken: 'access'));
-      final manager = AuthSessionManager(
-        gateway: FakeAuthorizationGateway(
-          endSessionError: const AuthPlatformException(
-            'OIDC_END_SESSION_FAILED',
+    test(
+      'treats browser cancellation as signed out rather than failed',
+      () async {
+        final manager = AuthSessionManager(
+          gateway: FakeAuthorizationGateway(
+            authorizeError: const AuthUserCancelledException(),
           ),
-        ),
-        configuration: configuration,
-        tokenStore: store,
-        clock: () => now,
-      );
+          configuration: configuration,
+          tokenStore: MemoryAuthTokenStore(),
+          clock: () => now,
+        );
 
-      final session = await manager.signOut();
+        final session = await manager.signIn();
 
-      expect(session.phase, AuthSessionPhase.signedOut);
-      expect(
-        session.reasonCode,
-        'LOCAL_SIGN_OUT_COMPLETE_REMOTE_SESSION_RETAINED',
-      );
-      expect(await store.read(), isNull);
-    });
+        expect(session.phase, AuthSessionPhase.signedOut);
+        expect(session.reasonCode, 'OIDC_USER_CANCELLED');
+      },
+    );
+
+    test(
+      'clears local credentials before remote end-session completes',
+      () async {
+        final store = MemoryAuthTokenStore();
+        await store.write(tokenSet(now: now, accessToken: 'access'));
+        final manager = AuthSessionManager(
+          gateway: FakeAuthorizationGateway(
+            endSessionError: const AuthPlatformException(
+              'OIDC_END_SESSION_FAILED',
+            ),
+          ),
+          configuration: configuration,
+          tokenStore: store,
+          clock: () => now,
+        );
+
+        final session = await manager.signOut();
+
+        expect(session.phase, AuthSessionPhase.signedOut);
+        expect(
+          session.reasonCode,
+          'LOCAL_SIGN_OUT_COMPLETE_REMOTE_SESSION_RETAINED',
+        );
+        expect(await store.read(), isNull);
+      },
+    );
   });
 }
 
@@ -267,9 +279,7 @@ final class FakeAuthorizationGateway implements AuthorizationGateway {
   int refreshCalls = 0;
 
   @override
-  Future<AuthTokenSet> authorize(
-    MobileOidcConfiguration configuration,
-  ) async {
+  Future<AuthTokenSet> authorize(MobileOidcConfiguration configuration) async {
     final error = authorizeError;
     if (error != null) {
       throw error;

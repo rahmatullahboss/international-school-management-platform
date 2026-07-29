@@ -26,7 +26,9 @@ final class MobileOidcConfiguration {
       throw const AuthConfigurationException('OIDC_REDIRECT_SCHEME_REQUIRED');
     }
     if (redirectUri.scheme != redirectUri.scheme.toLowerCase()) {
-      throw const AuthConfigurationException('OIDC_REDIRECT_SCHEME_LOWERCASE_REQUIRED');
+      throw const AuthConfigurationException(
+        'OIDC_REDIRECT_SCHEME_LOWERCASE_REQUIRED',
+      );
     }
     if (postLogoutRedirectUri != null && !postLogoutRedirectUri.hasScheme) {
       throw const AuthConfigurationException(
@@ -53,9 +55,7 @@ final class MobileOidcConfiguration {
       defaultValue: 'openid profile email offline_access school_api',
     );
 
-    if (issuerValue.isEmpty ||
-        clientIdValue.isEmpty ||
-        redirectValue.isEmpty) {
+    if (issuerValue.isEmpty || clientIdValue.isEmpty || redirectValue.isEmpty) {
       throw const AuthConfigurationException(
         'OIDC_COMPILE_TIME_CONFIGURATION_REQUIRED',
       );

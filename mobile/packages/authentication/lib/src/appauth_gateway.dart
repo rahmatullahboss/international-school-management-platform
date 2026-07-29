@@ -24,9 +24,7 @@ final class AppAuthAuthorizationGateway implements AuthorizationGateway {
   final appauth.FlutterAppAuth _appAuth;
 
   @override
-  Future<AuthTokenSet> authorize(
-    MobileOidcConfiguration configuration,
-  ) async {
+  Future<AuthTokenSet> authorize(MobileOidcConfiguration configuration) async {
     try {
       final response = await _appAuth.authorizeAndExchangeCode(
         appauth.AuthorizationTokenRequest(

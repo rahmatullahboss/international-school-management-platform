@@ -49,10 +49,8 @@ final class SecureAuthTokenStore implements AuthTokenStore {
   }
 
   @override
-  Future<void> write(AuthTokenSet tokens) => _storage.write(
-    key: _storageKey,
-    value: jsonEncode(tokens.toJson()),
-  );
+  Future<void> write(AuthTokenSet tokens) =>
+      _storage.write(key: _storageKey, value: jsonEncode(tokens.toJson()));
 
   @override
   Future<void> clear() => _storage.delete(key: _storageKey);
