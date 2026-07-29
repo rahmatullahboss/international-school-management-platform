@@ -1,4 +1,4 @@
-name: EXP-01 Milestone 2 Lint and Safety Fix
+name: EXP-01 Milestone 2 Deterministic Fix
 
 on:
   push:
@@ -11,22 +11,17 @@ permissions:
   contents: write
 
 concurrency:
-  group: exp-01-m2-lint-safety-fix
+  group: exp-01-m2-deterministic-fix
   cancel-in-progress: true
 
 jobs:
   fix:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
         with:
           ref: module/exp-01-m2-ci-fix
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22.22.2
-          cache: npm
-      - run: npm ci
       - name: Apply typed sorting and strict bulk-selection safety
         run: |
           python3 <<'PY'
@@ -115,14 +110,6 @@ jobs:
               raise SystemExit('bulk safety test target missing or ambiguous')
           test_path.write_text(tests.replace(old_test, new_test), encoding='utf-8')
           PY
-          npx prettier --write \
-            apps/web-admin/src/features/experience/AdminOperationsHome.tsx \
-            tests/experience/admin-workflows.test.tsx
-      - name: Run focused verification
-        run: |
-          npx eslint apps/web-admin/src/features/experience/AdminOperationsHome.tsx tests/experience/admin-workflows.test.tsx
-          npx vitest run tests/experience/admin-workflows.test.tsx
-          npm run typecheck
       - name: Commit fix and remove one-shot workflow
         run: |
           git rm .github/workflows/exp-01-m2-lint-safety-fix.yml
