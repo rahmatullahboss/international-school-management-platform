@@ -69,3 +69,6 @@ jobs:
       - name: Test mobile core
         working-directory: mobile/packages/mobile_core
         run: dart test
+      - name: Test API client
+        working-directory: mobile/packages/api_client
+        run: dart test
