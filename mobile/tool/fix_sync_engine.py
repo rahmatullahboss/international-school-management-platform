@@ -104,6 +104,7 @@ library_path.write_text(source, encoding='utf-8')
 test_path = Path(__file__).resolve().parents[1] / 'packages/sync_engine/test/sync_engine_test.dart'
 tests = test_path.read_text(encoding='utf-8')
 tests = tests.replace('const RetrySchedule(', 'RetrySchedule(')
+tests = tests.replace('const schedule = RetrySchedule(', 'final schedule = RetrySchedule(')
 tests = tests.replace('containsInOrder(<Object?>[', 'orderedEquals(<Object?>[')
 old_immutability = """    expect(payload.ciphertext, <int>[1, 2, 3]);
     expect(() => payload.ciphertext[0] = 8, throwsUnsupportedError);
