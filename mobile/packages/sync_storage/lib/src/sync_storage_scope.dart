@@ -38,7 +38,9 @@ final class SyncStorageScope {
 
   Future<String> fingerprint() async {
     final hash = await Sha256().hash(
-      utf8.encode('school-sync-scope-v1\u0000$accountId\u0000$tenantId\u0000$campusId'),
+      utf8.encode(
+        'school-sync-scope-v1\u0000$accountId\u0000$tenantId\u0000$campusId',
+      ),
     );
     return base64UrlEncode(hash.bytes).replaceAll('=', '');
   }

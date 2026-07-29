@@ -115,89 +115,95 @@ final class FileEncryptedSyncStore implements EncryptedSyncStore {
   final _SerialExecutor _serial = _SerialExecutor();
 
   @override
-  Future<void> upsert(SyncOperationEnvelope operation) =>
-      _serial.run(() async {
-        _validateOperationScope(operation);
-        await _guardDecryption(() async {
-          final files = await _files();
-          final snapshot = await _load(files);
-          final token = await _recordToken('operation', operation.operationId);
-          final key = await _keyVault.current(_scope);
-          final record = await _recordCipher.encrypt(
-            associatedData: syncRecordAssociatedData(
-              recordKind: 'operation',
-              recordToken: token,
-              scopeFingerprint: files.fingerprint,
-            ),
-            key: key,
-            value: _operationToJson(operation),
-          );
-          snapshot.records[token] = record;
-          await _write(files, snapshot);
-        });
-      });
+  Future<void> upsert(SyncOperationEnvelope operation) => _serial.run(() async {
+    _validateOperationScope(operation);
+    await _guardDecryption(() async {
+      final files = await _files();
+      final snapshot = await _load(files);
+      final token = await _recordToken('operation', operation.operationId);
+      final key = await _keyVault.current(_scope);
+      final record = await _recordCipher.encrypt(
+        associatedData: syncRecordAssociatedData(
+          recordKind: 'operation',
+          recordToken: token,
+          scopeFingerprint: files.fingerprint,
+        ),
+        key: key,
+        value: _operationToJson(operation),
+      );
+      snapshot.records[token] = record;
+      await _write(files, snapshot);
+    });
+  });
 
   @override
-  Future<SyncOperationEnvelope?> find(String operationId) =>
-      _serial.run(() async => _guardDecryption(() async {
-        final normalized = operationId.trim();
-        if (normalized.isEmpty) {
-          throw const SyncStorageException('SYNC_OPERATION_ID_REQUIRED');
-        }
-        final files = await _files();
-        final snapshot = await _load(files);
-        final token = await _recordToken('operation', normalized);
-        final record = snapshot.records[token];
-        if (record == null) {
-          return null;
-        }
-        final operation = await _decryptOperation(files, token, record);
-        if (operation.operationId != normalized) {
-          throw const SyncStorageException('SYNC_OPERATION_TOKEN_MISMATCH');
-        }
-        return operation;
-      }));
+  Future<SyncOperationEnvelope?> find(String operationId) => _serial.run(
+    () async => _guardDecryption(() async {
+      final normalized = operationId.trim();
+      if (normalized.isEmpty) {
+        throw const SyncStorageException('SYNC_OPERATION_ID_REQUIRED');
+      }
+      final files = await _files();
+      final snapshot = await _load(files);
+      final token = await _recordToken('operation', normalized);
+      final record = snapshot.records[token];
+      if (record == null) {
+        return null;
+      }
+      final operation = await _decryptOperation(files, token, record);
+      if (operation.operationId != normalized) {
+        throw const SyncStorageException('SYNC_OPERATION_TOKEN_MISMATCH');
+      }
+      return operation;
+    }),
+  );
 
   @override
   Future<List<SyncOperationEnvelope>> ready({
     required DateTime now,
     required SchoolSession session,
     int limit = 25,
-  }) => _serial.run(() async => _guardDecryption(() async {
-    _validateSession(session);
-    if (limit < 1 || limit > 100) {
-      throw const SyncStorageException('SYNC_READY_LIMIT_INVALID');
-    }
-    final files = await _files();
-    final snapshot = await _load(files);
-    final operations = <SyncOperationEnvelope>[];
-    for (final entry in snapshot.records.entries) {
-      final operation = await _decryptOperation(files, entry.key, entry.value);
-      if (operation.accountId != session.accountId ||
-          operation.tenantId != session.tenantId ||
-          operation.campusId != session.campusId ||
-          operation.persona != session.activePersona) {
-        continue;
+  }) => _serial.run(
+    () async => _guardDecryption(() async {
+      _validateSession(session);
+      if (limit < 1 || limit > 100) {
+        throw const SyncStorageException('SYNC_READY_LIMIT_INVALID');
       }
-      final isReady = switch (operation.state) {
-        SyncOperationState.savedOnDevice => true,
-        SyncOperationState.waitingForNetwork =>
-          operation.nextAttemptAt != null &&
-              !operation.nextAttemptAt!.isAfter(now),
-        _ => false,
-      };
-      if (isReady) {
-        operations.add(operation);
+      final files = await _files();
+      final snapshot = await _load(files);
+      final operations = <SyncOperationEnvelope>[];
+      for (final entry in snapshot.records.entries) {
+        final operation = await _decryptOperation(
+          files,
+          entry.key,
+          entry.value,
+        );
+        if (operation.accountId != session.accountId ||
+            operation.tenantId != session.tenantId ||
+            operation.campusId != session.campusId ||
+            operation.persona != session.activePersona) {
+          continue;
+        }
+        final isReady = switch (operation.state) {
+          SyncOperationState.savedOnDevice => true,
+          SyncOperationState.waitingForNetwork =>
+            operation.nextAttemptAt != null &&
+                !operation.nextAttemptAt!.isAfter(now),
+          _ => false,
+        };
+        if (isReady) {
+          operations.add(operation);
+        }
       }
-    }
-    operations.sort((first, second) {
-      final byTime = first.clientCreatedAt.compareTo(second.clientCreatedAt);
-      return byTime != 0
-          ? byTime
-          : first.operationId.compareTo(second.operationId);
-    });
-    return List<SyncOperationEnvelope>.unmodifiable(operations.take(limit));
-  }));
+      operations.sort((first, second) {
+        final byTime = first.clientCreatedAt.compareTo(second.clientCreatedAt);
+        return byTime != 0
+            ? byTime
+            : first.operationId.compareTo(second.operationId);
+      });
+      return List<SyncOperationEnvelope>.unmodifiable(operations.take(limit));
+    }),
+  );
 
   @override
   Future<void> saveCursor(SyncCursor cursor) => _serial.run(() async {
@@ -220,54 +226,56 @@ final class FileEncryptedSyncStore implements EncryptedSyncStore {
   });
 
   @override
-  Future<SyncCursor?> readCursor(SchoolSession session) =>
-      _serial.run(() async => _guardDecryption(() async {
-        _validateSession(session);
-        final files = await _files();
-        final snapshot = await _load(files);
-        final record = snapshot.cursor;
-        if (record == null) {
-          return null;
-        }
-        final key = await _keyVault.read(_scope, record.keyVersion);
-        final value = await _recordCipher.decrypt(
-          associatedData: syncRecordAssociatedData(
-            recordKind: 'cursor',
-            recordToken: 'current',
-            scopeFingerprint: files.fingerprint,
-          ),
-          key: key,
-          record: record,
-        );
-        final cursor = _cursorFromJson(value);
-        cursor.validateSession(session);
-        return cursor;
-      }));
+  Future<SyncCursor?> readCursor(SchoolSession session) => _serial.run(
+    () async => _guardDecryption(() async {
+      _validateSession(session);
+      final files = await _files();
+      final snapshot = await _load(files);
+      final record = snapshot.cursor;
+      if (record == null) {
+        return null;
+      }
+      final key = await _keyVault.read(_scope, record.keyVersion);
+      final value = await _recordCipher.decrypt(
+        associatedData: syncRecordAssociatedData(
+          recordKind: 'cursor',
+          recordToken: 'current',
+          scopeFingerprint: files.fingerprint,
+        ),
+        key: key,
+        record: record,
+      );
+      final cursor = _cursorFromJson(value);
+      cursor.validateSession(session);
+      return cursor;
+    }),
+  );
 
   @override
-  Future<void> purgeTerminalBefore(DateTime cutoff) =>
-      _serial.run(() async => _guardDecryption(() async {
-        final files = await _files();
-        final snapshot = await _load(files);
-        final removals = <String>[];
-        for (final entry in snapshot.records.entries) {
-          final operation = await _decryptOperation(
-            files,
-            entry.key,
-            entry.value,
-          );
-          if (operation.isTerminal &&
-              operation.clientCreatedAt.isBefore(cutoff)) {
-            removals.add(entry.key);
-          }
+  Future<void> purgeTerminalBefore(DateTime cutoff) => _serial.run(
+    () async => _guardDecryption(() async {
+      final files = await _files();
+      final snapshot = await _load(files);
+      final removals = <String>[];
+      for (final entry in snapshot.records.entries) {
+        final operation = await _decryptOperation(
+          files,
+          entry.key,
+          entry.value,
+        );
+        if (operation.isTerminal &&
+            operation.clientCreatedAt.isBefore(cutoff)) {
+          removals.add(entry.key);
         }
-        for (final token in removals) {
-          snapshot.records.remove(token);
-        }
-        if (removals.isNotEmpty) {
-          await _write(files, snapshot);
-        }
-      }));
+      }
+      for (final token in removals) {
+        snapshot.records.remove(token);
+      }
+      if (removals.isNotEmpty) {
+        await _write(files, snapshot);
+      }
+    }),
+  );
 
   Future<void> rotateKey() => _serial.run(() async {
     await _guardDecryption(() async {

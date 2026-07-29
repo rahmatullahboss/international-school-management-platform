@@ -81,10 +81,10 @@ void main() {
 
     final ready = await store.ready(now: now, session: session);
 
-    expect(
-      ready.map((operation) => operation.operationId),
-      <String>['ready-now', 'ready-retry'],
-    );
+    expect(ready.map((operation) => operation.operationId), <String>[
+      'ready-now',
+      'ready-retry',
+    ]);
   });
 
   test('persists and reloads a scope-bound delta cursor', () async {
@@ -103,70 +103,81 @@ void main() {
     final loaded = await reopened.readCursor(session);
 
     expect(loaded?.cursor, 'delta-cursor-100');
-    expect(await activeFile(directory).then((file) => file.readAsString()),
-        isNot(contains('delta-cursor-100')));
-  });
-
-  test('key rotation re-encrypts records and preserves readable data', () async {
-    final session = teacherSession();
-    final store = await factory.open(session);
-    await store.upsert(syncOperation());
-    final file = await activeFile(directory);
-    final before = jsonDecode(await file.readAsString()) as Map<String, Object?>;
-    final beforeVersion = firstRecordVersion(before);
-    final beforeText = await file.readAsString();
-
-    await store.rotateKey();
-
-    final after = jsonDecode(await file.readAsString()) as Map<String, Object?>;
-    expect(firstRecordVersion(after), beforeVersion + 1);
-    expect(await file.readAsString(), isNot(beforeText));
-    expect((await store.find('operation-1'))?.operationId, 'operation-1');
-  });
-
-  test('tampered ciphertext quarantines the store instead of resetting it', () async {
-    final session = teacherSession();
-    final store = await factory.open(session);
-    await store.upsert(syncOperation());
-    final file = await activeFile(directory);
-    final document = jsonDecode(await file.readAsString()) as Map<String, Object?>;
-    final records = document['records'] as Map<String, Object?>;
-    final record = records.values.single as Map<String, Object?>;
-    final bytes = base64Decode(record['box']! as String);
-    bytes[bytes.length ~/ 2] ^= 1;
-    record['box'] = base64Encode(bytes);
-    await file.writeAsString(jsonEncode(document), flush: true);
-
     expect(
-      () => store.find('operation-1'),
-      throwsA(
-        isA<SyncStorageException>().having(
-          (error) => error.code,
-          'code',
-          'SYNC_STORE_QUARANTINED',
-        ),
-      ),
-    );
-    final names = await directory
-        .list()
-        .map((entity) => entity.path.split(Platform.pathSeparator).last)
-        .toList();
-    expect(names.any((name) => name.endsWith('.blocked')), isTrue);
-    expect(names.any((name) => name.contains('.quarantine.')), isTrue);
-    expect(
-      () => store.ready(
-        now: DateTime.parse('2026-07-30T04:00:00+06:00'),
-        session: session,
-      ),
-      throwsA(
-        isA<SyncStorageException>().having(
-          (error) => error.code,
-          'code',
-          'SYNC_STORE_QUARANTINED',
-        ),
-      ),
+      await activeFile(directory).then((file) => file.readAsString()),
+      isNot(contains('delta-cursor-100')),
     );
   });
+
+  test(
+    'key rotation re-encrypts records and preserves readable data',
+    () async {
+      final session = teacherSession();
+      final store = await factory.open(session);
+      await store.upsert(syncOperation());
+      final file = await activeFile(directory);
+      final before =
+          jsonDecode(await file.readAsString()) as Map<String, Object?>;
+      final beforeVersion = firstRecordVersion(before);
+      final beforeText = await file.readAsString();
+
+      await store.rotateKey();
+
+      final after =
+          jsonDecode(await file.readAsString()) as Map<String, Object?>;
+      expect(firstRecordVersion(after), beforeVersion + 1);
+      expect(await file.readAsString(), isNot(beforeText));
+      expect((await store.find('operation-1'))?.operationId, 'operation-1');
+    },
+  );
+
+  test(
+    'tampered ciphertext quarantines the store instead of resetting it',
+    () async {
+      final session = teacherSession();
+      final store = await factory.open(session);
+      await store.upsert(syncOperation());
+      final file = await activeFile(directory);
+      final document =
+          jsonDecode(await file.readAsString()) as Map<String, Object?>;
+      final records = document['records'] as Map<String, Object?>;
+      final record = records.values.single as Map<String, Object?>;
+      final bytes = base64Decode(record['box']! as String);
+      bytes[bytes.length ~/ 2] ^= 1;
+      record['box'] = base64Encode(bytes);
+      await file.writeAsString(jsonEncode(document), flush: true);
+
+      expect(
+        () => store.find('operation-1'),
+        throwsA(
+          isA<SyncStorageException>().having(
+            (error) => error.code,
+            'code',
+            'SYNC_STORE_QUARANTINED',
+          ),
+        ),
+      );
+      final names = await directory
+          .list()
+          .map((entity) => entity.path.split(Platform.pathSeparator).last)
+          .toList();
+      expect(names.any((name) => name.endsWith('.blocked')), isTrue);
+      expect(names.any((name) => name.contains('.quarantine.')), isTrue);
+      expect(
+        () => store.ready(
+          now: DateTime.parse('2026-07-30T04:00:00+06:00'),
+          session: session,
+        ),
+        throwsA(
+          isA<SyncStorageException>().having(
+            (error) => error.code,
+            'code',
+            'SYNC_STORE_QUARANTINED',
+          ),
+        ),
+      );
+    },
+  );
 
   test('school purge deletes encrypted files and all key versions', () async {
     final session = teacherSession();
@@ -179,14 +190,8 @@ void main() {
 
     expect(await directory.list().isEmpty, isTrue);
     expect(await catalog.scopesForAccount(session.accountId), isEmpty);
-    expect(
-      () => keyVault.read(scope, 1),
-      throwsA(isA<SyncStorageException>()),
-    );
-    expect(
-      () => keyVault.read(scope, 2),
-      throwsA(isA<SyncStorageException>()),
-    );
+    expect(() => keyVault.read(scope, 1), throwsA(isA<SyncStorageException>()));
+    expect(() => keyVault.read(scope, 2), throwsA(isA<SyncStorageException>()));
   });
 
   test('account purge removes every registered school scope', () async {
@@ -229,10 +234,10 @@ void main() {
   });
 }
 
-Future<File> activeFile(Directory directory) async =>
-    directory.list().whereType<File>().firstWhere(
-      (file) => file.path.endsWith('.json'),
-    );
+Future<File> activeFile(Directory directory) async => directory
+    .list()
+    .whereType<File>()
+    .firstWhere((file) => file.path.endsWith('.json'));
 
 int firstRecordVersion(Map<String, Object?> document) {
   final records = document['records'] as Map<String, Object?>;

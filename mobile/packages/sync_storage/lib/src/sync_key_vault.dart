@@ -42,9 +42,7 @@ final class PlatformSyncKeyVault implements SyncKeyVault {
   Future<SyncKeyMaterial> current(SyncStorageScope scope) =>
       _serial.run(() async {
         final fingerprint = await scope.fingerprint();
-        final versionValue = await _storage.read(
-          key: _versionKey(fingerprint),
-        );
+        final versionValue = await _storage.read(key: _versionKey(fingerprint));
         if (versionValue == null) {
           return _create(fingerprint, 1, makeCurrent: true);
         }
@@ -68,9 +66,7 @@ final class PlatformSyncKeyVault implements SyncKeyVault {
   Future<SyncKeyMaterial> rotate(SyncStorageScope scope) =>
       _serial.run(() async {
         final fingerprint = await scope.fingerprint();
-        final versionValue = await _storage.read(
-          key: _versionKey(fingerprint),
-        );
+        final versionValue = await _storage.read(key: _versionKey(fingerprint));
         final currentVersion = versionValue == null
             ? 0
             : int.tryParse(versionValue);
@@ -81,23 +77,20 @@ final class PlatformSyncKeyVault implements SyncKeyVault {
       });
 
   @override
-  Future<void> deleteScope(SyncStorageScope scope) =>
-      _serial.run(() async {
-        final fingerprint = await scope.fingerprint();
-        final versionValue = await _storage.read(
-          key: _versionKey(fingerprint),
-        );
-        final currentVersion = versionValue == null
-            ? 0
-            : int.tryParse(versionValue);
-        if (currentVersion == null || currentVersion < 0) {
-          throw const SyncStorageException('SYNC_KEY_VERSION_CORRUPT');
-        }
-        for (var version = 1; version <= currentVersion; version++) {
-          await _storage.delete(key: _materialKey(fingerprint, version));
-        }
-        await _storage.delete(key: _versionKey(fingerprint));
-      });
+  Future<void> deleteScope(SyncStorageScope scope) => _serial.run(() async {
+    final fingerprint = await scope.fingerprint();
+    final versionValue = await _storage.read(key: _versionKey(fingerprint));
+    final currentVersion = versionValue == null
+        ? 0
+        : int.tryParse(versionValue);
+    if (currentVersion == null || currentVersion < 0) {
+      throw const SyncStorageException('SYNC_KEY_VERSION_CORRUPT');
+    }
+    for (var version = 1; version <= currentVersion; version++) {
+      await _storage.delete(key: _materialKey(fingerprint, version));
+    }
+    await _storage.delete(key: _versionKey(fingerprint));
+  });
 
   Future<SyncKeyMaterial> _create(
     String fingerprint,
@@ -134,10 +127,7 @@ final class PlatformSyncKeyVault implements SyncKeyVault {
       if (bytes.length != _algorithm.secretKeyLength) {
         throw const SyncStorageException('SYNC_KEY_LENGTH_INVALID');
       }
-      return SyncKeyMaterial(
-        secretKey: SecretKey(bytes),
-        version: version,
-      );
+      return SyncKeyMaterial(secretKey: SecretKey(bytes), version: version);
     } on FormatException catch (error) {
       throw SyncStorageException('SYNC_KEY_MATERIAL_CORRUPT', error);
     }
@@ -231,8 +221,9 @@ final class PlatformSyncScopeCatalog implements SyncScopeCatalog {
   });
 
   @override
-  Future<void> clearAccount(String accountId) =>
-      _serial.run(() async => _storage.delete(key: await _catalogKey(accountId)));
+  Future<void> clearAccount(String accountId) => _serial.run(
+    () async => _storage.delete(key: await _catalogKey(accountId)),
+  );
 
   Future<List<SyncStorageScope>> _read(String accountId) async {
     final encoded = await _storage.read(key: await _catalogKey(accountId));
@@ -257,10 +248,7 @@ final class PlatformSyncScopeCatalog implements SyncScopeCatalog {
     }
   }
 
-  Future<void> _write(
-    String accountId,
-    List<SyncStorageScope> scopes,
-  ) async {
+  Future<void> _write(String accountId, List<SyncStorageScope> scopes) async {
     final key = await _catalogKey(accountId);
     if (scopes.isEmpty) {
       await _storage.delete(key: key);
@@ -279,7 +267,9 @@ final class PlatformSyncScopeCatalog implements SyncScopeCatalog {
     if (normalized.isEmpty) {
       throw const SyncStorageException('SYNC_ACCOUNT_ID_REQUIRED');
     }
-    final hash = await Sha256().hash(utf8.encode('sync-account-v1\u0000$normalized'));
+    final hash = await Sha256().hash(
+      utf8.encode('sync-account-v1\u0000$normalized'),
+    );
     final fingerprint = base64UrlEncode(hash.bytes).replaceAll('=', '');
     return 'school.mobile.sync.scopes.$fingerprint';
   }
