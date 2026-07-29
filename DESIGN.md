@@ -2,73 +2,73 @@
 name: International School Management Platform
 description: Evidence-led operational interfaces for international K–12 schools
 colors:
-  institutional-ink: "#12263a"
-  operational-muted: "#4c6275"
-  paper: "#ffffff"
-  canvas: "#f3f6f8"
-  structural-rule: "#cbd6de"
-  action-teal: "#006d77"
-  action-teal-strong: "#004f57"
-  focus-blue: "#0b63ce"
-  information-surface: "#e7f2f8"
-  information-text: "#16445f"
-  success-surface: "#e5f4ec"
-  success-text: "#145c36"
-  warning-surface: "#fff1cf"
-  warning-text: "#714900"
-  error-surface: "#fde8e7"
-  error-text: "#8a1c17"
+  institutional-ink: '#12263a'
+  operational-muted: '#4c6275'
+  paper: '#ffffff'
+  canvas: '#f3f6f8'
+  structural-rule: '#cbd6de'
+  action-teal: '#006d77'
+  action-teal-strong: '#004f57'
+  focus-blue: '#0b63ce'
+  information-surface: '#e7f2f8'
+  information-text: '#16445f'
+  success-surface: '#e5f4ec'
+  success-text: '#145c36'
+  warning-surface: '#fff1cf'
+  warning-text: '#714900'
+  error-surface: '#fde8e7'
+  error-text: '#8a1c17'
 typography:
   display:
-    fontFamily: "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
-    fontSize: "clamp(2rem, 4vw, 3.5rem)"
+    fontFamily: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif'
+    fontSize: 'clamp(2rem, 4vw, 3.5rem)'
     fontWeight: 700
     lineHeight: 1.05
-    letterSpacing: "-0.03em"
+    letterSpacing: '-0.03em'
   title:
-    fontFamily: "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
-    fontSize: "1.5rem"
+    fontFamily: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif'
+    fontSize: '1.5rem'
     fontWeight: 700
     lineHeight: 1.2
-    letterSpacing: "-0.02em"
+    letterSpacing: '-0.02em'
   body:
-    fontFamily: "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
-    fontSize: "1rem"
+    fontFamily: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif'
+    fontSize: '1rem'
     fontWeight: 400
     lineHeight: 1.5
   label:
-    fontFamily: "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
-    fontSize: "0.875rem"
+    fontFamily: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif'
+    fontSize: '0.875rem'
     fontWeight: 650
     lineHeight: 1.3
 rounded:
-  control: "8px"
-  surface: "16px"
+  control: '8px'
+  surface: '16px'
 spacing:
-  xs: "8px"
-  sm: "12px"
-  md: "16px"
-  lg: "24px"
-  xl: "32px"
-  xxl: "48px"
+  xs: '8px'
+  sm: '12px'
+  md: '16px'
+  lg: '24px'
+  xl: '32px'
+  xxl: '48px'
 components:
   button-primary:
-    backgroundColor: "{colors.action-teal}"
-    textColor: "{colors.paper}"
-    typography: "{typography.label}"
-    rounded: "{rounded.control}"
-    padding: "12px 16px"
+    backgroundColor: '{colors.action-teal}'
+    textColor: '{colors.paper}'
+    typography: '{typography.label}'
+    rounded: '{rounded.control}'
+    padding: '12px 16px'
   button-primary-hover:
-    backgroundColor: "{colors.action-teal-strong}"
-    textColor: "{colors.paper}"
-    typography: "{typography.label}"
-    rounded: "{rounded.control}"
-    padding: "12px 16px"
+    backgroundColor: '{colors.action-teal-strong}'
+    textColor: '{colors.paper}'
+    typography: '{typography.label}'
+    rounded: '{rounded.control}'
+    padding: '12px 16px'
   panel:
-    backgroundColor: "{colors.paper}"
-    textColor: "{colors.institutional-ink}"
-    rounded: "{rounded.surface}"
-    padding: "24px"
+    backgroundColor: '{colors.paper}'
+    textColor: '{colors.institutional-ink}'
+    rounded: '{rounded.surface}'
+    padding: '24px'
 ---
 
 # Design System: International School Management Platform
