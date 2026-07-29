@@ -10,7 +10,12 @@ const importPattern = /(?:from\s+|import\s*\(|require\s*\()\s*['"]([^'"]+)['"]/g
 const compositionDependencies = new Map([
   [
     '@school/platform-web',
-    new Set(['@school/web-admin', '@school/web-teacher', '@school/web-family', '@school/web-student']),
+    new Set([
+      '@school/web-admin',
+      '@school/web-teacher',
+      '@school/web-family',
+      '@school/web-student',
+    ]),
   ],
 ]);
 

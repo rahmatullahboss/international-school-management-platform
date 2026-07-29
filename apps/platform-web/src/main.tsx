@@ -2,18 +2,9 @@ import { StrictMode, useEffect, useState, type ReactElement } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { AdminExperienceShell, AdminOperationsHome } from '@school/web-admin/experience';
-import {
-  GuardianExperienceShell,
-  GuardianHouseholdWorkspace,
-} from '@school/web-family/experience';
-import {
-  StudentDailyWorkspace,
-  StudentExperienceShell,
-} from '@school/web-student/experience';
-import {
-  TeacherDailyWorkspace,
-  TeacherExperienceShell,
-} from '@school/web-teacher/experience';
+import { GuardianExperienceShell, GuardianHouseholdWorkspace } from '@school/web-family/experience';
+import { StudentDailyWorkspace, StudentExperienceShell } from '@school/web-student/experience';
+import { TeacherDailyWorkspace, TeacherExperienceShell } from '@school/web-teacher/experience';
 
 import { registerPlatformServiceWorker } from './pwa';
 import {
@@ -51,7 +42,9 @@ const roleLinks = [
   { label: 'Role chooser', href: '/' },
 ] as const;
 
-const roleDescriptions: Readonly<Record<PilotRole, { readonly title: string; readonly detail: string }>> = {
+const roleDescriptions: Readonly<
+  Record<PilotRole, { readonly title: string; readonly detail: string }>
+> = {
   admin: {
     title: 'School operations overview',
     detail: 'Exceptions, approvals and governed cross-module readiness.',
@@ -85,7 +78,9 @@ function roleForPath(path: string): PilotRole | undefined {
 
 function initialConnectivity(): PilotConnectivity {
   if (!navigator.onLine) return 'offline';
-  return (navigator as NavigatorWithConnection).connection?.saveData === true ? 'degraded' : 'online';
+  return (navigator as NavigatorWithConnection).connection?.saveData === true
+    ? 'degraded'
+    : 'online';
 }
 
 function usePilotConnectivity(): PilotConnectivity {
@@ -128,13 +123,17 @@ function PilotLanding(): ReactElement {
           <div className="pilot-section-heading">
             <p>Demo access</p>
             <h2 id="pilot-role-title">Choose a role</h2>
-            <span>Authentication is simulated for pilot review; permissions remain role-scoped.</span>
+            <span>
+              Authentication is simulated for pilot review; permissions remain role-scoped.
+            </span>
           </div>
           <div className="pilot-role-grid">
             <a className="pilot-role-card" data-role="admin" href="/admin">
               <span>01</span>
               <h3>School administrator</h3>
-              <p>SIS, admissions, academics, finance, operations, support, reports and integrations.</p>
+              <p>
+                SIS, admissions, academics, finance, operations, support, reports and integrations.
+              </p>
               <strong>Open admin workspace</strong>
             </a>
             <a className="pilot-role-card" data-role="teacher" href="/teacher">
@@ -235,8 +234,8 @@ function PilotModuleSurface(props: { readonly page: PilotModulePage }): ReactEle
       <aside className="pilot-demo-note">
         <strong>Pilot data</strong>
         <span>
-          This route is composed from the integrated module contracts with synthetic staging records.
-          Mutating production actions remain disabled.
+          This route is composed from the integrated module contracts with synthetic staging
+          records. Mutating production actions remain disabled.
         </span>
       </aside>
     </div>
@@ -272,11 +271,22 @@ function AdminPortal(props: {
       userName="Amina Chowdhury · Principal"
       locale="en-BD"
       pageTitle={heading?.title ?? 'Administration'}
-      pageDescription={heading?.detail ?? heading?.description ?? 'Integrated administration workspace'}
+      pageDescription={
+        heading?.detail ?? heading?.description ?? 'Integrated administration workspace'
+      }
       activeHref={props.path}
       capabilities={adminCapabilities}
-      session={{ assurance: 'aal2', deviceLabel: 'Pilot browser', expiresAt: '2026-07-30T08:00:00+06:00' }}
-      connectivity={{ state: props.connectivity, pendingChanges: 0, lastSyncedAt: pilotTimestamp, retryHref: props.path }}
+      session={{
+        assurance: 'aal2',
+        deviceLabel: 'Pilot browser',
+        expiresAt: '2026-07-30T08:00:00+06:00',
+      }}
+      connectivity={{
+        state: props.connectivity,
+        pendingChanges: 0,
+        lastSyncedAt: pilotTimestamp,
+        retryHref: props.path,
+      }}
       utilityActions={shellUtilityActions('admin')}
     >
       {props.path === '/admin' ? (
@@ -320,8 +330,17 @@ function TeacherPortal(props: {
       pageDescription={heading?.detail ?? heading?.description ?? 'Assigned teaching work'}
       activeHref={props.path}
       capabilities={teacherCapabilities}
-      session={{ assurance: 'aal1', deviceLabel: 'Pilot browser', expiresAt: '2026-07-30T08:00:00+06:00' }}
-      connectivity={{ state: props.connectivity, pendingChanges: 0, lastSyncedAt: pilotTimestamp, retryHref: props.path }}
+      session={{
+        assurance: 'aal1',
+        deviceLabel: 'Pilot browser',
+        expiresAt: '2026-07-30T08:00:00+06:00',
+      }}
+      connectivity={{
+        state: props.connectivity,
+        pendingChanges: 0,
+        lastSyncedAt: pilotTimestamp,
+        retryHref: props.path,
+      }}
       utilityActions={shellUtilityActions('teacher')}
     >
       {props.path === '/teacher' ? (
@@ -364,8 +383,17 @@ function GuardianPortal(props: {
       pageDescription={heading?.detail ?? heading?.description ?? 'Household school services'}
       activeHref={props.path}
       capabilities={guardianCapabilities}
-      session={{ assurance: 'aal1', deviceLabel: 'Pilot browser', expiresAt: '2026-07-30T08:00:00+06:00' }}
-      connectivity={{ state: props.connectivity, pendingChanges: 0, lastSyncedAt: pilotTimestamp, retryHref: props.path }}
+      session={{
+        assurance: 'aal1',
+        deviceLabel: 'Pilot browser',
+        expiresAt: '2026-07-30T08:00:00+06:00',
+      }}
+      connectivity={{
+        state: props.connectivity,
+        pendingChanges: 0,
+        lastSyncedAt: pilotTimestamp,
+        retryHref: props.path,
+      }}
       utilityActions={shellUtilityActions('guardian')}
     >
       {props.path === '/family' ? (
@@ -409,8 +437,17 @@ function StudentPortal(props: {
       pageDescription={heading?.detail ?? heading?.description ?? 'Published student services'}
       activeHref={props.path}
       capabilities={studentCapabilities}
-      session={{ assurance: 'aal1', deviceLabel: 'Pilot browser', expiresAt: '2026-07-30T08:00:00+06:00' }}
-      connectivity={{ state: props.connectivity, pendingChanges: 0, lastSyncedAt: pilotTimestamp, retryHref: props.path }}
+      session={{
+        assurance: 'aal1',
+        deviceLabel: 'Pilot browser',
+        expiresAt: '2026-07-30T08:00:00+06:00',
+      }}
+      connectivity={{
+        state: props.connectivity,
+        pendingChanges: 0,
+        lastSyncedAt: pilotTimestamp,
+        retryHref: props.path,
+      }}
       utilityActions={shellUtilityActions('student')}
     >
       {props.path === '/student' ? (

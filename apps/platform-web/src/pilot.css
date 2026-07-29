@@ -1,7 +1,13 @@
 :root {
   color-scheme: light;
   font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
   background: #eef3f5;
   color: #132238;
 }
@@ -37,7 +43,7 @@ body {
 .pilot-entry__masthead h1 {
   max-width: 15ch;
   margin: 0;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: Georgia, 'Times New Roman', serif;
   font-size: clamp(2.7rem, 7vw, 6.4rem);
   font-weight: 500;
   line-height: 0.94;
@@ -106,7 +112,7 @@ body {
 
 .pilot-section-heading h2 {
   margin: 0;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: Georgia, 'Times New Roman', serif;
   font-size: clamp(2rem, 4vw, 3.7rem);
   font-weight: 500;
   letter-spacing: -0.035em;
@@ -167,7 +173,7 @@ body {
 
 .pilot-role-card h3 {
   margin: 2.6rem 0 0.75rem;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: Georgia, 'Times New Roman', serif;
   font-size: 1.65rem;
   font-weight: 500;
 }
@@ -184,19 +190,19 @@ body {
   color: #075e57;
 }
 
-.pilot-role-card[data-role="admin"] {
+.pilot-role-card[data-role='admin'] {
   border-top: 0.3rem solid #0f766e;
 }
 
-.pilot-role-card[data-role="teacher"] {
+.pilot-role-card[data-role='teacher'] {
   border-top: 0.3rem solid #1d4ed8;
 }
 
-.pilot-role-card[data-role="guardian"] {
+.pilot-role-card[data-role='guardian'] {
   border-top: 0.3rem solid #a16207;
 }
 
-.pilot-role-card[data-role="student"] {
+.pilot-role-card[data-role='student'] {
   border-top: 0.3rem solid #7e22ce;
 }
 
@@ -238,7 +244,7 @@ body {
 
 .pilot-module__heading h2 {
   margin: 0;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: Georgia, 'Times New Roman', serif;
   font-size: clamp(2rem, 4vw, 3.4rem);
   font-weight: 500;
   letter-spacing: -0.035em;
@@ -280,7 +286,7 @@ body {
 
 .pilot-metrics strong {
   color: #102a43;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: Georgia, 'Times New Roman', serif;
   font-size: clamp(1.7rem, 3vw, 2.6rem);
   font-weight: 500;
 }
@@ -304,7 +310,7 @@ body {
 
 .pilot-work-queue h3 {
   margin: 0;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: Georgia, 'Times New Roman', serif;
   font-size: 1.8rem;
   font-weight: 500;
 }

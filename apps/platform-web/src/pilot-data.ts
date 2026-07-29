@@ -497,10 +497,23 @@ export const modulePages: Readonly<Record<string, PilotModulePage>> = {
       { label: 'Offers awaiting response', value: '12', detail: 'For the 2027 intake' },
     ],
     queue: [
-      { title: 'Review 9 completed applications', detail: 'Admissions verification is complete.', status: 'Ready', href: '/admin/sis' },
-      { title: 'Resolve 3 duplicate household warnings', detail: 'Possible identity matches need review.', status: 'Attention', href: '/admin/sis' },
+      {
+        title: 'Review 9 completed applications',
+        detail: 'Admissions verification is complete.',
+        status: 'Ready',
+        href: '/admin/sis',
+      },
+      {
+        title: 'Resolve 3 duplicate household warnings',
+        detail: 'Possible identity matches need review.',
+        status: 'Attention',
+        href: '/admin/sis',
+      },
     ],
-    actions: [{ label: 'Open applicant register', href: '/admin/sis' }, { label: 'Create student record', href: '/admin/sis' }],
+    actions: [
+      { label: 'Open applicant register', href: '/admin/sis' },
+      { label: 'Create student record', href: '/admin/sis' },
+    ],
   },
   '/admin/academics': {
     eyebrow: 'Academics, attendance and records',
@@ -512,53 +525,108 @@ export const modulePages: Readonly<Record<string, PilotModulePage>> = {
       { label: 'Report cards pending', value: '74', detail: 'Awaiting review or publication' },
     ],
     queue: [
-      { title: 'Finalise three attendance registers', detail: 'Daily cut-off is approaching.', status: 'Due now', href: '/admin/academics' },
-      { title: 'Approve transcript correction', detail: 'Evidence and audit trail are attached.', status: 'Approval', href: '/admin/academics' },
+      {
+        title: 'Finalise three attendance registers',
+        detail: 'Daily cut-off is approaching.',
+        status: 'Due now',
+        href: '/admin/academics',
+      },
+      {
+        title: 'Approve transcript correction',
+        detail: 'Evidence and audit trail are attached.',
+        status: 'Approval',
+        href: '/admin/academics',
+      },
     ],
-    actions: [{ label: 'Open timetable', href: '/admin/academics' }, { label: 'Review report cards', href: '/admin/academics' }],
+    actions: [
+      { label: 'Open timetable', href: '/admin/academics' },
+      { label: 'Review report cards', href: '/admin/academics' },
+    ],
   },
   '/admin/finance': {
     eyebrow: 'Billing and accounting',
     title: 'Finance command centre',
     description: 'Review billing, payments, refunds, journals, reconciliation and finance reports.',
     metrics: [
-      { label: 'Receivables due', value: 'BDT 2.84m', detail: 'Current and overdue household balances' },
+      {
+        label: 'Receivables due',
+        value: 'BDT 2.84m',
+        detail: 'Current and overdue household balances',
+      },
       { label: 'Receipts today', value: 'BDT 486k', detail: '63 verified payment receipts' },
       { label: 'Unreconciled', value: '7', detail: 'Receipts waiting for bank matching' },
     ],
     queue: [
-      { title: 'Match seven verified receipts', detail: 'Deposit evidence is available.', status: 'Review', href: '/admin/finance' },
-      { title: 'Approve two refund requests', detail: 'Original allocations and reasons are attached.', status: 'Approval', href: '/admin/finance' },
+      {
+        title: 'Match seven verified receipts',
+        detail: 'Deposit evidence is available.',
+        status: 'Review',
+        href: '/admin/finance',
+      },
+      {
+        title: 'Approve two refund requests',
+        detail: 'Original allocations and reasons are attached.',
+        status: 'Approval',
+        href: '/admin/finance',
+      },
     ],
-    actions: [{ label: 'Open reconciliation', href: '/admin/finance' }, { label: 'View general ledger', href: '/admin/finance' }],
+    actions: [
+      { label: 'Open reconciliation', href: '/admin/finance' },
+      { label: 'View general ledger', href: '/admin/finance' },
+    ],
   },
   '/admin/operations': {
     eyebrow: 'School operations ERP',
     title: 'Operations and services',
-    description: 'Coordinate staff, procurement, assets, library, transport, catering and activities.',
+    description:
+      'Coordinate staff, procurement, assets, library, transport, catering and activities.',
     metrics: [
       { label: 'Staff on duty', value: '126', detail: 'Four approved absences' },
       { label: 'Open purchase orders', value: '17', detail: 'Five deliveries due this week' },
       { label: 'Transport routes', value: '12', detail: 'One route has a delay notice' },
     ],
     queue: [
-      { title: 'Approve science lab requisition', detail: 'Budget and supplier comparison are attached.', status: 'Approval', href: '/admin/operations' },
-      { title: 'Review delayed transport route', detail: 'Route 6 is running 18 minutes late.', status: 'Live', href: '/admin/operations' },
+      {
+        title: 'Approve science lab requisition',
+        detail: 'Budget and supplier comparison are attached.',
+        status: 'Approval',
+        href: '/admin/operations',
+      },
+      {
+        title: 'Review delayed transport route',
+        detail: 'Route 6 is running 18 minutes late.',
+        status: 'Live',
+        href: '/admin/operations',
+      },
     ],
-    actions: [{ label: 'Open inventory', href: '/admin/operations' }, { label: 'View transport control', href: '/admin/operations' }],
+    actions: [
+      { label: 'Open inventory', href: '/admin/operations' },
+      { label: 'View transport control', href: '/admin/operations' },
+    ],
   },
   '/admin/student-support': {
     eyebrow: 'Health, wellbeing and safeguarding',
     title: 'Restricted student support',
-    description: 'Purpose-bound access to health, behaviour, wellbeing, safeguarding and learning support.',
+    description:
+      'Purpose-bound access to health, behaviour, wellbeing, safeguarding and learning support.',
     metrics: [
       { label: 'Open support plans', value: '31', detail: 'Capability-scoped and purpose-bound' },
       { label: 'Reviews due', value: '6', detail: 'Due within the next seven days' },
       { label: 'Restricted tasks', value: '2', detail: 'Require verified session access' },
     ],
     queue: [
-      { title: 'Verify identity to open restricted task', detail: 'Sensitive details remain hidden until step-up.', status: 'Restricted', href: '/admin/student-support' },
-      { title: 'Review learning support adjustment', detail: 'Teacher evidence and family consent are available.', status: 'Review', href: '/admin/student-support' },
+      {
+        title: 'Verify identity to open restricted task',
+        detail: 'Sensitive details remain hidden until step-up.',
+        status: 'Restricted',
+        href: '/admin/student-support',
+      },
+      {
+        title: 'Review learning support adjustment',
+        detail: 'Teacher evidence and family consent are available.',
+        status: 'Review',
+        href: '/admin/student-support',
+      },
     ],
     actions: [{ label: 'Open permitted support work', href: '/admin/student-support' }],
   },
@@ -569,13 +637,30 @@ export const modulePages: Readonly<Record<string, PilotModulePage>> = {
     metrics: [
       { label: 'Announcements scheduled', value: '4', detail: 'For today and tomorrow' },
       { label: 'Unread priority threads', value: '11', detail: 'Across permitted workspaces' },
-      { label: 'Forms due this week', value: '96', detail: 'Household acknowledgements outstanding' },
+      {
+        label: 'Forms due this week',
+        value: '96',
+        detail: 'Household acknowledgements outstanding',
+      },
     ],
     queue: [
-      { title: 'Review weather closure draft', detail: 'Audience and translations are prepared.', status: 'Draft', href: '/admin/communications' },
-      { title: 'Follow up undelivered messages', detail: 'Eight recipients need an alternate channel.', status: 'Attention', href: '/admin/communications' },
+      {
+        title: 'Review weather closure draft',
+        detail: 'Audience and translations are prepared.',
+        status: 'Draft',
+        href: '/admin/communications',
+      },
+      {
+        title: 'Follow up undelivered messages',
+        detail: 'Eight recipients need an alternate channel.',
+        status: 'Attention',
+        href: '/admin/communications',
+      },
     ],
-    actions: [{ label: 'Create announcement', href: '/admin/communications' }, { label: 'Open message centre', href: '/admin/communications' }],
+    actions: [
+      { label: 'Create announcement', href: '/admin/communications' },
+      { label: 'Open message centre', href: '/admin/communications' },
+    ],
   },
   '/admin/integrations': {
     eyebrow: 'Internationalisation and integrations',
@@ -587,25 +672,55 @@ export const modulePages: Readonly<Record<string, PilotModulePage>> = {
       { label: 'Webhook delivery', value: '99.8%', detail: 'Across the last 24 hours' },
     ],
     queue: [
-      { title: 'Review SIS import conflict', detail: 'Two external records map to one student.', status: 'Conflict', href: '/admin/integrations' },
-      { title: 'Rotate sandbox connector secret', detail: 'Scheduled credential maintenance.', status: 'Due soon', href: '/admin/integrations' },
+      {
+        title: 'Review SIS import conflict',
+        detail: 'Two external records map to one student.',
+        status: 'Conflict',
+        href: '/admin/integrations',
+      },
+      {
+        title: 'Rotate sandbox connector secret',
+        detail: 'Scheduled credential maintenance.',
+        status: 'Due soon',
+        href: '/admin/integrations',
+      },
     ],
-    actions: [{ label: 'Open connector registry', href: '/admin/integrations' }, { label: 'Start import', href: '/admin/integrations' }],
+    actions: [
+      { label: 'Open connector registry', href: '/admin/integrations' },
+      { label: 'Start import', href: '/admin/integrations' },
+    ],
   },
   '/admin/reports': {
     eyebrow: 'Governed reporting',
     title: 'Reports and evidence',
     description: 'Review governed metrics, exports, report definitions and evidence timestamps.',
     metrics: [
-      { label: 'Published reports', value: '26', detail: 'Across academic and operational domains' },
+      {
+        label: 'Published reports',
+        value: '26',
+        detail: 'Across academic and operational domains',
+      },
       { label: 'Scheduled exports', value: '7', detail: 'All within policy' },
       { label: 'Definitions updated', value: '3', detail: 'Awaiting reviewer acknowledgement' },
     ],
     queue: [
-      { title: 'Review attendance definition update', detail: 'The proposed calculation change is documented.', status: 'Review', href: '/admin/reports' },
-      { title: 'Approve board pack export', detail: 'Sensitive fields are excluded by policy.', status: 'Approval', href: '/admin/reports' },
+      {
+        title: 'Review attendance definition update',
+        detail: 'The proposed calculation change is documented.',
+        status: 'Review',
+        href: '/admin/reports',
+      },
+      {
+        title: 'Approve board pack export',
+        detail: 'Sensitive fields are excluded by policy.',
+        status: 'Approval',
+        href: '/admin/reports',
+      },
     ],
-    actions: [{ label: 'Open report catalogue', href: '/admin/reports' }, { label: 'Create governed export', href: '/admin/reports' }],
+    actions: [
+      { label: 'Open report catalogue', href: '/admin/reports' },
+      { label: 'Create governed export', href: '/admin/reports' },
+    ],
   },
   '/teacher/classes': {
     eyebrow: 'Assigned teaching',
@@ -616,7 +731,14 @@ export const modulePages: Readonly<Record<string, PilotModulePage>> = {
       { label: 'Students assigned', value: '108', detail: 'Across four class sections' },
       { label: 'Room changes', value: '1', detail: 'Science lesson moved to Lab 2' },
     ],
-    queue: [{ title: 'Prepare Year 9B lesson', detail: 'The lesson starts at 10:00.', status: 'Next', href: '/teacher/classes' }],
+    queue: [
+      {
+        title: 'Prepare Year 9B lesson',
+        detail: 'The lesson starts at 10:00.',
+        status: 'Next',
+        href: '/teacher/classes',
+      },
+    ],
     actions: [{ label: 'Open class roster', href: '/teacher/classes' }],
   },
   '/teacher/attendance': {
@@ -628,7 +750,14 @@ export const modulePages: Readonly<Record<string, PilotModulePage>> = {
       { label: 'Pending on device', value: '0', detail: 'All local changes are synced' },
       { label: 'Conflicts', value: '0', detail: 'No reconciliation required' },
     ],
-    queue: [{ title: 'Finalise Year 8A register', detail: 'All 28 students are marked.', status: 'Ready', href: '/teacher/attendance' }],
+    queue: [
+      {
+        title: 'Finalise Year 8A register',
+        detail: 'All 28 students are marked.',
+        status: 'Ready',
+        href: '/teacher/attendance',
+      },
+    ],
     actions: [{ label: 'Open current register', href: '/teacher/attendance' }],
   },
   '/teacher/gradebook': {
@@ -640,7 +769,14 @@ export const modulePages: Readonly<Record<string, PilotModulePage>> = {
       { label: 'Draft assessments', value: '3', detail: 'Across assigned classes' },
       { label: 'Ready to publish', value: '1', detail: 'Subject lead review complete' },
     ],
-    queue: [{ title: 'Complete seven algebra results', detail: 'Due tomorrow at 16:00.', status: 'Due soon', href: '/teacher/gradebook' }],
+    queue: [
+      {
+        title: 'Complete seven algebra results',
+        detail: 'Due tomorrow at 16:00.',
+        status: 'Due soon',
+        href: '/teacher/gradebook',
+      },
+    ],
     actions: [{ label: 'Open gradebook', href: '/teacher/gradebook' }],
   },
   '/teacher/students': {
@@ -649,10 +785,21 @@ export const modulePages: Readonly<Record<string, PilotModulePage>> = {
     description: 'See only assigned student information needed for current teaching work.',
     metrics: [
       { label: 'Assigned students', value: '108', detail: 'Across four sections' },
-      { label: 'Support adjustments', value: '9', detail: 'Visible only when relevant to teaching' },
+      {
+        label: 'Support adjustments',
+        value: '9',
+        detail: 'Visible only when relevant to teaching',
+      },
       { label: 'Follow-ups due', value: '4', detail: 'Teacher-owned next actions' },
     ],
-    queue: [{ title: 'Review Samira’s adjusted task', detail: 'Before the next mathematics lesson.', status: 'Next action', href: '/teacher/students' }],
+    queue: [
+      {
+        title: 'Review Samira’s adjusted task',
+        detail: 'Before the next mathematics lesson.',
+        status: 'Next action',
+        href: '/teacher/students',
+      },
+    ],
     actions: [{ label: 'Open assigned roster', href: '/teacher/students' }],
   },
   '/teacher/messages': {
@@ -664,7 +811,14 @@ export const modulePages: Readonly<Record<string, PilotModulePage>> = {
       { label: 'Awaiting reply', value: '5', detail: 'Across assigned classes' },
       { label: 'Delivery failures', value: '0', detail: 'All recent messages delivered' },
     ],
-    queue: [{ title: 'Reply about algebra resources', detail: 'Guardian message received last night.', status: 'Unread', href: '/teacher/messages' }],
+    queue: [
+      {
+        title: 'Reply about algebra resources',
+        detail: 'Guardian message received last night.',
+        status: 'Unread',
+        href: '/teacher/messages',
+      },
+    ],
     actions: [{ label: 'Open inbox', href: '/teacher/messages' }],
   },
   '/teacher/resources': {
@@ -676,7 +830,14 @@ export const modulePages: Readonly<Record<string, PilotModulePage>> = {
       { label: 'Draft resources', value: '6', detail: 'Not visible to students' },
       { label: 'Expiring soon', value: '2', detail: 'Within seven days' },
     ],
-    queue: [{ title: 'Publish equations practice set', detail: 'Ready for Year 8A.', status: 'Draft', href: '/teacher/resources' }],
+    queue: [
+      {
+        title: 'Publish equations practice set',
+        detail: 'Ready for Year 8A.',
+        status: 'Draft',
+        href: '/teacher/resources',
+      },
+    ],
     actions: [{ label: 'Add resource', href: '/teacher/resources' }],
   },
   '/family/applications': {
@@ -688,7 +849,14 @@ export const modulePages: Readonly<Record<string, PilotModulePage>> = {
       { label: 'Documents required', value: '1', detail: 'Birth certificate copy' },
       { label: 'Messages', value: '0', detail: 'No unread admissions messages' },
     ],
-    queue: [{ title: 'Upload requested document', detail: 'Due 5 August.', status: 'Action required', href: '/family/applications' }],
+    queue: [
+      {
+        title: 'Upload requested document',
+        detail: 'Due 5 August.',
+        status: 'Action required',
+        href: '/family/applications',
+      },
+    ],
     actions: [{ label: 'Continue application', href: '/family/applications' }],
   },
   '/family/children': {
@@ -700,7 +868,14 @@ export const modulePages: Readonly<Record<string, PilotModulePage>> = {
       { label: 'Current enrolments', value: '1', detail: 'Main Campus' },
       { label: 'Profile updates pending', value: '0', detail: 'No action required' },
     ],
-    queue: [{ title: 'Review emergency contact details', detail: 'Annual confirmation opens next month.', status: 'Upcoming', href: '/family/children' }],
+    queue: [
+      {
+        title: 'Review emergency contact details',
+        detail: 'Annual confirmation opens next month.',
+        status: 'Upcoming',
+        href: '/family/children',
+      },
+    ],
     actions: [{ label: 'Open student profile', href: '/family/children' }],
   },
   '/family/attendance': {
@@ -712,7 +887,14 @@ export const modulePages: Readonly<Record<string, PilotModulePage>> = {
       { label: 'Absences', value: '1', detail: 'Explanation under review' },
       { label: 'Late arrivals', value: '2', detail: 'Published record' },
     ],
-    queue: [{ title: 'Track absence explanation', detail: 'The school is reviewing the submission.', status: 'In review', href: '/family/attendance' }],
+    queue: [
+      {
+        title: 'Track absence explanation',
+        detail: 'The school is reviewing the submission.',
+        status: 'In review',
+        href: '/family/attendance',
+      },
+    ],
     actions: [{ label: 'View attendance details', href: '/family/attendance' }],
   },
   '/family/grades': {
@@ -724,7 +906,14 @@ export const modulePages: Readonly<Record<string, PilotModulePage>> = {
       { label: 'Published reports', value: '1', detail: 'Term 2 progress report' },
       { label: 'Revised items', value: '0', detail: 'No revisions since publication' },
     ],
-    queue: [{ title: 'Review mathematics feedback', detail: 'The result and comment are published.', status: 'New', href: '/family/grades' }],
+    queue: [
+      {
+        title: 'Review mathematics feedback',
+        detail: 'The result and comment are published.',
+        status: 'New',
+        href: '/family/grades',
+      },
+    ],
     actions: [{ label: 'Open progress report', href: '/family/grades' }],
   },
   '/family/finance': {
@@ -736,8 +925,18 @@ export const modulePages: Readonly<Record<string, PilotModulePage>> = {
       { label: 'Next due date', value: '10 Aug', detail: 'No overdue balance' },
       { label: 'Receipts this term', value: '3', detail: 'All verified' },
     ],
-    queue: [{ title: 'August tuition instalment', detail: 'Due 10 August.', status: 'Due', href: '/family/finance' }],
-    actions: [{ label: 'View statement', href: '/family/finance' }, { label: 'Open payment options', href: '/family/finance' }],
+    queue: [
+      {
+        title: 'August tuition instalment',
+        detail: 'Due 10 August.',
+        status: 'Due',
+        href: '/family/finance',
+      },
+    ],
+    actions: [
+      { label: 'View statement', href: '/family/finance' },
+      { label: 'Open payment options', href: '/family/finance' },
+    ],
   },
   '/family/forms': {
     eyebrow: 'Forms and consent',
@@ -748,7 +947,14 @@ export const modulePages: Readonly<Record<string, PilotModulePage>> = {
       { label: 'Due soon', value: '1', detail: 'Due 2 August' },
       { label: 'Submitted this term', value: '6', detail: 'All acknowledged' },
     ],
-    queue: [{ title: 'Science trip consent', detail: 'Review itinerary and submit consent.', status: 'Due soon', href: '/family/forms' }],
+    queue: [
+      {
+        title: 'Science trip consent',
+        detail: 'Review itinerary and submit consent.',
+        status: 'Due soon',
+        href: '/family/forms',
+      },
+    ],
     actions: [{ label: 'Open consent form', href: '/family/forms' }],
   },
   '/family/documents': {
@@ -760,7 +966,14 @@ export const modulePages: Readonly<Record<string, PilotModulePage>> = {
       { label: 'Available documents', value: '12', detail: 'Across linked children' },
       { label: 'Expiring links', value: '0', detail: 'No action required' },
     ],
-    queue: [{ title: 'Term 2 progress report', detail: 'Published 28 July.', status: 'Available', href: '/family/documents' }],
+    queue: [
+      {
+        title: 'Term 2 progress report',
+        detail: 'Published 28 July.',
+        status: 'Available',
+        href: '/family/documents',
+      },
+    ],
     actions: [{ label: 'Open document library', href: '/family/documents' }],
   },
   '/family/messages': {
@@ -772,7 +985,14 @@ export const modulePages: Readonly<Record<string, PilotModulePage>> = {
       { label: 'Open conversations', value: '4', detail: 'Across school teams' },
       { label: 'Delivery failures', value: '0', detail: 'All recent messages delivered' },
     ],
-    queue: [{ title: 'Algebra resources', detail: 'Ms Rahman replied last night.', status: 'Unread', href: '/family/messages' }],
+    queue: [
+      {
+        title: 'Algebra resources',
+        detail: 'Ms Rahman replied last night.',
+        status: 'Unread',
+        href: '/family/messages',
+      },
+    ],
     actions: [{ label: 'Open inbox', href: '/family/messages' }],
   },
   '/student/timetable': {
@@ -784,7 +1004,14 @@ export const modulePages: Readonly<Record<string, PilotModulePage>> = {
       { label: 'Room changes', value: '1', detail: 'Science moved to Lab 2' },
       { label: 'Cancelled lessons', value: '0', detail: 'No cancellations today' },
     ],
-    queue: [{ title: 'Science in Lab 2', detail: 'Starts at 09:00.', status: 'Next', href: '/student/timetable' }],
+    queue: [
+      {
+        title: 'Science in Lab 2',
+        detail: 'Starts at 09:00.',
+        status: 'Next',
+        href: '/student/timetable',
+      },
+    ],
     actions: [{ label: 'Open full timetable', href: '/student/timetable' }],
   },
   '/student/attendance': {
@@ -796,7 +1023,14 @@ export const modulePages: Readonly<Record<string, PilotModulePage>> = {
       { label: 'Absences', value: '1', detail: 'Explanation under review' },
       { label: 'Late arrivals', value: '2', detail: 'Published record' },
     ],
-    queue: [{ title: 'Absence explanation', detail: 'The school is reviewing it.', status: 'In review', href: '/student/attendance' }],
+    queue: [
+      {
+        title: 'Absence explanation',
+        detail: 'The school is reviewing it.',
+        status: 'In review',
+        href: '/student/attendance',
+      },
+    ],
     actions: [{ label: 'View attendance details', href: '/student/attendance' }],
   },
   '/student/results': {
@@ -808,7 +1042,14 @@ export const modulePages: Readonly<Record<string, PilotModulePage>> = {
       { label: 'Published subjects', value: '8', detail: 'Current reporting period' },
       { label: 'Revised results', value: '0', detail: 'No revisions since publication' },
     ],
-    queue: [{ title: 'Read mathematics feedback', detail: 'Show the final verification step.', status: 'New', href: '/student/results' }],
+    queue: [
+      {
+        title: 'Read mathematics feedback',
+        detail: 'Show the final verification step.',
+        status: 'New',
+        href: '/student/results',
+      },
+    ],
     actions: [{ label: 'Open result details', href: '/student/results' }],
   },
   '/student/documents': {
@@ -820,7 +1061,14 @@ export const modulePages: Readonly<Record<string, PilotModulePage>> = {
       { label: 'Available documents', value: '7', detail: 'Current enrolment only' },
       { label: 'Pending publication', value: '0', detail: 'Drafts remain hidden' },
     ],
-    queue: [{ title: 'Term 2 progress report', detail: 'Published 28 July.', status: 'Available', href: '/student/documents' }],
+    queue: [
+      {
+        title: 'Term 2 progress report',
+        detail: 'Published 28 July.',
+        status: 'Available',
+        href: '/student/documents',
+      },
+    ],
     actions: [{ label: 'Open document library', href: '/student/documents' }],
   },
   '/student/resources': {
@@ -832,7 +1080,14 @@ export const modulePages: Readonly<Record<string, PilotModulePage>> = {
       { label: 'Available resources', value: '23', detail: 'Across current classes' },
       { label: 'Due activities', value: '2', detail: 'This week' },
     ],
-    queue: [{ title: 'Multi-step equations practice', detail: 'Prepare before tomorrow’s lesson.', status: 'New', href: '/student/resources' }],
+    queue: [
+      {
+        title: 'Multi-step equations practice',
+        detail: 'Prepare before tomorrow’s lesson.',
+        status: 'New',
+        href: '/student/resources',
+      },
+    ],
     actions: [{ label: 'Open resources', href: '/student/resources' }],
   },
   '/student/requests': {
@@ -844,7 +1099,14 @@ export const modulePages: Readonly<Record<string, PilotModulePage>> = {
       { label: 'Completed this term', value: '3', detail: 'All closed' },
       { label: 'Drafts', value: '0', detail: 'Nothing waiting on this device' },
     ],
-    queue: [{ title: 'Library book renewal', detail: 'Waiting for library approval.', status: 'In review', href: '/student/requests' }],
+    queue: [
+      {
+        title: 'Library book renewal',
+        detail: 'Waiting for library approval.',
+        status: 'In review',
+        href: '/student/requests',
+      },
+    ],
     actions: [{ label: 'Create request', href: '/student/requests' }],
   },
   '/student/messages': {
@@ -856,7 +1118,14 @@ export const modulePages: Readonly<Record<string, PilotModulePage>> = {
       { label: 'Open conversations', value: '3', detail: 'Teachers and school services' },
       { label: 'Delivery failures', value: '0', detail: 'All recent messages delivered' },
     ],
-    queue: [{ title: 'Science trip preparation', detail: 'Mr Karim sent two messages.', status: 'Unread', href: '/student/messages' }],
+    queue: [
+      {
+        title: 'Science trip preparation',
+        detail: 'Mr Karim sent two messages.',
+        status: 'Unread',
+        href: '/student/messages',
+      },
+    ],
     actions: [{ label: 'Open inbox', href: '/student/messages' }],
   },
 };
