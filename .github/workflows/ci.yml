@@ -10,7 +10,7 @@ on:
       - 'integration/**'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   verify:
@@ -30,60 +30,11 @@ jobs:
           --health-retries 10
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: module/exp-01-m3-teacher
-          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22.22.2'
           cache: npm
       - run: npm ci
-      - name: Format teacher milestone and fix exact optional retry prop
-        run: |
-          python3 <<'PY'
-          from pathlib import Path
-
-          path = Path('apps/web-teacher/src/features/experience/TeacherDailyWorkspace.tsx')
-          source = path.read_text(encoding='utf-8')
-          old = (
-              "function WorkspaceState(props: {\n"
-              "  readonly title: string;\n"
-              "  readonly detail: string;\n"
-              "  readonly role?: 'status' | 'alert';\n"
-              "  readonly retryHref?: string;\n"
-              "}): ReactElement {\n"
-          )
-          new = (
-              "function WorkspaceState(props: {\n"
-              "  readonly title: string;\n"
-              "  readonly detail: string;\n"
-              "  readonly role?: 'status' | 'alert';\n"
-              "  readonly retryHref?: string | undefined;\n"
-              "}): ReactElement {\n"
-          )
-          if source.count(old) != 1:
-              raise SystemExit(f'WorkspaceState target count: {source.count(old)}')
-          path.write_text(source.replace(old, new), encoding='utf-8')
-          PY
-          npx prettier --write \
-            apps/web-teacher/src/features/experience/TeacherDailyWorkspace.tsx \
-            apps/web-teacher/src/features/experience/teacher-daily-workspace.css \
-            apps/web-teacher/src/features/experience/index.ts \
-            tests/experience/teacher-workflows.test.tsx \
-            docs/modules/experience/milestone-3-teacher-experience.md
-          git fetch origin module/experience-portals-reporting --depth=1
-          git show FETCH_HEAD:.github/workflows/ci.yml > .github/workflows/ci.yml
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add \
-            .github/workflows/ci.yml \
-            apps/web-teacher/src/features/experience/TeacherDailyWorkspace.tsx \
-            apps/web-teacher/src/features/experience/teacher-daily-workspace.css \
-            apps/web-teacher/src/features/experience/index.ts \
-            tests/experience/teacher-workflows.test.tsx \
-            docs/modules/experience/milestone-3-teacher-experience.md
-          git commit -m "style(EXP-01): format teacher milestone"
-          git push origin HEAD:module/exp-01-m3-teacher
       - run: npm run format:check
       - run: npm run lint
       - run: npm run check:boundaries

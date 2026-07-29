@@ -208,7 +208,9 @@ describe('EXP-01 teacher experience', () => {
     );
 
     expect(markup).toContain('No authorised student context');
-    expect(markup).toContain('No matching student record is available in your current assigned scope.');
+    expect(markup).toContain(
+      'No matching student record is available in your current assigned scope.',
+    );
     expect(markup).not.toContain('Nadia Rahman');
     expect(markup).not.toContain('Restricted safeguarding record');
   });

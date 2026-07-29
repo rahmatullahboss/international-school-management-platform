@@ -4,12 +4,7 @@ import './teacher-daily-workspace.css';
 
 export type TeacherSessionState = 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
 export type TeacherAttendanceState =
-  | 'not-started'
-  | 'draft-local'
-  | 'syncing'
-  | 'synced'
-  | 'conflict'
-  | 'finalised';
+  'not-started' | 'draft-local' | 'syncing' | 'synced' | 'conflict' | 'finalised';
 export type TeacherPublicationState = 'draft' | 'ready' | 'published' | 'locked';
 
 interface CapabilityScoped {
@@ -105,7 +100,9 @@ export function selectTeacherItems<T extends CapabilityScoped>(
   return items.filter((item) => hasCapability(capabilities, item.requiredCapability));
 }
 
-export function sortTeacherSessions(sessions: readonly TeacherClassSession[]): TeacherClassSession[] {
+export function sortTeacherSessions(
+  sessions: readonly TeacherClassSession[],
+): TeacherClassSession[] {
   return [...sessions].sort((left, right) => {
     const stateDifference = sessionStateOrder[left.state] - sessionStateOrder[right.state];
     if (stateDifference !== 0) return stateDifference;
@@ -131,7 +128,7 @@ function WorkspaceState(props: {
   readonly title: string;
   readonly detail: string;
   readonly role?: 'status' | 'alert';
-  readonly retryHref?: string;
+  readonly retryHref?: string | undefined;
 }): ReactElement {
   return (
     <section className="teacher-workspace__state" role={props.role ?? 'status'}>
@@ -157,7 +154,10 @@ function AttendanceAction(props: {
 }): ReactElement {
   if (props.task.state === 'conflict') {
     return (
-      <a className="teacher-workspace__action teacher-workspace__action--warning" href={props.task.href}>
+      <a
+        className="teacher-workspace__action teacher-workspace__action--warning"
+        href={props.task.href}
+      >
         Reconcile changes
       </a>
     );
@@ -282,7 +282,9 @@ export function TeacherDailyWorkspace(props: TeacherDailyWorkspaceProps): ReactE
           <ol className="teacher-workspace__timeline">
             {sessions.map((session) => (
               <li key={session.id} data-state={session.state}>
-                <time dateTime={session.startsAt}>{formatTime(props.locale, session.startsAt)}</time>
+                <time dateTime={session.startsAt}>
+                  {formatTime(props.locale, session.startsAt)}
+                </time>
                 <div>
                   <strong>{session.subject}</strong>
                   <span>
@@ -333,14 +335,24 @@ export function TeacherDailyWorkspace(props: TeacherDailyWorkspaceProps): ReactE
               <tbody>
                 {attendance.map((task) => (
                   <tr key={task.id} data-state={task.state}>
-                    <td><strong>{task.classLabel}</strong></td>
-                    <td><time dateTime={task.sessionAt}>{formatTime(props.locale, task.sessionAt)}</time></td>
+                    <td>
+                      <strong>{task.classLabel}</strong>
+                    </td>
+                    <td>
+                      <time dateTime={task.sessionAt}>
+                        {formatTime(props.locale, task.sessionAt)}
+                      </time>
+                    </td>
                     <td>
                       {formatCount(props.locale, task.markedCount)} of{' '}
                       {formatCount(props.locale, task.rosterCount)} marked
                     </td>
-                    <td><span className="teacher-workspace__status">{task.state}</span></td>
-                    <td><AttendanceAction task={task} connectivity={props.connectivity} /></td>
+                    <td>
+                      <span className="teacher-workspace__status">{task.state}</span>
+                    </td>
+                    <td>
+                      <AttendanceAction task={task} connectivity={props.connectivity} />
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -356,7 +368,10 @@ export function TeacherDailyWorkspace(props: TeacherDailyWorkspaceProps): ReactE
             <p>Entry progress and publication state are separate and visible.</p>
           </header>
           {gradebook.length === 0 ? (
-            <EmptyState title="No gradebook tasks" detail="No assigned assessment needs attention." />
+            <EmptyState
+              title="No gradebook tasks"
+              detail="No assigned assessment needs attention."
+            />
           ) : (
             <ol className="teacher-workspace__tasks">
               {gradebook.map((task) => (
@@ -438,10 +453,14 @@ export function TeacherDailyWorkspace(props: TeacherDailyWorkspaceProps): ReactE
                 <p>{student.learningSummary}</p>
                 {student.permittedTags.length === 0 ? null : (
                   <ul aria-label={`${student.displayName} permitted learning tags`}>
-                    {student.permittedTags.map((tag) => <li key={tag}>{tag}</li>)}
+                    {student.permittedTags.map((tag) => (
+                      <li key={tag}>{tag}</li>
+                    ))}
                   </ul>
                 )}
-                {student.nextAction === undefined ? null : <small>Next: {student.nextAction}</small>}
+                {student.nextAction === undefined ? null : (
+                  <small>Next: {student.nextAction}</small>
+                )}
                 <a href={student.href}>Open permitted profile</a>
               </li>
             ))}
