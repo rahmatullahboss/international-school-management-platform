@@ -40,11 +40,6 @@ jobs:
             docs/modules/experience \
             tsconfig.json \
             package-lock.json
-      - name: Verify focused checkpoint
-        run: |
-          npm ci
-          npm run typecheck
-          npx vitest run tests/experience/persona-shells.test.tsx
       - name: Commit generated normalization
         run: |
           if git diff --quiet; then
@@ -69,3 +64,8 @@ jobs:
           git commit -m "style(EXP-01): normalize persona foundation"
           git pull --rebase origin module/experience-portals-reporting
           git push origin HEAD:module/experience-portals-reporting
+      - name: Verify focused checkpoint
+        run: |
+          npm ci
+          npm run typecheck
+          npx vitest run tests/experience/persona-shells.test.tsx
