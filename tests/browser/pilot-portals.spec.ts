@@ -57,7 +57,7 @@ test('guardian and student portals remain scoped to their own records', async ({
   await expect(page.getByText('August tuition instalment')).toBeVisible();
 
   await page.goto('/student');
-  await expect(page.getByRole('heading', { name: 'Today' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Today', exact: true }).first()).toBeVisible();
   await expect(page.getByText('Multi-step equations practice')).toBeVisible();
   await expect(page.getByText('Term 2 progress report')).toBeVisible();
   await expect(page.getByText('Nabil Noor')).toHaveCount(0);
