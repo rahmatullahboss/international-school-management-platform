@@ -77,9 +77,9 @@ export interface OperationsCommandInput extends OperationsRequestContext {
 }
 
 export interface OperationsApiDependencies {
-  getSummary(input: OperationsSummaryInput): unknown | Promise<unknown>;
-  getReport(input: OperationsReportInput): unknown | Promise<unknown>;
-  executeCommand(input: OperationsCommandInput): unknown | Promise<unknown>;
+  readonly getSummary: (input: OperationsSummaryInput) => Promise<unknown>;
+  readonly getReport: (input: OperationsReportInput) => Promise<unknown>;
+  readonly executeCommand: (input: OperationsCommandInput) => Promise<unknown>;
 }
 
 export interface OperationsApiEnvelope<T> {
