@@ -105,6 +105,22 @@ describe('EXP-01 admin experience', () => {
     expect(
       selectAdminBulkActions(actions, exceptions, ['care-1'], ['attendance.bulk-remind']),
     ).toEqual([]);
+    expect(
+      selectAdminBulkActions(
+        actions,
+        exceptions,
+        ['attendance-1', 'care-1'],
+        ['attendance.bulk-remind'],
+      ),
+    ).toEqual([]);
+    expect(
+      selectAdminBulkActions(
+        actions,
+        exceptions,
+        ['attendance-1', 'missing-id'],
+        ['attendance.bulk-remind'],
+      ),
+    ).toEqual([]);
   });
 
   it('renders evidence-backed queues, approvals, step-up state and capability-scoped search', () => {

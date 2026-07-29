@@ -162,15 +162,14 @@ export function selectAdminExceptions(
   exceptions: readonly AdminExceptionItem[],
   capabilities: readonly string[],
 ): AdminExceptionItem[] {
-  return exceptions
-    .filter((item) => hasCapability(capabilities, item.capability))
-    .toSorted((left, right) => {
-      const severityDifference = severityOrder[left.severity] - severityOrder[right.severity];
-      if (severityDifference !== 0) return severityDifference;
-      if (left.dueAt === undefined) return 1;
-      if (right.dueAt === undefined) return -1;
-      return left.dueAt.localeCompare(right.dueAt);
-    });
+  const permitted = exceptions.filter((item) => hasCapability(capabilities, item.capability));
+  return [...permitted].sort((left, right) => {
+    const severityDifference = severityOrder[left.severity] - severityOrder[right.severity];
+    if (severityDifference !== 0) return severityDifference;
+    if (left.dueAt === undefined) return 1;
+    if (right.dueAt === undefined) return -1;
+    return left.dueAt.localeCompare(right.dueAt);
+  });
 }
 
 export function selectAdminApprovals(
@@ -195,12 +194,14 @@ export function selectAdminBulkActions(
 ): AdminBulkAction[] {
   if (actions === undefined || selectedIds === undefined || selectedIds.length === 0) return [];
   const selected = exceptions.filter((item) => selectedIds.includes(item.id));
-  const selectedGroups = new Set(selected.map((item) => item.bulkGroup).filter(Boolean));
+  if (selected.length !== selectedIds.length) return [];
+
   return actions.filter(
     (action) =>
-      selectedGroups.size === 1 &&
-      selectedGroups.has(action.group) &&
-      capabilities.includes(action.capability),
+      capabilities.includes(action.capability) &&
+      selected.every(
+        (item) => item.bulkGroup === action.group && item.bulkCapability === action.capability,
+      ),
   );
 }
 
