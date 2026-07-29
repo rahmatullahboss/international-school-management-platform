@@ -537,6 +537,25 @@ Neon checks: `202607290203_CARE-01_behavior` applied on CARE branch; 8/8 behavio
 Security/privacy evidence: teacher may submit scoped CARE-C2 incident but cannot read CARE-C3 follow-up; guardian projection requires verified authority and excludes source narrative; events exclude narrative/action detail; aggregate cohorts below five suppressed
 Production mutation performed: no; Neon `main`, integration branch, ACAD-01 and OPS-01 were not modified
 Exact next milestone: wellbeing
+Checkpoint SHA: `cc26e80`
+Dirty/uncommitted state: clean after checkpoint commit and push
+
+### Checkpoint 4 — wellbeing
+
+Date/time: 2026-07-29T10:10:00+06:00
+Stream: CARE-01
+Milestone completed: wellbeing
+Git branch: `module/student-support`
+Worktree: `.worktrees/care-01-student-support`
+Neon branch: `agent/care-01-student-support` (`br-raspy-smoke-ax0msb57`)
+Starting checkpoint SHA: `cc26e80`
+Changed paths: `packages/modules/wellbeing/**`, `tests/student-support/wellbeing*.test.ts`, `docs/modules/student-support/wellbeing.md`, CARE-01 tracker section
+Domain evidence: pastoral referrals, active legal basis, assigned-counselor cases and sessions, append-only corrections, AAL2 risk and safeguarding escalation, support plans/reviews, independently approved minimized portal publication and safe reports/events implemented
+Focused checks: 7 Vitest tests PASS; CARE TypeScript no-emit typecheck PASS
+Neon checks: `202607290204_CARE-01_wellbeing` applied on CARE branch; 10/10 wellbeing tables FORCE RLS; no-context visible rows `0`; tenant-A visible `1`, tenant-B leak `0`; cross-tenant referral insert denied; counselling-session rewrite denied
+Security/privacy evidence: teachers can submit scoped CARE-C2 referrals but cannot access CARE-C3 counselling; assigned-counselor restriction enforced; high/immediate risk and escalation require AAL2; events exclude narrative/factors/actions; guardian release excludes counselling/risk detail; cohorts below five suppressed
+Production mutation performed: no; Neon `main`, integration branch, ACAD-01 and OPS-01 were not modified
+Exact next milestone: safeguarding-domain
 Dirty/uncommitted state: checkpoint evidence pending commit
 
 ## EXP-01 evidence
