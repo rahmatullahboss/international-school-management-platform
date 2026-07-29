@@ -211,7 +211,7 @@ function formatValue(locale: string, value: string | number): string {
 
 function StepUpLabel(props: {
   assurance: AdminAssurance;
-  requiredAssurance?: AdminAssurance;
+  requiredAssurance?: AdminAssurance | undefined;
 }): ReactElement | null {
   if (assuranceMeets(props.assurance, props.requiredAssurance)) return null;
   return <span className="admin-step-up">Verify identity to continue</span>;
