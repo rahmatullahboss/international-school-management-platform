@@ -26,6 +26,8 @@ manifest_entries() {
   python3 - "$MANIFEST" <<'PY'
 import json, sys
 manifest = json.load(open(sys.argv[1], encoding='utf-8'))
+if manifest.get('gate') != 'GATE-WAVE-2-INTEGRATED':
+    raise SystemExit(f"Unexpected integration manifest gate: {manifest.get('gate')}")
 for item in manifest['migrations']:
     print(f"{item['id']}|{item['stream']}|{item['path']}")
 PY
@@ -66,10 +68,13 @@ verify_manifest() {
   local url="$1" expected actual missing
   expected=$(python3 - "$MANIFEST" <<'PY'
 import json, sys
-print(len(json.load(open(sys.argv[1], encoding='utf-8'))['migrations']))
+manifest = json.load(open(sys.argv[1], encoding='utf-8'))
+if manifest.get('gate') != 'GATE-WAVE-2-INTEGRATED':
+    raise SystemExit(f"Unexpected integration manifest gate: {manifest.get('gate')}")
+print(len(manifest['migrations']))
 PY
-)
-  actual=$(psql "$url" -X --no-psqlrc -Atc "SELECT count(*) FROM platform.schema_migration WHERE stream_id IN ('FND-01','SIS-01','FIN-01','INT-01')")
+  )
+  actual=$(psql "$url" -X --no-psqlrc -Atc "SELECT count(*) FROM platform.schema_migration WHERE stream_id IN ('FND-01','SIS-01','FIN-01','INT-01','ACAD-01','OPS-01','CARE-01')")
   [[ "$actual" == "$expected" ]] || { echo "Migration ledger count mismatch: expected=$expected actual=$actual" >&2; exit 1; }
 
   missing=$(python3 - "$MANIFEST" <<'PY' | psql "$url" -X --no-psqlrc -At
@@ -78,7 +83,7 @@ ids = [m['id'].replace("'", "''") for m in json.load(open(sys.argv[1], encoding=
 values = ','.join("('" + item + "')" for item in ids)
 print(f"WITH expected(id) AS (VALUES {values}) SELECT id FROM expected EXCEPT SELECT migration_id FROM platform.schema_migration ORDER BY id;")
 PY
-)
+  )
   [[ -z "$missing" ]] || { echo "Missing migrations: $missing" >&2; exit 1; }
 
   psql "$url" -X --no-psqlrc -v ON_ERROR_STOP=1 <<'SQL' >/dev/null
@@ -166,11 +171,11 @@ $probe$;
 ROLLBACK;
 SQL
 
-  echo "Wave 1 database verification: PASS ($actual migrations)"
+  echo "Wave 2 database verification: PASS ($actual migrations)"
 }
 
 replay_database() {
-  local replay_db="integ01_replay_${RANDOM}_$$" replay_url
+  local replay_db="integ01_wave2_replay_${RANDOM}_$$" replay_url
   createdb --maintenance-db="$DATABASE_URL" "$replay_db"
   replay_url=$(replace_database_name "$DATABASE_URL" "$replay_db")
   cleanup() {
@@ -182,7 +187,7 @@ replay_database() {
   verify_manifest "$replay_url"
   cleanup
   trap - EXIT
-  echo "Disposable recovery replay: PASS"
+  echo "Disposable Wave 2 recovery replay: PASS"
 }
 
 assert_branch_identity "$DATABASE_URL"
