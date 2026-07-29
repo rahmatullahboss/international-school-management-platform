@@ -1,0 +1,75 @@
+name: Sync UX Continuity Board
+
+on:
+  push:
+    branches:
+      - ux/smooth-operational-experience-v1
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ux-continuity-board
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ux/smooth-operational-experience-v1
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+          cache: npm
+
+      - run: npm ci
+
+      - name: Synchronize UX continuity state
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path('docs/execution/03-agent-board.json')
+          board = json.loads(path.read_text(encoding='utf-8'))
+          board['updated_at'] = '2026-07-30'
+          board['program_status'] = 'pilot_runtime_ux_refined'
+          board['ux_continuity'] = {
+              'id': 'UX-01',
+              'status': 'gate_passed',
+              'gate': 'GATE-UX-CONTINUITY-V1',
+              'branch': 'ux/smooth-operational-experience-v1',
+              'verified_candidate_sha': 'e74a30143eb7882e81ebd7d5b5c373d3132b309e',
+              'root_ci_run': '30490122291',
+              'cloudflare_deploy_run': '30490122337',
+              'routing': 'history-api-client-navigation',
+              'full_screen_in_app_loading': False,
+              'role_bundle_prefetch': ['pointer-intent', 'keyboard-focus', 'suitable-idle'],
+              'task_navigation_grouped': True,
+              'task_finder_enabled': True,
+              'browser_journeys_passed': 20,
+              'synthetic_data_only': True,
+              'production_mutations_enabled': False,
+              'remaining_release_gate': 'reviewed identity, permission-aware Worker APIs and isolated cache, approved staging data, safe mutations, live negative tests, monitoring, backup, rollback, owner-led UAT and explicit production authorization',
+          }
+          path.write_text(json.dumps(board, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
+          PY
+
+      - run: npm run format
+      - run: python3 scripts/validate_execution_artifacts.py
+
+      - name: Commit machine-readable gate state
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/execution/03-agent-board.json
+          git commit -m 'docs(ux): synchronize machine-readable continuity gate'
+          git push origin HEAD:ux/smooth-operational-experience-v1
