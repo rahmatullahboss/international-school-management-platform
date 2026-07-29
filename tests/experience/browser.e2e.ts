@@ -111,7 +111,9 @@ test('mobile RTL layout keeps logical alignment and contains page overflow', asy
   expect(layout.bodyWidth).toBeLessThanOrEqual(layout.viewportWidth);
 });
 
-test('offline and reduced-motion states remain explicit without blocking work', async ({ page }) => {
+test('offline and reduced-motion states remain explicit without blocking work', async ({
+  page,
+}) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.setContent(shellFixture({ offline: true }));
 
