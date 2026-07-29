@@ -5,7 +5,6 @@
   "execution_mode": "whole-module-agent-ownership",
   "microtask_agents_allowed": false,
   "agent_delegation_allowed": false,
-  "program_status": "pilot_ready",
   "parallel_execution": {
     "allowed": true,
     "assignment_unit": "complete_module_stream",
@@ -25,9 +24,7 @@
     "worker_driver": "@neondatabase/serverless",
     "hyperdrive_required": false,
     "branch_per_stream": true,
-    "production_data_in_agent_branches": false,
-    "canonical_manifest_gate": "GATE-WAVE-2-INTEGRATED",
-    "canonical_migration_count": 40
+    "production_data_in_agent_branches": false
   },
   "design_baseline": {
     "skill": "impeccable",
@@ -61,8 +58,7 @@
   "reviewed_bases": {
     "foundation": "55114f55a375d3d79dba7ea21f984b789b5dbca1",
     "wave_1": "8cc8ee1562ade672b14c1c44af935fe7e2307976",
-    "wave_2": "60836a8fe92f64ba581c4bde65005729d1fe14b2",
-    "wave_3_main": "6093109c8c573c3b4495141ad71661d5d5ca22c1"
+    "wave_2": "60836a8fe92f64ba581c4bde65005729d1fe14b2"
   },
   "reviewed_stream_shas": {
     "wave_1": {
@@ -75,12 +71,10 @@
       "OPS-01": "fc749d7c0ece36964da8f923431bb3b7ac925e56",
       "CARE-01": "9304bd6c425eca4ec69db90c1f1cab3f7a409b8d"
     },
-    "wave_3": {
-      "EXP-01": "5c952703c24ee9927fcf2cd480d3ce8d0d139847"
-    },
+    "wave_1_integration_base": "042b75990f9cd819239c584a370687042393f6a7",
     "wave_1_integration": "8cc8ee1562ade672b14c1c44af935fe7e2307976",
-    "wave_2_integration": "60836a8fe92f64ba581c4bde65005729d1fe14b2",
-    "wave_3_integration": "6093109c8c573c3b4495141ad71661d5d5ca22c1"
+    "wave_2_integration_base": "ec921ea26f6980017f848bfd6646a77868bd4cb1",
+    "wave_2_integration": "60836a8fe92f64ba581c4bde65005729d1fe14b2"
   },
   "streams": [
     {
@@ -100,22 +94,28 @@
         "packages/database/**",
         "packages/policy/**",
         "packages/events/**",
+        "packages/localization/**",
         "packages/ui/**",
         "infra/**",
         "scripts/**",
+        ".agents/skills/impeccable/**",
+        ".codex/hooks.json",
+        ".github/**",
         "docs/design/**",
         "PRODUCT.md",
-        "DESIGN.md"
+        "DESIGN.md",
+        ".impeccable/config.json",
+        "root configuration files"
       ],
       "milestones": [
-        "platform-foundation",
+        "repository-bootstrap",
         "neon-data-platform",
-        "tenancy-identity-policy",
-        "audit-events",
-        "localization-documents",
-        "shared-ui",
-        "verification",
-        "release-freeze"
+        "tenancy-routing",
+        "identity-policy",
+        "audit-outbox-idempotency",
+        "localization-documents-workflows",
+        "shared-experience-boundaries",
+        "foundation-verification-freeze"
       ],
       "completion_gate": "GATE-FOUNDATION-READY"
     },
@@ -144,10 +144,10 @@
       "milestones": [
         "module-contract",
         "people-households",
-        "profiles",
+        "student-staff-profiles",
         "admissions",
         "enrollment-lifecycle",
-        "interfaces-reports",
+        "interfaces-imports-reports",
         "verification"
       ],
       "completion_gate": "GATE-SIS-COMPLETE"
@@ -212,7 +212,7 @@
         "migration-studio",
         "oneroster",
         "lti-sso",
-        "verification"
+        "admin-observability-verification"
       ],
       "completion_gate": "GATE-INT-COMPLETE"
     },
@@ -221,6 +221,7 @@
       "name": "Academics Attendance and Records",
       "wave": 2,
       "status": "complete_and_integrated",
+      "reviewed_sha": "1d895afdf51f6d4f6323ada4b93d9ba32b244480",
       "branch": "module/academics-attendance-records",
       "worktree": ".worktrees/acad-01-academics",
       "neon_branch": "agent/acad-01-academics",
@@ -259,6 +260,7 @@
       "name": "School Operations ERP",
       "wave": 2,
       "status": "complete_and_integrated",
+      "reviewed_sha": "fc749d7c0ece36964da8f923431bb3b7ac925e56",
       "branch": "module/school-operations",
       "worktree": ".worktrees/ops-01-operations",
       "neon_branch": "agent/ops-01-operations",
@@ -273,11 +275,12 @@
       "owned_paths": [
         "packages/modules/hr/**",
         "packages/modules/procurement/**",
-        "packages/modules/inventory-assets/**",
+        "packages/modules/inventory/**",
         "packages/modules/library/**",
         "packages/modules/transport/**",
-        "packages/modules/residential-catering/**",
-        "packages/modules/activities-trips/**",
+        "packages/modules/hostel/**",
+        "packages/modules/cafeteria/**",
+        "packages/modules/activities/**",
         "apps/web-admin/src/features/operations/**",
         "tests/operations/**",
         "docs/modules/operations/**"
@@ -290,7 +293,7 @@
         "transport",
         "hostel-cafeteria",
         "activities-trips",
-        "verification"
+        "unified-verification"
       ],
       "completion_gate": "GATE-OPS-COMPLETE"
     },
@@ -299,6 +302,7 @@
       "name": "Health Wellbeing and Safeguarding",
       "wave": 2,
       "status": "complete_and_integrated",
+      "reviewed_sha": "9304bd6c425eca4ec69db90c1f1cab3f7a409b8d",
       "branch": "module/student-support",
       "worktree": ".worktrees/care-01-student-support",
       "neon_branch": "agent/care-01-student-support",
@@ -334,7 +338,9 @@
       "id": "EXP-01",
       "name": "Portals Communications and Reporting Experience",
       "wave": 3,
-      "status": "complete_and_integrated",
+      "status": "ready_for_integration",
+      "candidate_sha": "5c952703c24ee9927fcf2cd480d3ce8d0d139847",
+      "completion_ci_run": 30464998020,
       "branch": "module/experience-portals-reporting",
       "worktree": ".worktrees/exp-01-experience",
       "neon_branch": "agent/exp-01-experience",
@@ -351,6 +357,8 @@
         "apps/web-teacher/**",
         "apps/web-family/**",
         "apps/web-student/**",
+        "packages/modules/communications/**",
+        "packages/modules/reporting/**",
         "packages/modules/documents-experience/**",
         "tests/experience/**",
         "docs/modules/experience/**"
@@ -366,16 +374,13 @@
         "pwa-verification"
       ],
       "completion_gate": "GATE-EXP-COMPLETE",
-      "candidate_sha": "5c952703c24ee9927fcf2cd480d3ce8d0d139847",
-      "handoff_sha": "6c2ec8eec92727abeca2477820a9c7f35b2e7bbd",
-      "integration_merge_sha": "6093109c8c573c3b4495141ad71661d5d5ca22c1",
-      "completion_ci_run": 30464998020
+      "reviewed_base": "60836a8fe92f64ba581c4bde65005729d1fe14b2"
     },
     {
       "id": "INTEG-01",
       "name": "Serial Integration and Release Verification",
       "wave": "continuous-gated",
-      "status": "pilot_ready",
+      "status": "wave_2_integrated",
       "branch": "integration/international-school-platform-v1",
       "worktree": ".worktrees/integ-01-release",
       "neon_branch": "integration/international-school-platform-v1",
@@ -409,9 +414,7 @@
         "safe-cleanup-report"
       ],
       "completion_gate": "GATE-PILOT-READY",
-      "wave_3_merge_sha": "6093109c8c573c3b4495141ad71661d5d5ca22c1",
-      "final_root_ci_run": 30467898523,
-      "final_neon_recovery_run": 30467899681
+      "reviewed_wave_2_sha": "60836a8fe92f64ba581c4bde65005729d1fe14b2"
     }
   ],
   "hard_stops": [
@@ -427,8 +430,6 @@
   "cleanup": {
     "worker_self_cleanup_allowed": false,
     "force_delete_allowed": false,
-    "requires_reviewed_integration_reachability": true,
-    "eligible_resources_must_be_clean_inactive_and_reachable": true,
-    "cleanup_performed": false
+    "requires_reviewed_integration_reachability": true
   }
 }

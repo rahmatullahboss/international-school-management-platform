@@ -26,6 +26,8 @@ manifest_entries() {
   python3 - "$MANIFEST" <<'PY'
 import json, sys
 manifest = json.load(open(sys.argv[1], encoding='utf-8'))
+# EXP-01 adds no database migration stream, so the canonical integrated
+# database manifest intentionally retains the reviewed Wave 2 schema gate.
 if manifest.get('gate') != 'GATE-WAVE-2-INTEGRATED':
     raise SystemExit(f"Unexpected integration manifest gate: {manifest.get('gate')}")
 for item in manifest['migrations']:
@@ -171,11 +173,11 @@ $probe$;
 ROLLBACK;
 SQL
 
-  echo "Wave 2 database verification: PASS ($actual migrations)"
+  echo "Integrated database verification: PASS ($actual migrations)"
 }
 
 replay_database() {
-  local replay_db="integ01_wave2_replay_${RANDOM}_$$" replay_url
+  local replay_db="integ01_final_replay_${RANDOM}_$$" replay_url
   createdb --maintenance-db="$DATABASE_URL" "$replay_db"
   replay_url=$(replace_database_name "$DATABASE_URL" "$replay_db")
   cleanup() {
@@ -187,7 +189,7 @@ replay_database() {
   verify_manifest "$replay_url"
   cleanup
   trap - EXIT
-  echo "Disposable Wave 2 recovery replay: PASS"
+  echo "Disposable final integration recovery replay: PASS"
 }
 
 assert_branch_identity "$DATABASE_URL"

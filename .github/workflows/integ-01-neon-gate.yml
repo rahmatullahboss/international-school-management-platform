@@ -1,9 +1,10 @@
-name: INTEG-01 Wave 2 Neon Gate
+name: INTEG-01 Final Neon Recovery Gate
 
 on:
   push:
     branches:
       - integration/international-school-platform-v1
+      - integration/international-school-platform-finalization
   pull_request:
     branches:
       - main
@@ -15,7 +16,7 @@ on:
   workflow_dispatch:
     inputs:
       operation:
-        description: Integration Neon gate operation
+        description: Final integration Neon gate operation
         required: true
         default: full
         type: choice
@@ -29,11 +30,11 @@ permissions:
   contents: read
 
 concurrency:
-  group: integ-01-wave-2-neon-gate
+  group: integ-01-final-neon-gate
   cancel-in-progress: false
 
 jobs:
-  wave-2-neon-gate:
+  final-neon-gate:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
@@ -82,14 +83,14 @@ jobs:
           [[ "$project" == "$NEON_PROJECT_ID" ]]
           [[ "$branch" == "$NEON_BRANCH_ID" ]]
 
-      - name: Apply canonical Wave 2 migrations
+      - name: Apply canonical integrated migrations
         if: github.event_name == 'push' || github.event_name == 'pull_request' || inputs.operation == 'apply' || inputs.operation == 'full'
         run: ./scripts/integ-01-neon-gate.sh apply
 
-      - name: Verify canonical Wave 2 database
+      - name: Verify canonical integrated database
         if: github.event_name == 'workflow_dispatch' && inputs.operation == 'verify'
         run: ./scripts/integ-01-neon-gate.sh verify
 
-      - name: Replay canonical Wave 2 database
+      - name: Replay canonical integrated database
         if: github.event_name == 'push' || github.event_name == 'pull_request' || inputs.operation == 'replay-database' || inputs.operation == 'full'
         run: ./scripts/integ-01-neon-gate.sh replay-database
