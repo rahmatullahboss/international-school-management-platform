@@ -94,6 +94,17 @@ Make the composed school platform feel like one continuous application: users ke
 7. machine board, tracker, design research, ADR and release evidence are synchronized;
 8. exact reviewed head is merged with expected-head protection.
 
+## Verified implementation evidence
+
+- Candidate: `e74a30143eb7882e81ebd7d5b5c373d3132b309e`
+- Root CI: `30490122291` — all 21 repository gates passed.
+- Cloudflare staging deploy/smoke: `30490122337` — API Worker, web Worker, role chooser, four role routes, PWA manifest, offline page and API health passed.
+- Repository tests: 504 passed; live Neon verification passed separately.
+- Browser journeys: 20 passed, including preserved document state, browser back navigation and task search.
+- Build budgets: 207,287-byte initial JavaScript, 13,514-byte initial CSS, 292,668-byte total route JavaScript and 71,650-byte total route CSS; all limits passed.
+
+The gate passes for the verified candidate. Final documentation reconciliation and expected-head merge evidence are recorded on pull request #43.
+
 ## Production boundary
 
 Passing this gate improves the synthetic pilot experience only. Production promotion still requires reviewed identity and tenant context, permission-aware Worker APIs, cache-isolation tests, approved staging seed/reset tooling, safe mutation acceptance, monitoring, backup and rollback rehearsal, owner-led UAT and explicit production authorization.
