@@ -57,7 +57,7 @@ new_payload = """    return EncryptedSyncPayload._(
 """
 if old_payload in source:
     source = source.replace(old_payload, new_payload, 1)
-elif new_payload not in source:
+elif 'final Uint8List _ciphertext;' not in source:
     raise SystemExit('Unexpected encrypted payload declaration shape')
 
 old_retry = """final class RetrySchedule {
@@ -96,7 +96,7 @@ new_retry = """final class RetrySchedule {
 """
 if old_retry in source:
     source = source.replace(old_retry, new_retry, 1)
-elif new_retry not in source:
+elif 'factory RetrySchedule({' not in source:
     raise SystemExit('Unexpected retry schedule declaration shape')
 source = source.replace('const RetrySchedule(', 'RetrySchedule(')
 library_path.write_text(source, encoding='utf-8')
@@ -118,7 +118,7 @@ new_immutability = """    expect(payload.ciphertext, <int>[1, 2, 3]);
 """
 if old_immutability in tests:
     tests = tests.replace(old_immutability, new_immutability, 1)
-elif new_immutability not in tests:
+elif 'final exposed = payload.ciphertext;' not in tests:
     raise SystemExit('Unexpected ciphertext immutability test shape')
 test_path.write_text(tests, encoding='utf-8')
 print('Durable sync compatibility fixes applied.')
