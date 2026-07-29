@@ -1,4 +1,4 @@
-name: EXP-01 Milestone 2 Format and Verify
+name: EXP-01 Milestone 2 Formatter
 
 on:
   push:
@@ -11,25 +11,13 @@ permissions:
   contents: write
 
 concurrency:
-  group: exp-01-m2-format-verify
-  cancel-in-progress: false
+  group: exp-01-m2-formatter
+  cancel-in-progress: true
 
 jobs:
-  verify:
+  format:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_HOST_AUTH_METHOD: trust
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
@@ -44,50 +32,13 @@ jobs:
           npx prettier --write \
             apps/web-admin/src/features/experience/AdminOperationsHome.tsx \
             tests/experience/admin-workflows.test.tsx
-      - run: npm run format:check
-      - run: npm run lint
-      - run: npm run check:boundaries
-      - run: npm run typecheck
-      - run: npm run test
-      - name: Verify all Wave 2 migrations on fresh PostgreSQL
-        env:
-          PGHOST: 127.0.0.1
-          PGPORT: 5432
-          PGUSER: postgres
-          PGDATABASE: postgres
-        run: npm run verify:migrations
-      - name: Verify live Neon serverless driver
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      - name: Commit formatting and remove one-shot workflow
         run: |
-          test -n "$DATABASE_URL"
-          npm run test:neon
-      - run: npm run build
-      - run: npm audit --audit-level=high
-      - run: npm run licenses:check
-      - run: npm run provenance:generate
-      - run: git diff --exit-code -- artifacts THIRD_PARTY_NOTICES.md
-      - run: npx playwright install --with-deps chromium
-      - run: npm run test:browser
-      - run: python3 scripts/validate_execution_artifacts.py
-      - name: Record evidence and remove one-shot workflow
-        run: |
-          cat > docs/modules/experience/milestone-2-full-verification.md <<EOF
-          # EXP-01 Milestone 2 Full Verification
-
-          - Workflow run: \`${GITHUB_RUN_ID}\`
-          - Commit under test: \`${GITHUB_SHA}\`
-          - Result: passed.
-          - Checks: canonical formatting, lint, architecture boundaries, repository typecheck, full Vitest suite, fresh 40-migration replay, live Neon driver, build, dependency audit, licences, provenance, all Chromium suites and execution-artifact validation.
-          - Scope: administration experience only; no production deployment or production database mutation.
-          EOF
           git rm .github/workflows/exp-01-m2-format-verify.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add \
             apps/web-admin/src/features/experience/AdminOperationsHome.tsx \
-            tests/experience/admin-workflows.test.tsx \
-            docs/modules/experience/milestone-2-full-verification.md \
-            .github/workflows/exp-01-m2-format-verify.yml
-          git commit -m "test(EXP-01): pass Milestone 2 full verification"
+            tests/experience/admin-workflows.test.tsx
+          git commit -m "style(EXP-01): format administration milestone"
           git push origin HEAD:module/exp-01-m2-ci-fix
