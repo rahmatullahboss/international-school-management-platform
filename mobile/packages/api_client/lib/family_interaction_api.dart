@@ -432,14 +432,6 @@ final class FamilyInteractionApi {
       );
 }
 
-Map<String, Object?> _requiredObject(Map<String, Object?> json, String key) {
-  final value = json[key];
-  if (value is! Map<String, Object?>) {
-    throw FormatException('FAMILY_OBJECT_REQUIRED:$key');
-  }
-  return value;
-}
-
 List<Map<String, Object?>> _objectList(Map<String, Object?> json, String key) {
   final value = json[key];
   if (value is! List<Object?>) {
