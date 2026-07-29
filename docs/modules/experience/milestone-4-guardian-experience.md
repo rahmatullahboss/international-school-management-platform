@@ -35,6 +35,6 @@ This milestone delivers the guardian household and multi-child portal for linked
 - Secure conversations filtered by relationship and capability.
 - Loading, recoverable error, no-linked-child and unlinked-child masked states.
 
-## Verification intent
+## Verification
 
-Focused tests must prove relationship filtering, active-child resolution, all-section child switching, published-only grades, fee/form/document/message attribution, restricted-message masking and unlinked-child non-disclosure. Full format, lint, architecture boundaries, typecheck, tests, fresh migration replay, Neon, build, browser and execution-artifact gates remain required before Milestone 4 is marked complete.
+Canonical formatter checkpoint `d2ae2fd7ea19283add735cbd8929142abe1d3b1e` restored the standard repository CI and formatted the guardian workspace and focused tests. The clean-head full repository, migration, Neon, build, browser and artifact gate remains required before Milestone 4 is marked complete.
