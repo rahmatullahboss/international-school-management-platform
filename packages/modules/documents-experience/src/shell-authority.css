@@ -1,0 +1,163 @@
+@import './shell.css';
+
+/*
+ * EXP-01 authority layer.
+ * The reviewed persona foundation remains intact; these scoped overrides bind it
+ * to the root DESIGN.md tokens and complete responsive/reduced-motion behavior.
+ */
+.experience-shell {
+  --experience-ink: #12263a;
+  --experience-ink-soft: #4c6275;
+  --experience-paper: #f3f6f8;
+  --experience-sheet: #ffffff;
+  --experience-line: #cbd6de;
+  --experience-action: #006d77;
+  --experience-action-dark: #004f57;
+  --experience-attention: #714900;
+  --experience-danger: #8a1c17;
+  --experience-focus: #0b63ce;
+  --experience-radius: 16px;
+}
+
+.experience-rail {
+  background: #e7f2f8;
+}
+
+.experience-nav a:hover {
+  background: var(--experience-paper);
+}
+
+.experience-nav__badge {
+  background: #e5f4ec;
+  color: #145c36;
+}
+
+.experience-session span,
+.experience-session time {
+  background: var(--experience-paper);
+  color: var(--experience-ink-soft);
+}
+
+.experience-session span[data-assurance='aal2'] {
+  background: #e5f4ec;
+  color: #145c36;
+}
+
+.experience-notice {
+  background: #e7f2f8;
+  color: #16445f;
+}
+
+.experience-notice--warning {
+  background: #fff1cf;
+  color: #714900;
+}
+
+.experience-error,
+.experience-loading {
+  border: 1px solid var(--experience-line);
+  box-shadow: none;
+}
+
+.experience-loading__line {
+  background: #e7f2f8;
+}
+
+@media (max-width: 58rem) {
+  .experience-shell {
+    display: block;
+  }
+
+  .experience-rail {
+    position: static;
+    min-height: auto;
+    padding-block-end: 0.75rem;
+    border-inline-end: 0;
+    border-block-end: 1px solid var(--experience-line);
+  }
+
+  .experience-nav ul {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: inline mandatory;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: thin;
+  }
+
+  .experience-nav li {
+    flex: 0 0 min(18rem, 82vw);
+    scroll-snap-align: start;
+  }
+
+  .experience-rail__footer {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+  }
+
+  .experience-stage {
+    padding: clamp(1rem, 4vw, 1.75rem);
+  }
+
+  .experience-masthead {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .experience-session {
+    justify-content: flex-start;
+    max-inline-size: none;
+  }
+}
+
+@media (max-width: 36rem) {
+  .experience-rail {
+    gap: 1rem;
+    padding-inline: 0.75rem;
+  }
+
+  .experience-identity strong,
+  .experience-identity span,
+  .experience-nav strong,
+  .experience-nav small {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  .experience-rail__footer {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .experience-stage {
+    padding-inline: 1rem;
+  }
+
+  .experience-masthead h1 {
+    max-inline-size: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .experience-connectivity__signal,
+  .experience-loading__line {
+    animation: none !important;
+  }
+
+  .experience-nav ul {
+    scroll-behavior: auto;
+  }
+}
+
+@media (forced-colors: active) {
+  .experience-connectivity__signal,
+  .experience-identity__mark,
+  .experience-nav a[aria-current='page'] {
+    forced-color-adjust: auto;
+  }
+
+  .experience-error,
+  .experience-loading,
+  .experience-notice {
+    border: 1px solid CanvasText;
+  }
+}
