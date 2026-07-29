@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   verify-deploy-smoke:
-    if: github.event_name == 'workflow_dispatch' || github.head_ref == 'deploy/cloudflare-staging-pilot'
+    if: github.event_name == 'workflow_dispatch' || github.head_ref == 'deploy/cloudflare-staging-pilot' || github.head_ref == 'pilot/runtime-portal-composition'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     environment: cloudflare-staging
@@ -94,7 +94,11 @@ jobs:
           }
 
           fetch_with_retry "$API_URL/health" api-health.json "API health endpoint"
-          fetch_with_retry "$WEB_URL/" web-index.html "Web homepage"
+          fetch_with_retry "$WEB_URL/" web-index.html "Pilot role chooser"
+          fetch_with_retry "$WEB_URL/admin" web-admin.html "Admin portal"
+          fetch_with_retry "$WEB_URL/teacher" web-teacher.html "Teacher portal"
+          fetch_with_retry "$WEB_URL/family" web-family.html "Guardian portal"
+          fetch_with_retry "$WEB_URL/student" web-student.html "Student portal"
           fetch_with_retry "$WEB_URL/manifest.webmanifest" web-manifest.json "PWA manifest"
           fetch_with_retry "$WEB_URL/offline.html" web-offline.html "Offline page"
 
@@ -103,15 +107,17 @@ jobs:
           from pathlib import Path
 
           payload = json.loads(Path('api-health.json').read_text(encoding='utf-8'))
-          index_text = Path('web-index.html').read_text(encoding='utf-8')
-          manifest_text = Path('web-manifest.json').read_text(encoding='utf-8')
-          offline_text = Path('web-offline.html').read_text(encoding='utf-8')
-
           assert payload.get('status') == 'ok', payload
           assert payload.get('environment') == 'staging', payload
+
+          index_text = Path('web-index.html').read_text(encoding='utf-8')
           assert 'International School Platform' in index_text, index_text[:500]
-          assert 'School Platform' in manifest_text, manifest_text[:500]
-          assert 'You are offline' in offline_text, offline_text[:500]
+          assert 'School Platform' in Path('web-manifest.json').read_text(encoding='utf-8')
+          assert 'You are offline' in Path('web-offline.html').read_text(encoding='utf-8')
+
+          for file_name in ['web-admin.html', 'web-teacher.html', 'web-family.html', 'web-student.html']:
+              text = Path(file_name).read_text(encoding='utf-8')
+              assert 'International School Platform' in text, (file_name, text[:500])
           PY
 
       - name: Publish staging URLs
@@ -120,7 +126,11 @@ jobs:
           {
             echo '## Cloudflare staging deployment'
             echo
-            echo "- Web: $WEB_URL"
+            echo "- Role chooser: $WEB_URL/"
+            echo "- Admin: $WEB_URL/admin"
+            echo "- Teacher: $WEB_URL/teacher"
+            echo "- Guardian: $WEB_URL/family"
+            echo "- Student: $WEB_URL/student"
             echo "- API health: $API_URL/health"
-            echo '- Scope: foundation/PWA shell and API health; complete role-portal runtime composition remains pending.'
+            echo '- Scope: composed role portals with synthetic pilot data; production mutations remain disabled.'
           } >> "$GITHUB_STEP_SUMMARY"
