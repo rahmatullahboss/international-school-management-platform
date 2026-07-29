@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 
 import type { PilotModulePage } from './pilot-data';
+import './pilot-ux.css';
 
 export type PilotRole = 'admin' | 'teacher' | 'guardian' | 'student';
 export type PilotConnectivity = 'online' | 'degraded' | 'offline';
@@ -12,40 +13,30 @@ export const roleRoots: Readonly<Record<PilotRole, string>> = {
   student: '/student',
 };
 
-export const roleLinks = [
-  { label: 'Admin', href: '/admin' },
-  { label: 'Teacher', href: '/teacher' },
-  { label: 'Guardian', href: '/family' },
-  { label: 'Student', href: '/student' },
-  { label: 'Role chooser', href: '/' },
-] as const;
-
 export const roleDescriptions: Readonly<
   Record<PilotRole, { readonly title: string; readonly detail: string }>
 > = {
   admin: {
     title: 'School operations overview',
-    detail: 'Exceptions, approvals and governed cross-module readiness.',
+    detail: 'See urgent work, approvals and school-wide exceptions in one place.',
   },
   teacher: {
     title: 'Today’s teaching workspace',
-    detail: 'Assigned classes, attendance, gradebook work and permitted student context.',
+    detail: 'Move through classes, attendance, grading and student follow-up.',
   },
   guardian: {
     title: 'Family home',
-    detail: 'Applications, children, attendance, results, fees, forms and messages.',
+    detail: 'Manage children, attendance, results, fees, forms and messages.',
   },
   student: {
     title: 'Today',
-    detail: 'Lessons, published progress, resources, requests and secure messages.',
+    detail: 'See lessons, published progress, resources, requests and messages.',
   },
 };
 
 export function shellUtilityActions(activeRole: PilotRole) {
-  const activeRoot = roleRoots[activeRole];
-  return roleLinks
-    .filter((link) => link.href === '/' || link.href !== activeRoot)
-    .map((link) => ({ label: link.label, href: link.href }));
+  void activeRole;
+  return [] as const;
 }
 
 export function resolvePageHeading(
@@ -74,6 +65,22 @@ export function PilotModuleSurface(props: { readonly page: PilotModulePage }): R
         <span>{props.page.description}</span>
       </header>
 
+      <nav className="pilot-actions" aria-label={`${props.page.title} common actions`}>
+        <div>
+          <span>Common actions</span>
+          <strong>What would you like to do?</strong>
+        </div>
+        {props.page.actions.map((action, index) => (
+          <a
+            data-emphasis={index === 0 ? 'primary' : 'secondary'}
+            href={action.href}
+            key={action.label}
+          >
+            {action.label}
+          </a>
+        ))}
+      </nav>
+
       <section className="pilot-metrics" aria-label={`${props.page.title} summary`}>
         {props.page.metrics.map((metric) => (
           <article key={metric.label}>
@@ -86,8 +93,9 @@ export function PilotModuleSurface(props: { readonly page: PilotModulePage }): R
 
       <section className="pilot-work-queue" aria-labelledby="pilot-queue-title">
         <div>
-          <p>Current work</p>
-          <h3 id="pilot-queue-title">Priority queue</h3>
+          <p>Needs attention</p>
+          <h3 id="pilot-queue-title">Priority work</h3>
+          <span>Start with these items, ordered by urgency.</span>
         </div>
         <ol>
           {props.page.queue.map((item) => (
@@ -97,25 +105,19 @@ export function PilotModuleSurface(props: { readonly page: PilotModulePage }): R
                 <span>{item.detail}</span>
               </div>
               <span className="pilot-status">{item.status}</span>
-              <a href={item.href}>Open</a>
+              <a href={item.href} aria-label={`Review ${item.title}`}>
+                Review
+              </a>
             </li>
           ))}
         </ol>
       </section>
 
-      <nav className="pilot-actions" aria-label={`${props.page.title} actions`}>
-        {props.page.actions.map((action) => (
-          <a href={action.href} key={action.label}>
-            {action.label}
-          </a>
-        ))}
-      </nav>
-
       <aside className="pilot-demo-note">
-        <strong>Pilot data</strong>
+        <strong>Pilot information</strong>
         <span>
-          This route is composed from the integrated module contracts with synthetic staging
-          records. Mutating production actions remain disabled.
+          This workspace uses synthetic staging records. Live payments, publication, restricted-data
+          changes and final approvals remain disabled.
         </span>
       </aside>
     </div>
@@ -125,18 +127,32 @@ export function PilotModuleSurface(props: { readonly page: PilotModulePage }): R
 export function UnknownRoute(props: { readonly homeHref: string }): ReactElement {
   return (
     <section className="pilot-unknown" role="alert">
-      <p>Route not available in this pilot</p>
-      <h2>The requested workspace is not composed yet.</h2>
-      <a href={props.homeHref}>Return to role home</a>
+      <p>Page not available in this pilot</p>
+      <h2>This task has not been connected to the pilot workspace yet.</h2>
+      <a href={props.homeHref}>Return to workspace home</a>
     </section>
   );
 }
 
-export function PortalLoading(): ReactElement {
+export function PortalLoading(props: { readonly role: PilotRole }): ReactElement {
   return (
-    <main className="pilot-loading" role="status" aria-live="polite">
-      <p>Loading role workspace</p>
-      <h1>Preparing permitted modules…</h1>
-    </main>
+    <div className="pilot-boot-shell" data-role={props.role} role="status" aria-live="polite">
+      <aside aria-hidden="true">
+        <div className="pilot-boot-shell__brand" />
+        {Array.from({ length: 6 }, (_, index) => (
+          <span key={index} />
+        ))}
+      </aside>
+      <main>
+        <p>Opening {roleDescriptions[props.role].title.toLowerCase()}</p>
+        <h1>Your workspace is almost ready</h1>
+        <div className="pilot-boot-shell__heading" aria-hidden="true" />
+        <div className="pilot-boot-shell__content" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </div>
+      </main>
+    </div>
   );
 }

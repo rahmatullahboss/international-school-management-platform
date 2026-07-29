@@ -1,0 +1,330 @@
+.pilot-route-progress {
+  position: fixed;
+  z-index: 100;
+  inset-block-start: 0;
+  inset-inline: 0;
+  block-size: 0.2rem;
+  pointer-events: none;
+}
+
+.pilot-route-progress > span {
+  display: block;
+  inline-size: 38%;
+  block-size: 100%;
+  background: #0b63ce;
+  box-shadow: 0 0 0.8rem rgb(11 99 206 / 35%);
+  animation: pilot-route-progress 850ms ease-in-out infinite alternate;
+}
+
+.pilot-route-progress > p {
+  position: fixed;
+  inset-block-start: 0.7rem;
+  inset-inline-end: 0.8rem;
+  margin: 0;
+  padding: 0.42rem 0.65rem;
+  border: 1px solid #c6d7e3;
+  border-radius: 0.5rem;
+  background: rgb(255 255 255 / 94%);
+  color: #16445f;
+  box-shadow: 0 0.45rem 1.2rem rgb(18 38 58 / 12%);
+  font-size: 0.75rem;
+  font-weight: 750;
+}
+
+@keyframes pilot-route-progress {
+  from {
+    transform: translateX(-25%);
+  }
+  to {
+    transform: translateX(185%);
+  }
+}
+
+.pilot-boot-shell {
+  min-block-size: 100dvh;
+  display: grid;
+  grid-template-columns: minmax(15rem, 18.5rem) minmax(0, 1fr);
+  background: #f4f7f8;
+  color: #132238;
+}
+
+.pilot-boot-shell > aside {
+  display: grid;
+  align-content: start;
+  gap: 0.55rem;
+  padding: 1.3rem 1rem;
+  border-inline-end: 1px solid #cbd6de;
+  background: #f0f4f2;
+}
+
+.pilot-boot-shell__brand {
+  inline-size: 72%;
+  block-size: 2.6rem;
+  margin-block-end: 1.35rem;
+  border-radius: 0.65rem;
+  background: #d8e2de;
+}
+
+.pilot-boot-shell > aside > span {
+  inline-size: 100%;
+  block-size: 3rem;
+  border-radius: 0.65rem;
+  background: #e1e8e4;
+}
+
+.pilot-boot-shell > main {
+  padding: clamp(1.5rem, 4vw, 3.5rem);
+}
+
+.pilot-boot-shell > main > p {
+  margin: 0 0 0.45rem;
+  color: #006d77;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pilot-boot-shell > main > h1 {
+  max-inline-size: 20ch;
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 3.7rem);
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}
+
+.pilot-boot-shell__heading {
+  inline-size: min(38rem, 76%);
+  block-size: 1rem;
+  margin-block-start: 1.1rem;
+  border-radius: 0.35rem;
+  background: #dce5e9;
+}
+
+.pilot-boot-shell__content {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-block-start: 3rem;
+}
+
+.pilot-boot-shell__content > span {
+  min-block-size: 9rem;
+  border: 1px solid #d3dde3;
+  border-radius: 0.8rem;
+  background: white;
+}
+
+.pilot-boot-shell__brand,
+.pilot-boot-shell > aside > span,
+.pilot-boot-shell__heading,
+.pilot-boot-shell__content > span {
+  position: relative;
+  overflow: hidden;
+}
+
+.pilot-boot-shell__brand::after,
+.pilot-boot-shell > aside > span::after,
+.pilot-boot-shell__heading::after,
+.pilot-boot-shell__content > span::after {
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 55%), transparent);
+  animation: pilot-skeleton 1.5s ease-in-out infinite;
+  content: '';
+}
+
+@keyframes pilot-skeleton {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.pilot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  align-items: end;
+  padding: 1rem;
+  border: 1px solid #cbd6de;
+  border-radius: 0.8rem;
+  background: white;
+}
+
+.pilot-actions > div {
+  min-inline-size: min(100%, 17rem);
+  display: grid;
+  gap: 0.18rem;
+  margin-inline-end: auto;
+}
+
+.pilot-actions > div > span {
+  color: #4c6275;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.pilot-actions > div > strong {
+  color: #12263a;
+  font-size: 1rem;
+}
+
+.pilot-actions > a {
+  display: inline-flex;
+  min-block-size: 2.65rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0.58rem 0.85rem;
+  border: 1px solid #9fb9b3;
+  border-radius: 0.55rem;
+  background: white;
+  color: #004f57;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.pilot-actions > a[data-emphasis='primary'] {
+  border-color: #006d77;
+  background: #006d77;
+  color: white;
+}
+
+.pilot-actions > a:hover {
+  border-color: #006d77;
+  background: #e7f3f1;
+}
+
+.pilot-actions > a[data-emphasis='primary']:hover {
+  background: #004f57;
+}
+
+.pilot-work-queue > div > span {
+  display: block;
+  margin-block-start: 0.45rem;
+  color: #53677a;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.pilot-role-card__number {
+  display: inline-grid;
+  inline-size: 2rem;
+  block-size: 2rem;
+  place-items: center;
+  border: 1px solid #cdd9df;
+  border-radius: 0.45rem;
+  background: #f6f9fa;
+}
+
+.pilot-entry__masthead h1,
+.pilot-section-heading h2,
+.pilot-role-card h3,
+.pilot-module__heading h2,
+.pilot-work-queue h3 {
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+}
+
+.pilot-entry__masthead h1 {
+  max-inline-size: 17ch;
+  font-weight: 750;
+  line-height: 1;
+}
+
+.pilot-section-heading h2,
+.pilot-module__heading h2 {
+  font-weight: 720;
+}
+
+.pilot-role-card h3,
+.pilot-work-queue h3 {
+  font-weight: 720;
+}
+
+.pilot-role-card {
+  min-block-size: 17rem;
+}
+
+.pilot-role-card strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.pilot-role-card strong::after {
+  content: '→';
+}
+
+@media (max-width: 58rem) {
+  .pilot-boot-shell {
+    display: block;
+  }
+
+  .pilot-boot-shell > aside {
+    grid-template-columns: repeat(4, minmax(8rem, 1fr));
+    overflow-x: auto;
+    border-inline-end: 0;
+    border-block-end: 1px solid #cbd6de;
+  }
+
+  .pilot-boot-shell__brand {
+    grid-column: 1 / -1;
+    inline-size: 13rem;
+    margin-block-end: 0.4rem;
+  }
+
+  .pilot-boot-shell > aside > span:nth-of-type(n + 5) {
+    display: none;
+  }
+}
+
+@media (max-width: 42rem) {
+  .pilot-route-progress > p {
+    inset-inline: 0.7rem auto;
+  }
+
+  .pilot-boot-shell__content {
+    grid-template-columns: 1fr;
+  }
+
+  .pilot-actions {
+    align-items: stretch;
+  }
+
+  .pilot-actions > div {
+    inline-size: 100%;
+    margin-block-end: 0.25rem;
+  }
+
+  .pilot-actions > a {
+    flex: 1 1 10rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pilot-route-progress > span,
+  .pilot-boot-shell__brand::after,
+  .pilot-boot-shell > aside > span::after,
+  .pilot-boot-shell__heading::after,
+  .pilot-boot-shell__content > span::after {
+    animation: none;
+  }
+
+  .pilot-role-card {
+    transition: none;
+  }
+
+  .pilot-role-card:hover,
+  .pilot-role-card:focus-visible {
+    transform: none;
+  }
+}

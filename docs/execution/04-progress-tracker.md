@@ -2,9 +2,9 @@
 
 **Program:** `international-school-platform-v1`  
 **Updated:** 2026-07-30  
-**Current repository state:** All domain module streams are complete and integrated. `GATE-PILOT-READY`, `GATE-CLOUDFLARE-STAGING` and `GATE-PILOT-RUNTIME-COMPOSED` have passed. The composed admin, teacher, guardian and student pilot is deployed on non-production Cloudflare Workers with synthetic records.
+**Current repository state:** All domain module streams are complete and integrated. `GATE-PILOT-READY`, `GATE-CLOUDFLARE-STAGING`, `GATE-PILOT-RUNTIME-COMPOSED` and `GATE-UX-CONTINUITY-V1` have passed. The non-production Cloudflare pilot now provides continuous client navigation, task-led role menus and synthetic records without enabling production mutations.
 
-Historical checkpoint-by-checkpoint evidence through Wave 3 is preserved in [the archived tracker](archive/04-progress-tracker-through-wave3.md). PILOT-01 scope, evidence and remaining production boundary are recorded in [09-pilot-runtime-composition.md](09-pilot-runtime-composition.md).
+Historical checkpoint-by-checkpoint evidence through Wave 3 is preserved in [the archived tracker](archive/04-progress-tracker-through-wave3.md). PILOT-01 scope is recorded in [09-pilot-runtime-composition.md](09-pilot-runtime-composition.md), while the UX continuity contract and evidence are recorded in [10-ux-continuity-v1.md](10-ux-continuity-v1.md) and [11-ux-continuity-release-evidence.md](11-ux-continuity-release-evidence.md).
 
 ## Gate status
 
@@ -21,6 +21,7 @@ Historical checkpoint-by-checkpoint evidence through Wave 3 is preserved in [the
 | `GATE-PILOT-READY` | passed | Final root CI `30467898523` and final Neon recovery run `30467899681` passed on PR #39 candidate ancestry |
 | `GATE-CLOUDFLARE-STAGING` | passed | Main merge `41639fab433491df0395d02217a70c6eb2ddb775`; root CI `30479347127`; deploy/smoke `30479347117` |
 | `GATE-PILOT-RUNTIME-COMPOSED` | passed | Candidate `a50ad782489137f5afd806e30c7a3e249b5074ec`; root CI `30484622352`; Cloudflare deploy/smoke `30484622364`; all role routes live |
+| `GATE-UX-CONTINUITY-V1` | passed | Candidate `e74a30143eb7882e81ebd7d5b5c373d3132b309e`; root CI `30490122291`; Cloudflare deploy/smoke `30490122337`; continuous navigation and task discovery verified |
 
 ## Stream tracker
 
@@ -36,6 +37,7 @@ Historical checkpoint-by-checkpoint evidence through Wave 3 is preserved in [the
 | `EXP-01` | 3 | complete and integrated | implementation `5c952703c24ee9927fcf2cd480d3ce8d0d139847`; main merge `6093109c8c573c3b4495141ad71661d5d5ca22c1` |
 | `INTEG-01` | gated serial | pilot ready | final system and recovery evidence in `docs/execution/08-final-system-release-evidence.md` |
 | `PILOT-01` | post-integration | runtime composed and staged | base `41639fab433491df0395d02217a70c6eb2ddb775`; candidate `a50ad782489137f5afd806e30c7a3e249b5074ec`; CI `30484622352`; deploy `30484622364` |
+| `UX-01` | post-integration | continuity gate passed and staged | candidate `e74a30143eb7882e81ebd7d5b5c373d3132b309e`; CI `30490122291`; deploy `30490122337` |
 
 ## PILOT-01 gate closure
 
@@ -47,17 +49,42 @@ Completed and verified:
 - deep-link route surfaces covering all integrated module families;
 - synthetic, non-sensitive read models and explicit production-mutation boundary;
 - capability-scoped navigation and role-level lazy loading;
-- new browser journeys for role selection, representative module routes and role scoping;
+- browser journeys for role selection, representative module routes and role scoping;
 - Cloudflare live smoke tests for role chooser, admin, teacher, guardian, student, manifest, offline page and API health;
 - deployment, execution, progress and release evidence documentation.
 
-Verified performance evidence:
+Verified PILOT-01 performance evidence:
 
 - initial JavaScript: 203,338 bytes against a 250,000-byte limit;
 - initial CSS: 8,475 bytes against a 50,000-byte limit;
 - total route JavaScript: 283,316 bytes against a 350,000-byte limit;
 - total route CSS: 60,355 bytes against an 85,000-byte limit;
 - no budget violation.
+
+## UX-01 continuity gate closure
+
+Completed and verified on candidate `e74a30143eb7882e81ebd7d5b5c373d3132b309e`:
+
+- same-origin application links navigate through browser history without reloading the document;
+- browser back and forward retain the application instance and current role shell;
+- role bundles preload on pointer intent, keyboard focus and suitable idle time;
+- the current screen remains available while a destination bundle prepares;
+- in-app transitions use a non-blocking progress status rather than a separate loading screen;
+- initial direct deep links use a skeleton in the final shell layout;
+- role navigation is grouped by familiar school tasks and long menus include task search;
+- active location, identity, capability filtering, connectivity and native link behaviour remain explicit;
+- reduced-motion, responsive, RTL, keyboard and role-isolation journeys pass;
+- staging deployment concurrency is isolated by branch so unrelated pull requests cannot cancel the verified run.
+
+Verification evidence:
+
+- repository tests: 504 passed, with one environment-dependent direct-Neon test skipped in the ordinary suite and passed separately against live Neon;
+- browser journeys: 20 passed across platform/UX, SIS, finance, integrations, student support and EXP suites;
+- initial JavaScript: 207,287 bytes against a 250,000-byte limit;
+- initial CSS: 13,514 bytes against a 50,000-byte limit;
+- total route JavaScript: 292,668 bytes against a 350,000-byte limit;
+- total route CSS: 71,650 bytes against an 85,000-byte limit;
+- no build-budget violation.
 
 ## Live staging routes
 
@@ -77,15 +104,16 @@ Verified performance evidence:
 - Wave 3 main merge: `6093109c8c573c3b4495141ad71661d5d5ca22c1`
 - Cloudflare staging merge: `41639fab433491df0395d02217a70c6eb2ddb775`
 - PILOT-01 verified candidate: `a50ad782489137f5afd806e30c7a3e249b5074ec`
+- UX-01 verified candidate: `e74a30143eb7882e81ebd7d5b5c373d3132b309e`
 
 ## Final integrated system verification
 
 ### Application and browser evidence
 
-- Repository tests: 504 passed; PILOT-01 added browser acceptance coverage without changing domain-test outcomes.
-- Browser journeys: 19 passed across platform/pilot, SIS, finance, integrations, student support and EXP suites.
+- Repository tests: 504 passed; UX-01 changed navigation and copy contracts without changing domain-test outcomes.
+- Browser journeys: 20 passed across platform/UX, SIS, finance, integrations, student support and EXP suites.
 - Format, lint, architecture boundaries, typecheck, Worker build, Vite build, dependency audit, licence policy, provenance drift and execution-artifact validation passed.
-- Role bundles are lazy-loaded, keeping the initial role-chooser payload within the original production budget.
+- Role bundles remain lazy-loaded and intent-prefetched, keeping the initial payload within the approved production budget.
 
 ### Database and recovery evidence
 
@@ -101,7 +129,7 @@ Verified performance evidence:
 
 ## Remaining production milestones
 
-- replace synthetic read models with permission-aware Worker APIs;
+- replace synthetic read models with permission-aware Worker APIs and a tenant-safe stale-while-revalidate cache;
 - implement reviewed OAuth/OIDC login, renewal, logout, role, tenant and campus context;
 - provide approved staging tenant seed and reset tooling;
 - connect safe pilot mutations and live permission-negative tests;
@@ -114,4 +142,4 @@ No Git branch, worktree or Neon branch was deleted. Cleanup remains owner-review
 
 ## Production boundary
 
-No production deployment, production database mutation, production cache purge or destructive cleanup was performed. Cloudflare staging and PILOT-01 use synthetic records and non-production Workers. Production promotion still requires reviewed authentication, permission-aware APIs, approved staging data, monitoring, rollback, backup rehearsal and explicit owner authorization.
+No production deployment, production database mutation, production cache purge or destructive cleanup was performed. Cloudflare staging and UX-01 use synthetic records and non-production Workers. Production promotion still requires reviewed authentication, permission-aware APIs and cache isolation, approved staging data, monitoring, rollback, backup rehearsal and explicit owner authorization.
