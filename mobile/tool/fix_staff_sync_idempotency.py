@@ -36,6 +36,12 @@ source = re.sub(
     source,
     count=1,
 )
+source = re.sub(
+    r'(            syncRuntimeLoader: widget\.syncRuntimeLoader,\n)+',
+    '            syncRuntimeLoader: widget.syncRuntimeLoader,\n',
+    source,
+    count=1,
+)
 
 path.write_text(source, encoding='utf-8')
 print('Staff sync wiring canonicalized.')
