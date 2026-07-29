@@ -51,6 +51,10 @@ Root CI run `30490122291` passed all 21 gates on `e74a30143eb7882e81ebd7d5b5c373
 
 Run `30490122337` passed repository verification, API Worker deployment, web Worker deployment and live smoke tests for the role chooser, admin, teacher, guardian, student, manifest, offline page and API health endpoint. Deployment concurrency is keyed by branch so unrelated pull requests cannot cancel the UX verification run.
 
+## Documentation reconciliation
+
+`DESIGN.md`, the design research index, execution index, progress tracker, UX workstream, checkpoint, this release evidence and the machine-readable agent board are synchronized. Final exact-head CI/deployment and expected-head merge evidence are recorded on pull request #43.
+
 ## Gate outcome
 
 `GATE-UX-CONTINUITY-V1` passes for the verified candidate. The staged application now behaves as one continuous workspace and exposes clearer task-led navigation without weakening role scoping or enabling production mutations.
