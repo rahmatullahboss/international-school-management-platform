@@ -636,7 +636,27 @@ Production mutation performed: no
 
 ## EXP-01 evidence
 
-No execution evidence recorded.
+### Final module candidate — `GATE-EXP-COMPLETE` passed
+
+Date/time: 2026-07-29T21:19:10+06:00
+Stream: EXP-01
+Milestones completed: persona foundation; administration experience; teacher experience; guardian experience; student experience; communications/forms; documents/reporting; PWA/offline resilience and final verification
+Git branch: `module/experience-portals-reporting`
+Worktree: `.worktrees/exp-01-experience`
+Neon branch: `agent/exp-01-experience` (`br-billowing-bar-axe2et95`)
+Reviewed starting base: `60836a8fe92f64ba581c4bde65005729d1fe14b2`
+Candidate implementation SHA: `5c952703c24ee9927fcf2cd480d3ce8d0d139847`
+Pull request: `#27` (draft, mergeable, reserved for reviewed Wave 3 serial integration)
+Delivered scope: capability-shaped admin/teacher/guardian/student portals; authorised operational ledgers and record workspaces; announcements, secure messaging, multilingual notification templates/adapters/preferences; forms, surveys, consent and acknowledgements; governed dashboards, report catalog/jobs/exports and short-lived document grants; installable PWA shell, low-bandwidth mode, bounded approved offline drafts, privacy-safe telemetry, performance budgets and support runbook
+Security/tenant outcome: tenant, principal visibility and capability filtering precede sorting/counting/rendering; restricted care/support context does not inherit broad access; document grants and report formats enforce independent authorization; offline durable state rejects restricted classifications, secrets, banking/medical/safeguarding keys and sensitive online-only operations; service worker bypasses API/auth/download/report/logout/private/no-store traffic
+Local verification: full `npm run verify` PASS; 504 tests PASS with one credential-gated local Neon test skipped; all browser suites PASS 15/15 including EXP 6/6; platform-web bundle 201,022-byte JavaScript and 4,054-byte CSS within budget; required PWA assets present; artifact validation and provenance generation PASS
+GitHub verification: CI run `30464998020` PASS across all 21 steps, including clean install, format, lint, architecture boundaries, typecheck, all tests, fresh 40-migration PostgreSQL replay, live Neon driver, build, PWA bundle gate, audit, licences, provenance drift, every Chromium suite and artifact validation
+Earlier final-stream checkpoints: communications implementation `4b9629fee735c7f6dbcd9561ed14a4207e8ba3ff` / CI `30460170124`; documents-reporting implementation `7a7aa79b278fc25b4cfa9bd93efce80f0d914966` / CI `30461899197`
+Documentation: `docs/modules/experience/milestone-1-persona-foundation.md` through `milestone-8-pwa-resilience-experience.md`; `docs/modules/experience/final-handoff.md`; `docs/operations/experience-pwa-offline-runbook.md`
+Gate outcome: `GATE-EXP-COMPLETE` PASS; candidate is ready for reviewed INTEG-01 Wave 3 serial integration
+Exact next milestone: INTEG-01 reviews and integrates exact candidate SHA `5c952703c24ee9927fcf2cd480d3ce8d0d139847`, then reruns canonical migrations, live Neon, system/browser, performance and recovery verification
+Dirty/uncommitted state: final evidence, tracker and board handoff only
+Production mutation performed: no
 
 ## INTEG-01 evidence
 

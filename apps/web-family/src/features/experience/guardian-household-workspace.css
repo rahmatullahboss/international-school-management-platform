@@ -1,0 +1,435 @@
+.guardian-workspace {
+  --guardian-ink: #12263a;
+  --guardian-muted: #4c6275;
+  --guardian-paper: #ffffff;
+  --guardian-canvas: #f3f6f8;
+  --guardian-line: #cbd6de;
+  --guardian-action: #006d77;
+  --guardian-action-strong: #004f57;
+  --guardian-focus: #0b63ce;
+  --guardian-info-surface: #e7f2f8;
+  --guardian-info-text: #16445f;
+  --guardian-success-surface: #e5f4ec;
+  --guardian-success-text: #145c36;
+  --guardian-warning-surface: #fff1cf;
+  --guardian-warning-text: #714900;
+  --guardian-error-surface: #fde8e7;
+  --guardian-error-text: #8a1c17;
+  display: grid;
+  gap: 1.5rem;
+  color: var(--guardian-ink);
+}
+
+.guardian-workspace :is(a, button, input):focus-visible,
+.guardian-workspace__table-frame:focus-visible {
+  outline: 3px solid var(--guardian-focus);
+  outline-offset: 3px;
+}
+
+.guardian-workspace__masthead {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(24rem, 34rem);
+  gap: 1rem 2rem;
+  align-items: end;
+  padding-block-end: 1.25rem;
+  border-block-end: 1px solid var(--guardian-line);
+}
+
+.guardian-workspace__masthead h2,
+.guardian-workspace__section h3,
+.guardian-workspace__children h3,
+.guardian-workspace__state h2 {
+  margin: 0;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.guardian-workspace__masthead > div > span,
+.guardian-workspace__section > header p,
+.guardian-workspace__children > header p,
+.guardian-workspace__state p {
+  display: block;
+  max-inline-size: 70ch;
+  margin-block: 0.45rem 0;
+  color: var(--guardian-muted);
+  line-height: 1.55;
+}
+
+.guardian-workspace__kicker {
+  margin: 0 0 0.35rem;
+  color: var(--guardian-action-strong);
+  font-size: 0.85rem;
+  font-weight: 750;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.guardian-workspace__masthead dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+  border-block-start: 1px solid var(--guardian-line);
+  border-inline-start: 1px solid var(--guardian-line);
+}
+
+.guardian-workspace__masthead dl > div {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.85rem;
+  border-block-end: 1px solid var(--guardian-line);
+  border-inline-end: 1px solid var(--guardian-line);
+  background: var(--guardian-paper);
+}
+
+.guardian-workspace__masthead dt {
+  color: var(--guardian-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.guardian-workspace__masthead dd {
+  margin: 0;
+  font-size: clamp(1.2rem, 3vw, 1.65rem);
+  font-weight: 750;
+  overflow-wrap: anywhere;
+}
+
+.guardian-workspace__section,
+.guardian-workspace__children,
+.guardian-workspace__state {
+  min-inline-size: 0;
+  padding: clamp(1rem, 2vw, 1.5rem);
+  border: 1px solid var(--guardian-line);
+  border-radius: 16px;
+  background: var(--guardian-paper);
+}
+
+.guardian-workspace__section > header,
+.guardian-workspace__children > header {
+  margin-block-end: 1rem;
+}
+
+.guardian-workspace__children nav {
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+}
+
+.guardian-workspace__children nav ul {
+  display: flex;
+  gap: 0.75rem;
+  min-inline-size: max-content;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.guardian-workspace__children nav a {
+  min-inline-size: 13rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.2rem 0.65rem;
+  align-items: center;
+  padding: 0.85rem;
+  border: 1px solid var(--guardian-line);
+  border-radius: 8px;
+  color: var(--guardian-ink);
+  text-decoration: none;
+}
+
+.guardian-workspace__children nav a[aria-current='page'] {
+  border-color: var(--guardian-action);
+  background: var(--guardian-info-surface);
+}
+
+.guardian-workspace__children nav a > span {
+  grid-row: 1 / 4;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--guardian-ink);
+  color: white;
+  font-weight: 800;
+}
+
+.guardian-workspace__children nav small {
+  color: var(--guardian-muted);
+}
+
+.guardian-workspace__split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+.guardian-workspace__tasks,
+.guardian-workspace__records,
+.guardian-workspace__documents,
+.guardian-workspace__messages {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  border-block-start: 1px solid var(--guardian-line);
+  list-style: none;
+}
+
+.guardian-workspace__tasks > li,
+.guardian-workspace__documents > li,
+.guardian-workspace__messages > li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem 1rem;
+  align-items: start;
+  padding-block: 0.9rem;
+  border-block-end: 1px solid var(--guardian-line);
+}
+
+.guardian-workspace__tasks > li > div,
+.guardian-workspace__documents > li > div,
+.guardian-workspace__messages > li > div,
+.guardian-workspace__records > li > div:first-child {
+  min-inline-size: 0;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.guardian-workspace__tasks > li > a,
+.guardian-workspace__documents > li > a,
+.guardian-workspace__messages > li > a {
+  grid-column: 2;
+}
+
+.guardian-workspace__tasks span,
+.guardian-workspace__tasks small,
+.guardian-workspace__tasks time,
+.guardian-workspace__documents span,
+.guardian-workspace__documents small,
+.guardian-workspace__documents time,
+.guardian-workspace__messages span,
+.guardian-workspace__messages small,
+.guardian-workspace__messages time,
+.guardian-workspace__records span,
+.guardian-workspace__records small,
+.guardian-workspace__records time {
+  color: var(--guardian-muted);
+  line-height: 1.4;
+}
+
+.guardian-workspace a {
+  color: var(--guardian-action-strong);
+  font-weight: 700;
+}
+
+.guardian-workspace__records {
+  gap: 0;
+}
+
+.guardian-workspace__records > li {
+  display: grid;
+  gap: 0.75rem;
+  padding-block: 1rem;
+  border-block-end: 1px solid var(--guardian-line);
+}
+
+.guardian-workspace__records dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+  border-block-start: 1px solid var(--guardian-line);
+  border-inline-start: 1px solid var(--guardian-line);
+}
+
+.guardian-workspace__records dl > div {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.6rem;
+  border-block-end: 1px solid var(--guardian-line);
+  border-inline-end: 1px solid var(--guardian-line);
+}
+
+.guardian-workspace__records dt {
+  color: var(--guardian-muted);
+  font-size: 0.75rem;
+}
+
+.guardian-workspace__records dd {
+  margin: 0;
+  font-weight: 750;
+}
+
+.guardian-workspace__records p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.guardian-workspace__records--grades > li[data-publication='revised'] {
+  background: var(--guardian-info-surface);
+}
+
+.guardian-workspace__table-frame {
+  overflow: auto;
+  border: 1px solid var(--guardian-line);
+  border-radius: 8px;
+}
+
+.guardian-workspace table {
+  inline-size: 100%;
+  min-inline-size: 58rem;
+  border-collapse: collapse;
+}
+
+.guardian-workspace caption {
+  padding: 0.75rem;
+  color: var(--guardian-muted);
+  text-align: start;
+}
+
+.guardian-workspace :is(th, td) {
+  padding: 0.75rem;
+  border-block-start: 1px solid var(--guardian-line);
+  text-align: start;
+  vertical-align: top;
+}
+
+.guardian-workspace th {
+  background: var(--guardian-canvas);
+  font-size: 0.82rem;
+}
+
+.guardian-workspace td:last-child {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.guardian-workspace tr[data-state='overdue'] {
+  background: var(--guardian-error-surface);
+}
+
+.guardian-workspace tr[data-state='due'] {
+  background: var(--guardian-warning-surface);
+}
+
+.guardian-workspace tr[data-state='credit'],
+.guardian-workspace tr[data-state='clear'] {
+  background: var(--guardian-success-surface);
+}
+
+.guardian-workspace__status,
+.guardian-workspace__unread {
+  display: inline-block;
+  inline-size: fit-content;
+  padding: 0.2rem 0.45rem;
+  border-radius: 8px;
+  background: var(--guardian-info-surface);
+  color: var(--guardian-info-text);
+  font-size: 0.78rem;
+  font-weight: 750;
+  text-transform: capitalize;
+}
+
+[data-state='overdue'] .guardian-workspace__status {
+  background: var(--guardian-error-surface);
+  color: var(--guardian-error-text);
+}
+
+[data-state='due'],
+[data-state='due-soon'] {
+  --guardian-task-state-surface: var(--guardian-warning-surface);
+  --guardian-task-state-text: var(--guardian-warning-text);
+}
+
+[data-state='due'] .guardian-workspace__status,
+[data-state='due-soon'] .guardian-workspace__status {
+  background: var(--guardian-task-state-surface);
+  color: var(--guardian-task-state-text);
+}
+
+[data-state='complete'] .guardian-workspace__status,
+[data-state='clear'] .guardian-workspace__status,
+[data-state='credit'] .guardian-workspace__status {
+  background: var(--guardian-success-surface);
+  color: var(--guardian-success-text);
+}
+
+.guardian-workspace__primary {
+  display: inline-flex;
+  min-block-size: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  background: var(--guardian-action);
+  color: white !important;
+  text-decoration: none;
+}
+
+.guardian-workspace__primary:hover {
+  background: var(--guardian-action-strong);
+}
+
+.guardian-workspace__unread {
+  background: var(--guardian-action);
+  color: white;
+}
+
+.guardian-workspace__empty {
+  display: grid;
+  gap: 0.25rem;
+  padding: 1rem;
+  border: 1px dashed var(--guardian-line);
+  border-radius: 8px;
+  background: var(--guardian-canvas);
+}
+
+.guardian-workspace__empty span {
+  color: var(--guardian-muted);
+  line-height: 1.45;
+}
+
+.guardian-workspace__state[role='alert'] {
+  border-color: var(--guardian-error-text);
+  background: var(--guardian-error-surface);
+}
+
+@media (max-width: 68rem) {
+  .guardian-workspace__masthead,
+  .guardian-workspace__split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 42rem) {
+  .guardian-workspace__masthead dl,
+  .guardian-workspace__records dl {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .guardian-workspace__tasks > li,
+  .guardian-workspace__documents > li,
+  .guardian-workspace__messages > li {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .guardian-workspace__tasks > li > a,
+  .guardian-workspace__documents > li > a,
+  .guardian-workspace__messages > li > a {
+    grid-column: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guardian-workspace * {
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (forced-colors: active) {
+  .guardian-workspace__section,
+  .guardian-workspace__children,
+  .guardian-workspace__state,
+  .guardian-workspace__empty,
+  .guardian-workspace__children nav a {
+    border-color: CanvasText;
+  }
+}

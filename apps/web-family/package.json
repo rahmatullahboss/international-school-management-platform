@@ -5,13 +5,15 @@
   "type": "module",
   "exports": {
     "./admissions": "./src/features/admissions/index.ts",
-    "./finance": "./src/features/finance/index.tsx"
+    "./finance": "./src/features/finance/index.tsx",
+    "./experience": "./src/features/experience/index.ts"
   },
   "scripts": {
     "build": "tsc -b",
     "typecheck": "tsc -b"
   },
   "dependencies": {
+    "@school/documents-experience": "*",
     "@school/finance": "*",
     "react": "^19.0.0"
   },

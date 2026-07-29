@@ -11,10 +11,13 @@
     { "path": "./packages/modules/country-packs/tsconfig.json" },
     { "path": "./packages/modules/integrations/tsconfig.json" },
     { "path": "./packages/modules/migration-studio/tsconfig.json" },
+    { "path": "./packages/modules/documents-experience/tsconfig.json" },
     { "path": "./packages/sis/tsconfig.json" },
     { "path": "./apps/platform-api/tsconfig.json" },
     { "path": "./apps/platform-web/tsconfig.json" },
     { "path": "./apps/web-admin/tsconfig.json" },
-    { "path": "./apps/web-family/tsconfig.json" }
+    { "path": "./apps/web-teacher/tsconfig.json" },
+    { "path": "./apps/web-family/tsconfig.json" },
+    { "path": "./apps/web-student/tsconfig.json" }
   ]
 }

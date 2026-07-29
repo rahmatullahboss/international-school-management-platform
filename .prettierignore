@@ -7,6 +7,7 @@ test-results
 package-lock.json
 docs/**
 artifacts/**
+apps/platform-web/public/icons/*.svg
 .agents/skills/impeccable/**
 .github/skills/impeccable/**
 README.md

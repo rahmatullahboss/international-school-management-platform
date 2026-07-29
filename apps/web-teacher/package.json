@@ -1,0 +1,21 @@
+{
+  "name": "@school/web-teacher",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./academics": "./src/features/academics/index.ts",
+    "./experience": "./src/features/experience/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b"
+  },
+  "dependencies": {
+    "@school/documents-experience": "*",
+    "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0"
+  }
+}

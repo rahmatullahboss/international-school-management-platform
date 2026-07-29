@@ -15,6 +15,7 @@
   ],
   "scripts": {
     "build": "tsc -b --force && npm run build --workspace=@school/platform-api && npm run build --workspace=@school/platform-web",
+    "check:experience-budget": "node scripts/check-experience-build-budget.mjs",
     "check:boundaries": "node scripts/check-architecture-boundaries.mjs",
     "clean": "npm run clean --workspaces --if-present",
     "dev": "npm run dev --workspace=@school/platform-api",
@@ -32,12 +33,13 @@
     "test:browser:finance": "playwright test -c tests/finance/playwright.config.ts",
     "test:browser:integrations": "npm run test:browser --workspace=@school/integrations",
     "test:browser:student-support": "playwright test -c tests/student-support/playwright.config.ts",
-    "test:browser": "npm run test:browser:platform && npm run test:browser:sis && npm run test:browser:finance && npm run test:browser:integrations && npm run test:browser:student-support",
+    "test:browser:experience": "playwright test -c tests/experience/playwright.config.ts",
+    "test:browser": "npm run test:browser:platform && npm run test:browser:sis && npm run test:browser:finance && npm run test:browser:integrations && npm run test:browser:student-support && npm run test:browser:experience",
     "test:coverage": "vitest run --coverage --coverage.reporter=text",
     "typecheck": "tsc -b",
     "validate:artifacts": "python3 scripts/validate_execution_artifacts.py",
     "verify:migrations": "bash tests/integration/verify-wave2-migrations.sh",
-    "verify": "npm run format:check && npm run lint && npm run check:boundaries && npm run typecheck && npm run test && npm run build && npm run validate:artifacts"
+    "verify": "npm run format:check && npm run lint && npm run check:boundaries && npm run typecheck && npm run test && npm run build && npm run check:experience-budget && npm run validate:artifacts"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260727.1",
