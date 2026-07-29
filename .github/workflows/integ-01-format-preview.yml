@@ -1,4 +1,4 @@
-name: INTEG-01 Format Preview
+name: INTEG-01 Apply Canonical Formatting
 
 on:
   push:
@@ -8,32 +8,38 @@ on:
       - .github/workflows/integ-01-format-preview.yml
       - tests/integration/wave1-migration-manifest.test.ts
       - tests/integration/wave2-cross-module-journeys.test.ts
-  pull_request:
-    branches:
-      - main
-    paths:
-      - .github/workflows/integ-01-format-preview.yml
-      - tests/integration/wave1-migration-manifest.test.ts
-      - tests/integration/wave2-cross-module-journeys.test.ts
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  preview:
+  format:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: integration/international-school-platform-v1
       - uses: actions/setup-node@v4
         with:
           node-version: 22.22.0
           cache: npm
       - run: npm ci
-      - name: Render canonical Prettier diff
+      - name: Apply canonical Prettier formatting
         run: |
           npx prettier --write \
             tests/integration/wave1-migration-manifest.test.ts \
             tests/integration/wave2-cross-module-journeys.test.ts
-          git diff -- \
+      - name: Commit formatting when required
+        run: |
+          if git diff --quiet -- \
+            tests/integration/wave1-migration-manifest.test.ts \
+            tests/integration/wave2-cross-module-journeys.test.ts; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
             tests/integration/wave1-migration-manifest.test.ts \
             tests/integration/wave2-cross-module-journeys.test.ts
+          git commit -m "style(INTEG-01): apply canonical formatting"
+          git push origin HEAD:integration/international-school-platform-v1
