@@ -11,6 +11,7 @@ dependencies:
   http: ^1.6.0
   school_family_domain: ^0.1.0
   school_mobile_core: ^0.1.0
+  school_staff_domain: ^0.1.0
 
 dev_dependencies:
   lints: ^6.1.0
