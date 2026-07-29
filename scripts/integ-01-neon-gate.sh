@@ -68,8 +68,8 @@ verify_manifest() {
 import json, sys
 print(len(json.load(open(sys.argv[1], encoding='utf-8'))['migrations']))
 PY
-)
-  actual=$(psql "$url" -X --no-psqlrc -Atc "SELECT count(*) FROM platform.schema_migration WHERE stream_id IN ('FND-01','SIS-01','FIN-01','INT-01')")
+  )
+  actual=$(psql "$url" -X --no-psqlrc -Atc "SELECT count(*) FROM platform.schema_migration WHERE stream_id IN ('FND-01','SIS-01','FIN-01','INT-01','ACAD-01','OPS-01','CARE-01')")
   [[ "$actual" == "$expected" ]] || { echo "Migration ledger count mismatch: expected=$expected actual=$actual" >&2; exit 1; }
 
   missing=$(python3 - "$MANIFEST" <<'PY' | psql "$url" -X --no-psqlrc -At
@@ -78,7 +78,7 @@ ids = [m['id'].replace("'", "''") for m in json.load(open(sys.argv[1], encoding=
 values = ','.join("('" + item + "')" for item in ids)
 print(f"WITH expected(id) AS (VALUES {values}) SELECT id FROM expected EXCEPT SELECT migration_id FROM platform.schema_migration ORDER BY id;")
 PY
-)
+  )
   [[ -z "$missing" ]] || { echo "Missing migrations: $missing" >&2; exit 1; }
 
   psql "$url" -X --no-psqlrc -v ON_ERROR_STOP=1 <<'SQL' >/dev/null
@@ -166,7 +166,7 @@ $probe$;
 ROLLBACK;
 SQL
 
-  echo "Wave 1 database verification: PASS ($actual migrations)"
+  echo "Wave 2 database verification: PASS ($actual migrations)"
 }
 
 replay_database() {
