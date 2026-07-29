@@ -18,7 +18,7 @@ quarantine_replacement = """      final fingerprint = await SyncStorageScope.fro
       expect(await blocked.exists(), isTrue);
       expect(names.any((name) => name.contains('.quarantine.')), isTrue);
 """
-if 'final fingerprint = await SyncStorageScope.fromSession(session).fingerprint();' not in source:
+if 'final fingerprint = await SyncStorageScope.fromSession(' not in source:
     source, count = re.subn(
         r"(?m)^\s*final names = await directory\n"
         r"\s*\.list\(\)\n"
@@ -83,7 +83,7 @@ find_new = """      await expectLater(
 """
 if find_old in source:
     source = source.replace(find_old, find_new, 1)
-elif find_new not in source:
+elif 'await expectLater(' not in source or "store.find('operation-1')" not in source:
     raise SystemExit('Unexpected quarantine find assertion shape')
 
 ready_old = """      expect(
@@ -116,7 +116,7 @@ ready_new = """      await expectLater(
 """
 if ready_old in source:
     source = source.replace(ready_old, ready_new, 1)
-elif ready_new not in source:
+elif 'await expectLater(' not in source or 'store.ready(' not in source:
     raise SystemExit('Unexpected quarantined ready assertion shape')
 
 path.write_text(source, encoding='utf-8')
