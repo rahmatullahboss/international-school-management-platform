@@ -3,6 +3,7 @@
 **Program:** `international-school-platform-v1`
 **Gate:** `GATE-WAVE-2-INTEGRATED` — passed
 **Reviewed integration SHA:** `60836a8fe92f64ba581c4bde65005729d1fe14b2`
+**Evidence commit:** `c9bedf491429c05dabfa12e7f5c1adceb4caa8c1`
 **Integration PR:** `#25`
 **Date:** 2026-07-29
 
