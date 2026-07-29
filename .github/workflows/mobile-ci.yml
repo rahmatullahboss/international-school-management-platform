@@ -84,7 +84,7 @@ jobs:
         working-directory: mobile/packages/mobile_core
         run: dart test
       - name: Test API client
-        working_directory: mobile/packages/api_client
+        working-directory: mobile/packages/api_client
         run: dart test
       - name: Build family Android debug APK
         working-directory: mobile/apps/family_app
