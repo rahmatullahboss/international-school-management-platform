@@ -20,7 +20,8 @@ function pageShell(direction: 'ltr' | 'rtl' = 'ltr'): string {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>EXP-01 persona shell proof</title>
-    <style>${legacyCss}\n${authorityCss}</style>
+    <style>${legacyCss}</style>
+    <style>${authorityCss}</style>
   </head>
   <body>
     <div class="experience-shell" data-persona="teacher" data-connectivity="syncing" dir="${direction}">
