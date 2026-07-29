@@ -1,0 +1,129 @@
+{
+  "schema_version": 1,
+  "program_id": "international-school-platform-mobile-v1",
+  "updated_at": "2026-07-29",
+  "status": "planned_not_activated",
+  "architecture_decision": "one_flutter_workspace_two_distributable_apps",
+  "applications": [
+    {
+      "id": "family_app",
+      "name": "School Family",
+      "personas": ["guardian", "student"]
+    },
+    {
+      "id": "staff_app",
+      "name": "School Staff",
+      "personas": ["teacher"]
+    }
+  ],
+  "execution_mode": "whole_module_agent_ownership",
+  "microtask_agents_allowed": false,
+  "agent_delegation_allowed": false,
+  "database_access": {
+    "direct_database_access_allowed": false,
+    "database_schema_is_client_contract": false,
+    "client_database_branch_required": false,
+    "authoritative_interface": "versioned_application_apis_and_bounded_read_models"
+  },
+  "current_dependencies": {
+    "reviewed_wave_2_base": "60836a8fe92f64ba581c4bde65005729d1fe14b2",
+    "exp_01": "active",
+    "wave_3_integration_sha": null,
+    "mobile_openapi_schema_sha": null,
+    "mobile_threat_model": "required_before_activation"
+  },
+  "parallel_foundation": {
+    "allowed_during_exp_01": true,
+    "allowed_work": [
+      "documentation_and_adrs",
+      "flutter_workspace_and_ci",
+      "design_tokens_and_accessibility_harness",
+      "synthetic_auth_device_session_proof",
+      "generated_client_pipeline_against_marked_schemas",
+      "fake_repositories_and_synthetic_fixtures",
+      "encrypted_local_store_and_generic_sync_engine",
+      "push_and_deep_link_harness",
+      "dependency_sbom_licence_and_provenance_controls"
+    ],
+    "prohibited_work": [
+      "direct_neon_or_table_access",
+      "speculative_domain_endpoints",
+      "duplicate_server_business_rules",
+      "production_mobile_release",
+      "real_student_data_in_development"
+    ]
+  },
+  "activation_gate": {
+    "id": "GATE-MOBILE-CONTRACTS-READY",
+    "status": "blocked",
+    "required_conditions": [
+      "reviewed_wave_3_or_approved_mobile_contract_base",
+      "exact_git_base_sha_recorded",
+      "exact_mobile_api_schema_version_recorded",
+      "adr_007_and_mobile_docs_approved",
+      "mobile_threat_model_and_offline_allowlist_approved",
+      "family_and_staff_app_identity_and_release_ownership_approved",
+      "client_only_stream_supported_by_execution_artifacts",
+      "no_overlapping_mobile_path_owner"
+    ]
+  },
+  "streams": [
+    {
+      "id": "MOB-01",
+      "name": "Native Mobile Applications",
+      "status": "planned_not_executable",
+      "branch": "module/native-mobile-applications",
+      "worktree": ".worktrees/mob-01-mobile",
+      "database_branch": null,
+      "entry_gate": "GATE-MOBILE-CONTRACTS-READY",
+      "starting_base": null,
+      "api_schema_version": null,
+      "owned_paths": [
+        "mobile/**",
+        "tests/mobile/**",
+        "docs/modules/mobile/**",
+        "docs/mobile/completion/**",
+        "mobile-specific CI and generated artifacts within approved extension points"
+      ],
+      "forbidden_paths": [
+        "packages/modules/**",
+        "apps/web-*/**",
+        "packages/database/**",
+        "module migrations",
+        "active EXP-01 owned paths",
+        "foundation authorities without approved contract change"
+      ],
+      "milestones": [
+        "activation_and_contract_inventory",
+        "flutter_workspace_foundation",
+        "design_localization_adaptive_experience",
+        "identity_device_api_runtime",
+        "offline_sync_notifications",
+        "school_family_application",
+        "school_staff_application",
+        "hardening_and_release_evidence"
+      ],
+      "completion_gate": "GATE-MOBILE-INTERNAL-PILOT-READY",
+      "workpack": "docs/mobile/MOB-01-WORKPACK.md"
+    }
+  ],
+  "hard_stops": [
+    "activation_gate_not_passed",
+    "wrong_or_shared_branch_worktree_base_or_schema",
+    "dirty_overlapping_or_unowned_changes",
+    "missing_reviewed_backend_contract",
+    "direct_database_or_private_table_access_required",
+    "server_domain_logic_duplication_required",
+    "unapproved_local_data_classification_or_retention",
+    "failed_tenant_persona_auth_idempotency_sync_migration_or_security_invariant",
+    "real_data_production_mutation_or_store_submission_required_without_authorization",
+    "unapproved_dependency_licence_or_privacy_risk",
+    "context_limit_after_safe_checkpoint",
+    "whole_stream_completion_boundary_reached"
+  ],
+  "cleanup": {
+    "worker_self_cleanup_allowed": false,
+    "force_delete_allowed": false,
+    "requires_reviewed_integration_reachability": true
+  }
+}
