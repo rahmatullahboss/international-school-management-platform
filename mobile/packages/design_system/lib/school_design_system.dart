@@ -84,7 +84,7 @@ abstract final class SchoolTheme {
           fontSize: 14,
           height: 1.45,
         ),
-        labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.w650),
+        labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
         titleLarge: TextStyle(
           color: SchoolColors.institutionalInk,
           fontSize: 24,
@@ -141,10 +141,11 @@ class SchoolAdaptiveScaffold extends StatelessWidget {
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
       final isWide = constraints.maxWidth >= 760;
+      final statusWidget = status;
       final content = Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (status case final status?)
+          if (statusWidget != null)
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 SchoolSpacing.md,
@@ -152,7 +153,7 @@ class SchoolAdaptiveScaffold extends StatelessWidget {
                 SchoolSpacing.md,
                 0,
               ),
-              child: status,
+              child: statusWidget,
             ),
           Expanded(child: body),
         ],
@@ -306,24 +307,27 @@ class SchoolPageSection extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.all(SchoolSpacing.md),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(title, style: Theme.of(context).textTheme.titleLarge),
-        if (description case final description?) ...[
-          const SizedBox(height: SchoolSpacing.xs),
-          Text(
-            description,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: SchoolColors.operationalMuted,
+  Widget build(BuildContext context) {
+    final descriptionText = description;
+    return Padding(
+      padding: const EdgeInsets.all(SchoolSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(title, style: Theme.of(context).textTheme.titleLarge),
+          if (descriptionText != null) ...[
+            const SizedBox(height: SchoolSpacing.xs),
+            Text(
+              descriptionText,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: SchoolColors.operationalMuted,
+              ),
             ),
-          ),
+          ],
+          const SizedBox(height: SchoolSpacing.md),
+          child,
         ],
-        const SizedBox(height: SchoolSpacing.md),
-        child,
-      ],
-    ),
-  );
+      ),
+    );
+  }
 }
