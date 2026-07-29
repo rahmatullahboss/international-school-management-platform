@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "program_id": "international-school-platform-v1",
-  "updated_at": "2026-07-28",
+  "updated_at": "2026-07-29",
   "execution_mode": "whole-module-agent-ownership",
   "microtask_agents_allowed": false,
   "agent_delegation_allowed": false,
@@ -29,12 +29,24 @@
   "design_baseline": {
     "skill": "impeccable",
     "skill_version": "4.0.2",
-    "providers": ["codex", "github"],
+    "providers": [
+      "codex",
+      "github"
+    ],
     "product_authority": "PRODUCT.md",
     "visual_authority": "DESIGN.md",
     "whole_module_agent_owns_ui": true,
     "microtask_design_agents_allowed": false,
-    "required_ui_evidence": ["shape-or-approved-brief", "critique", "audit", "detector", "accessibility", "responsive-rtl", "harden", "polish"]
+    "required_ui_evidence": [
+      "shape-or-approved-brief",
+      "critique",
+      "audit",
+      "detector",
+      "accessibility",
+      "responsive-rtl",
+      "harden",
+      "polish"
+    ]
   },
   "base_rules": {
     "FND-01": "resolve latest reviewed origin/main in rahmatullahboss/international-school-management-platform, create or resume the fixed foundation branch/worktree and record the exact base SHA",
@@ -66,8 +78,35 @@
       "dependencies": [],
       "entry_gate": "GATE-DOCUMENTS-APPROVED",
       "full_prompt_section": "FND-01 — Platform Foundation",
-      "owned_paths": ["apps/platform/**", "packages/platform/**", "packages/database/**", "packages/policy/**", "packages/events/**", "packages/localization/**", "packages/ui/**", "infra/**", "scripts/**", ".agents/skills/impeccable/**", ".codex/hooks.json", ".github/**", "docs/design/**", "PRODUCT.md", "DESIGN.md", ".impeccable/config.json", "root configuration files"],
-      "milestones": ["repository-bootstrap", "neon-data-platform", "tenancy-routing", "identity-policy", "audit-outbox-idempotency", "localization-documents-workflows", "shared-experience-boundaries", "foundation-verification-freeze"],
+      "owned_paths": [
+        "apps/platform/**",
+        "packages/platform/**",
+        "packages/database/**",
+        "packages/policy/**",
+        "packages/events/**",
+        "packages/localization/**",
+        "packages/ui/**",
+        "infra/**",
+        "scripts/**",
+        ".agents/skills/impeccable/**",
+        ".codex/hooks.json",
+        ".github/**",
+        "docs/design/**",
+        "PRODUCT.md",
+        "DESIGN.md",
+        ".impeccable/config.json",
+        "root configuration files"
+      ],
+      "milestones": [
+        "repository-bootstrap",
+        "neon-data-platform",
+        "tenancy-routing",
+        "identity-policy",
+        "audit-outbox-idempotency",
+        "localization-documents-workflows",
+        "shared-experience-boundaries",
+        "foundation-verification-freeze"
+      ],
       "completion_gate": "GATE-FOUNDATION-READY"
     },
     {
@@ -250,7 +289,7 @@
       "id": "CARE-01",
       "name": "Health Wellbeing and Safeguarding",
       "wave": 2,
-      "status": "blocked_by_wave_1_and_threat_model",
+      "status": "complete_review_ready_recovery_rehearsal_pending",
       "branch": "module/student-support",
       "worktree": ".worktrees/care-01-student-support",
       "neon_branch": "agent/care-01-student-support",
@@ -280,7 +319,45 @@
         "learning-support",
         "restricted-interface-verification"
       ],
-      "completion_gate": "GATE-CARE-COMPLETE"
+      "completion_gate": "GATE-CARE-COMPLETE",
+      "starting_base_sha": "8cc8ee1562ade672b14c1c44af935fe7e2307976",
+      "threat_model_sha": "1ee5ef8dd5c38234cf67acfda5b73df4602f64d4",
+      "verified_implementation_sha": "d257a9af11b03d573c4bb2165f934397be8e7fbe",
+      "draft_pull_request": 19,
+      "ci": {
+        "run_id": 30426849884,
+        "status": "success",
+        "gates": [
+          "format",
+          "lint",
+          "architecture-boundaries",
+          "typecheck",
+          "unit-tests",
+          "fresh-postgresql",
+          "live-neon-driver",
+          "build",
+          "audit",
+          "licenses",
+          "provenance",
+          "chromium-browser",
+          "execution-artifacts"
+        ]
+      },
+      "neon_branch_id": "br-raspy-smoke-ax0msb57",
+      "module_migrations": [
+        "202607290201_CARE-01_security_contract",
+        "202607290202_CARE-01_health",
+        "202607290203_CARE-01_behavior",
+        "202607290204_CARE-01_wellbeing",
+        "202607290205_CARE-01_safeguarding_domain",
+        "202607290206_CARE-01_learning_support"
+      ],
+      "remaining_integration_gate": {
+        "gate": "fresh-disposable-wave1-to-care-recovery-rehearsal",
+        "status": "pending_external_capacity",
+        "reason": "Neon project branch limit is 10/10; satisfying the gate would require deleting or resetting another active agent branch, which CARE-01 did not do.",
+        "owner": "INTEG-01"
+      }
     },
     {
       "id": "EXP-01",

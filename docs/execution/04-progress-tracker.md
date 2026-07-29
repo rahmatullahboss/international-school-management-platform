@@ -482,81 +482,119 @@ No execution evidence recorded.
 
 ## CARE-01 evidence
 
+### Stream summary
+
+Status: complete and review-ready; integration-owned fresh disposable recovery rehearsal pending
+Git branch: `module/student-support`
+Fixed worktree: `.worktrees/care-01-student-support`
+Neon branch: `agent/care-01-student-support` (`br-raspy-smoke-ax0msb57`)
+Exact starting base: `8cc8ee1562ade672b14c1c44af935fe7e2307976`
+Approved threat-model evidence: `1ee5ef8dd5c38234cf67acfda5b73df4602f64d4`, read through Git history only
+Verified implementation SHA: `d257a9af11b03d573c4bb2165f934397be8e7fbe`
+Draft integration PR: `#19`
+CI evidence: run `30426849884` SUCCESS
+Production/default Neon mutation: none
+ACAD-01/OPS-01 unmerged code or worktree touched: no
+
 ### Checkpoint 1 — security-contract
 
-Date/time: 2026-07-29T09:39:22+06:00
-Stream: CARE-01
-Milestone completed: security-contract
-Git branch: `module/student-support`
-Worktree: `.worktrees/care-01-student-support`
-Neon branch: `agent/care-01-student-support` (`br-raspy-smoke-ax0msb57`)
-Starting base: `8cc8ee1562ade672b14c1c44af935fe7e2307976`
-Approved threat-model evidence source: `1ee5ef8dd5c38234cf67acfda5b73df4602f64d4` read through Git history only; no merge/cherry-pick/import
-Changed paths: `packages/modules/safeguarding/**`, `tests/student-support/**`, `docs/modules/student-support/**`, CARE-01 tracker section
-Security evidence: all 40 `SS-TM-001` through `SS-TM-040` published; deny-by-default need-to-know, guardian release, AAL2, break-glass, immutable read evidence, exact export/connector, notification, offline, retention and incident controls implemented
-Focused checks: 14 Vitest tests PASS; CARE TypeScript no-emit typecheck PASS
-Neon checks: FND 5/5 and SIS 6/6 canonical migrations replayed on CARE branch; CARE security migration applied; no-context visible rows `0`; tenant-A visible `1`, tenant-B leak `0`; cross-tenant insert denied by RLS; access-evidence update denied by privilege
-Recovery status: FIN 4 and INT 7 canonical replay plus full fresh disposable replay deferred to final restricted-interface-verification checkpoint; no CARE dependency directly mutates those schemas
-Production mutation performed: no; Neon `main`, integration branch, ACAD-01 and OPS-01 were not modified
-Exact next milestone: health
-Checkpoint SHA: `3e82c65`
-Dirty/uncommitted state: clean after checkpoint commit and push
+Checkpoint SHA: `3e82c6598e8e4aae4b93d39de5d2c7e20fda8c70`
+Completed: 2026-07-29
+Evidence:
+
+- all 40 `SS-TM-001` through `SS-TM-040` invariants published and tested;
+- deny-by-default need-to-know authorization, guardian release, AAL2, break-glass, immutable read evidence, exact export/connector, safe notification, offline emergency, retention and incident controls;
+- security migration applied on the CARE Neon branch;
+- no-context rows `0`, tenant-A isolation clean, cross-tenant write denied, access-evidence mutation denied.
 
 ### Checkpoint 2 — health
 
-Date/time: 2026-07-29T09:52:00+06:00
-Stream: CARE-01
-Milestone completed: health
-Git branch: `module/student-support`
-Worktree: `.worktrees/care-01-student-support`
-Neon branch: `agent/care-01-student-support` (`br-raspy-smoke-ax0msb57`)
-Starting checkpoint SHA: `3e82c65`
-Changed paths: `packages/modules/health/**`, `tests/student-support/health*.test.ts`, `docs/modules/student-support/health.md`, CARE-01 tracker section
-Domain evidence: health profiles, conditions, allergies, medication orders, AAL2 administration, allergy contraindication, idempotency, immutable corrections, immunizations, care plans, clinic encounters, restricted document classification, minimum emergency projection, safe events and suppressed operational reports implemented
-Focused checks: 8 Vitest tests PASS; CARE TypeScript no-emit typecheck PASS
-Neon checks: `202607290202_CARE-01_health` applied on CARE branch; 12/12 health tables FORCE RLS; no-context visible rows `0`; tenant-A visible `1`, tenant-B leak `0`; cross-tenant profile insert denied; medication-administration rewrite denied
-Security/privacy evidence: current legal basis required independently of authorization; broad principal denied; emergency source narrative and allergy reaction excluded; events contain no narrative; aggregate cohorts below five suppressed
-Production mutation performed: no; Neon `main`, integration branch, ACAD-01 and OPS-01 were not modified
-Exact next milestone: behavior
 Checkpoint SHA: `88a1e3a`
-Dirty/uncommitted state: clean after checkpoint commit and push
+Completed: 2026-07-29
+Evidence:
+
+- health profiles, conditions, allergies, medication orders, AAL2 administration, contraindication checks, immutable corrections, immunizations, care plans, clinic encounters and emergency-minimum projection;
+- `202607290202_CARE-01_health` applied;
+- 12/12 health tables force RLS;
+- no-context `0`, tenant-B leak `0`, cross-tenant write denied and medication-administration rewrite denied;
+- events/reports exclude narrative and small cohorts are suppressed.
 
 ### Checkpoint 3 — behavior
 
-Date/time: 2026-07-29T10:01:26+06:00
-Stream: CARE-01
-Milestone completed: behavior
-Git branch: `module/student-support`
-Worktree: `.worktrees/care-01-student-support`
-Neon branch: `agent/care-01-student-support` (`br-raspy-smoke-ax0msb57`)
-Starting checkpoint SHA: `88a1e3a`
-Changed paths: `packages/modules/behavior/**`, `tests/student-support/behavior*.test.ts`, `docs/modules/student-support/behavior.md`, CARE-01 tracker section
-Domain evidence: relationship-scoped incident intake, idempotency, controlled transitions, append-only status history, actions, restorative plans, restricted follow-up, corrections, AAL2 independently approved portal publication and safe events/reports implemented
-Focused checks: 6 Vitest tests PASS; CARE TypeScript no-emit typecheck PASS
-Neon checks: `202607290203_CARE-01_behavior` applied on CARE branch; 8/8 behavior tables FORCE RLS; no-context visible rows `0`; tenant-A visible `1`, tenant-B leak `0`; cross-tenant insert denied; source incident rewrite denied with correction-only trigger
-Security/privacy evidence: teacher may submit scoped CARE-C2 incident but cannot read CARE-C3 follow-up; guardian projection requires verified authority and excludes source narrative; events exclude narrative/action detail; aggregate cohorts below five suppressed
-Production mutation performed: no; Neon `main`, integration branch, ACAD-01 and OPS-01 were not modified
-Exact next milestone: wellbeing
 Checkpoint SHA: `cc26e80`
-Dirty/uncommitted state: clean after checkpoint commit and push
+Completed: 2026-07-29
+Evidence:
+
+- relationship-scoped intake, idempotency, controlled transitions, append-only status history, actions, restorative plans, restricted follow-up, corrections and independently approved publication;
+- `202607290203_CARE-01_behavior` applied;
+- 8/8 behavior tables force RLS;
+- no-context `0`, tenant-B leak `0`, cross-tenant write denied and source rewrite denied;
+- teacher access does not inherit restricted follow-up.
 
 ### Checkpoint 4 — wellbeing
 
-Date/time: 2026-07-29T10:10:00+06:00
-Stream: CARE-01
-Milestone completed: wellbeing
-Git branch: `module/student-support`
-Worktree: `.worktrees/care-01-student-support`
-Neon branch: `agent/care-01-student-support` (`br-raspy-smoke-ax0msb57`)
-Starting checkpoint SHA: `cc26e80`
-Changed paths: `packages/modules/wellbeing/**`, `tests/student-support/wellbeing*.test.ts`, `docs/modules/student-support/wellbeing.md`, CARE-01 tracker section
-Domain evidence: pastoral referrals, active legal basis, assigned-counselor cases and sessions, append-only corrections, AAL2 risk and safeguarding escalation, support plans/reviews, independently approved minimized portal publication and safe reports/events implemented
-Focused checks: 7 Vitest tests PASS; CARE TypeScript no-emit typecheck PASS
-Neon checks: `202607290204_CARE-01_wellbeing` applied on CARE branch; 10/10 wellbeing tables FORCE RLS; no-context visible rows `0`; tenant-A visible `1`, tenant-B leak `0`; cross-tenant referral insert denied; counselling-session rewrite denied
-Security/privacy evidence: teachers can submit scoped CARE-C2 referrals but cannot access CARE-C3 counselling; assigned-counselor restriction enforced; high/immediate risk and escalation require AAL2; events exclude narrative/factors/actions; guardian release excludes counselling/risk detail; cohorts below five suppressed
-Production mutation performed: no; Neon `main`, integration branch, ACAD-01 and OPS-01 were not modified
-Exact next milestone: safeguarding-domain
-Dirty/uncommitted state: checkpoint evidence pending commit
+Checkpoint SHA: `e619555955bdcdd2e6dc63d1880018a553bca581`
+Completed: 2026-07-29
+Evidence:
+
+- pastoral referrals, active legal basis, assigned-counselor cases/sessions, append-only corrections, AAL2 risk/escalation, support plans/reviews and minimized publication;
+- `202607290204_CARE-01_wellbeing` applied;
+- 10/10 wellbeing tables force RLS;
+- no-context `0`, tenant-B leak `0`, cross-tenant write denied and counselling-session rewrite denied;
+- events exclude narrative/factors/actions and small cohorts are suppressed.
+
+### Checkpoint 5 — safeguarding-domain
+
+Completed: 2026-07-29
+Evidence:
+
+- write-only idempotent concern intake and opaque receipt;
+- narrow AAL2 case bootstrap, authoritative principal/case/purpose membership and immediate revocation;
+- immutable chronology, independently reviewed assessments/safety plans, mandatory reports, exact expiring disclosures, C4 document references and independently approved closure;
+- no default student/guardian safeguarding publication;
+- `202607290205_CARE-01_safeguarding_domain` applied;
+- 16/16 safeguarding tables force RLS;
+- no-context concern rows `0`, teacher concern reads `0`, AAL2 lead tenant-A `1` with tenant-B leak `0`, unrelated principal case rows `0`, cross-tenant intake denied and chronology rewrite denied.
+
+### Checkpoint 6 — learning-support
+
+Completed: 2026-07-29
+Evidence:
+
+- legal-basis and relationship-scoped referrals, restricted assessments, independently approved accommodations/plans, goals/reviews, classroom-safe academic projection and versioned portal publication;
+- no ACAD-01 unmerged code or table dependency;
+- `202607290206_CARE-01_learning_support` applied;
+- 11/11 learning-support tables force RLS;
+- no-context `0`, tenant-B leak `0`, cross-tenant insert denied and plan-review rewrite denied.
+
+### Checkpoint 7 — restricted-interface-verification
+
+Verified implementation SHA: `d257a9af11b03d573c4bb2165f934397be8e7fbe`
+Completed: 2026-07-29
+Evidence:
+
+- versioned bounded `/v1/care` API registry with exact permission/purpose/AAL and masked errors;
+- accessible responsive RTL-aware admin surfaces for clinic, behavior, wellbeing, safeguarding, learning support, break-glass review and exact disclosure approval;
+- permission/role matrix, API, events/notifications, retention/export/disclosure, incident-response, interface and recovery documentation;
+- draft PR `#19` targets `integration/international-school-platform-v1` and remains draft;
+- CI run `30426849884` passed format, lint, architecture boundaries, typecheck, full tests, fresh PostgreSQL migration validation, live Neon driver, build, audit, license, provenance, Chromium browser suite and execution-artifact validator.
+
+### Migration and recovery status
+
+CARE ledger contains migrations `201` through `206`. The reviewed integration Neon branch
+`br-shiny-silence-axznuy37` was compared and contains the authoritative FND 5, SIS 6, FIN 4 and INT 7
+ledger. CARE does not mutate FIN/INT schemas and consumes their reviewed public contracts.
+
+A new disposable branch could not be created because the Neon project is at its 10/10 branch limit.
+Creating capacity would require deleting or resetting another active agent branch, which is destructive
+and prohibited for this stream. Therefore CARE-01 does not claim a fresh FND→SIS→FIN→INT→CARE replay.
+The exact integration-owned recovery procedure is documented in
+`docs/modules/student-support/recovery.md`. This pending integration gate does not weaken CARE RLS,
+authorization, audit or negative-test evidence and does not mark any program/pilot gate passed.
+
+Exact next action: INTEG-01 reviews PR `#19`, provisions a disposable branch slot without destroying
+active work, executes the documented Wave 1→CARE replay, and records the integration gate result.
+Dirty/uncommitted state: no module source changes after verified implementation SHA; tracker/board evidence only
 
 ## EXP-01 evidence
 
