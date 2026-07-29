@@ -84,7 +84,9 @@ final class TeacherTodayReadModel {
     required Iterable<TeacherMeetingSummary> meetings,
     required String teacherDisplayName,
   }) {
-    final normalizedMeetings = List<TeacherMeetingSummary>.unmodifiable(meetings);
+    final normalizedMeetings = List<TeacherMeetingSummary>.unmodifiable(
+      meetings,
+    );
     _requireUnique(
       normalizedMeetings.map((meeting) => meeting.meetingId),
       'TEACHER_MEETING_DUPLICATE',
@@ -142,7 +144,9 @@ final class TeacherRosterReadModel {
     if (version < 0) {
       throw const TeacherDomainException('TEACHER_ROSTER_VERSION_INVALID');
     }
-    final normalizedStudents = List<TeacherRosterStudent>.unmodifiable(students);
+    final normalizedStudents = List<TeacherRosterStudent>.unmodifiable(
+      students,
+    );
     _requireUnique(
       normalizedStudents.map((student) => student.studentId),
       'TEACHER_ROSTER_STUDENT_DUPLICATE',
@@ -281,7 +285,9 @@ final class TeacherGradeDraftCommand {
     if (scoreScale < 1 || maximumScoreUnits < 1) {
       throw const TeacherDomainException('TEACHER_GRADE_SCALE_INVALID');
     }
-    final normalizedEntries = List<TeacherGradeDraftEntry>.unmodifiable(entries);
+    final normalizedEntries = List<TeacherGradeDraftEntry>.unmodifiable(
+      entries,
+    );
     if (normalizedEntries.isEmpty) {
       throw const TeacherDomainException('TEACHER_GRADE_ENTRIES_REQUIRED');
     }
