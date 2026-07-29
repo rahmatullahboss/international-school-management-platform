@@ -1,0 +1,69 @@
+name: EXP-01 Milestone 2 Checkpoint
+
+on:
+  push:
+    branches:
+      - module/exp-01-m2-admin
+    paths:
+      - .github/workflows/exp-01-m2-checkpoint.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: exp-01-m2-checkpoint
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: module/exp-01-m2-admin
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.2
+          cache: npm
+      - run: npm ci
+      - name: Apply design-authority correction and canonical formatting
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          path = Path('apps/web-admin/src/features/experience/admin-command-centre.css')
+          text = path.read_text(encoding='utf-8')
+          old = "  background: linear-gradient(to inline-end, var(--admin-error-surface), transparent 45%);"
+          new = "  background: var(--admin-error-surface);"
+          if text.count(old) != 1:
+              raise SystemExit('Expected one decorative gradient to replace')
+          path.write_text(text.replace(old, new), encoding='utf-8')
+          PY
+          npx prettier --write \
+            apps/web-admin/src/features/experience/AdminCommandCentre.tsx \
+            apps/web-admin/src/features/experience/admin-command-centre.css \
+            apps/web-admin/src/features/experience/index.ts \
+            tests/experience/admin-command-centre.test.tsx \
+            docs/modules/experience/milestone-2-admin-experience.md
+      - name: Run focused and structural checks
+        run: |
+          npx eslint \
+            apps/web-admin/src/features/experience/AdminCommandCentre.tsx \
+            tests/experience/admin-command-centre.test.tsx
+          npm run check:boundaries
+          npm run typecheck
+          npx vitest run tests/experience/admin-command-centre.test.tsx
+          npm run validate:artifacts
+      - name: Record verified source and remove one-shot workflow
+        run: |
+          git rm .github/workflows/exp-01-m2-checkpoint.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            apps/web-admin/src/features/experience/AdminCommandCentre.tsx \
+            apps/web-admin/src/features/experience/admin-command-centre.css \
+            apps/web-admin/src/features/experience/index.ts \
+            tests/experience/admin-command-centre.test.tsx \
+            docs/modules/experience/milestone-2-admin-experience.md
+          git commit -m "test(EXP-01): verify admin command centre checkpoint"
+          git push origin HEAD:module/exp-01-m2-admin
