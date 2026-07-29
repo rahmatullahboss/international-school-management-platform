@@ -2,7 +2,7 @@
 
 **Program:** `international-school-platform-v1`
 **Updated:** 2026-07-29
-**Current repository state:** `GATE-WAVE-1-INTEGRATED` and `GATE-STUDENT-SUPPORT-THREAT-MODEL` passed. Reviewed `SIS-01`, `FIN-01` and `INT-01` are serially integrated from exact base `042b75990f9cd819239c584a370687042393f6a7`; reviewed Wave 1 integration SHA is `8cc8ee1562ade672b14c1c44af935fe7e2307976`.
+**Current repository state:** Wave 2 module implementation and review are complete. Reviewed candidates are `ACAD-01` `1d895afdf51f6d4f6323ada4b93d9ba32b244480`, `OPS-01` `fc749d7c0ece36964da8f923431bb3b7ac925e56` and `CARE-01` `9304bd6c425eca4ec69db90c1f1cab3f7a409b8d`. `INTEG-01` is ready to perform serial Wave 2 integration; `GATE-WAVE-2-INTEGRATED` remains blocked until migration composition, restricted-record boundaries and recovery rehearsal pass.
 
 ## Gate status
 
@@ -10,7 +10,7 @@
 |---|---|---|
 | `GATE-DOCUMENTS-APPROVED` | passed | Owner authorized FND-01 execution; `python3 scripts/validate_execution_artifacts.py` passed on 2026-07-28 |
 | `GATE-FOUNDATION-READY` | passed | Milestones 1–8 implemented; owner review approved; Neon SQL/RLS proof passed; secret-backed `npm run test:neon` passed 1/1 on 2026-07-28 |
-| `GATE-REVIEWED-SHAS-AVAILABLE` | passed | `SIS-01` `5e2499018282d8296abfe093b5dd95b231829379`; `FIN-01` `5f9e1692a8fc19fc2e9789a338d028918acdeaf6`; `INT-01` `bfa95a4a42025213fa7c2090a587ef5304924da7` |
+| `GATE-REVIEWED-SHAS-AVAILABLE` | passed | Wave 1: `SIS-01` `5e2499018282d8296abfe093b5dd95b231829379`, `FIN-01` `5f9e1692a8fc19fc2e9789a338d028918acdeaf6`, `INT-01` `bfa95a4a42025213fa7c2090a587ef5304924da7`; Wave 2: `ACAD-01` `1d895afdf51f6d4f6323ada4b93d9ba32b244480`, `OPS-01` `fc749d7c0ece36964da8f923431bb3b7ac925e56`, `CARE-01` `9304bd6c425eca4ec69db90c1f1cab3f7a409b8d` |
 | `GATE-INT-COMPLETE` | passed | Seven milestones complete; agent-branch apply `30345998526`, logical replay `30346762735` and fresh Neon branch replay `30347294967` passed |
 | `GATE-WAVE-1-INTEGRATED` | passed | Reviewed integration SHA `8cc8ee1562ade672b14c1c44af935fe7e2307976`; CI `30362743336`; integration Neon apply/recovery run `30362743167`; 22 migrations, 139/139 tenant-owned tables protected, finance invariants and six browser journeys passed |
 | `GATE-STUDENT-SUPPORT-THREAT-MODEL` | passed | [Student-support high-risk data threat model](../security/student-support-threat-model.md) approved against reviewed Wave 1 integration SHA `8cc8ee1562ade672b14c1c44af935fe7e2307976`; 40 security invariants, role/action matrix, negative tests, RLS/migration guardrails and incident controls recorded |
@@ -28,7 +28,7 @@ Owner decision recorded on 2026-07-28:
 - the foundation/program coordinator maintains shared documentation, gate state, contract-change decisions and this tracker without writing concurrently inside module-owned paths;
 - `INTEG-01` reviews and integrates module SHAs serially after they are recorded here.
 
-Current readiness: Wave 2 may use exact reviewed Wave 1 integration SHA `8cc8ee1562ade672b14c1c44af935fe7e2307976`. `ACAD-01`, `OPS-01` and `CARE-01` are ready to start; CARE-01 must implement the approved student-support threat-model invariants beginning with its security-contract milestone.
+Current readiness: `ACAD-01`, `OPS-01` and `CARE-01` are complete and reviewed. `INTEG-01` may now consume only the exact frozen Wave 2 SHAs recorded here. `EXP-01` remains blocked until `GATE-WAVE-2-INTEGRATED` passes.
 
 ## Stream tracker
 
@@ -38,11 +38,11 @@ Current readiness: Wave 2 may use exact reviewed Wave 1 integration SHA `8cc8ee1
 | `SIS-01` | 1 | complete; integrated to `main` | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | complete | reviewed head `5e2499018282d8296abfe093b5dd95b231829379`; main merge `9b9605aff93901eb1ad9e5b4d9ad9d6517d04aba` | none |
 | `FIN-01` | 1 | complete; integrated by `INTEG-01` | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | complete | reviewed head `5f9e1692a8fc19fc2e9789a338d028918acdeaf6`; integration merge `da3d561` | none |
 | `INT-01` | 1 | complete; integrated by `INTEG-01` | `55114f55a375d3d79dba7ea21f984b789b5dbca1` | complete | reviewed head `bfa95a4a42025213fa7c2090a587ef5304924da7`; integration merge `0822462` | none |
-| `ACAD-01` | 2 | ready to start | `8cc8ee1562ade672b14c1c44af935fe7e2307976` | academic structure | none | none |
-| `OPS-01` | 2 | ready to start | `8cc8ee1562ade672b14c1c44af935fe7e2307976` | HR/staff | none | none |
-| `CARE-01` | 2 | ready to start | `8cc8ee1562ade672b14c1c44af935fe7e2307976` | security contract | threat-model gate passed; evidence commit recorded below | none |
+| `ACAD-01` | 2 | complete; reviewed; waiting integration | `8cc8ee1562ade672b14c1c44af935fe7e2307976` | complete | reviewed head `1d895afdf51f6d4f6323ada4b93d9ba32b244480`; PR `#7` green | none |
+| `OPS-01` | 2 | complete; reviewed; waiting integration | `8cc8ee1562ade672b14c1c44af935fe7e2307976` | complete | reviewed head `fc749d7c0ece36964da8f923431bb3b7ac925e56`; final branch CI `30419451935` green | none |
+| `CARE-01` | 2 | complete; reviewed; waiting integration | `8cc8ee1562ade672b14c1c44af935fe7e2307976` | complete | reviewed head `9304bd6c425eca4ec69db90c1f1cab3f7a409b8d`; draft PR `#19` final-head CI `30427728682` green | integration-owned conflict resolution and fresh disposable recovery rehearsal |
 | `EXP-01` | 3 | blocked | reviewed Wave 2 integration SHA | persona shells | none | `GATE-WAVE-2-INTEGRATED` |
-| `INTEG-01` | gated serial | Wave 1 gate passed | `042b75990f9cd819239c584a370687042393f6a7` | release Wave 2 from reviewed integration SHA | `8cc8ee1562ade672b14c1c44af935fe7e2307976` | none |
+| `INTEG-01` | gated serial | ready for Wave 2 integration | integration branch head `ec921ea26f6980017f848bfd6646a77868bd4cb1` | serially integrate reviewed ACAD, OPS and CARE SHAs | reviewed Wave 1 integration `8cc8ee1562ade672b14c1c44af935fe7e2307976` | `GATE-WAVE-2-INTEGRATED` verification pending |
 
 ## Required checkpoint evidence format
 
@@ -191,6 +191,17 @@ Coordinator review: current `main` CI PASS at `9b9605aff93901eb1ad9e5b4d9ad9d651
 Reviewed stream SHAs: `SIS-01` `5e2499018282d8296abfe093b5dd95b231829379`; `FIN-01` `5f9e1692a8fc19fc2e9789a338d028918acdeaf6`; `INT-01` `bfa95a4a42025213fa7c2090a587ef5304924da7`
 Integration preview: `FIN-01` and `INT-01` both conflict with current `main` in shared workspace/package/tracker files; no module branch was rewritten, reset or merged during review
 Gate outcome: `GATE-REVIEWED-SHAS-AVAILABLE` passed; `INTEG-01` is ready for Wave 1 serial integration
+Production mutation performed: no
+
+### Wave 2 reviewed-SHA freeze checkpoint
+
+Date/time: 2026-07-29T12:29:00+06:00
+Coordinator review: current `main` SHA `783be43f734178ec65b4c72b7527f4902fd0f0a6` has green CI run `30418088440`; every reviewed Wave 2 candidate descends from exact reviewed Wave 1 integration SHA `8cc8ee1562ade672b14c1c44af935fe7e2307976`
+Reviewed stream SHAs: `ACAD-01` `1d895afdf51f6d4f6323ada4b93d9ba32b244480`; `OPS-01` `fc749d7c0ece36964da8f923431bb3b7ac925e56`; `CARE-01` `9304bd6c425eca4ec69db90c1f1cab3f7a409b8d`
+Review evidence: ACAD PR `#7` is green and mergeable; OPS final module-branch CI `30419451935` passed after verification PR `#10`; CARE draft PR `#19` final-head CI `30427728682` passed and changes after verified implementation SHA `d257a9af11b03d573c4bb2165f934397be8e7fbe` are documentation/board/tracker only
+Integration preview: CARE PR `#19` conflicts with the advanced integration base by design; ACAD, OPS and CARE must not be merged independently. The CARE fixed local worktree remains at checkpoint `e619555955bdcdd2e6dc63d1880018a553bca581` with preserved uncommitted work and must not be reset, discarded or used as the integration source; the exact remote reviewed SHA above is authoritative
+Recovery constraint: Neon is at the 10/10 branch limit, so the fresh disposable FND→SIS→FIN→INT→CARE rehearsal remains an explicit `INTEG-01` responsibility. No existing active or unreviewed Git/Neon branch may be deleted merely to create capacity
+Gate outcome: `GATE-REVIEWED-SHAS-AVAILABLE` remains passed with Wave 2 candidates frozen; `INTEG-01` is ready for serial Wave 2 integration
 Production mutation performed: no
 
 ## SIS-01 evidence
