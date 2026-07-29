@@ -16,13 +16,13 @@ final class MobileBootstrapApi {
 
     try {
       return MobileBootstrapDecoder.decode(response);
-    } on BootstrapContractException catch (error) {
+    } on BootstrapContractException {
       throw SchoolApiException(
         code: 'INVALID_BOOTSTRAP_RESPONSE',
         message: 'The account access response could not be validated.',
         statusCode: null,
       );
-    } on FormatException catch (error) {
+    } on FormatException {
       throw SchoolApiException(
         code: 'INVALID_BOOTSTRAP_RESPONSE',
         message: 'The account access response could not be decoded.',
