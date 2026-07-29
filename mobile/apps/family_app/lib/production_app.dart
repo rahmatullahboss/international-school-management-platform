@@ -185,10 +185,8 @@ class _AuthorizedFamilyAppState extends State<_AuthorizedFamilyApp> {
           routes: [
             GoRoute(
               path: '/',
-              builder: (context, state) => _FamilyHomeScreen(
-                journey: _journey,
-                session: session,
-              ),
+              builder: (context, state) =>
+                  _FamilyHomeScreen(journey: _journey, session: session),
             ),
             if (session.can(SchoolCapability.attendanceRead))
               GoRoute(
@@ -400,16 +398,14 @@ class _AuthorizedFamilyShell extends StatelessWidget {
 }
 
 class _FamilyJourneyView extends StatelessWidget {
-  const _FamilyJourneyView({
-    required this.builder,
-    required this.journey,
-  });
+  const _FamilyJourneyView({required this.builder, required this.journey});
 
   final Widget Function(
     BuildContext context,
     FamilyProfileDirectory directory,
     FamilyDashboardReadModel dashboard,
-  ) builder;
+  )
+  builder;
   final FamilyJourneyController journey;
 
   @override
@@ -467,7 +463,12 @@ class _FamilyHomeScreen extends StatelessWidget {
     journey: journey,
     builder: (context, directory, dashboard) {
       final links = <Widget>[];
-      void addLink(IconData icon, String label, String path, String supporting) {
+      void addLink(
+        IconData icon,
+        String label,
+        String path,
+        String supporting,
+      ) {
         if (links.isNotEmpty) links.add(const Divider());
         links.add(
           ListTile(
@@ -596,7 +597,9 @@ class _FamilyAttendanceScreen extends StatelessWidget {
                           'Absent',
                           attendance.absentSessions,
                         ),
-                        Text('Total finalized sessions · ${attendance.totalSessions}'),
+                        Text(
+                          'Total finalized sessions · ${attendance.totalSessions}',
+                        ),
                       ],
                     ),
             ),
@@ -636,7 +639,9 @@ class _FamilyResultsReadScreen extends StatelessWidget {
                         ListTile(
                           contentPadding: EdgeInsets.zero,
                           leading: const Icon(Icons.verified_outlined),
-                          title: Text('${result.subjectLabel} · ${result.gradeLabel}'),
+                          title: Text(
+                            '${result.subjectLabel} · ${result.gradeLabel}',
+                          ),
                           subtitle: Text(result.assessmentLabel),
                         ),
                     ],

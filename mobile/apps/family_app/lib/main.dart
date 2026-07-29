@@ -5,10 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:school_app_bootstrap/school_app_bootstrap.dart';
+import 'package:school_api_client/family_read_api.dart';
+import 'package:school_api_client/school_api_client.dart';
+import 'package:school_family_domain/school_family_domain.dart';
 import 'package:school_authentication/school_authentication.dart';
 import 'package:school_design_system/school_design_system.dart';
 import 'package:school_mobile_core/mobile_core.dart';
 
+part 'family_journey_controller.dart';
 part 'production_app.dart';
 
 void main() {

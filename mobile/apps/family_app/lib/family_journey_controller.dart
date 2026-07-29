@@ -89,12 +89,7 @@ final class FamilyJourneyController extends ChangeNotifier {
     if (dashboard.student.studentId != directory.activeStudentId) {
       throw const FamilyDomainException('FAMILY_DASHBOARD_PROFILE_MISMATCH');
     }
-    _set(
-      FamilyJourneyState.ready(
-        dashboard: dashboard,
-        directory: directory,
-      ),
-    );
+    _set(FamilyJourneyState.ready(dashboard: dashboard, directory: directory));
   }
 
   bool _sameScope(SchoolSession first, SchoolSession second) =>
@@ -115,8 +110,7 @@ final class FamilyJourneyController extends ChangeNotifier {
     return 'FAMILY_JOURNEY_UNAVAILABLE';
   }
 
-  bool _isCurrent(int generation) =>
-      !_disposed && generation == _generation;
+  bool _isCurrent(int generation) => !_disposed && generation == _generation;
 
   void _set(FamilyJourneyState next) {
     if (_disposed) return;

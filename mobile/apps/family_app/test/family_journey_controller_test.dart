@@ -22,48 +22,51 @@ void main() {
     controller.dispose();
   });
 
-  test('switches children and discards a slower stale dashboard response', () async {
-    final repository = ControlledFamilyRepository();
-    final controller = FamilyJourneyController(
-      repository: repository,
-      session: guardianSession(),
-    );
-    final initialization = controller.initialize();
-    await repository.profileRequested.future;
-    repository.profileResponse.complete(directory());
-    await repository.firstDashboardRequested.future;
+  test(
+    'switches children and discards a slower stale dashboard response',
+    () async {
+      final repository = ControlledFamilyRepository();
+      final controller = FamilyJourneyController(
+        repository: repository,
+        session: guardianSession(),
+      );
+      final initialization = controller.initialize();
+      await repository.profileRequested.future;
+      repository.profileResponse.complete(directory());
+      await repository.firstDashboardRequested.future;
 
-    final switchFuture = controller.selectStudent('student-2');
-    await repository.secondDashboardRequested.future;
-    repository.secondDashboardResponse.complete(dashboard('student-2'));
-    await switchFuture;
-    repository.firstDashboardResponse.complete(dashboard('student-1'));
-    await initialization;
+      final switchFuture = controller.selectStudent('student-2');
+      await repository.secondDashboardRequested.future;
+      repository.secondDashboardResponse.complete(dashboard('student-2'));
+      await switchFuture;
+      repository.firstDashboardResponse.complete(dashboard('student-1'));
+      await initialization;
 
-    expect(controller.state.phase, FamilyJourneyPhase.ready);
-    expect(controller.state.directory?.activeStudentId, 'student-2');
-    expect(controller.state.dashboard?.student.studentId, 'student-2');
-    controller.dispose();
-  });
+      expect(controller.state.phase, FamilyJourneyPhase.ready);
+      expect(controller.state.directory?.activeStudentId, 'student-2');
+      expect(controller.state.dashboard?.student.studentId, 'student-2');
+      controller.dispose();
+    },
+  );
 
-  test('fails closed when dashboard identity differs from selected child', () async {
-    final repository = FakeFamilyRepository(
-      dashboardFactory: (studentId) => dashboard('different-student'),
-    );
-    final controller = FamilyJourneyController(
-      repository: repository,
-      session: guardianSession(),
-    );
+  test(
+    'fails closed when dashboard identity differs from selected child',
+    () async {
+      final repository = FakeFamilyRepository(
+        dashboardFactory: (studentId) => dashboard('different-student'),
+      );
+      final controller = FamilyJourneyController(
+        repository: repository,
+        session: guardianSession(),
+      );
 
-    await controller.initialize();
+      await controller.initialize();
 
-    expect(controller.state.phase, FamilyJourneyPhase.failed);
-    expect(
-      controller.state.reasonCode,
-      'FAMILY_DASHBOARD_PROFILE_MISMATCH',
-    );
-    controller.dispose();
-  });
+      expect(controller.state.phase, FamilyJourneyPhase.failed);
+      expect(controller.state.reasonCode, 'FAMILY_DASHBOARD_PROFILE_MISMATCH');
+      controller.dispose();
+    },
+  );
 
   test('reloads when tenant, campus, persona or capabilities change', () async {
     final repository = FakeFamilyRepository();
