@@ -1,0 +1,552 @@
+.teacher-acad {
+  --teacher-ink: #142a3b;
+  --teacher-muted: #526879;
+  --teacher-paper: #ffffff;
+  --teacher-canvas: #eef3f5;
+  --teacher-rule: #c8d5dc;
+  --teacher-accent: #006d77;
+  --teacher-accent-strong: #004f57;
+  --teacher-focus: #0b63ce;
+  --teacher-success-bg: #e4f4eb;
+  --teacher-success-text: #125b34;
+  --teacher-warning-bg: #fff0c9;
+  --teacher-warning-text: #704700;
+  --teacher-error-bg: #fde7e5;
+  --teacher-error-text: #8b1c17;
+  --teacher-info-bg: #e7f1f7;
+  --teacher-info-text: #18445d;
+}
+
+.teacher-acad {
+  min-block-size: 100%;
+  padding: clamp(1rem, 2.5vw, 2.5rem);
+  color: var(--teacher-ink);
+  background: var(--teacher-canvas);
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.teacher-acad *,
+.teacher-acad *::before,
+.teacher-acad *::after {
+  box-sizing: border-box;
+}
+
+.teacher-acad :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid var(--teacher-focus);
+  outline-offset: 3px;
+}
+
+.teacher-acad a {
+  color: var(--teacher-accent-strong);
+  font-weight: 650;
+  text-underline-offset: 0.2em;
+}
+
+.teacher-acad :where(h1, h2, h3, p, td, th, a, span, strong, label) {
+  overflow-wrap: anywhere;
+}
+
+.teacher-acad__skip {
+  position: fixed;
+  inset-block-start: 0.5rem;
+  inset-inline-start: 0.5rem;
+  z-index: 100;
+  padding: 0.7rem 1rem;
+  border-radius: 8px;
+  color: #ffffff !important;
+  background: var(--teacher-accent-strong);
+  transform: translateY(-150%);
+}
+
+.teacher-acad__skip:focus {
+  transform: translateY(0);
+}
+
+.teacher-acad--state {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+  max-inline-size: 84rem;
+  margin-inline: auto;
+}
+
+.teacher-acad--state h1,
+.teacher-acad--state p {
+  margin: 0;
+}
+
+.teacher-acad__error {
+  padding: clamp(1.5rem, 3vw, 3rem);
+  color: var(--teacher-error-text);
+  background: var(--teacher-error-bg);
+  border: 1px solid #e5aaa6;
+  border-radius: 12px;
+}
+
+.teacher-acad__error p {
+  margin-block: 0.5rem 1rem;
+}
+
+.teacher-acad__skeleton {
+  block-size: 16rem;
+  background: linear-gradient(90deg, #dfe7eb 25%, #f7fafb 50%, #dfe7eb 75%);
+  background-size: 200% 100%;
+  border-radius: 12px;
+  animation: teacher-acad-skeleton 1.6s ease-in-out infinite;
+}
+
+@keyframes teacher-acad-skeleton {
+  from {
+    background-position: 100% 0;
+  }
+
+  to {
+    background-position: -100% 0;
+  }
+}
+
+.teacher-acad button,
+.teacher-acad input,
+.teacher-acad select,
+.teacher-acad textarea {
+  min-block-size: 2.75rem;
+  border: 1px solid #8ba0ad;
+  border-radius: 9px;
+  color: var(--teacher-ink);
+  background: var(--teacher-paper);
+  font: inherit;
+}
+
+.teacher-acad input,
+.teacher-acad select,
+.teacher-acad textarea {
+  inline-size: 100%;
+  padding: 0.55rem 0.7rem;
+}
+
+.teacher-acad textarea {
+  resize: vertical;
+}
+
+.teacher-acad button {
+  padding-inline: 1rem;
+  border-color: var(--teacher-accent);
+  color: #ffffff;
+  background: var(--teacher-accent);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.teacher-acad button:hover:not(:disabled) {
+  background: var(--teacher-accent-strong);
+}
+
+.teacher-acad button:disabled {
+  border-color: #9cabb4;
+  color: #586b76;
+  background: #dfe6ea;
+  cursor: not-allowed;
+}
+
+.teacher-acad__masthead,
+.teacher-acad__nav,
+.teacher-acad__next,
+.teacher-acad__panel {
+  max-inline-size: 84rem;
+  margin-inline: auto;
+  background: var(--teacher-paper);
+}
+
+.teacher-acad__masthead {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 24rem);
+  gap: clamp(1.5rem, 4vw, 4rem);
+  align-items: end;
+  padding: clamp(1.5rem, 3vw, 3rem);
+  color: #f7fbfd;
+  background: var(--teacher-ink);
+  border-radius: 16px 16px 0 0;
+}
+
+.teacher-acad__masthead p {
+  margin: 0 0 0.4rem;
+  color: #b9dce0;
+  font-weight: 700;
+}
+
+.teacher-acad__masthead h1 {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.teacher-acad__masthead > div > span {
+  display: block;
+  margin-block-start: 0.75rem;
+  color: #d9e7ec;
+}
+
+.teacher-acad__sync {
+  display: grid;
+  gap: 0.35rem;
+  padding-block-start: 1rem;
+  border-block-start: 1px solid #5f7585;
+}
+
+.teacher-acad__sync span {
+  color: #d9e7ec;
+}
+
+.teacher-acad__sync form {
+  margin-block-start: 0.5rem;
+}
+
+.teacher-acad__sync[data-state='offline'] strong,
+.teacher-acad__sync[data-state='error'] strong {
+  color: #ffd990;
+}
+
+.teacher-acad__nav {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 10;
+  display: flex;
+  gap: 0.35rem;
+  overflow-x: auto;
+  padding: 0.75rem clamp(1rem, 3vw, 2rem);
+  border-block-end: 1px solid var(--teacher-rule);
+}
+
+.teacher-acad__nav a {
+  padding: 0.55rem 0.8rem;
+  border-radius: 8px;
+  color: var(--teacher-muted);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.teacher-acad__nav a:hover {
+  color: var(--teacher-ink);
+  background: var(--teacher-canvas);
+}
+
+.teacher-acad__next {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem clamp(1rem, 3vw, 2rem);
+  color: var(--teacher-info-text);
+  background: var(--teacher-info-bg);
+  border-block-end: 1px solid #bad1de;
+}
+
+.teacher-acad__next h2,
+.teacher-acad__next p {
+  margin: 0;
+}
+
+.teacher-acad__next h2 {
+  font-size: 1rem;
+}
+
+.teacher-acad__next p {
+  margin-block-start: 0.25rem;
+}
+
+.teacher-acad__panel {
+  padding: clamp(1.5rem, 3vw, 3rem);
+  border-block-end: 1px solid var(--teacher-rule);
+}
+
+.teacher-acad__panel > header {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: space-between;
+  align-items: start;
+  margin-block-end: 1.5rem;
+}
+
+.teacher-acad__panel h2,
+.teacher-acad__panel h3 {
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.teacher-acad__panel h2 {
+  font-size: 1.5rem;
+}
+
+.teacher-acad__panel h3 {
+  font-size: 1.2rem;
+}
+
+.teacher-acad__panel > header p {
+  max-inline-size: 70ch;
+  margin: 0.4rem 0 0;
+  color: var(--teacher-muted);
+}
+
+.teacher-acad__panel-state {
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.teacher-acad__context {
+  margin: 0 0 1rem;
+  color: var(--teacher-muted);
+  font-weight: 650;
+}
+
+.teacher-acad__schedule {
+  margin: 0;
+  padding: 0;
+  border-block-start: 1px solid var(--teacher-rule);
+  list-style: none;
+}
+
+.teacher-acad__schedule li {
+  display: grid;
+  grid-template-columns: minmax(10rem, 0.8fr) minmax(14rem, 1.4fr) auto auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem 0.5rem;
+  border-block-end: 1px solid var(--teacher-rule);
+}
+
+.teacher-acad__schedule li[data-status='next'] {
+  background: #f1f8f8;
+}
+
+.teacher-acad__schedule time {
+  color: var(--teacher-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.teacher-acad__schedule div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.teacher-acad__schedule div span {
+  color: var(--teacher-muted);
+}
+
+.teacher-acad__substitution {
+  color: var(--teacher-warning-text) !important;
+  font-weight: 650;
+}
+
+.teacher-acad__status {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 1.75rem;
+  padding-inline: 0.65rem;
+  border-radius: 999px;
+  color: var(--teacher-info-text);
+  background: var(--teacher-info-bg);
+  font-size: 0.78rem;
+  font-weight: 750;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.teacher-acad__status[data-tone='online'],
+.teacher-acad__status[data-tone='completed'],
+.teacher-acad__status[data-tone='finalized'],
+.teacher-acad__status[data-tone='published'],
+.teacher-acad__status[data-tone='closed'],
+.teacher-acad__status[data-tone='moderated'] {
+  color: var(--teacher-success-text);
+  background: var(--teacher-success-bg);
+}
+
+.teacher-acad__status[data-tone='offline'],
+.teacher-acad__status[data-tone='syncing'],
+.teacher-acad__status[data-tone='incomplete'],
+.teacher-acad__status[data-tone='pending'],
+.teacher-acad__status[data-tone='late'] {
+  color: var(--teacher-warning-text);
+  background: var(--teacher-warning-bg);
+}
+
+.teacher-acad__status[data-tone='error'],
+.teacher-acad__status[data-tone='cancelled'],
+.teacher-acad__status[data-tone='missing'] {
+  color: var(--teacher-error-text);
+  background: var(--teacher-error-bg);
+}
+
+.teacher-acad__table {
+  overflow: auto;
+  max-inline-size: 100%;
+  border-block: 1px solid var(--teacher-rule);
+}
+
+.teacher-acad table {
+  inline-size: 100%;
+  min-inline-size: 52rem;
+  border-collapse: collapse;
+  font-size: 0.925rem;
+}
+
+.teacher-acad caption {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.teacher-acad th,
+.teacher-acad td {
+  padding: 0.85rem 0.75rem;
+  text-align: start;
+  vertical-align: top;
+  border-block-end: 1px solid var(--teacher-rule);
+}
+
+.teacher-acad th {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1;
+  color: var(--teacher-muted);
+  background: var(--teacher-canvas);
+  font-size: 0.8rem;
+  font-weight: 750;
+}
+
+.teacher-acad td strong,
+.teacher-acad td span {
+  display: block;
+}
+
+.teacher-acad td span {
+  color: var(--teacher-muted);
+  font-size: 0.825rem;
+}
+
+.teacher-acad__row-form {
+  display: grid;
+  grid-template-columns: minmax(8rem, 0.7fr) minmax(10rem, 1fr) auto;
+  gap: 0.6rem;
+  align-items: start;
+}
+
+.teacher-acad__comment-form {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.teacher-acad__finalize {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  align-items: center;
+  margin-block-start: 1rem;
+}
+
+.teacher-acad__finalize p {
+  max-inline-size: 58ch;
+  margin: 0;
+  color: var(--teacher-muted);
+}
+
+.teacher-acad__grade-entry {
+  margin-block-start: 2rem;
+}
+
+.teacher-acad__grade-entry h3 {
+  margin-block-end: 1rem;
+}
+
+.teacher-acad__empty {
+  display: grid;
+  gap: 0.25rem;
+  padding: 1.25rem 0;
+  border-block: 1px solid var(--teacher-rule);
+}
+
+.teacher-acad__empty span {
+  color: var(--teacher-muted);
+}
+
+.teacher-acad__visually-hidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (max-width: 56rem) {
+  .teacher-acad {
+    padding: 0;
+  }
+
+  .teacher-acad__masthead {
+    grid-template-columns: 1fr;
+    border-radius: 0;
+  }
+
+  .teacher-acad__panel,
+  .teacher-acad__next {
+    padding-inline: 1rem;
+  }
+
+  .teacher-acad__schedule li {
+    grid-template-columns: 1fr auto;
+  }
+
+  .teacher-acad__schedule time,
+  .teacher-acad__schedule div {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 40rem) {
+  .teacher-acad__panel > header,
+  .teacher-acad__next,
+  .teacher-acad__finalize {
+    display: grid;
+  }
+
+  .teacher-acad__row-form {
+    grid-template-columns: 1fr;
+  }
+
+  .teacher-acad__row-form button,
+  .teacher-acad__finalize button {
+    inline-size: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .teacher-acad__skeleton {
+    animation: none;
+    background: #dfe7eb;
+  }
+}
+
+@media (forced-colors: active) {
+  .teacher-acad__status,
+  .teacher-acad button,
+  .teacher-acad__skip {
+    border: 1px solid ButtonText;
+  }
+}

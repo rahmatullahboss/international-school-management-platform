@@ -11,6 +11,11 @@
     "people/**/*.ts",
     "admissions/**/*.ts",
     "student-lifecycle/**/*.ts",
+    "academics/src/**/*.ts",
+    "scheduling/src/**/*.ts",
+    "attendance/src/**/*.ts",
+    "gradebook/src/**/*.ts",
+    "records/src/**/*.ts",
     "billing/src/**/*.ts",
     "ledger/src/**/*.ts"
   ],

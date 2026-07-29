@@ -485,7 +485,127 @@ Production mutation performed: no; the generic `DATABASE_URL`/Neon `main` databa
 
 ## ACAD-01 evidence
 
-No execution evidence recorded.
+### Milestone 1 — academic structure
+
+Date/time: 2026-07-28T23:35:09+06:00
+Stream: ACAD-01
+Milestone completed: 1 — academic years/terms, instructional calendars, bell schedules, curriculum/program/course versions, standards, class sections, staff assignments and rosters
+Git branch: `module/academics-attendance-records`
+Worktree: `.worktrees/acad-01-academics`
+Neon branch: `agent/acad-01-academics` (`br-gentle-waterfall-axcl7l8z`), connector-created parent `main` (`br-cool-wildflower-axsot8l1`); reviewed Wave 1 schema replay remains required before completion
+Starting base: `8cc8ee1562ade672b14c1c44af935fe7e2307976`
+Checkpoint SHA: `224ba1c2ec23e0861ac1f432b08d797d90640347`
+Changed owned paths: `packages/modules/academics/**`; `tests/academics/academic-structure.test.ts`; `docs/modules/academics/contracts.md`; compatible append-only TypeScript include registration
+Focused checks and results: dependency install/audit PASS with 0 vulnerabilities; module TypeScript project-reference build PASS; focused ESLint PASS; academic structure Vitest 5/5 PASS; migration contract asserts 13 tenant-owned tables, forced RLS, opaque SIS/INT references and published-version immutability
+Cross-module contract outcome: SIS student/staff/enrollment, tenancy campus and INT country-pack identifiers remain opaque references; no foreign key or write into another module schema; FIN not coupled
+UI/design evidence: not applicable to this backend/domain checkpoint; Impeccable 4.0.2 loaded; reviewed base does not contain foundation-owned `PRODUCT.md` or `DESIGN.md`, recorded in module contract without recreating them
+Gate outcome: milestone 1 passed; `GATE-ACAD-COMPLETE` remains blocked pending milestones 2–7 and reviewed-base Neon replay
+Exact next milestone: 2 — timetable versions, meetings, rooms, conflict detection, substitutions, publish/unpublish and student/teacher schedule views
+Dirty/uncommitted state: tracker evidence only
+Production mutation performed: no
+
+### Milestone 2 — timetable and scheduling
+
+Date/time: 2026-07-28T23:38:55+06:00
+Stream: ACAD-01
+Milestone completed: 2 — versioned timetables, meeting patterns/instances, teacher-room-student conflict detection, publication, substitutions and schedule views
+Git branch/worktree: `module/academics-attendance-records` / `.worktrees/acad-01-academics`
+Neon branch: `agent/acad-01-academics` (`br-gentle-waterfall-axcl7l8z`)
+Starting base: `8cc8ee1562ade672b14c1c44af935fe7e2307976`
+Checkpoint SHA: `48e17eafba473cae544fbef99e7edf6a7e808d06`
+Changed owned paths: `packages/modules/scheduling/**`; `tests/academics/timetable.test.ts`; `docs/modules/academics/timetable.md`; append-only TypeScript include registration
+Focused checks and results: focused ESLint PASS; module TypeScript project-reference build PASS; cumulative academic Vitest 10/10 PASS; idempotent materialization, local timezone intent, conflict blocking, immutable publication, dated teacher/room substitution and tenant-scoped student/teacher views verified
+Gate outcome: milestone 2 passed; live reviewed-base migration replay remains pending final database gate
+Exact next milestone: 3 — attendance policies/codes/sessions, low-latency roster capture, offline sync, amendments, finalization, notices, alerts and reports
+Dirty/uncommitted state: tracker evidence only
+Production mutation performed: no
+
+### Milestone 3 — attendance and offline synchronization
+
+Date/time: 2026-07-28T23:44:29+06:00
+Stream: ACAD-01
+Milestone completed: 3 — versioned policies/codes, meeting-resolved sessions, roster capture, offline batch idempotency, reconciliation, finalization, approved amendments, guardian notices and attendance summaries/alerts
+Git branch/worktree: `module/academics-attendance-records` / `.worktrees/acad-01-academics`
+Neon branch: `agent/acad-01-academics` (`br-gentle-waterfall-axcl7l8z`)
+Starting base: `8cc8ee1562ade672b14c1c44af935fe7e2307976`
+Checkpoint SHA: `f2005a19fadf4e9149b78aa24c781cbce1736dc4`
+Changed owned paths: `packages/modules/attendance/**`; `tests/academics/attendance.test.ts`; `docs/modules/academics/attendance.md`; append-only TypeScript include registration
+Focused checks and results: focused ESLint PASS; module TypeScript project-reference build PASS; cumulative academic Vitest 15/15 PASS; identical offline retries replay, changed payload IDs conflict, invalid rows isolate, one-current-result invariant, incomplete finalization guard, approved historical amendment and chronic-absence calculation verified
+Gate outcome: milestone 3 passed; live reviewed-base migration replay remains pending final database gate
+Exact next milestone: 4 — grading policy/scales/categories, assessments/rubrics, score states, explainable calculations, moderation, locks, publication windows and grade-change approvals
+Dirty/uncommitted state: tracker evidence only
+Production mutation performed: no
+
+### Milestone 4 — gradebook, moderation and publication
+
+Date/time: 2026-07-28T23:50:28+06:00
+Stream: ACAD-01
+Milestone completed: 4 — versioned grading policies/scales/categories, rubrics/outcomes, assessments, raw result states, explainable calculations, moderation, locks, publication windows and approved grade changes
+Git branch/worktree: `module/academics-attendance-records` / `.worktrees/acad-01-academics`
+Neon branch: `agent/acad-01-academics` (`br-gentle-waterfall-axcl7l8z`)
+Starting base: `8cc8ee1562ade672b14c1c44af935fe7e2307976`
+Checkpoint SHA: `42a354f51b29e4154b56becebf9e4c41f7d171a1`
+Changed owned paths: `packages/modules/gradebook/**`; `tests/academics/gradebook.test.ts`; `docs/modules/academics/gradebook.md`; append-only TypeScript include registration
+Focused checks and results: focused ESLint PASS; module TypeScript project-reference build PASS; cumulative academic Vitest 20/20 PASS; category/scale validation, raw-score/state separation, standards evidence, weighted calculation inputs/formula, moderation-before-lock, publication windows and approved locked-grade changes verified
+Gate outcome: milestone 4 passed; live reviewed-base migration replay remains pending final database gate
+Exact next milestone: 5 — reporting periods/templates, report-card snapshots/approval, promotion/retention, credits/GPA and immutable transcript issue/amend/reissue
+Dirty/uncommitted state: tracker evidence only
+Production mutation performed: no
+
+### Milestone 5 — report cards, credits/GPA and transcripts
+
+Date/time: 2026-07-28T23:55:42+06:00
+Stream: ACAD-01
+Milestone completed: 5 — reporting periods/templates, report-card snapshots/approval/publication, promotion/retention decisions, versioned credit/GPA calculations and immutable transcript issue/amend/reissue history
+Git branch/worktree: `module/academics-attendance-records` / `.worktrees/acad-01-academics`
+Neon branch: `agent/acad-01-academics` (`br-gentle-waterfall-axcl7l8z`)
+Starting base: `8cc8ee1562ade672b14c1c44af935fe7e2307976`
+Checkpoint SHA: `2e8464e95dec7d25841463c922d0ac0b07fa2b78`
+Changed owned paths: `packages/modules/records/**`; `tests/academics/records.test.ts`; `docs/modules/academics/records.md`; append-only TypeScript include registration
+Focused checks and results: focused ESLint PASS; module TypeScript project-reference build PASS; cumulative academic Vitest 25/25 PASS; closed-period/template validation, approval-separated publication, promotion evidence/decision, explainable credit/GPA snapshot, independent transcript amendment approval and immutable version history verified
+Gate outcome: milestone 5 passed; live reviewed-base migration replay remains pending final database gate
+Exact next milestone: 6 — permission-scoped application APIs, reports/import-export, admin/teacher academic UI and Impeccable accessibility/responsive/RTL hardening evidence
+Dirty/uncommitted state: tracker evidence only
+Production mutation performed: no
+
+### Milestone 6 — application APIs, reports and academic workspaces
+
+Date/time: 2026-07-29T00:21:15+06:00
+Stream: ACAD-01
+Milestone completed: 6 — deny-by-default application facade, external SIS/INT reference validation, scoped attendance/grade/records APIs, attendance reporting, safe CSV export, validated import staging, admin control room and teacher academic workspace
+Git branch/worktree: `module/academics-attendance-records` / `.worktrees/acad-01-academics`
+Neon branch: `agent/acad-01-academics` (`br-gentle-waterfall-axcl7l8z`)
+Starting base: `8cc8ee1562ade672b14c1c44af935fe7e2307976`
+Checkpoint SHA: `0950a95222daba35301fde65e31f9dd30b9fc492`
+Changed owned paths: `packages/modules/academics/src/application.ts`; academic public export; `apps/web-admin/src/features/academics/**`; `apps/web-teacher/src/features/academics/**`; `tests/academics/application-service.test.ts`; `tests/academics/academic-ui.test.tsx`; application/UI and workflow evidence docs
+Focused checks and results: focused Prettier/ESLint PASS; module and admin TypeScript project-reference builds PASS; standalone teacher strict TypeScript PASS; application-service tests 6/6 PASS; SSR UI tests 6/6 PASS; cumulative ACAD Vitest 37/37 PASS; Impeccable detector 0 findings; manual critique/audit resolved skip navigation, locale-aware counts, loading/error recovery, scoped tokens, long-content wrapping and invalid empty grade-state option; responsive/RTL, forced-colour and reduced-motion assertions PASS
+Cross-module outcome: SIS/tenancy/INT identifiers validated only through public external contracts; no writes to active Wave 2 branches or other module schemas; ordinary academic flows remain uncoupled from FIN
+UI authority note: exact reviewed base lacks foundation-owned `PRODUCT.md` and `DESIGN.md`; ACAD did not recreate them and documented repository-design/Operate workflow substitution
+Gate outcome: milestone 6 passed; final complete gate requires root verification, reviewed-base Neon migration replay/isolation probes, recovery evidence, final docs and handoff
+Exact next milestone: 7 — full repository verification, migration composition on isolated Neon, RLS/immutability/recovery probes, observability/release documentation and final PR handoff
+Dirty/uncommitted state: tracker evidence only
+Production mutation performed: no
+
+### Milestone 7 — verification, recovery and release handoff
+
+Date/time: 2026-07-29T00:39:35+06:00
+Stream: ACAD-01
+Milestone completed: 7 — ordered migration manifest, observability/readiness, isolated Neon replay, forced-RLS/immutability/recovery probes, root verification, operational runbook, release handoff and integration PR
+Git branch/worktree: `module/academics-attendance-records` / `.worktrees/acad-01-academics`
+Neon branch: `agent/acad-01-academics` (`br-gentle-waterfall-axcl7l8z`) in project `lingering-brook-52999532`; PostgreSQL 17.10; no production endpoint used
+Starting base: `8cc8ee1562ade672b14c1c44af935fe7e2307976`
+Checkpoint SHA: `baa62b906194deea2cafc3eb43e388c980e78d0b`
+Pull request: #7 — https://github.com/rahmatullahboss/international-school-management-platform/pull/7 targeting `integration/international-school-platform-v1`
+Database evidence: exact reviewed-base SQL migrations extracted from the reviewed SHA and replayed before ACAD migrations in one `ON_ERROR_STOP` transaction; second full replay retained the same ledger count and exactly 5 ACAD rows; 5 schemas and 53 ACAD tables verified; all 53 tables have RLS enabled, forced RLS and `tenant_policy`; required publication/finalisation/lock/transcript immutability triggers verified
+Recovery evidence: rollback-only `app_runtime` probe confirmed tenant A could not see tenant B, an unrelated tenant saw zero rows, published academic-version mutation was rejected, and a post-rollback owner query found zero `ACAD-PROBE-%` rows
+Focused/module checks: ACAD Vitest 42/42 PASS; module/admin TypeScript PASS; standalone teacher strict TypeScript PASS; focused ESLint/Prettier PASS; Impeccable detector 0 findings; npm production dependency audit PASS with 0 vulnerabilities; ACAD static hygiene/private-schema dependency checks PASS
+Root checks: `format:check` PASS; `lint` PASS; `typecheck` PASS; `test` PASS; `build` PASS; `verify:boundaries` PASS; `verify:artifacts` PASS
+Known coordinator-owned blocker: root `verify:migrations` and `verify:rollbacks` fail before verification because reviewed base `package.json` references missing `scripts/verify-migrations.mjs`; ACAD did not recreate shared tooling outside ownership and supplies module manifest, assertion-only schema verifier, rollback-only probe and live Neon evidence
+Documentation: contracts, timetable, attendance, gradebook, records, application/UI, Impeccable evidence, operations, runbook, migration evidence and release handoff complete
+Gate outcome: ACAD implementation and module-owned verification complete; `GATE-ACAD-COMPLETE` is READY FOR INTEGRATION REVIEW but global migration/rollback gate remains BLOCKED solely on restoration of coordinator-owned root verifier
+Exact integration next step: restore the shared migration verifier, replay reviewed-base + ACAD on a fresh equivalent Neon branch, run all root gates, review PR #7 and merge through the integration stream; do not deploy from the module branch
+Dirty/uncommitted state: tracker evidence only
+Production mutation performed: no
 
 ## OPS-01 evidence
 
