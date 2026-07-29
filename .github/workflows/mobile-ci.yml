@@ -13,7 +13,7 @@ on:
       - '.github/workflows/mobile-ci.yml'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   verify-mobile:
@@ -31,25 +31,11 @@ jobs:
       - name: Resolve workspace dependencies
         working-directory: mobile
         run: flutter pub get
-      - name: Canonicalize mobile sources
-        run: |
-          cd mobile
-          dart format .
-          rm -rf .dart_tool apps/*/.dart_tool packages/*/.dart_tool
-      - name: Commit canonical source cleanup
-        if: github.event_name == 'push'
-        run: |
-          if git diff --quiet -- mobile; then
-            exit 0
-          fi
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add -A mobile
-          git commit -m "chore(MOB-01): remove generated Flutter metadata"
-          git push origin HEAD:module/flutter-mobile-apps
-      - name: Restore workspace metadata for verification
+      - name: Verify formatting
         working-directory: mobile
-        run: flutter pub get
+        run: dart format --output=none --set-exit-if-changed .
+      - name: Verify generated files remain ignored
+        run: git diff --exit-code -- mobile
       - name: Analyze family app
         working-directory: mobile/apps/family_app
         run: flutter analyze
