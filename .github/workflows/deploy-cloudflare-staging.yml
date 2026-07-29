@@ -14,7 +14,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: cloudflare-staging-pilot
+  group: cloudflare-staging-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 jobs:
