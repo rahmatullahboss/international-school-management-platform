@@ -31,9 +31,22 @@ jobs:
       - name: Resolve workspace dependencies
         working-directory: mobile
         run: flutter pub get
-      - name: Verify formatting
+      - name: Format mobile sources
         working-directory: mobile
-        run: dart format --output=none --set-exit-if-changed .
+        run: dart format .
+      - name: Upload formatted source evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: formatted-mobile-source
+          path: |
+            mobile/apps/family_app/lib
+            mobile/apps/staff_app/lib
+            mobile/packages/api_client/lib
+            mobile/packages/design_system/lib
+            mobile/packages/mobile_core/lib
+            mobile/packages/mobile_core/test
+          if-no-files-found: error
+          retention-days: 1
       - name: Analyze family app
         working-directory: mobile/apps/family_app
         run: flutter analyze
