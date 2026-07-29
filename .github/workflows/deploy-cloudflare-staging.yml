@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   verify-deploy-smoke:
-    if: github.event_name == 'workflow_dispatch' || github.head_ref == 'deploy/cloudflare-staging-pilot' || github.head_ref == 'pilot/runtime-portal-composition'
+    if: github.event_name == 'workflow_dispatch' || github.head_ref == 'deploy/cloudflare-staging-pilot' || github.head_ref == 'pilot/runtime-portal-composition' || github.head_ref == 'ux/smooth-operational-experience-v1'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     environment: cloudflare-staging
@@ -132,5 +132,5 @@ jobs:
             echo "- Guardian: $WEB_URL/family"
             echo "- Student: $WEB_URL/student"
             echo "- API health: $API_URL/health"
-            echo '- Scope: composed role portals with synthetic pilot data; production mutations remain disabled.'
+            echo '- Scope: continuous client navigation and clearer task-led role portals with synthetic pilot data; production mutations remain disabled.'
           } >> "$GITHUB_STEP_SUMMARY"
