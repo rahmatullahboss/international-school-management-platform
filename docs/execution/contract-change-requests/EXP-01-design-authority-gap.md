@@ -44,6 +44,8 @@ No shared component API, token implementation, module behavior, database object 
 - no architecture-boundary or module-owned implementation changes;
 - `EXP-01` consumes the reviewed repair commit and records both authority SHAs.
 
+Canonical repository formatting was applied before the verification run; the one-shot formatting workflow removed itself from the final branch tree.
+
 ## Coordinator decision
 
 **Approved as a compatible foundation contract repair.** The repair documents confirmed product facts and the incumbent implemented visual system. Final public brand assets, logo, custom typography and marketing identity remain explicitly undecided and cannot be fabricated by module agents.
