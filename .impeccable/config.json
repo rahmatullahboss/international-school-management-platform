@@ -1,0 +1,11 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [],
+    "designSystem": {
+      "enabled": true
+    }
+  },
+  "updateCheck": true
+}
