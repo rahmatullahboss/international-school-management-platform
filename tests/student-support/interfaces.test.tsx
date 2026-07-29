@@ -29,7 +29,7 @@ describe('CARE restricted admin interfaces', () => {
     );
     expect(html).toContain('Suppressed');
     expect(html).not.toContain('null');
-    expect(html).toContain('Step-up authentication');
+    expect(html).toContain('step-up authentication');
   });
 
   test('masks existence when restricted record access is denied', () => {
