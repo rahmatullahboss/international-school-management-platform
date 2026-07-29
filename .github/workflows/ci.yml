@@ -40,10 +40,20 @@ jobs:
 
           path = Path('apps/web-admin/src/features/experience/AdminOperationsHome.tsx')
           source = path.read_text(encoding='utf-8')
-          old = '  requiredAssurance?: AdminAssurance;'
-          new = '  requiredAssurance?: AdminAssurance | undefined;'
+          old = (
+              "function StepUpLabel(props: {\n"
+              "  assurance: AdminAssurance;\n"
+              "  requiredAssurance?: AdminAssurance;\n"
+              "}): ReactElement | null {\n"
+          )
+          new = (
+              "function StepUpLabel(props: {\n"
+              "  assurance: AdminAssurance;\n"
+              "  requiredAssurance?: AdminAssurance | undefined;\n"
+              "}): ReactElement | null {\n"
+          )
           if source.count(old) != 1:
-              raise SystemExit(f'expected one StepUpLabel prop declaration, found {source.count(old)}')
+              raise SystemExit(f'expected one StepUpLabel signature, found {source.count(old)}')
           path.write_text(source.replace(old, new), encoding='utf-8')
           PY
           git fetch origin module/experience-portals-reporting --depth=1
