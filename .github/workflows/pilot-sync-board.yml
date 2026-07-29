@@ -1,0 +1,64 @@
+name: Sync PILOT-01 Board
+
+on:
+  push:
+    branches:
+      - pilot/runtime-portal-composition
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: pilot/runtime-portal-composition
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.2
+          cache: npm
+      - run: npm ci
+      - name: Update machine-readable board
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path('docs/execution/03-agent-board.json')
+          board = json.loads(path.read_text(encoding='utf-8'))
+          board['updated_at'] = '2026-07-30'
+          board['program_status'] = 'pilot_runtime_composed'
+          board.setdefault('reviewed_bases', {})['cloudflare_staging'] = '41639fab433491df0395d02217a70c6eb2ddb775'
+          board['pilot_runtime'] = {
+              'id': 'PILOT-01',
+              'status': 'gate_passed',
+              'gate': 'GATE-PILOT-RUNTIME-COMPOSED',
+              'branch': 'pilot/runtime-portal-composition',
+              'verified_candidate_sha': 'a50ad782489137f5afd806e30c7a3e249b5074ec',
+              'root_ci_run': '30484622352',
+              'cloudflare_deploy_run': '30484622364',
+              'role_chooser': 'https://international-school-platform-web-staging.rahmatullahzisan.workers.dev/',
+              'role_routes': ['/admin', '/teacher', '/family', '/student'],
+              'api_health': 'https://international-school-platform-api-staging.rahmatullahzisan.workers.dev/health',
+              'synthetic_data_only': True,
+              'production_mutations_enabled': False,
+              'remaining_release_gate': 'reviewed identity, permission-aware APIs, approved staging data, live negative tests, monitoring, backup, rollback and explicit owner authorization',
+          }
+          path.write_text(json.dumps(board, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
+          PY
+      - run: npx prettier --write docs/execution/03-agent-board.json
+      - run: python3 scripts/validate_execution_artifacts.py
+      - name: Commit board update
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/execution/03-agent-board.json
+          git commit -m 'docs(pilot): synchronize machine-readable runtime gate'
+          git push origin HEAD:pilot/runtime-portal-composition
