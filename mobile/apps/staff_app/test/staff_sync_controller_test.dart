@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:school_api_client/school_api_client.dart';
 import 'package:school_mobile_core/mobile_core.dart';
 import 'package:school_staff_app/main.dart';
 import 'package:school_staff_domain/school_staff_domain.dart';
@@ -17,7 +16,7 @@ void main() {
       final repository = _TeacherRepository(
         status: TeacherWriteStatus.accepted,
       );
-      final runtime = teacherRuntime(
+      final runtime = _teacherRuntime(
         repository: repository,
         session: session,
         store: store,
@@ -61,7 +60,7 @@ void main() {
     final session = teacherSession();
     final store = _MemorySyncStore();
     final repository = _TeacherRepository(status: TeacherWriteStatus.conflict);
-    final runtime = teacherRuntime(
+    final runtime = _teacherRuntime(
       repository: repository,
       session: session,
       store: store,
@@ -103,7 +102,7 @@ void main() {
         repository: repository,
         runtimeLoader: ({required repository, required session}) async {
           loads++;
-          return teacherRuntime(
+          return _teacherRuntime(
             repository: repository,
             session: session,
             store: _MemorySyncStore(),
@@ -124,7 +123,7 @@ void main() {
   );
 }
 
-TeacherSyncRuntime teacherRuntime({
+TeacherSyncRuntime _teacherRuntime({
   required TeacherJourneyRepository repository,
   required SchoolSession session,
   required _MemorySyncStore store,
