@@ -13,12 +13,12 @@ on:
       - '.github/workflows/mobile-ci.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   verify-mobile:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -31,11 +31,151 @@ jobs:
       - name: Resolve workspace dependencies
         working-directory: mobile
         run: flutter pub get
+      - name: Generate reviewed native projects
+        if: github.event_name == 'push'
+        run: |
+          set -euo pipefail
+          for app in family_app staff_app; do
+            app_dir="mobile/apps/${app}"
+            cp "${app_dir}/pubspec.yaml" "/tmp/${app}-pubspec.yaml"
+            cp "${app_dir}/lib/main.dart" "/tmp/${app}-main.dart"
+            cp "${app_dir}/test/app_test.dart" "/tmp/${app}-test.dart"
+            pushd "${app_dir}"
+            flutter create \
+              --platforms=android,ios \
+              --project-name "school_${app}" \
+              --org com.ozzyl.school \
+              --no-pub \
+              .
+            popd
+            cp "/tmp/${app}-pubspec.yaml" "${app_dir}/pubspec.yaml"
+            cp "/tmp/${app}-main.dart" "${app_dir}/lib/main.dart"
+            cp "/tmp/${app}-test.dart" "${app_dir}/test/app_test.dart"
+            rm -f "${app_dir}/test/widget_test.dart"
+          done
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          APPS = {
+              'family_app': {
+                  'bundle': 'com.ozzyl.school.family',
+                  'label': 'School Family',
+                  'scheme': 'ozzylschoolfamily',
+              },
+              'staff_app': {
+                  'bundle': 'com.ozzyl.school.staff',
+                  'label': 'School Staff',
+                  'scheme': 'ozzylschoolstaff',
+              },
+          }
+
+          ENTITLEMENTS = '''<?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+          	<key>keychain-access-groups</key>
+          	<array/>
+          </dict>
+          </plist>
+          '''
+
+          for app, config in APPS.items():
+              root = Path('mobile/apps') / app
+
+              gradle = root / 'android/app/build.gradle.kts'
+              source = gradle.read_text()
+              source = re.sub(r'namespace = "[^"]+"', f'namespace = "{config["bundle"]}"', source, count=1)
+              source = re.sub(r'applicationId = "[^"]+"', f'applicationId = "{config["bundle"]}"', source, count=1)
+              source = source.replace('minSdk = flutter.minSdkVersion', 'minSdk = 23')
+              if 'appAuthRedirectScheme' not in source:
+                  marker = '        versionName = flutter.versionName\n'
+                  replacement = marker + '''\n        manifestPlaceholders.putAll(\n            mapOf(\n                "appAuthRedirectScheme" to "''' + config['scheme'] + '''",\n            ),\n        )\n'''
+                  if marker not in source:
+                      raise SystemExit(f'Android defaultConfig marker missing for {app}')
+                  source = source.replace(marker, replacement, 1)
+              gradle.write_text(source)
+
+              manifest = root / 'android/app/src/main/AndroidManifest.xml'
+              source = manifest.read_text()
+              source = re.sub(r'android:label="[^"]+"', f'android:label="{config["label"]}"', source, count=1)
+              if 'android:allowBackup=' not in source:
+                  source = source.replace(
+                      f'android:label="{config["label"]}"',
+                      f'android:label="{config["label"]}"\n        android:allowBackup="false"',
+                      1,
+                  )
+              manifest.write_text(source)
+
+              info = root / 'ios/Runner/Info.plist'
+              source = info.read_text()
+              if config['scheme'] not in source:
+                  block = f'''\n\t<key>CFBundleURLTypes</key>\n\t<array>\n\t\t<dict>\n\t\t\t<key>CFBundleTypeRole</key>\n\t\t\t<string>Editor</string>\n\t\t\t<key>CFBundleURLSchemes</key>\n\t\t\t<array>\n\t\t\t\t<string>{config['scheme']}</string>\n\t\t\t</array>\n\t\t</dict>\n\t</array>\n'''
+                  source = source.replace('\n</dict>\n</plist>\n', block + '\n</dict>\n</plist>\n', 1)
+              info.write_text(source)
+
+              runner = root / 'ios/Runner'
+              (runner / 'DebugProfile.entitlements').write_text(ENTITLEMENTS)
+              (runner / 'Release.entitlements').write_text(ENTITLEMENTS)
+
+              project = root / 'ios/Runner.xcodeproj/project.pbxproj'
+              source = project.read_text()
+              block_pattern = re.compile(
+                  r'(\t\t[A-F0-9]+ /\* (Debug|Release|Profile) \*/ = \{\n'
+                  r'\t\t\tisa = XCBuildConfiguration;\n'
+                  r'\t\t\tbuildSettings = \{\n)(.*?)'
+                  r'(\n\t\t\t\};\n\t\t\tname = \2;\n\t\t\};)',
+                  re.S,
+              )
+
+              def patch_block(match):
+                  prefix, configuration, body, suffix = match.groups()
+                  if 'INFOPLIST_FILE = Runner/Info.plist;' not in body:
+                      return match.group(0)
+                  body = re.sub(
+                      r'PRODUCT_BUNDLE_IDENTIFIER = [^;]+;',
+                      f'PRODUCT_BUNDLE_IDENTIFIER = {config["bundle"]};',
+                      body,
+                  )
+                  entitlement = 'Release.entitlements' if configuration == 'Release' else 'DebugProfile.entitlements'
+                  if 'CODE_SIGN_ENTITLEMENTS' not in body:
+                      body = body.replace(
+                          f'PRODUCT_BUNDLE_IDENTIFIER = {config["bundle"]};',
+                          f'CODE_SIGN_ENTITLEMENTS = Runner/{entitlement};\n\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = {config["bundle"]};',
+                          1,
+                      )
+                  return prefix + body + suffix
+
+              source, count = block_pattern.subn(patch_block, source)
+              if count == 0 or config['bundle'] not in source or 'CODE_SIGN_ENTITLEMENTS' not in source:
+                  raise SystemExit(f'iOS project configuration patch failed for {app}')
+              project.write_text(source)
+          PY
+      - name: Commit native projects
+        if: github.event_name == 'push'
+        run: |
+          if git diff --quiet -- mobile/apps/family_app/android mobile/apps/family_app/ios mobile/apps/family_app/.metadata mobile/apps/family_app/.gitignore mobile/apps/staff_app/android mobile/apps/staff_app/ios mobile/apps/staff_app/.metadata mobile/apps/staff_app/.gitignore; then
+            exit 0
+          fi
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add \
+            mobile/apps/family_app/android \
+            mobile/apps/family_app/ios \
+            mobile/apps/family_app/.metadata \
+            mobile/apps/family_app/.gitignore \
+            mobile/apps/staff_app/android \
+            mobile/apps/staff_app/ios \
+            mobile/apps/staff_app/.metadata \
+            mobile/apps/staff_app/.gitignore
+          git commit -m "build(MOB-01): add Android and iOS application projects"
+          git push origin HEAD:module/flutter-mobile-apps
       - name: Verify formatting
         working-directory: mobile
         run: dart format --output=none --set-exit-if-changed .
       - name: Verify generated files remain ignored
-        run: git diff --exit-code -- mobile
+        run: git diff --exit-code -- mobile ':!mobile/apps/family_app/android' ':!mobile/apps/family_app/ios' ':!mobile/apps/family_app/.metadata' ':!mobile/apps/family_app/.gitignore' ':!mobile/apps/staff_app/android' ':!mobile/apps/staff_app/ios' ':!mobile/apps/staff_app/.metadata' ':!mobile/apps/staff_app/.gitignore'
       - name: Analyze family app
         working-directory: mobile/apps/family_app
         run: flutter analyze
@@ -72,3 +212,9 @@ jobs:
       - name: Test API client
         working-directory: mobile/packages/api_client
         run: dart test
+      - name: Build family Android debug APK
+        working-directory: mobile/apps/family_app
+        run: flutter build apk --debug
+      - name: Build staff Android debug APK
+        working-directory: mobile/apps/staff_app
+        run: flutter build apk --debug
