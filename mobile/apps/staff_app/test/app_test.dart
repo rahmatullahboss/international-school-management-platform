@@ -22,8 +22,12 @@ void main() {
       findsOneWidget,
     );
 
-    await tester.tap(find.text('Complete demo sync (1)'));
+    final syncAction = find.text('Complete demo sync (1)');
+    await tester.ensureVisible(syncAction);
     await tester.pumpAndSettle();
+    await tester.tap(syncAction);
+    await tester.pumpAndSettle();
+
     expect(find.text('All changes synced'), findsOneWidget);
   });
 }
