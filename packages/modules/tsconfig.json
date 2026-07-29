@@ -23,6 +23,11 @@
     "transport/src/**/*.ts",
     "residential-catering/src/**/*.ts",
     "activities-trips/src/**/*.ts",
+    "health/src/**/*.ts",
+    "behavior/src/**/*.ts",
+    "wellbeing/src/**/*.ts",
+    "safeguarding/src/**/*.ts",
+    "learning-support/src/**/*.ts",
     "billing/src/**/*.ts",
     "ledger/src/**/*.ts"
   ],
