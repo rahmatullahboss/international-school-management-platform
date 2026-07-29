@@ -167,6 +167,12 @@ final class MobileAppCoordinator extends ChangeNotifier {
 
   MobileApplicationState get state => _state;
 
+  /// Shared authenticated transport for app-owned repositories.
+  ///
+  /// It is only present for the production environment factory. The coordinator
+  /// retains ownership and closes it during [dispose]. Consumers must not close it.
+  SchoolApiClient? get apiClient => _ownedApiClient;
+
   Future<void> initialize() async {
     final operation = ++_operationGeneration;
     _set(const MobileApplicationState.restoring());
@@ -255,7 +261,9 @@ final class MobileAppCoordinator extends ChangeNotifier {
     }
     switch (snapshot.phase) {
       case AuthSessionPhase.signedOut:
-        _set(MobileApplicationState.signedOut(reasonCode: snapshot.reasonCode));
+        _set(
+          MobileApplicationState.signedOut(reasonCode: snapshot.reasonCode),
+        );
       case AuthSessionPhase.failed:
         _set(
           MobileApplicationState.failed(
@@ -278,7 +286,9 @@ final class MobileAppCoordinator extends ChangeNotifier {
       }
       final options = _accessOptions(bootstrap);
       if (options.isEmpty) {
-        _set(const MobileApplicationState.failed('BOOTSTRAP_NO_APP_ACCESS'));
+        _set(
+          const MobileApplicationState.failed('BOOTSTRAP_NO_APP_ACCESS'),
+        );
         return;
       }
       if (options.length == 1) {
