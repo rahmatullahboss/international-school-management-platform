@@ -36,9 +36,7 @@ final class SchoolSession {
     required this.locale,
     required this.tenantId,
     required this.timeZone,
-  }) : availablePersonas = Set<SchoolPersona>.unmodifiable(
-         availablePersonas,
-       ),
+  }) : availablePersonas = Set<SchoolPersona>.unmodifiable(availablePersonas),
        capabilities = Set<String>.unmodifiable(capabilities) {
     if (!this.availablePersonas.contains(activePersona)) {
       throw ArgumentError.value(
@@ -91,7 +89,9 @@ final class PersonaAccess {
     required Iterable<String> capabilities,
     required SchoolPersona persona,
   }) {
-    final normalized = capabilities.map((capability) => capability.trim()).toSet();
+    final normalized = capabilities
+        .map((capability) => capability.trim())
+        .toSet();
     if (normalized.any((capability) => capability.isEmpty)) {
       throw const BootstrapContractException('BOOTSTRAP_CAPABILITY_EMPTY');
     }
@@ -116,7 +116,9 @@ final class CampusAccess {
     final normalizedId = campusId.trim();
     final normalizedName = campusName.trim();
     if (normalizedId.isEmpty || normalizedName.isEmpty) {
-      throw const BootstrapContractException('BOOTSTRAP_CAMPUS_IDENTITY_REQUIRED');
+      throw const BootstrapContractException(
+        'BOOTSTRAP_CAMPUS_IDENTITY_REQUIRED',
+      );
     }
 
     final byPersona = <SchoolPersona, PersonaAccess>{};
@@ -147,9 +149,8 @@ final class CampusAccess {
   final String campusName;
   final Map<SchoolPersona, PersonaAccess> _personas;
 
-  Set<SchoolPersona> get personas => Set<SchoolPersona>.unmodifiable(
-    _personas.keys,
-  );
+  Set<SchoolPersona> get personas =>
+      Set<SchoolPersona>.unmodifiable(_personas.keys);
 
   PersonaAccess? accessFor(SchoolPersona persona) => _personas[persona];
 }
@@ -163,7 +164,9 @@ final class TenantAccess {
     final normalizedId = tenantId.trim();
     final normalizedName = tenantName.trim();
     if (normalizedId.isEmpty || normalizedName.isEmpty) {
-      throw const BootstrapContractException('BOOTSTRAP_TENANT_IDENTITY_REQUIRED');
+      throw const BootstrapContractException(
+        'BOOTSTRAP_TENANT_IDENTITY_REQUIRED',
+      );
     }
 
     final byId = <String, CampusAccess>{};
@@ -194,9 +197,8 @@ final class TenantAccess {
   final String tenantName;
   final Map<String, CampusAccess> _campuses;
 
-  List<CampusAccess> get campuses => List<CampusAccess>.unmodifiable(
-    _campuses.values,
-  );
+  List<CampusAccess> get campuses =>
+      List<CampusAccess>.unmodifiable(_campuses.values);
 
   CampusAccess? campus(String campusId) => _campuses[campusId];
 }
@@ -215,7 +217,9 @@ final class MobileBootstrap {
     if (normalizedAccountId.isEmpty ||
         normalizedLocale.isEmpty ||
         normalizedTimeZone.isEmpty) {
-      throw const BootstrapContractException('BOOTSTRAP_ACCOUNT_CONTEXT_REQUIRED');
+      throw const BootstrapContractException(
+        'BOOTSTRAP_ACCOUNT_CONTEXT_REQUIRED',
+      );
     }
 
     final byId = <String, TenantAccess>{};
@@ -252,9 +256,8 @@ final class MobileBootstrap {
   final String? syncCursor;
   final Map<String, TenantAccess> _schools;
 
-  List<TenantAccess> get schools => List<TenantAccess>.unmodifiable(
-    _schools.values,
-  );
+  List<TenantAccess> get schools =>
+      List<TenantAccess>.unmodifiable(_schools.values);
 
   SchoolSession activate({
     required String campusId,

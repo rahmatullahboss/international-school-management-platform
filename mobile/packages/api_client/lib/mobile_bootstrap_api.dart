@@ -93,27 +93,28 @@ abstract final class MobileBootstrapDecoder {
     if (value is! List<Object?>) {
       throw FormatException('BOOTSTRAP_LIST_REQUIRED:$key');
     }
-    return value.map((item) {
-      if (item is! Map<String, Object?>) {
-        throw FormatException('BOOTSTRAP_OBJECT_REQUIRED:$key');
-      }
-      return item;
-    }).toList(growable: false);
+    return value
+        .map((item) {
+          if (item is! Map<String, Object?>) {
+            throw FormatException('BOOTSTRAP_OBJECT_REQUIRED:$key');
+          }
+          return item;
+        })
+        .toList(growable: false);
   }
 
-  static List<String> _stringList(
-    Map<String, Object?> json,
-    String key,
-  ) {
+  static List<String> _stringList(Map<String, Object?> json, String key) {
     final value = json[key];
     if (value is! List<Object?>) {
       throw FormatException('BOOTSTRAP_LIST_REQUIRED:$key');
     }
-    return value.map((item) {
-      if (item is! String || item.trim().isEmpty) {
-        throw FormatException('BOOTSTRAP_STRING_REQUIRED:$key');
-      }
-      return item.trim();
-    }).toList(growable: false);
+    return value
+        .map((item) {
+          if (item is! String || item.trim().isEmpty) {
+            throw FormatException('BOOTSTRAP_STRING_REQUIRED:$key');
+          }
+          return item.trim();
+        })
+        .toList(growable: false);
   }
 }

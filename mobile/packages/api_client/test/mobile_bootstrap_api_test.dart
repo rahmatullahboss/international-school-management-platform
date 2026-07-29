@@ -114,9 +114,7 @@ void main() {
     );
 
     expect(
-      () => MobileBootstrapApi(
-        client,
-      ).load(correlationId: 'correlation-2'),
+      () => MobileBootstrapApi(client).load(correlationId: 'correlation-2'),
       throwsA(
         isA<SchoolApiException>().having(
           (error) => error.code,
