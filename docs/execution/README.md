@@ -1,6 +1,6 @@
 # Whole-Module Multi-Agent Execution System
 
-**Status:** Pilot runtime composed; production promotion gated  
+**Status:** Pilot runtime UX refined; production promotion gated  
 **Date:** 2026-07-30  
 **Operating rule:** one agent owns one complete large module; internal milestones are not separate agent assignments.
 
@@ -22,7 +22,9 @@ Owner operating decision: separate agents are used only for complete module stre
 8. [Artifact contract](artifact-contract.md)
 9. [Final system release evidence](08-final-system-release-evidence.md)
 10. [PILOT-01 runtime composition](09-pilot-runtime-composition.md)
-11. Validation script: `scripts/validate_execution_artifacts.py`
+11. [UX-01 smooth operational experience](10-ux-continuity-v1.md)
+12. [UX continuity release evidence](11-ux-continuity-release-evidence.md)
+13. Validation script: `scripts/validate_execution_artifacts.py`
 
 ## 3. Repository baseline
 
@@ -79,6 +81,7 @@ After the APIs/read models from the previous waves are stable:
 ### Post-integration pilot
 
 - `PILOT-01` — Composes reviewed persona packages into the Cloudflare staging runtime, adds synthetic acceptance data and records the boundary before production authentication/API work.
+- `UX-01` — Refines the staged runtime with continuous client navigation, background preparation, task-led information architecture and accessible loading-state rules.
 
 ## 5. Whole-module completion boundary
 
@@ -146,6 +149,7 @@ All frontend work uses the repository-local Impeccable skill and the contracts u
 - UI-bearing checkpoints include shape/brief, critique, audit, detector, accessibility, responsive/RTL, hardening and polish evidence.
 - `EXP-01` composes cross-module experiences but does not move domain logic into presentation code.
 - `INTEG-01` rejects UI modules that lack the required design evidence.
+- `UX-01` may refine cross-persona navigation and loading infrastructure without moving domain rules or weakening capability filtering.
 
 ## 11. Hard stops
 
