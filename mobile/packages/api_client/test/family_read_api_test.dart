@@ -57,71 +57,70 @@ void main() {
     client.close();
   });
 
-  test('decodes authoritative dashboard values without recalculation', () async {
-    final client = SchoolApiClient(
-      accessTokenProvider: () async => 'access-token',
-      baseUri: Uri.parse('https://api.school.example/'),
-      client: MockClient(
-        (request) async => http.Response(
-          jsonEncode(dashboardFixture()),
-          200,
+  test(
+    'decodes authoritative dashboard values without recalculation',
+    () async {
+      final client = SchoolApiClient(
+        accessTokenProvider: () async => 'access-token',
+        baseUri: Uri.parse('https://api.school.example/'),
+        client: MockClient(
+          (request) async => http.Response(jsonEncode(dashboardFixture()), 200),
         ),
-      ),
-    );
+      );
 
-    final dashboard = await FamilyReadApi(client).loadDashboard(
-      correlationId: 'family-dashboard-correlation',
-      session: guardianSession(),
-      studentId: 'student-1',
-    );
-
-    expect(dashboard.attendance?.summaryLabel, 'Published attendance · 96%');
-    expect(dashboard.fees?.outstanding.minorUnits, 450000);
-    expect(dashboard.fees?.outstanding.currencyCode, 'BDT');
-    expect(dashboard.publishedResults.single.gradeLabel, 'A');
-    expect(dashboard.messages?.unreadCount, 2);
-
-    client.close();
-  });
-
-  test('rejects optional sections not granted by the active capability set', () async {
-    final client = SchoolApiClient(
-      accessTokenProvider: () async => 'access-token',
-      baseUri: Uri.parse('https://api.school.example/'),
-      client: MockClient(
-        (request) async => http.Response(
-          jsonEncode(dashboardFixture()),
-          200,
-        ),
-      ),
-    );
-    final session = SchoolSession(
-      accountId: 'account-1',
-      activePersona: SchoolPersona.student,
-      availablePersonas: const {SchoolPersona.student},
-      campusId: 'campus-1',
-      capabilities: const {SchoolCapability.attendanceRead},
-      locale: 'en-BD',
-      tenantId: 'tenant-1',
-      timeZone: 'Asia/Dhaka',
-    );
-
-    expect(
-      () => FamilyReadApi(client).loadDashboard(
-        session: session,
+      final dashboard = await FamilyReadApi(client).loadDashboard(
+        correlationId: 'family-dashboard-correlation',
+        session: guardianSession(),
         studentId: 'student-1',
-      ),
-      throwsA(
-        isA<SchoolApiException>().having(
-          (error) => error.code,
-          'code',
-          'INVALID_FAMILY_RESPONSE',
-        ),
-      ),
-    );
+      );
 
-    client.close();
-  });
+      expect(dashboard.attendance?.summaryLabel, 'Published attendance · 96%');
+      expect(dashboard.fees?.outstanding.minorUnits, 450000);
+      expect(dashboard.fees?.outstanding.currencyCode, 'BDT');
+      expect(dashboard.publishedResults.single.gradeLabel, 'A');
+      expect(dashboard.messages?.unreadCount, 2);
+
+      client.close();
+    },
+  );
+
+  test(
+    'rejects optional sections not granted by the active capability set',
+    () async {
+      final client = SchoolApiClient(
+        accessTokenProvider: () async => 'access-token',
+        baseUri: Uri.parse('https://api.school.example/'),
+        client: MockClient(
+          (request) async => http.Response(jsonEncode(dashboardFixture()), 200),
+        ),
+      );
+      final session = SchoolSession(
+        accountId: 'account-1',
+        activePersona: SchoolPersona.student,
+        availablePersonas: const {SchoolPersona.student},
+        campusId: 'campus-1',
+        capabilities: const {SchoolCapability.attendanceRead},
+        locale: 'en-BD',
+        tenantId: 'tenant-1',
+        timeZone: 'Asia/Dhaka',
+      );
+
+      expect(
+        () => FamilyReadApi(
+          client,
+        ).loadDashboard(session: session, studentId: 'student-1'),
+        throwsA(
+          isA<SchoolApiException>().having(
+            (error) => error.code,
+            'code',
+            'INVALID_FAMILY_RESPONSE',
+          ),
+        ),
+      );
+
+      client.close();
+    },
+  );
 
   test('rejects cross-campus profile responses', () async {
     final client = SchoolApiClient(

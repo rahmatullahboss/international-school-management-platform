@@ -23,9 +23,10 @@ final class FamilyReadApi implements FamilyReadRepository {
       ),
     );
     try {
-      final students = _objectList(response, 'students')
-          .map(_student)
-          .toList(growable: false);
+      final students = _objectList(
+        response,
+        'students',
+      ).map(_student).toList(growable: false);
       if (students.any((student) => student.campusId != session.campusId)) {
         throw const FamilyDomainException('FAMILY_PROFILE_CAMPUS_MISMATCH');
       }
@@ -74,8 +75,7 @@ final class FamilyReadApi implements FamilyReadRepository {
       final fees = _optionalObject(response, 'fees');
       final messages = _optionalObject(response, 'messages');
 
-      if (attendance != null &&
-          !session.can(SchoolCapability.attendanceRead)) {
+      if (attendance != null && !session.can(SchoolCapability.attendanceRead)) {
         throw const FamilyDomainException(
           'FAMILY_RESPONSE_CAPABILITY_VIOLATION',
         );
@@ -202,10 +202,7 @@ Map<String, Object?>? _optionalObject(Map<String, Object?> json, String key) {
   return value;
 }
 
-List<Map<String, Object?>> _objectList(
-  Map<String, Object?> json,
-  String key,
-) {
+List<Map<String, Object?>> _objectList(Map<String, Object?> json, String key) {
   final value = json[key];
   if (value is! List<Object?>) {
     throw FormatException('FAMILY_LIST_REQUIRED:$key');
