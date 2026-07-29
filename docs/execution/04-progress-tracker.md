@@ -499,6 +499,25 @@ Neon checks: FND 5/5 and SIS 6/6 canonical migrations replayed on CARE branch; C
 Recovery status: FIN 4 and INT 7 canonical replay plus full fresh disposable replay deferred to final restricted-interface-verification checkpoint; no CARE dependency directly mutates those schemas
 Production mutation performed: no; Neon `main`, integration branch, ACAD-01 and OPS-01 were not modified
 Exact next milestone: health
+Checkpoint SHA: `3e82c65`
+Dirty/uncommitted state: clean after checkpoint commit and push
+
+### Checkpoint 2 — health
+
+Date/time: 2026-07-29T09:52:00+06:00
+Stream: CARE-01
+Milestone completed: health
+Git branch: `module/student-support`
+Worktree: `.worktrees/care-01-student-support`
+Neon branch: `agent/care-01-student-support` (`br-raspy-smoke-ax0msb57`)
+Starting checkpoint SHA: `3e82c65`
+Changed paths: `packages/modules/health/**`, `tests/student-support/health*.test.ts`, `docs/modules/student-support/health.md`, CARE-01 tracker section
+Domain evidence: health profiles, conditions, allergies, medication orders, AAL2 administration, allergy contraindication, idempotency, immutable corrections, immunizations, care plans, clinic encounters, restricted document classification, minimum emergency projection, safe events and suppressed operational reports implemented
+Focused checks: 8 Vitest tests PASS; CARE TypeScript no-emit typecheck PASS
+Neon checks: `202607290202_CARE-01_health` applied on CARE branch; 12/12 health tables FORCE RLS; no-context visible rows `0`; tenant-A visible `1`, tenant-B leak `0`; cross-tenant profile insert denied; medication-administration rewrite denied
+Security/privacy evidence: current legal basis required independently of authorization; broad principal denied; emergency source narrative and allergy reaction excluded; events contain no narrative; aggregate cohorts below five suppressed
+Production mutation performed: no; Neon `main`, integration branch, ACAD-01 and OPS-01 were not modified
+Exact next milestone: behavior
 Dirty/uncommitted state: checkpoint evidence pending commit
 
 ## EXP-01 evidence
