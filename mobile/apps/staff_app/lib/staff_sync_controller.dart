@@ -1,9 +1,10 @@
 part of 'main.dart';
 
-typedef StaffSyncRuntimeLoader = Future<TeacherSyncRuntime> Function({
-  required TeacherJourneyRepository repository,
-  required SchoolSession session,
-});
+typedef StaffSyncRuntimeLoader =
+    Future<TeacherSyncRuntime> Function({
+      required TeacherJourneyRepository repository,
+      required SchoolSession session,
+    });
 
 enum StaffSyncPhase { initializing, ready, saving, syncing, failed }
 
@@ -184,7 +185,8 @@ final class StaffAttendanceSyncController extends ChangeNotifier {
     notifyListeners();
     try {
       final now = _clock();
-      final identity = '${roster.meetingId}-${now.toUtc().microsecondsSinceEpoch}';
+      final identity =
+          '${roster.meetingId}-${now.toUtc().microsecondsSinceEpoch}';
       await runtime.queue.enqueueAttendance(
         command: TeacherAttendanceBatchCommand(
           baseVersion: roster.version,
@@ -203,10 +205,7 @@ final class StaffAttendanceSyncController extends ChangeNotifier {
         ),
         session: _session,
       );
-      await _refreshJournal(
-        dirty: false,
-        phase: StaffSyncPhase.ready,
-      );
+      await _refreshJournal(dirty: false, phase: StaffSyncPhase.ready);
     } on TeacherSyncException catch (error) {
       _fail(error.code);
     } on TeacherDomainException catch (error) {
