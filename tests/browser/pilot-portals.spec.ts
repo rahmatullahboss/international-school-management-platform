@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 const adminSnapshot = {
   schemaVersion: 1,
@@ -83,10 +83,9 @@ const adminSnapshot = {
   },
 };
 
-async function configurePilotApi(page: Parameters<typeof test>[0] extends never ? never : any): Promise<void> {
+async function configurePilotApi(page: Page): Promise<void> {
   await page.addInitScript(() => {
-    (window as typeof window & { __PLATFORM_API_URL__?: string }).__PLATFORM_API_URL__ =
-      'https://pilot-api.test';
+    window.__PLATFORM_API_URL__ = 'https://pilot-api.test';
   });
 }
 

@@ -72,7 +72,8 @@ export function PilotDataStatus(props: {
               }
             : {
                 label: 'Pilot seed data',
-                detail: 'A scoped staging snapshot will replace this seed without blocking the page.',
+                detail:
+                  'A scoped staging snapshot will replace this seed without blocking the page.',
               };
 
   return (

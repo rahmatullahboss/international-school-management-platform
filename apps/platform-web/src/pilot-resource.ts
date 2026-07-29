@@ -60,7 +60,8 @@ const inFlight = new Map<string, Promise<StoredSnapshot<unknown>>>();
 
 function resolveApiBase(): string | undefined {
   const runtimeOverride = window.__PLATFORM_API_URL__?.trim();
-  if (runtimeOverride !== undefined && runtimeOverride !== '') return runtimeOverride.replace(/\/$/u, '');
+  if (runtimeOverride !== undefined && runtimeOverride !== '')
+    return runtimeOverride.replace(/\/$/u, '');
 
   const buildValue = (import.meta.env.VITE_PLATFORM_API_URL as string | undefined)?.trim();
   if (buildValue !== undefined && buildValue !== '') return buildValue.replace(/\/$/u, '');
@@ -122,7 +123,7 @@ function readStoredSnapshot<T>(key: string, role: PilotRole): StoredSnapshot<T> 
       return undefined;
     }
     const stored = parsed as unknown as StoredSnapshot<T>;
-    memoryCache.set(key, stored as StoredSnapshot<unknown>);
+    memoryCache.set(key, stored);
     return stored;
   } catch {
     return undefined;
@@ -130,7 +131,7 @@ function readStoredSnapshot<T>(key: string, role: PilotRole): StoredSnapshot<T> 
 }
 
 function storeSnapshot<T>(key: string, snapshot: StoredSnapshot<T>): void {
-  memoryCache.set(key, snapshot as StoredSnapshot<unknown>);
+  memoryCache.set(key, snapshot);
   try {
     window.localStorage.setItem(storageKey(key), JSON.stringify(snapshot));
   } catch {
@@ -172,7 +173,7 @@ async function requestSnapshot<T>(
       throw new Error(`Pilot read API returned ${response.status}.`);
     }
 
-    const payload = (await response.json()) as unknown;
+    const payload = await response.json();
     if (!isMatchingEnvelope<T>(payload, role)) {
       throw new Error('Pilot read API returned a snapshot outside the requested scope.');
     }
@@ -187,7 +188,7 @@ async function requestSnapshot<T>(
     return stored;
   })();
 
-  inFlight.set(key, promise as Promise<StoredSnapshot<unknown>>);
+  inFlight.set(key, promise);
   try {
     return await promise;
   } finally {
@@ -203,7 +204,10 @@ export function usePilotResource<T extends Readonly<Record<string, unknown>>>(
   connectivity: PilotConnectivity,
 ): PilotResource<T> {
   const apiBase = useMemo(resolveApiBase, []);
-  const key = useMemo(() => (apiBase === undefined ? undefined : cacheKey(apiBase, role)), [apiBase, role]);
+  const key = useMemo(
+    () => (apiBase === undefined ? undefined : cacheKey(apiBase, role)),
+    [apiBase, role],
+  );
   const initial = useMemo(
     () => (key === undefined ? undefined : readStoredSnapshot<T>(key, role)),
     [key, role],
@@ -225,7 +229,9 @@ export function usePilotResource<T extends Readonly<Record<string, unknown>>>(
       })
       .catch((error: unknown) => {
         setState('stale');
-        setMessage(error instanceof Error ? error.message : 'The staging read API could not be reached.');
+        setMessage(
+          error instanceof Error ? error.message : 'The staging read API could not be reached.',
+        );
       });
   }, [apiBase, connectivity, key, role, snapshot]);
 
