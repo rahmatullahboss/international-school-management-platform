@@ -67,10 +67,12 @@ describe('CARE-01 security contract', () => {
       security.authorize(accessRequest({ resource: { ...resource, tenantId: 'tenant-b' } })).reason,
     ).toBe('tenant-mismatch');
     expect(
-      security.authorize(accessRequest({ context: { ...context, persona: 'tenant-admin' } })).reason,
+      security.authorize(accessRequest({ context: { ...context, persona: 'tenant-admin' } }))
+        .reason,
     ).toBe('not-found');
     expect(
-      security.authorize(accessRequest({ context: { ...context, machineCredential: true } })).reason,
+      security.authorize(accessRequest({ context: { ...context, machineCredential: true } }))
+        .reason,
     ).toBe('machine-credential-denied');
   });
 

@@ -313,10 +313,12 @@ export class CareSecurityService {
   authorize(request: CareAccessRequest): CareAuthorizationDecision {
     const now = request.now ?? this.#now();
     const { context, resource } = request;
-    if (!context.tenantId || !context.principalId) return this.#deny(request, 'tenant-context-required', now);
+    if (!context.tenantId || !context.principalId)
+      return this.#deny(request, 'tenant-context-required', now);
     if (context.tenantId !== resource.tenantId) return this.#deny(request, 'tenant-mismatch', now);
     if (!context.membershipActive) return this.#deny(request, 'membership-inactive', now);
-    if (!context.permissions.includes(request.permission)) return this.#deny(request, 'permission-not-granted', now);
+    if (!context.permissions.includes(request.permission))
+      return this.#deny(request, 'permission-not-granted', now);
     if (!context.purpose) return this.#deny(request, 'purpose-not-permitted', now);
     if (highRiskActions.has(request.action) && context.assurance !== 'aal2') {
       return this.#deny(request, 'step-up-required', now);
@@ -392,7 +394,10 @@ export class CareSecurityService {
     return this.#allow(request, 'published-projection', now, true);
   }
 
-  #authorizeBreakGlass(request: CareAccessRequest, now: Date): CareAuthorizationDecision | undefined {
+  #authorizeBreakGlass(
+    request: CareAccessRequest,
+    now: Date,
+  ): CareAuthorizationDecision | undefined {
     const grant = request.breakGlass;
     if (!grant) return undefined;
     if (request.context.assurance !== 'aal2') return this.#deny(request, 'step-up-required', now);
@@ -428,7 +433,9 @@ export class CareSecurityService {
         const evidence = this.auditStore.append({
           tenantId: request.resource.tenantId,
           principalId: request.context.principalId ?? 'missing-principal',
-          ...(request.context.linkedPersonId ? { linkedPersonId: request.context.linkedPersonId } : {}),
+          ...(request.context.linkedPersonId
+            ? { linkedPersonId: request.context.linkedPersonId }
+            : {}),
           persona: request.context.persona,
           action: request.action,
           resourceId: request.resource.resourceId,
@@ -495,8 +502,14 @@ export interface HighRiskExportRequest {
 export class CareExportController {
   readonly #exports = new Map<string, Readonly<HighRiskExportRequest>>();
 
-  request(input: Omit<HighRiskExportRequest, 'approvedBy' | 'status'>): Readonly<HighRiskExportRequest> {
-    if (input.subjectIds.length === 0 || input.fields.length === 0 || input.recipient.trim() === '') {
+  request(
+    input: Omit<HighRiskExportRequest, 'approvedBy' | 'status'>,
+  ): Readonly<HighRiskExportRequest> {
+    if (
+      input.subjectIds.length === 0 ||
+      input.fields.length === 0 ||
+      input.recipient.trim() === ''
+    ) {
       throw new Error('High-risk export requires exact subject, field and recipient scope');
     }
     const record = Object.freeze({ ...input, status: 'requested' as const });
@@ -504,19 +517,33 @@ export class CareExportController {
     return record;
   }
 
-  approve(exportId: string, approverId: string, assurance: AssuranceLevel): Readonly<HighRiskExportRequest> {
+  approve(
+    exportId: string,
+    approverId: string,
+    assurance: AssuranceLevel,
+  ): Readonly<HighRiskExportRequest> {
     const current = this.#require(exportId);
     if (assurance !== 'aal2') throw new Error('step-up-required');
     if (current.requestedBy === approverId) throw new Error('Independent export approval required');
     if (current.status !== 'requested') throw new Error('Export is not awaiting approval');
-    const approved = Object.freeze({ ...current, approvedBy: approverId, status: 'approved' as const });
+    const approved = Object.freeze({
+      ...current,
+      approvedBy: approverId,
+      status: 'approved' as const,
+    });
     this.#exports.set(exportId, approved);
     return approved;
   }
 
-  generate(exportId: string, now: Date, requestedFields: readonly string[], rowCount: number): void {
+  generate(
+    exportId: string,
+    now: Date,
+    requestedFields: readonly string[],
+    rowCount: number,
+  ): void {
     const current = this.#require(exportId);
-    if (current.status !== 'approved' || current.expiresAt <= now) throw new Error('Export approval is stale');
+    if (current.status !== 'approved' || current.expiresAt <= now)
+      throw new Error('Export approval is stale');
     if (rowCount > current.subjectIds.length) throw new Error('Export population exceeds approval');
     if (requestedFields.some((field) => !current.fields.includes(field))) {
       throw new Error('Export requested an unapproved field');
@@ -526,7 +553,11 @@ export class CareExportController {
 
   download(exportId: string, now: Date, recipient: string): void {
     const current = this.#require(exportId);
-    if (current.status !== 'generated' || current.expiresAt <= now || current.recipient !== recipient) {
+    if (
+      current.status !== 'generated' ||
+      current.expiresAt <= now ||
+      current.recipient !== recipient
+    ) {
       throw new Error('Export download authorization failed');
     }
     this.#exports.set(exportId, Object.freeze({ ...current, status: 'downloaded' as const }));
@@ -572,7 +603,15 @@ export function authorizeConnectorTransfer(
 }
 
 const prohibitedNotificationKeys = new Set([
-  'diagnosis', 'medication', 'dose', 'allergy', 'counselling', 'allegation', 'caseType', 'reporter', 'narrative',
+  'diagnosis',
+  'medication',
+  'dose',
+  'allergy',
+  'counselling',
+  'allegation',
+  'caseType',
+  'reporter',
+  'narrative',
 ]);
 
 export function createSafeCareNotification(input: {
@@ -598,7 +637,9 @@ export interface OfflineEmergencyBundle {
   tenantId: string;
   deviceId: string;
   studentIds: readonly string[];
-  fields: readonly ('allergy-summary' | 'medication-summary' | 'emergency-action' | 'contact-instruction')[];
+  fields: readonly (
+    'allergy-summary' | 'medication-summary' | 'emergency-action' | 'contact-instruction'
+  )[];
   encrypted: true;
   deviceBound: true;
   generatedAt: Date;
@@ -606,7 +647,11 @@ export interface OfflineEmergencyBundle {
   revokedAt?: Date;
 }
 
-export function validateOfflineBundle(bundle: OfflineEmergencyBundle, now: Date, deviceId: string): boolean {
+export function validateOfflineBundle(
+  bundle: OfflineEmergencyBundle,
+  now: Date,
+  deviceId: string,
+): boolean {
   return (
     bundle.encrypted &&
     bundle.deviceBound &&
@@ -644,10 +689,18 @@ export class CareIncidentIsolation {
   readonly #isolatedDevices = new Set<string>();
   readonly #isolatedConnectors = new Set<string>();
 
-  revokeSession(sessionId: string): void { this.#revokedSessions.add(sessionId); }
-  revokeGrant(grantId: string): void { this.#revokedGrants.add(grantId); }
-  isolateDevice(deviceId: string): void { this.#isolatedDevices.add(deviceId); }
-  isolateConnector(connectorId: string): void { this.#isolatedConnectors.add(connectorId); }
+  revokeSession(sessionId: string): void {
+    this.#revokedSessions.add(sessionId);
+  }
+  revokeGrant(grantId: string): void {
+    this.#revokedGrants.add(grantId);
+  }
+  isolateDevice(deviceId: string): void {
+    this.#isolatedDevices.add(deviceId);
+  }
+  isolateConnector(connectorId: string): void {
+    this.#isolatedConnectors.add(connectorId);
+  }
 
   snapshot(): Readonly<{
     sessions: readonly string[];

@@ -118,7 +118,10 @@ function bootstrap(service: LearningSupportService) {
 
 describe('CARE-01 learning-support domain', () => {
   test('requires active legal basis, current relationship and idempotent referral intake', () => {
-    const service = new LearningSupportService(new CareSecurityService({ now: () => now }), () => now);
+    const service = new LearningSupportService(
+      new CareSecurityService({ now: () => now }),
+      () => now,
+    );
     expect(() =>
       service.submitReferral(access(), {
         tenantId: 'tenant-a',
@@ -151,7 +154,10 @@ describe('CARE-01 learning-support domain', () => {
   });
 
   test('denies teachers access to CARE-C3 assessment source', () => {
-    const service = new LearningSupportService(new CareSecurityService({ now: () => now }), () => now);
+    const service = new LearningSupportService(
+      new CareSecurityService({ now: () => now }),
+      () => now,
+    );
     const { teacherAccess, assessment } = bootstrap(service);
     expect(() =>
       service.readAssessment(
@@ -172,11 +178,16 @@ describe('CARE-01 learning-support domain', () => {
         code: 'LEARNING_SUPPORT_ACCESS_DENIED',
       }),
     );
-    expect(service.readAssessment(access(), 'tenant-a', assessment.assessmentId)).toEqual(assessment);
+    expect(service.readAssessment(access(), 'tenant-a', assessment.assessmentId)).toEqual(
+      assessment,
+    );
   });
 
   test('requires AAL2 and independent approval for active plans', () => {
-    const service = new LearningSupportService(new CareSecurityService({ now: () => now }), () => now);
+    const service = new LearningSupportService(
+      new CareSecurityService({ now: () => now }),
+      () => now,
+    );
     const { referral, accommodation } = bootstrap(service);
     expect(() =>
       service.createPlan(access({ context: context({ assurance: 'aal1' }) }), {
@@ -211,7 +222,10 @@ describe('CARE-01 learning-support domain', () => {
   });
 
   test('returns only minimized classroom accommodations through the academic contract', () => {
-    const service = new LearningSupportService(new CareSecurityService({ now: () => now }), () => now);
+    const service = new LearningSupportService(
+      new CareSecurityService({ now: () => now }),
+      () => now,
+    );
     const { plan } = bootstrap(service);
     const teacherProjectionAccess = access({
       context: context({
@@ -239,7 +253,10 @@ describe('CARE-01 learning-support domain', () => {
   });
 
   test('publishes only independently approved minimized guardian projection', () => {
-    const service = new LearningSupportService(new CareSecurityService({ now: () => now }), () => now);
+    const service = new LearningSupportService(
+      new CareSecurityService({ now: () => now }),
+      () => now,
+    );
     const { plan } = bootstrap(service);
     expect(() =>
       service.publishSummary(access(), {
@@ -301,7 +318,10 @@ describe('CARE-01 learning-support domain', () => {
   });
 
   test('emits minimum events and suppresses small operational cohorts', () => {
-    const service = new LearningSupportService(new CareSecurityService({ now: () => now }), () => now);
+    const service = new LearningSupportService(
+      new CareSecurityService({ now: () => now }),
+      () => now,
+    );
     bootstrap(service);
     const events = JSON.stringify(service.listEvents('tenant-a'));
     expect(events).not.toContain('Restricted synthetic classroom summary');

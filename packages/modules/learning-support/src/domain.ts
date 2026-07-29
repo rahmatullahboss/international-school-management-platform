@@ -7,10 +7,7 @@ import {
 } from '../../safeguarding/src/security.js';
 
 export type LearningSupportLegalBasis =
-  | 'consent'
-  | 'legal-obligation'
-  | 'public-task'
-  | 'vital-interests';
+  'consent' | 'legal-obligation' | 'public-task' | 'vital-interests';
 
 export interface LearningSupportBasisEvidence {
   basis: LearningSupportLegalBasis;
@@ -235,7 +232,8 @@ export class LearningSupportService {
     const existingId = this.#referralByIdempotency.get(replayKey);
     if (existingId) {
       const existing = this.#referrals.get(this.#key(input.tenantId, existingId));
-      if (!existing) throw new LearningSupportDomainError('LEARNING_SUPPORT_NOT_FOUND', 'Referral not found');
+      if (!existing)
+        throw new LearningSupportDomainError('LEARNING_SUPPORT_NOT_FOUND', 'Referral not found');
       return clone(existing);
     }
     this.#authorize(access, {
@@ -275,11 +273,17 @@ export class LearningSupportService {
 
   acceptReferral(
     access: LearningSupportAccessScope,
-    input: { tenantId: string; referralId: string; assignedLeadPrincipalId: string; accept: boolean },
+    input: {
+      tenantId: string;
+      referralId: string;
+      assignedLeadPrincipalId: string;
+      accept: boolean;
+    },
   ): LearningSupportReferral {
     const key = this.#key(input.tenantId, input.referralId);
     const referral = this.#referrals.get(key);
-    if (!referral) throw new LearningSupportDomainError('LEARNING_SUPPORT_NOT_FOUND', 'Referral not found');
+    if (!referral)
+      throw new LearningSupportDomainError('LEARNING_SUPPORT_NOT_FOUND', 'Referral not found');
     this.#authorizeSource(access, referral, 'care.learning-support.referral.triage', 'amend', [
       'referral-triage',
     ]);
@@ -481,7 +485,9 @@ export class LearningSupportService {
       reviewAt: input.reviewAt,
       status: input.approvedByPrincipalId ? 'active' : 'draft',
       preparedByPrincipalId: actor,
-      ...(input.approvedByPrincipalId ? { approvedByPrincipalId: input.approvedByPrincipalId } : {}),
+      ...(input.approvedByPrincipalId
+        ? { approvedByPrincipalId: input.approvedByPrincipalId }
+        : {}),
       version: 1,
       createdAt: this.#now(),
     };
@@ -705,15 +711,18 @@ export class LearningSupportService {
       effectiveFrom: publication.effectiveFrom,
       ...(publication.expiresAt ? { expiresAt: publication.expiresAt } : {}),
     };
-    this.#authorize({ ...access, publication: release }, {
-      tenantId,
-      resourceId: publication.supportPlanId,
-      studentPersonId: publication.studentPersonId,
-      classification: 'CARE-C2',
-      permission: 'care.portal.read',
-      action: 'read',
-      fields: release.allowedFields,
-    });
+    this.#authorize(
+      { ...access, publication: release },
+      {
+        tenantId,
+        resourceId: publication.supportPlanId,
+        studentPersonId: publication.studentPersonId,
+        classification: 'CARE-C2',
+        permission: 'care.portal.read',
+        action: 'read',
+        fields: release.allowedFields,
+      },
+    );
     return {
       supportPlanId: publication.supportPlanId,
       studentPersonId: publication.studentPersonId,
@@ -734,7 +743,9 @@ export class LearningSupportService {
     reviews: readonly LearningSupportPlanReview[];
   }> {
     return {
-      referrals: [...this.#referrals.values()].filter((item) => item.tenantId === tenantId).map(clone),
+      referrals: [...this.#referrals.values()]
+        .filter((item) => item.tenantId === tenantId)
+        .map(clone),
       plans: [...this.#plans.values()].filter((item) => item.tenantId === tenantId).map(clone),
       reviews: this.#reviews.filter((item) => item.tenantId === tenantId).map(clone),
     };
@@ -825,7 +836,8 @@ export class LearningSupportService {
 
   #requireReferral(tenantId: string, referralId: string): LearningSupportReferral {
     const referral = this.#referrals.get(this.#key(tenantId, referralId));
-    if (!referral) throw new LearningSupportDomainError('LEARNING_SUPPORT_NOT_FOUND', 'Referral not found');
+    if (!referral)
+      throw new LearningSupportDomainError('LEARNING_SUPPORT_NOT_FOUND', 'Referral not found');
     return referral;
   }
 

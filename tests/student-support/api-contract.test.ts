@@ -59,7 +59,12 @@ describe('CARE restricted API v1', () => {
         routeId: 'learning-support.assessment.read',
         context: contextWithoutTenant(),
       }),
-    ).toMatchObject({ allowed: false, status: 404, code: 'CARE_API_CONTEXT_REQUIRED', masked: true });
+    ).toMatchObject({
+      allowed: false,
+      status: 404,
+      code: 'CARE_API_CONTEXT_REQUIRED',
+      masked: true,
+    });
     expect(
       authorizeCareApiRoute({
         routeId: 'learning-support.assessment.read',

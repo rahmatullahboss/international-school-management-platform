@@ -76,9 +76,8 @@ export function buildWellbeingOperationalReport(
     ),
     openCases: safeCount(cases.filter((item) => item.status === 'open').length, minimum),
     highOrImmediateRisk: safeCount(
-      riskAssessments.filter(
-        (item) => item.riskLevel === 'high' || item.riskLevel === 'immediate',
-      ).length,
+      riskAssessments.filter((item) => item.riskLevel === 'high' || item.riskLevel === 'immediate')
+        .length,
       minimum,
     ),
     escalatedReviews: safeCount(

@@ -8,12 +8,7 @@ import {
 
 export type BehaviorSeverity = 'low' | 'moderate' | 'high' | 'critical';
 export type BehaviorIncidentStatus =
-  | 'draft'
-  | 'submitted'
-  | 'under-review'
-  | 'actioned'
-  | 'resolved'
-  | 'closed';
+  'draft' | 'submitted' | 'under-review' | 'actioned' | 'resolved' | 'closed';
 
 export interface BehaviorIncident {
   tenantId: string;
@@ -581,9 +576,7 @@ export class BehaviorService {
       version: Math.max(0, ...currentVersions.map((item) => item.version)) + 1,
       categoryLabel: input.categoryLabel,
       ...(input.actionSummary ? { actionSummary: input.actionSummary } : {}),
-      ...(input.restorativeSummary
-        ? { restorativeSummary: input.restorativeSummary }
-        : {}),
+      ...(input.restorativeSummary ? { restorativeSummary: input.restorativeSummary } : {}),
       status: 'released',
       preparedByPrincipalId: incident.reporterPrincipalId,
       approvedByPrincipalId: approver,
@@ -592,16 +585,13 @@ export class BehaviorService {
     };
     for (const current of currentVersions) {
       if (current.status === 'released') {
-        this.#publications.set(
-          this.#key(current.tenantId, current.publicationId),
-          { ...current, status: 'revoked' },
-        );
+        this.#publications.set(this.#key(current.tenantId, current.publicationId), {
+          ...current,
+          status: 'revoked',
+        });
       }
     }
-    this.#publications.set(
-      this.#key(publication.tenantId, publication.publicationId),
-      publication,
-    );
+    this.#publications.set(this.#key(publication.tenantId, publication.publicationId), publication);
     this.#emit('care.behavior.publication.released.v1', incident, access.context.correlationId, {
       audience: publication.audience,
       version: publication.version,

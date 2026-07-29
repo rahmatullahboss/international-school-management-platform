@@ -168,18 +168,15 @@ describe('CARE-01 health domain', () => {
     });
 
     expect(() =>
-      service.administerMedication(
-        access({ context: context({ assurance: 'aal1' }) }),
-        {
-          tenantId: 'tenant-a',
-          medicationOrderId: order.medicationOrderId,
-          administeredAt: now,
-          dose: '2 units',
-          route: 'oral',
-          outcome: 'given',
-          idempotencyKey: 'administration-2',
-        },
-      ),
+      service.administerMedication(access({ context: context({ assurance: 'aal1' }) }), {
+        tenantId: 'tenant-a',
+        medicationOrderId: order.medicationOrderId,
+        administeredAt: now,
+        dose: '2 units',
+        route: 'oral',
+        outcome: 'given',
+        idempotencyKey: 'administration-2',
+      }),
     ).toThrowError(
       expect.objectContaining<Partial<HealthDomainError>>({ code: 'HEALTH_ACCESS_DENIED' }),
     );
@@ -211,9 +208,9 @@ describe('CARE-01 health domain', () => {
       replacementDose: '1 unit',
     });
     expect(service.listAdministrations('tenant-a', profile.profileId)[0]?.dose).toBe('2 units');
-    expect(
-      service.listAdministrationCorrections('tenant-a', first.administrationId),
-    ).toEqual([correction]);
+    expect(service.listAdministrationCorrections('tenant-a', first.administrationId)).toEqual([
+      correction,
+    ]);
   });
 
   test('returns only the minimum emergency projection and records a CARE-E read', () => {
@@ -258,9 +255,9 @@ describe('CARE-01 health domain', () => {
     });
     expect(JSON.stringify(projection)).not.toContain('Restricted source narrative');
     expect(JSON.stringify(projection)).not.toContain('Restricted reaction detail');
-    expect(security.auditStore.list('tenant-a').some((item) => item.classification === 'CARE-E')).toBe(
-      true,
-    );
+    expect(
+      security.auditStore.list('tenant-a').some((item) => item.classification === 'CARE-E'),
+    ).toBe(true);
   });
 
   test('closes clinic encounters once and emits no narrative in the event', () => {

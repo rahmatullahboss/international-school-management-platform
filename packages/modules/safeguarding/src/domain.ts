@@ -237,7 +237,8 @@ export class SafeguardingService {
     const existingId = this.#concernByIdempotency.get(replayKey);
     if (existingId) {
       const existing = this.#concerns.get(this.#key(input.tenantId, existingId));
-      if (!existing) throw new SafeguardingDomainError('SAFEGUARDING_NOT_FOUND', 'Concern not found');
+      if (!existing)
+        throw new SafeguardingDomainError('SAFEGUARDING_NOT_FOUND', 'Concern not found');
       return {
         tenantId: existing.tenantId,
         concernId: existing.concernId,
@@ -263,10 +264,16 @@ export class SafeguardingService {
     };
     this.#concerns.set(this.#key(concern.tenantId, concern.concernId), concern);
     this.#concernByIdempotency.set(replayKey, concern.concernId);
-    this.#emit('care.safeguarding.concern.received.v1', concern, concern.concernId, access.context.correlationId, {
-      urgency: concern.urgency,
-      concernCategory: concern.concernCategory,
-    });
+    this.#emit(
+      'care.safeguarding.concern.received.v1',
+      concern,
+      concern.concernId,
+      access.context.correlationId,
+      {
+        urgency: concern.urgency,
+        concernCategory: concern.concernCategory,
+      },
+    );
     return {
       tenantId: concern.tenantId,
       concernId: concern.concernId,
@@ -300,7 +307,10 @@ export class SafeguardingService {
         'safeguarding-assessment',
       );
       if (!membership) {
-        throw new SafeguardingDomainError('SAFEGUARDING_MEMBERSHIP_INVALID', 'Lead membership missing');
+        throw new SafeguardingDomainError(
+          'SAFEGUARDING_MEMBERSHIP_INVALID',
+          'Lead membership missing',
+        );
       }
       return { caseFile: clone(existing), leadMembership: clone(membership) };
     }
@@ -339,9 +349,15 @@ export class SafeguardingService {
       ...concern,
       status: 'linked-to-case',
     });
-    this.#emit('care.safeguarding.case.opened.v1', caseFile, caseFile.caseId, access.context.correlationId, {
-      riskBand: caseFile.riskBand,
-    });
+    this.#emit(
+      'care.safeguarding.case.opened.v1',
+      caseFile,
+      caseFile.caseId,
+      access.context.correlationId,
+      {
+        riskBand: caseFile.riskBand,
+      },
+    );
     return { caseFile: clone(caseFile), leadMembership: clone(leadMembership) };
   }
 
@@ -359,7 +375,12 @@ export class SafeguardingService {
   ): SafeguardingMembershipGrant {
     this.#requireAal2(access);
     const caseFile = this.#requireCase(input.tenantId, input.caseId);
-    this.#authorizeCase(access, caseFile, 'care.safeguarding.membership.manage', 'case-membership-change');
+    this.#authorizeCase(
+      access,
+      caseFile,
+      'care.safeguarding.membership.manage',
+      'case-membership-change',
+    );
     if (input.principalId === access.context.principalId) {
       throw new SafeguardingDomainError(
         'SAFEGUARDING_INDEPENDENT_APPROVAL_REQUIRED',
@@ -367,7 +388,10 @@ export class SafeguardingService {
       );
     }
     if (input.expiresAt <= this.#now()) {
-      throw new SafeguardingDomainError('SAFEGUARDING_MEMBERSHIP_INVALID', 'Membership expiry is invalid');
+      throw new SafeguardingDomainError(
+        'SAFEGUARDING_MEMBERSHIP_INVALID',
+        'Membership expiry is invalid',
+      );
     }
     return clone(
       this.#grantMembershipUnchecked({
@@ -391,9 +415,15 @@ export class SafeguardingService {
     this.#requireAal2(access);
     const key = this.#key(input.tenantId, input.membershipId);
     const membership = this.#memberships.get(key);
-    if (!membership) throw new SafeguardingDomainError('SAFEGUARDING_NOT_FOUND', 'Membership not found');
+    if (!membership)
+      throw new SafeguardingDomainError('SAFEGUARDING_NOT_FOUND', 'Membership not found');
     const caseFile = this.#requireCase(input.tenantId, membership.caseId);
-    this.#authorizeCase(access, caseFile, 'care.safeguarding.membership.manage', 'case-membership-change');
+    this.#authorizeCase(
+      access,
+      caseFile,
+      'care.safeguarding.membership.manage',
+      'case-membership-change',
+    );
     const revoked: SafeguardingMembershipGrant = {
       ...membership,
       status: 'revoked',
@@ -462,7 +492,11 @@ export class SafeguardingService {
       );
     }
     for (const current of this.#assessments.values()) {
-      if (current.tenantId === input.tenantId && current.caseId === input.caseId && current.status === 'active') {
+      if (
+        current.tenantId === input.tenantId &&
+        current.caseId === input.caseId &&
+        current.status === 'active'
+      ) {
         this.#assessments.set(this.#key(current.tenantId, current.assessmentId), {
           ...current,
           status: 'superseded',
@@ -517,7 +551,9 @@ export class SafeguardingService {
       reviewAt: input.reviewAt,
       status: input.approvedByPrincipalId ? 'active' : 'draft',
       preparedByPrincipalId: actor,
-      ...(input.approvedByPrincipalId ? { approvedByPrincipalId: input.approvedByPrincipalId } : {}),
+      ...(input.approvedByPrincipalId
+        ? { approvedByPrincipalId: input.approvedByPrincipalId }
+        : {}),
       version: 1,
       createdAt: this.#now(),
     };
@@ -541,7 +577,12 @@ export class SafeguardingService {
     this.#requirePurpose(access, 'mandatory-reporting');
     this.#assertExactScope(input.exactFieldCategories, input.recipientReference);
     const caseFile = this.#requireCase(input.tenantId, input.caseId);
-    this.#authorizeCase(access, caseFile, 'care.safeguarding.report.approve', 'external-disclosure');
+    this.#authorizeCase(
+      access,
+      caseFile,
+      'care.safeguarding.report.approve',
+      'external-disclosure',
+    );
     const actor = access.context.principalId ?? 'missing-principal';
     if (actor === input.approvedByPrincipalId) {
       throw new SafeguardingDomainError(
@@ -580,7 +621,10 @@ export class SafeguardingService {
     const caseFile = this.#requireCase(tenantId, report.caseId);
     this.#authorizeCase(access, caseFile, 'care.safeguarding.report.submit', 'external-disclosure');
     if (report.status !== 'approved') {
-      throw new SafeguardingDomainError('SAFEGUARDING_INVALID_TRANSITION', 'Report is not approved');
+      throw new SafeguardingDomainError(
+        'SAFEGUARDING_INVALID_TRANSITION',
+        'Report is not approved',
+      );
     }
     const submitted: MandatoryReport = { ...report, status: 'submitted', submittedAt: this.#now() };
     this.#reports.set(key, submitted);
@@ -611,10 +655,18 @@ export class SafeguardingService {
     this.#requirePurpose(access, input.purposeCode);
     this.#assertExactScope(input.exactFieldCategories, input.recipientReference);
     if (input.expiresAt <= this.#now()) {
-      throw new SafeguardingDomainError('SAFEGUARDING_DISCLOSURE_EXPIRED', 'Disclosure expiry is invalid');
+      throw new SafeguardingDomainError(
+        'SAFEGUARDING_DISCLOSURE_EXPIRED',
+        'Disclosure expiry is invalid',
+      );
     }
     const caseFile = this.#requireCase(input.tenantId, input.caseId);
-    this.#authorizeCase(access, caseFile, 'care.safeguarding.disclosure.approve', 'external-disclosure');
+    this.#authorizeCase(
+      access,
+      caseFile,
+      'care.safeguarding.disclosure.approve',
+      'external-disclosure',
+    );
     const actor = access.context.principalId ?? 'missing-principal';
     if (actor === input.approvedByPrincipalId) {
       throw new SafeguardingDomainError(
@@ -652,13 +704,22 @@ export class SafeguardingService {
     this.#requireAal2(access);
     const key = this.#key(tenantId, disclosureId);
     const disclosure = this.#disclosures.get(key);
-    if (!disclosure) throw new SafeguardingDomainError('SAFEGUARDING_NOT_FOUND', 'Disclosure not found');
+    if (!disclosure)
+      throw new SafeguardingDomainError('SAFEGUARDING_NOT_FOUND', 'Disclosure not found');
     this.#requirePurpose(access, disclosure.purposeCode);
     if (disclosure.expiresAt <= this.#now()) {
-      throw new SafeguardingDomainError('SAFEGUARDING_DISCLOSURE_EXPIRED', 'Disclosure has expired');
+      throw new SafeguardingDomainError(
+        'SAFEGUARDING_DISCLOSURE_EXPIRED',
+        'Disclosure has expired',
+      );
     }
     const caseFile = this.#requireCase(tenantId, disclosure.caseId);
-    this.#authorizeCase(access, caseFile, 'care.safeguarding.disclosure.generate', 'external-disclosure');
+    this.#authorizeCase(
+      access,
+      caseFile,
+      'care.safeguarding.disclosure.generate',
+      'external-disclosure',
+    );
     if (
       recipientReference !== disclosure.recipientReference ||
       exactFieldCategories.length !== disclosure.exactFieldCategories.length ||
@@ -732,20 +793,31 @@ export class SafeguardingService {
       reviewedAt: this.#now(),
     };
     this.#closures.push(review);
-    const updated: SafeguardingCaseFile = input.outcome === 'close'
-      ? { ...caseFile, status: 'closed', closedAt: this.#now(), version: caseFile.version + 1 }
-      : { ...caseFile, status: 'monitoring', version: caseFile.version + 1 };
+    const updated: SafeguardingCaseFile =
+      input.outcome === 'close'
+        ? { ...caseFile, status: 'closed', closedAt: this.#now(), version: caseFile.version + 1 }
+        : { ...caseFile, status: 'monitoring', version: caseFile.version + 1 };
     this.#cases.set(this.#key(updated.tenantId, updated.caseId), updated);
     if (updated.status === 'closed') {
-      this.#emit('care.safeguarding.case.closed.v1', updated, updated.caseId, access.context.correlationId, {
-        outcome: review.outcome,
-        reasonCategory: review.reasonCategory,
-      });
+      this.#emit(
+        'care.safeguarding.case.closed.v1',
+        updated,
+        updated.caseId,
+        access.context.correlationId,
+        {
+          outcome: review.outcome,
+          reasonCategory: review.reasonCategory,
+        },
+      );
     }
     return { caseFile: clone(updated), review: clone(review) };
   }
 
-  readCase(access: SafeguardingAccessScope, tenantId: string, caseId: string): SafeguardingCaseFile {
+  readCase(
+    access: SafeguardingAccessScope,
+    tenantId: string,
+    caseId: string,
+  ): SafeguardingCaseFile {
     const caseFile = this.#requireCase(tenantId, caseId);
     this.#authorizeCase(access, caseFile, 'care.safeguarding.read', 'read');
     return clone(caseFile);
@@ -784,9 +856,13 @@ export class SafeguardingService {
     closureReviews: readonly SafeguardingClosureReview[];
   }> {
     return {
-      concerns: [...this.#concerns.values()].filter((item) => item.tenantId === tenantId).map(clone),
+      concerns: [...this.#concerns.values()]
+        .filter((item) => item.tenantId === tenantId)
+        .map(clone),
       cases: [...this.#cases.values()].filter((item) => item.tenantId === tenantId).map(clone),
-      mandatoryReports: [...this.#reports.values()].filter((item) => item.tenantId === tenantId).map(clone),
+      mandatoryReports: [...this.#reports.values()]
+        .filter((item) => item.tenantId === tenantId)
+        .map(clone),
       closureReviews: this.#closures.filter((item) => item.tenantId === tenantId).map(clone),
     };
   }
@@ -869,9 +945,10 @@ export class SafeguardingService {
   ): void {
     const principalId = access.context.principalId;
     const purpose = access.context.purpose;
-    const currentMembership = principalId && purpose
-      ? this.#activeMembership(caseFile.tenantId, caseFile.caseId, principalId, purpose)
-      : undefined;
+    const currentMembership =
+      principalId && purpose
+        ? this.#activeMembership(caseFile.tenantId, caseFile.caseId, principalId, purpose)
+        : undefined;
     const decision = this.#security.authorize({
       context: access.context,
       resource: {
@@ -887,7 +964,10 @@ export class SafeguardingService {
       ...(currentMembership ? { caseMembership: currentMembership } : {}),
     });
     if (!decision.allowed) {
-      throw new SafeguardingDomainError('SAFEGUARDING_ACCESS_DENIED', 'Safeguarding case not found');
+      throw new SafeguardingDomainError(
+        'SAFEGUARDING_ACCESS_DENIED',
+        'Safeguarding case not found',
+      );
     }
   }
 
@@ -902,7 +982,10 @@ export class SafeguardingService {
     purpose: 'mandatory-reporting' | 'approved-data-transfer',
   ): void {
     if (access.context.purpose !== purpose) {
-      throw new SafeguardingDomainError('SAFEGUARDING_ACCESS_DENIED', 'Purpose does not match approval');
+      throw new SafeguardingDomainError(
+        'SAFEGUARDING_ACCESS_DENIED',
+        'Purpose does not match approval',
+      );
     }
   }
 

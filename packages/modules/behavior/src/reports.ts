@@ -61,15 +61,9 @@ export function buildBehaviorOperationalReport(
 
   const severityCounts = Object.freeze({
     low: safeCount(incidents.filter((item) => item.severity === 'low').length, minimum),
-    moderate: safeCount(
-      incidents.filter((item) => item.severity === 'moderate').length,
-      minimum,
-    ),
+    moderate: safeCount(incidents.filter((item) => item.severity === 'moderate').length, minimum),
     high: safeCount(incidents.filter((item) => item.severity === 'high').length, minimum),
-    critical: safeCount(
-      incidents.filter((item) => item.severity === 'critical').length,
-      minimum,
-    ),
+    critical: safeCount(incidents.filter((item) => item.severity === 'critical').length, minimum),
   });
 
   return {
@@ -85,10 +79,7 @@ export function buildBehaviorOperationalReport(
       actions.filter((item) => item.actionType === 'restorative').length,
       minimum,
     ),
-    openFollowUps: safeCount(
-      followUps.filter((item) => item.status === 'open').length,
-      minimum,
-    ),
+    openFollowUps: safeCount(followUps.filter((item) => item.status === 'open').length, minimum),
     escalatedFollowUps: safeCount(
       followUps.filter((item) => item.outcomeCode === 'escalated').length,
       minimum,

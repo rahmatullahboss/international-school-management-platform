@@ -12,7 +12,7 @@ describe('CARE health migration contract', () => {
     const sql = await readFile(migrationPath, 'utf8');
     expect(sql).toContain('CREATE SCHEMA IF NOT EXISTS health');
     expect(sql.match(/FORCE ROW LEVEL SECURITY/g)).toHaveLength(1);
-    expect(sql).toContain("FOREACH table_name IN ARRAY ARRAY[");
+    expect(sql).toContain('FOREACH table_name IN ARRAY ARRAY[');
     expect(sql).toContain("current_setting(''app.tenant_id'', true)");
     expect(sql).toContain('medication_administration_append_only');
     expect(sql).toContain('CARE_HEALTH_CLOSED_ENCOUNTER_IMMUTABLE');

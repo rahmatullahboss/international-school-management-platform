@@ -9,11 +9,7 @@ import {
 } from '../../safeguarding/src/security.js';
 
 export type HealthRecordStatus = 'active' | 'resolved' | 'entered-in-error';
-export type LegalBasisCode =
-  | 'consent'
-  | 'vital-interests'
-  | 'legal-obligation'
-  | 'public-task';
+export type LegalBasisCode = 'consent' | 'vital-interests' | 'legal-obligation' | 'public-task';
 
 export interface LegalBasisEvidence {
   basis: LegalBasisCode;
@@ -175,7 +171,12 @@ export interface EmergencyHealthProjection {
   projectionVersion: number;
   bloodGroup?: string;
   lifeThreateningAllergies: readonly { substanceCode: string; display: string }[];
-  activeMedicationSummaries: readonly { medicationCode: string; display: string; dose: string; route: string }[];
+  activeMedicationSummaries: readonly {
+    medicationCode: string;
+    display: string;
+    dose: string;
+    route: string;
+  }[];
   emergencyActions: readonly string[];
   generatedAt: Date;
 }
@@ -300,9 +301,15 @@ export class HealthService {
       updatedAt: now,
     };
     this.#profiles.set(this.#key(profile.tenantId, profile.profileId), profile);
-    this.#emit('care.health.profile.created.v1', profile, profile.profileId, access.context.correlationId, {
-      version: profile.version,
-    });
+    this.#emit(
+      'care.health.profile.created.v1',
+      profile,
+      profile.profileId,
+      access.context.correlationId,
+      {
+        version: profile.version,
+      },
+    );
     return clone(profile);
   }
 
@@ -376,9 +383,15 @@ export class HealthService {
       recordedAt: now,
     };
     this.#allergies.set(this.#key(allergy.tenantId, allergy.allergyId), allergy);
-    this.#emit('care.health.allergy.recorded.v1', allergy, allergy.allergyId, access.context.correlationId, {
-      severity: allergy.severity,
-    });
+    this.#emit(
+      'care.health.allergy.recorded.v1',
+      allergy,
+      allergy.allergyId,
+      access.context.correlationId,
+      {
+        severity: allergy.severity,
+      },
+    );
     return clone(allergy);
   }
 
@@ -432,9 +445,15 @@ export class HealthService {
       recordedAt: now,
     };
     this.#medicationOrders.set(this.#key(order.tenantId, order.medicationOrderId), order);
-    this.#emit('care.health.medication.ordered.v1', order, order.medicationOrderId, access.context.correlationId, {
-      orderVersion: 1,
-    });
+    this.#emit(
+      'care.health.medication.ordered.v1',
+      order,
+      order.medicationOrderId,
+      access.context.correlationId,
+      {
+        orderVersion: 1,
+      },
+    );
     return clone(order);
   }
 
@@ -512,9 +531,15 @@ export class HealthService {
       administration,
     );
     this.#administrationByIdempotency.set(idempotencyScope, administration.administrationId);
-    this.#emit('care.health.medication.administered.v1', administration, administration.administrationId, access.context.correlationId, {
-      outcome: administration.outcome,
-    });
+    this.#emit(
+      'care.health.medication.administered.v1',
+      administration,
+      administration.administrationId,
+      access.context.correlationId,
+      {
+        outcome: administration.outcome,
+      },
+    );
     return clone(administration);
   }
 
@@ -531,7 +556,8 @@ export class HealthService {
     const administration = this.#administrations.get(
       this.#key(input.tenantId, input.administrationId),
     );
-    if (!administration) throw new HealthDomainError('HEALTH_NOT_FOUND', 'Administration not found');
+    if (!administration)
+      throw new HealthDomainError('HEALTH_NOT_FOUND', 'Administration not found');
     if (
       input.reason.trim().length < 8 ||
       (input.replacementOutcome === undefined && input.replacementDose === undefined)
@@ -555,9 +581,7 @@ export class HealthService {
       administrationId: input.administrationId,
       correctedByPrincipalId: access.context.principalId ?? 'missing-principal',
       reason: input.reason.trim(),
-      ...(input.replacementOutcome
-        ? { replacementOutcome: input.replacementOutcome }
-        : {}),
+      ...(input.replacementOutcome ? { replacementOutcome: input.replacementOutcome } : {}),
       ...(input.replacementDose ? { replacementDose: input.replacementDose } : {}),
       recordedAt: this.#now(),
     };
@@ -567,7 +591,10 @@ export class HealthService {
 
   recordImmunization(
     access: HealthAccessScope,
-    input: Omit<ImmunizationRecord, 'immunizationId' | 'studentPersonId' | 'status' | 'recordedAt'> & {
+    input: Omit<
+      ImmunizationRecord,
+      'immunizationId' | 'studentPersonId' | 'status' | 'recordedAt'
+    > & {
       legalBasis: LegalBasisEvidence;
     },
   ): ImmunizationRecord {
@@ -717,9 +744,15 @@ export class HealthService {
       version: encounter.version + 1,
     };
     this.#encounters.set(key, closed);
-    this.#emit('care.health.encounter.closed.v1', closed, closed.encounterId, access.context.correlationId, {
-      disposition: input.disposition,
-    });
+    this.#emit(
+      'care.health.encounter.closed.v1',
+      closed,
+      closed.encounterId,
+      access.context.correlationId,
+      {
+        disposition: input.disposition,
+      },
+    );
     return clone(closed);
   }
 
@@ -854,8 +887,7 @@ export class HealthService {
   ): readonly MedicationAdministrationCorrection[] {
     return [...this.#corrections.values()]
       .filter(
-        (record) =>
-          record.tenantId === tenantId && record.administrationId === administrationId,
+        (record) => record.tenantId === tenantId && record.administrationId === administrationId,
       )
       .map(clone);
   }
@@ -866,8 +898,12 @@ export class HealthService {
     administrations: readonly MedicationAdministration[];
   }> {
     return {
-      profiles: [...this.#profiles.values()].filter((item) => item.tenantId === tenantId).map(clone),
-      encounters: [...this.#encounters.values()].filter((item) => item.tenantId === tenantId).map(clone),
+      profiles: [...this.#profiles.values()]
+        .filter((item) => item.tenantId === tenantId)
+        .map(clone),
+      encounters: [...this.#encounters.values()]
+        .filter((item) => item.tenantId === tenantId)
+        .map(clone),
       administrations: [...this.#administrations.values()]
         .filter((item) => item.tenantId === tenantId)
         .map(clone),

@@ -126,9 +126,9 @@ describe('CARE-01 behavior domain', () => {
     ).toThrowError(
       expect.objectContaining<Partial<BehaviorDomainError>>({ code: 'BEHAVIOR_ACCESS_DENIED' }),
     );
-    expect(
-      service.readRestrictedFollowUp(access(), 'tenant-a', followUp.followUpId),
-    ).toMatchObject({ outcomeCode: 'improving' });
+    expect(service.readRestrictedFollowUp(access(), 'tenant-a', followUp.followUpId)).toMatchObject(
+      { outcomeCode: 'improving' },
+    );
   });
 
   test('records corrections without rewriting source incident fields', () => {

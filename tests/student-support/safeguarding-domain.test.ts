@@ -101,7 +101,9 @@ describe('CARE-01 safeguarding domain', () => {
     });
     expect(replay).toMatchObject({ concernId: receipt.concernId, duplicate: true });
     expect(() => service.readCase(teacherAccess, 'tenant-a', caseFile.caseId)).toThrowError(
-      expect.objectContaining<Partial<SafeguardingDomainError>>({ code: 'SAFEGUARDING_ACCESS_DENIED' }),
+      expect.objectContaining<Partial<SafeguardingDomainError>>({
+        code: 'SAFEGUARDING_ACCESS_DENIED',
+      }),
     );
   });
 
@@ -126,14 +128,18 @@ describe('CARE-01 safeguarding domain', () => {
       }),
       caseMembership: membership,
     };
-    expect(service.readCase(memberAccess, 'tenant-a', caseFile.caseId).caseId).toBe(caseFile.caseId);
+    expect(service.readCase(memberAccess, 'tenant-a', caseFile.caseId).caseId).toBe(
+      caseFile.caseId,
+    );
     service.revokeMembership(leadAccess, {
       tenantId: 'tenant-a',
       membershipId: membership.membershipId,
       reason: 'Synthetic immediate revocation',
     });
     expect(() => service.readCase(memberAccess, 'tenant-a', caseFile.caseId)).toThrowError(
-      expect.objectContaining<Partial<SafeguardingDomainError>>({ code: 'SAFEGUARDING_ACCESS_DENIED' }),
+      expect.objectContaining<Partial<SafeguardingDomainError>>({
+        code: 'SAFEGUARDING_ACCESS_DENIED',
+      }),
     );
   });
 
@@ -161,7 +167,9 @@ describe('CARE-01 safeguarding domain', () => {
         },
       ),
     ).toThrowError(
-      expect.objectContaining<Partial<SafeguardingDomainError>>({ code: 'SAFEGUARDING_AAL2_REQUIRED' }),
+      expect.objectContaining<Partial<SafeguardingDomainError>>({
+        code: 'SAFEGUARDING_AAL2_REQUIRED',
+      }),
     );
     expect(() =>
       service.assessCase(leadAccess, {
@@ -219,7 +227,9 @@ describe('CARE-01 safeguarding domain', () => {
       recipientReference: 'synthetic-recipient',
       approvedByPrincipalId: 'reviewer-2',
     });
-    expect(service.submitMandatoryReport(reportAccess, 'tenant-a', report.mandatoryReportId)).toMatchObject({
+    expect(
+      service.submitMandatoryReport(reportAccess, 'tenant-a', report.mandatoryReportId),
+    ).toMatchObject({
       status: 'submitted',
     });
 

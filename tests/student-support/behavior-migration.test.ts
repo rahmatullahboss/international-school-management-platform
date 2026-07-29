@@ -11,7 +11,7 @@ describe('CARE behavior migration contract', () => {
   test('uses CARE ownership, forced RLS, immutable history and suppressed reporting', async () => {
     const sql = await readFile(migrationPath, 'utf8');
     expect(sql).toContain('CREATE SCHEMA IF NOT EXISTS behavior');
-    expect(sql).toContain("FOREACH table_name IN ARRAY ARRAY[");
+    expect(sql).toContain('FOREACH table_name IN ARRAY ARRAY[');
     expect(sql).toContain("current_setting(''app.tenant_id'', true)");
     expect(sql).toContain('CARE_BEHAVIOR_APPEND_ONLY_RECORD');
     expect(sql).toContain('CARE_BEHAVIOR_SOURCE_IMMUTABLE_USE_CORRECTION');

@@ -71,16 +71,22 @@ const maskedFixture = `
   </section>
 </main>`;
 
-test('restricted admin surface is semantic, keyboard reachable and step-up aware', async ({ page }) => {
+test('restricted admin surface is semantic, keyboard reachable and step-up aware', async ({
+  page,
+}) => {
   await page.setContent(pageShell(restrictedFixture));
 
   await expect(page.getByRole('heading', { level: 1, name: 'Student support' })).toBeVisible();
   await expect(page.getByText('Suppressed', { exact: true })).toBeVisible();
   await expect(
-    page.getByRole('table', { name: 'Authorized clinic encounters with controlled categories only' }),
+    page.getByRole('table', {
+      name: 'Authorized clinic encounters with controlled categories only',
+    }),
   ).toBeVisible();
   await expect(
-    page.getByRole('table', { name: 'Existence-protected cases within the current membership scope' }),
+    page.getByRole('table', {
+      name: 'Existence-protected cases within the current membership scope',
+    }),
   ).toBeVisible();
   await expect(page.getByRole('button', { name: 'Medication administration' })).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Open case' })).toBeDisabled();
@@ -97,12 +103,19 @@ test('restricted admin surface is semantic, keyboard reachable and step-up aware
   expect(duplicateIds).toEqual([]);
 
   const bodyText = await page.locator('body').innerText();
-  for (const prohibited of ['counselling note', 'allegation', 'reporter identity', 'restricted rationale']) {
+  for (const prohibited of [
+    'counselling note',
+    'allegation',
+    'reporter identity',
+    'restricted rationale',
+  ]) {
     expect(bodyText.toLowerCase()).not.toContain(prohibited);
   }
 });
 
-test('mobile and RTL layouts retain scrollable tables and logical text alignment', async ({ page }) => {
+test('mobile and RTL layouts retain scrollable tables and logical text alignment', async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 360, height: 800 });
   await page.setContent(pageShell(restrictedFixture, 'rtl'));
 
@@ -118,7 +131,9 @@ test('mobile and RTL layouts retain scrollable tables and logical text alignment
   expect(['start', 'right']).toContain(overflow.textAlign);
 });
 
-test('unauthorized case state masks existence and exposes no privileged controls', async ({ page }) => {
+test('unauthorized case state masks existence and exposes no privileged controls', async ({
+  page,
+}) => {
   await page.setContent(pageShell(maskedFixture));
 
   await expect(page.getByRole('heading', { level: 1, name: 'Record unavailable' })).toBeVisible();

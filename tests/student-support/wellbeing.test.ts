@@ -132,18 +132,15 @@ describe('CARE-01 wellbeing and counselling domain', () => {
     const service = new WellbeingService(new CareSecurityService({ now: () => now }), () => now);
     const { counsellingCase } = bootstrap(service);
     expect(() =>
-      service.recordSession(
-        access({ context: context({ principalId: 'counselor-2' }) }),
-        {
-          tenantId: 'tenant-a',
-          counsellingCaseId: counsellingCase.counsellingCaseId,
-          occurredAt: now,
-          sessionType: 'check-in',
-          restrictedNote: 'Restricted synthetic counselling note',
-          controlledOutcomeCode: 'continue',
-          basisEvidence: basis,
-        },
-      ),
+      service.recordSession(access({ context: context({ principalId: 'counselor-2' }) }), {
+        tenantId: 'tenant-a',
+        counsellingCaseId: counsellingCase.counsellingCaseId,
+        occurredAt: now,
+        sessionType: 'check-in',
+        restrictedNote: 'Restricted synthetic counselling note',
+        controlledOutcomeCode: 'continue',
+        basisEvidence: basis,
+      }),
     ).toThrowError(
       expect.objectContaining<Partial<WellbeingDomainError>>({
         code: 'WELLBEING_COUNSELOR_MISMATCH',

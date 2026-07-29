@@ -86,12 +86,10 @@ export function buildSafeguardingOperationalReport(
       minimum,
     ),
     mandatoryReportsSubmitted: safeCount(
-      reports.filter((item) => item.status === 'submitted' || item.status === 'acknowledged').length,
+      reports.filter((item) => item.status === 'submitted' || item.status === 'acknowledged')
+        .length,
       minimum,
     ),
-    casesClosed: safeCount(
-      closures.filter((item) => item.outcome === 'close').length,
-      minimum,
-    ),
+    casesClosed: safeCount(closures.filter((item) => item.outcome === 'close').length, minimum),
   };
 }

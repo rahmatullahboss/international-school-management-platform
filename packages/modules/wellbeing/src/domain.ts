@@ -7,10 +7,7 @@ import {
 } from '../../safeguarding/src/security.js';
 
 export type WellbeingLegalBasis =
-  | 'consent'
-  | 'vital-interests'
-  | 'legal-obligation'
-  | 'public-task';
+  'consent' | 'vital-interests' | 'legal-obligation' | 'public-task';
 
 export interface WellbeingBasisEvidence {
   basis: WellbeingLegalBasis;
@@ -272,10 +269,16 @@ export class WellbeingService {
     };
     this.#referrals.set(this.#key(referral.tenantId, referral.referralId), referral);
     this.#referralByIdempotency.set(replayKey, referral.referralId);
-    this.#emit('care.wellbeing.referral.submitted.v1', referral, referral.referralId, access.context.correlationId, {
-      urgency: referral.urgency,
-      referralCategory: referral.referralCategory,
-    });
+    this.#emit(
+      'care.wellbeing.referral.submitted.v1',
+      referral,
+      referral.referralId,
+      access.context.correlationId,
+      {
+        urgency: referral.urgency,
+        referralCategory: referral.referralCategory,
+      },
+    );
     return clone(referral);
   }
 
@@ -292,7 +295,10 @@ export class WellbeingService {
     const referral = this.#referrals.get(key);
     if (!referral) throw new WellbeingDomainError('WELLBEING_NOT_FOUND', 'Referral not found');
     if (referral.status !== 'submitted') {
-      throw new WellbeingDomainError('WELLBEING_INVALID_TRANSITION', 'Referral is not awaiting triage');
+      throw new WellbeingDomainError(
+        'WELLBEING_INVALID_TRANSITION',
+        'Referral is not awaiting triage',
+      );
     }
     this.#authorize(access, {
       tenantId: input.tenantId,
@@ -385,7 +391,10 @@ export class WellbeingService {
       fields: ['counselling-session-note', 'controlled-outcome'],
     });
     if (counsellingCase.status !== 'open') {
-      throw new WellbeingDomainError('WELLBEING_INVALID_TRANSITION', 'Counselling case is not open');
+      throw new WellbeingDomainError(
+        'WELLBEING_INVALID_TRANSITION',
+        'Counselling case is not open',
+      );
     }
     const session: CounsellingSession = {
       tenantId: input.tenantId,
@@ -513,9 +522,15 @@ export class WellbeingService {
       this.#key(assessment.tenantId, assessment.riskAssessmentId),
       assessment,
     );
-    this.#emit('care.wellbeing.risk.updated.v1', counsellingCase, assessment.riskAssessmentId, access.context.correlationId, {
-      riskLevel: assessment.riskLevel,
-    });
+    this.#emit(
+      'care.wellbeing.risk.updated.v1',
+      counsellingCase,
+      assessment.riskAssessmentId,
+      access.context.correlationId,
+      {
+        riskLevel: assessment.riskLevel,
+      },
+    );
     return clone(assessment);
   }
 
@@ -713,10 +728,16 @@ export class WellbeingService {
       ...(input.expiresAt ? { expiresAt: input.expiresAt } : {}),
     };
     this.#publications.set(this.#key(publication.tenantId, publication.publicationId), publication);
-    this.#emit('care.wellbeing.publication.released.v1', counsellingCase, publication.publicationId, access.context.correlationId, {
-      audience: publication.audience,
-      version: publication.version,
-    });
+    this.#emit(
+      'care.wellbeing.publication.released.v1',
+      counsellingCase,
+      publication.publicationId,
+      access.context.correlationId,
+      {
+        audience: publication.audience,
+        version: publication.version,
+      },
+    );
     return clone(publication);
   }
 
@@ -743,15 +764,18 @@ export class WellbeingService {
       effectiveFrom: publication.effectiveFrom,
       ...(publication.expiresAt ? { expiresAt: publication.expiresAt } : {}),
     };
-    this.#authorize({ ...access, publication: release }, {
-      tenantId,
-      resourceId: publication.counsellingCaseId,
-      studentPersonId: publication.studentPersonId,
-      classification: 'CARE-C2',
-      permission: 'care.portal.read',
-      action: 'read',
-      fields: release.allowedFields,
-    });
+    this.#authorize(
+      { ...access, publication: release },
+      {
+        tenantId,
+        resourceId: publication.counsellingCaseId,
+        studentPersonId: publication.studentPersonId,
+        classification: 'CARE-C2',
+        permission: 'care.portal.read',
+        action: 'read',
+        fields: release.allowedFields,
+      },
+    );
     return {
       counsellingCaseId: publication.counsellingCaseId,
       studentPersonId: publication.studentPersonId,
@@ -781,7 +805,10 @@ export class WellbeingService {
     return clone(session);
   }
 
-  listSessionCorrections(tenantId: string, sessionId: string): readonly CounsellingSessionCorrection[] {
+  listSessionCorrections(
+    tenantId: string,
+    sessionId: string,
+  ): readonly CounsellingSessionCorrection[] {
     return this.#sessionCorrections
       .filter((item) => item.tenantId === tenantId && item.sessionId === sessionId)
       .map(clone);
@@ -798,12 +825,16 @@ export class WellbeingService {
     planReviews: readonly WellbeingPlanReview[];
   }> {
     return {
-      referrals: [...this.#referrals.values()].filter((item) => item.tenantId === tenantId).map(clone),
+      referrals: [...this.#referrals.values()]
+        .filter((item) => item.tenantId === tenantId)
+        .map(clone),
       cases: [...this.#cases.values()].filter((item) => item.tenantId === tenantId).map(clone),
       riskAssessments: [...this.#riskAssessments.values()]
         .filter((item) => item.tenantId === tenantId)
         .map(clone),
-      planReviews: [...this.#reviews.values()].filter((item) => item.tenantId === tenantId).map(clone),
+      planReviews: [...this.#reviews.values()]
+        .filter((item) => item.tenantId === tenantId)
+        .map(clone),
     };
   }
 

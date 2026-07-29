@@ -17,9 +17,7 @@ describe('CARE security migration contract', () => {
     expect(sql).toContain('CREATE POLICY care_access_evidence_select');
     expect(sql).toContain('CREATE POLICY care_access_evidence_insert');
     expect(sql).not.toContain('FOR SELECT, INSERT');
-    expect(sql).toContain(
-      'REVOKE UPDATE, DELETE ON safeguarding.access_evidence FROM app_runtime',
-    );
+    expect(sql).toContain('REVOKE UPDATE, DELETE ON safeguarding.access_evidence FROM app_runtime');
     expect(sql).toContain('GRANT SELECT, INSERT ON safeguarding.access_evidence TO app_runtime');
     expect(sql).toContain("'202607290201_CARE-01_security_contract'");
     expect(sql).not.toMatch(/ALTER TABLE\s+(people|billing|ledger|integration|hr|academics)\./i);

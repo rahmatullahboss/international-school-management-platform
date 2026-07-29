@@ -57,7 +57,13 @@ export interface LearningSupportQueueRow {
   readonly nextReviewAt: string | null;
 }
 
-function EmptyTableRow({ columns, message }: { readonly columns: number; readonly message: string }) {
+function EmptyTableRow({
+  columns,
+  message,
+}: {
+  readonly columns: number;
+  readonly message: string;
+}) {
   return (
     <tr>
       <td colSpan={columns}>{message}</td>
@@ -117,7 +123,9 @@ export function StudentSupportSummary({
       <header>
         <p>Restricted operations</p>
         <h1 id="student-support-summary-title">Student support</h1>
-        <p>Counts are cohort-protected and never include case narrative or diagnosis-like detail.</p>
+        <p>
+          Counts are cohort-protected and never include case narrative or diagnosis-like detail.
+        </p>
       </header>
       {!auditAvailable ? (
         <div role="alert">
@@ -138,7 +146,7 @@ export function StudentSupportSummary({
             <article>
               <h2>{metric.label}</h2>
               <p aria-label={`${metric.label} value`}>
-                {metric.suppressed ? 'Suppressed' : metric.value ?? 'Unavailable'}
+                {metric.suppressed ? 'Suppressed' : (metric.value ?? 'Unavailable')}
               </p>
               <p>{metric.definition}</p>
               <small>
@@ -228,7 +236,11 @@ export function HealthClinicWorkspace({
                   <td>{row.status}</td>
                   <td>{row.emergencyTransferRequired ? 'Emergency review' : 'Routine'}</td>
                   <td>
-                    <button type="button" disabled={!canOpen} onClick={() => onOpen?.(row.encounterId)}>
+                    <button
+                      type="button"
+                      disabled={!canOpen}
+                      onClick={() => onOpen?.(row.encounterId)}
+                    >
                       Open encounter
                     </button>
                   </td>
@@ -343,7 +355,10 @@ export function WellbeingWorkspace({
           </thead>
           <tbody>
             {rows.length === 0 ? (
-              <EmptyTableRow columns={7} message="No wellbeing referrals match the current scope." />
+              <EmptyTableRow
+                columns={7}
+                message="No wellbeing referrals match the current scope."
+              />
             ) : (
               rows.map((row) => (
                 <tr key={row.referralId}>
@@ -356,7 +371,11 @@ export function WellbeingWorkspace({
                   <td>{row.status}</td>
                   <td>{row.assignedCounselorLabel ?? 'Unassigned'}</td>
                   <td>
-                    <button type="button" disabled={!canTriage} onClick={() => onTriage?.(row.referralId)}>
+                    <button
+                      type="button"
+                      disabled={!canTriage}
+                      onClick={() => onTriage?.(row.referralId)}
+                    >
                       Triage
                     </button>{' '}
                     <button
@@ -430,7 +449,10 @@ export function SafeguardingWorkspace({
             </thead>
             <tbody>
               {rows.length === 0 ? (
-                <EmptyTableRow columns={7} message="No cases were found in the current membership scope." />
+                <EmptyTableRow
+                  columns={7}
+                  message="No cases were found in the current membership scope."
+                />
               ) : (
                 rows.map((row) => (
                   <tr key={row.caseReference}>
@@ -506,7 +528,9 @@ export function LearningSupportWorkspace({
       <h2 id="learning-support-workspace-title">Learning support</h2>
       <ResponsiveTableRegion label="Learning-support referrals and plans" direction={direction}>
         <table>
-          <caption>Referral and plan workflow metadata without findings or restricted rationale</caption>
+          <caption>
+            Referral and plan workflow metadata without findings or restricted rationale
+          </caption>
           <thead>
             <tr>
               <th scope="col">Student reference</th>
@@ -520,7 +544,10 @@ export function LearningSupportWorkspace({
           </thead>
           <tbody>
             {rows.length === 0 ? (
-              <EmptyTableRow columns={7} message="No learning-support items match the current scope." />
+              <EmptyTableRow
+                columns={7}
+                message="No learning-support items match the current scope."
+              />
             ) : (
               rows.map((row) => (
                 <tr key={row.referralId}>
@@ -528,7 +555,9 @@ export function LearningSupportWorkspace({
                   <td>{row.referralCategory}</td>
                   <td>{row.priority}</td>
                   <td>{row.status}</td>
-                  <td>{row.activePlanVersion === null ? 'None' : `Version ${row.activePlanVersion}`}</td>
+                  <td>
+                    {row.activePlanVersion === null ? 'None' : `Version ${row.activePlanVersion}`}
+                  </td>
                   <td>
                     {row.nextReviewAt === null ? (
                       'Not scheduled'
@@ -537,7 +566,11 @@ export function LearningSupportWorkspace({
                     )}
                   </td>
                   <td>
-                    <button type="button" disabled={!canOpenSource} onClick={() => onOpen?.(row.referralId)}>
+                    <button
+                      type="button"
+                      disabled={!canOpenSource}
+                      onClick={() => onOpen?.(row.referralId)}
+                    >
                       Open authorized source
                     </button>{' '}
                     <button
@@ -644,7 +677,9 @@ export function ExactDisclosureApprovalPanel({
   return (
     <section aria-labelledby="exact-disclosure-title">
       <h2 id="exact-disclosure-title">Exact disclosure approval</h2>
-      <p>This approval applies only to the listed subjects, fields, recipient, purpose and expiry.</p>
+      <p>
+        This approval applies only to the listed subjects, fields, recipient, purpose and expiry.
+      </p>
       <dl>
         <div>
           <dt>Subjects</dt>

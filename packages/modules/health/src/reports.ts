@@ -1,8 +1,4 @@
-import type {
-  ClinicEncounter,
-  HealthProfile,
-  MedicationAdministration,
-} from './domain.js';
+import type { ClinicEncounter, HealthProfile, MedicationAdministration } from './domain.js';
 
 export interface HealthOperationalReportInput {
   tenantId: string;
@@ -48,9 +44,7 @@ export function buildHealthOperationalReport(
   const profiles = input.profiles.filter((item) => item.tenantId === input.tenantId);
   const encounters = input.encounters.filter(
     (item) =>
-      item.tenantId === input.tenantId &&
-      item.openedAt >= input.from &&
-      item.openedAt <= input.to,
+      item.tenantId === input.tenantId && item.openedAt >= input.from && item.openedAt <= input.to,
   );
   const administrations = input.administrations.filter(
     (item) =>
