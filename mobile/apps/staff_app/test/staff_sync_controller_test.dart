@@ -9,38 +9,53 @@ import 'package:school_sync_storage/school_sync_storage.dart';
 import 'package:school_teacher_sync/school_teacher_sync.dart';
 
 void main() {
-  test('authorized roster saves encrypted draft and syncs accepted receipt', () async {
-    final session = teacherSession();
-    final store = _MemorySyncStore();
-    final repository = _TeacherRepository(status: TeacherWriteStatus.accepted);
-    final runtime = teacherRuntime(
-      repository: repository,
-      session: session,
-      store: store,
-    );
-    final controller = StaffAttendanceSyncController(
-      clock: () => DateTime.parse('2026-07-30T05:30:00+06:00'),
-      repository: repository,
-      runtimeLoader: ({required repository, required session}) async => runtime,
-      session: session,
-    );
+  test(
+    'authorized roster saves encrypted draft and syncs accepted receipt',
+    () async {
+      final session = teacherSession();
+      final store = _MemorySyncStore();
+      final repository = _TeacherRepository(
+        status: TeacherWriteStatus.accepted,
+      );
+      final runtime = teacherRuntime(
+        repository: repository,
+        session: session,
+        store: store,
+      );
+      final controller = StaffAttendanceSyncController(
+        clock: () => DateTime.parse('2026-07-30T05:30:00+06:00'),
+        repository: repository,
+        runtimeLoader: ({required repository, required session}) async =>
+            runtime,
+        session: session,
+      );
 
-    await controller.initialize();
-    controller.attachRoster(roster());
-    controller.mark('student-1', TeacherAttendanceMark.absent);
-    await controller.saveOnDevice();
+      await controller.initialize();
+      controller.attachRoster(roster());
+      controller.mark('student-1', TeacherAttendanceMark.absent);
+      await controller.saveOnDevice();
 
-    expect(controller.state.dirty, isFalse);
-    expect(controller.state.pendingCount, 1);
-    expect(store.operations.single.payload.ciphertext, isNotEmpty);
-    expect(store.operations.single.payload.toString(), isNot(contains('student-1')));
+      expect(controller.state.dirty, isFalse);
+      expect(controller.state.pendingCount, 1);
+      expect(store.operations.single.payload.ciphertext, isNotEmpty);
+      expect(
+        store.operations.single.payload.toString(),
+        isNot(contains('student-1')),
+      );
 
-    await controller.syncNow();
+      await controller.syncNow();
 
-    expect(controller.state.pendingCount, 0);
-    expect(controller.state.latestOperation?.state, SyncOperationState.synced);
-    expect(repository.lastAttendance?.lines.single.mark, TeacherAttendanceMark.absent);
-  });
+      expect(controller.state.pendingCount, 0);
+      expect(
+        controller.state.latestOperation?.state,
+        SyncOperationState.synced,
+      );
+      expect(
+        repository.lastAttendance?.lines.single.mark,
+        TeacherAttendanceMark.absent,
+      );
+    },
+  );
 
   test('conflict receipt remains visible for manual attention', () async {
     final session = teacherSession();
@@ -65,37 +80,48 @@ void main() {
     await controller.syncNow();
 
     expect(controller.state.attentionCount, 1);
-    expect(controller.state.latestOperation?.state, SyncOperationState.conflict);
-    expect(controller.state.latestOperation?.lastReasonCode, 'VERSION_CONFLICT');
-  });
-
-  test('school scope update clears roster and reloads isolated runtime', () async {
-    final first = teacherSession();
-    final second = teacherSession(tenantId: 'tenant-2', campusId: 'campus-2');
-    final repository = _TeacherRepository(status: TeacherWriteStatus.accepted);
-    var loads = 0;
-    final controller = StaffAttendanceSyncController(
-      repository: repository,
-      runtimeLoader: ({required repository, required session}) async {
-        loads++;
-        return teacherRuntime(
-          repository: repository,
-          session: session,
-          store: _MemorySyncStore(),
-        );
-      },
-      session: first,
+    expect(
+      controller.state.latestOperation?.state,
+      SyncOperationState.conflict,
     );
-
-    await controller.initialize();
-    controller.attachRoster(roster());
-    await controller.updateScope(repository: repository, session: second);
-
-    expect(loads, 2);
-    expect(controller.state.rosterMeetingId, isNull);
-    expect(controller.state.marks, isEmpty);
-    expect(controller.state.phase, StaffSyncPhase.ready);
+    expect(
+      controller.state.latestOperation?.lastReasonCode,
+      'VERSION_CONFLICT',
+    );
   });
+
+  test(
+    'school scope update clears roster and reloads isolated runtime',
+    () async {
+      final first = teacherSession();
+      final second = teacherSession(tenantId: 'tenant-2', campusId: 'campus-2');
+      final repository = _TeacherRepository(
+        status: TeacherWriteStatus.accepted,
+      );
+      var loads = 0;
+      final controller = StaffAttendanceSyncController(
+        repository: repository,
+        runtimeLoader: ({required repository, required session}) async {
+          loads++;
+          return teacherRuntime(
+            repository: repository,
+            session: session,
+            store: _MemorySyncStore(),
+          );
+        },
+        session: first,
+      );
+
+      await controller.initialize();
+      controller.attachRoster(roster());
+      await controller.updateScope(repository: repository, session: second);
+
+      expect(loads, 2);
+      expect(controller.state.rosterMeetingId, isNull);
+      expect(controller.state.marks, isEmpty);
+      expect(controller.state.phase, StaffSyncPhase.ready);
+    },
+  );
 }
 
 TeacherSyncRuntime teacherRuntime({
@@ -171,15 +197,18 @@ final class _MemorySyncStore
     Set<SyncOperationState>? states,
     int limit = 100,
   }) async {
-    final values = _operations.values.where((operation) {
-      operation.validateSession(session);
-      return (kinds == null || kinds.contains(operation.kind)) &&
-          (states == null || states.contains(operation.state));
-    }).toList(growable: false)
-      ..sort(
-        (first, second) =>
-            second.clientCreatedAt.compareTo(first.clientCreatedAt),
-      );
+    final values =
+        _operations.values
+            .where((operation) {
+              operation.validateSession(session);
+              return (kinds == null || kinds.contains(operation.kind)) &&
+                  (states == null || states.contains(operation.state));
+            })
+            .toList(growable: false)
+          ..sort(
+            (first, second) =>
+                second.clientCreatedAt.compareTo(first.clientCreatedAt),
+          );
     return List<SyncOperationEnvelope>.unmodifiable(values.take(limit));
   }
 
@@ -197,13 +226,15 @@ final class _MemorySyncStore
     required SchoolSession session,
     int limit = 25,
   }) async => List<SyncOperationEnvelope>.unmodifiable(
-    _operations.values.where((operation) {
-      operation.validateSession(session);
-      return operation.state == SyncOperationState.savedOnDevice ||
-          (operation.state == SyncOperationState.waitingForNetwork &&
-              operation.nextAttemptAt != null &&
-              !operation.nextAttemptAt!.isAfter(now));
-    }).take(limit),
+    _operations.values
+        .where((operation) {
+          operation.validateSession(session);
+          return operation.state == SyncOperationState.savedOnDevice ||
+              (operation.state == SyncOperationState.waitingForNetwork &&
+                  operation.nextAttemptAt != null &&
+                  !operation.nextAttemptAt!.isAfter(now));
+        })
+        .take(limit),
   );
 
   @override
