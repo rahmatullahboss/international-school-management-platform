@@ -87,9 +87,6 @@ class _StaffProductionAppState extends State<StaffProductionApp> {
             repository: repository,
             session: session,
             syncRuntimeLoader: widget.syncRuntimeLoader,
-            syncRuntimeLoader: widget.syncRuntimeLoader,
-            syncRuntimeLoader: widget.syncRuntimeLoader,
-            syncRuntimeLoader: widget.syncRuntimeLoader,
           );
         }
         return MaterialApp(
