@@ -1,10 +1,10 @@
 # Whole-Module Program Progress Tracker
 
 **Program:** `international-school-platform-v1`  
-**Updated:** 2026-07-30  
-**Current repository state:** All domain module streams are complete and integrated. `GATE-PILOT-READY`, `GATE-CLOUDFLARE-STAGING`, `GATE-PILOT-RUNTIME-COMPOSED`, `GATE-UX-CONTINUITY-V1`, `GATE-PILOT-READ-API-V1`, `GATE-PILOT-SIGNED-SESSION-V1`, `GATE-OIDC-TRUST-BOUNDARY-V1`, `GATE-OIDC-PKCE-FLOW-V1`, `GATE-AUTH-DURABLE-CONTEXT-V1` and `GATE-AUTH-SESSION-TERMINATION-V1` have passed. The non-production Cloudflare pilot now includes strict OIDC verification, Authorization Code + PKCE contracts, durable identity state and exact-origin current/account-wide browser logout, while real provider routes, production identity and mutations remain disabled.
+**Updated:** 2026-07-31  
+**Current repository state:** All domain module streams are complete and integrated. `GATE-PILOT-READY`, `GATE-CLOUDFLARE-STAGING`, `GATE-PILOT-RUNTIME-COMPOSED`, `GATE-UX-CONTINUITY-V1`, `GATE-PILOT-READ-API-V1`, `GATE-PILOT-SIGNED-SESSION-V1`, `GATE-OIDC-TRUST-BOUNDARY-V1`, `GATE-OIDC-PKCE-FLOW-V1`, `GATE-AUTH-DURABLE-CONTEXT-V1`, `GATE-AUTH-SESSION-TERMINATION-V1` and `GATE-AUTH-PROVIDER-CACHE-ROTATION-V1` have passed. The non-production Cloudflare pilot now includes strict OIDC verification, Authorization Code + PKCE contracts, durable identity state, exact-origin browser logout, bounded provider discovery/JWKS caching and signing-key rotation governance, while real provider routes, production identity and mutations remain disabled.
 
-Historical checkpoint-by-checkpoint evidence through Wave 3 is preserved in [the archived tracker](archive/04-progress-tracker-through-wave3.md). PILOT-01 scope is recorded in [09-pilot-runtime-composition.md](09-pilot-runtime-composition.md), UX continuity in [10-ux-continuity-v1.md](10-ux-continuity-v1.md) and [11-ux-continuity-release-evidence.md](11-ux-continuity-release-evidence.md), scoped reads in [12-pilot-read-api-v1.md](12-pilot-read-api-v1.md) and [13-pilot-read-api-release-evidence.md](13-pilot-read-api-release-evidence.md), and signed staging sessions in [14-pilot-signed-session-v1.md](14-pilot-signed-session-v1.md) [15-pilot-signed-session-release-evidence.md](15-pilot-signed-session-release-evidence.md), and the OIDC trust boundary in [16-oidc-trust-boundary-v1.md](16-oidc-trust-boundary-v1.md) and [17-oidc-trust-boundary-release-evidence.md](17-oidc-trust-boundary-release-evidence.md), with the PKCE flow in [18-oidc-pkce-flow-v1.md](18-oidc-pkce-flow-v1.md) and [19-oidc-pkce-flow-release-evidence.md](19-oidc-pkce-flow-release-evidence.md), and durable identity context in [20-auth-durable-context-v1.md](20-auth-durable-context-v1.md) and [21-auth-durable-context-release-evidence.md](21-auth-durable-context-release-evidence.md), with browser session termination in [22-auth-session-termination-v1.md](22-auth-session-termination-v1.md) and [23-auth-session-termination-release-evidence.md](23-auth-session-termination-release-evidence.md).
+Historical checkpoint-by-checkpoint evidence through Wave 3 is preserved in [the archived tracker](archive/04-progress-tracker-through-wave3.md). PILOT-01 scope is recorded in [09-pilot-runtime-composition.md](09-pilot-runtime-composition.md), UX continuity in [10-ux-continuity-v1.md](10-ux-continuity-v1.md) and [11-ux-continuity-release-evidence.md](11-ux-continuity-release-evidence.md), scoped reads in [12-pilot-read-api-v1.md](12-pilot-read-api-v1.md) and [13-pilot-read-api-release-evidence.md](13-pilot-read-api-release-evidence.md), and signed staging sessions in [14-pilot-signed-session-v1.md](14-pilot-signed-session-v1.md) [15-pilot-signed-session-release-evidence.md](15-pilot-signed-session-release-evidence.md), and the OIDC trust boundary in [16-oidc-trust-boundary-v1.md](16-oidc-trust-boundary-v1.md) and [17-oidc-trust-boundary-release-evidence.md](17-oidc-trust-boundary-release-evidence.md), with the PKCE flow in [18-oidc-pkce-flow-v1.md](18-oidc-pkce-flow-v1.md) and [19-oidc-pkce-flow-release-evidence.md](19-oidc-pkce-flow-release-evidence.md), and durable identity context in [20-auth-durable-context-v1.md](20-auth-durable-context-v1.md) and [21-auth-durable-context-release-evidence.md](21-auth-durable-context-release-evidence.md), with browser session termination in [22-auth-session-termination-v1.md](22-auth-session-termination-v1.md) and [23-auth-session-termination-release-evidence.md](23-auth-session-termination-release-evidence.md), and provider cache/key rotation governance in [24-auth-provider-cache-key-rotation-v1.md](24-auth-provider-cache-key-rotation-v1.md) and [25-auth-provider-cache-key-rotation-release-evidence.md](25-auth-provider-cache-key-rotation-release-evidence.md).
 
 ## Gate status
 
@@ -28,6 +28,7 @@ Historical checkpoint-by-checkpoint evidence through Wave 3 is preserved in [the
 | `GATE-OIDC-PKCE-FLOW-V1` | passed | Implementation proof `fffd269a7f840f9f90cdca4c4268e46bec7f2a8e`; root CI `30517446940`; deploy/smoke `30517446956`; S256 transaction, discovery, replay, confidential exchange and token-withholding boundaries verified |
 | `GATE-AUTH-DURABLE-CONTEXT-V1` | passed | Implementation proof `9886f41d198772c684d3b245258964d4bcb0e83c`; root CI `30530441477`; deploy/smoke `30530441742`; durable replay, membership projection, session registration and revocation verified |
 | `GATE-AUTH-SESSION-TERMINATION-V1` | passed | Implementation proof `ea9093af5e2707edf45fde73a19af371d01cb8ac`; root CI `30533390869`; deploy/smoke `30533390917`; exact-origin current/account-wide logout and secure cookie deletion verified |
+| `GATE-AUTH-PROVIDER-CACHE-ROTATION-V1` | passed | Implementation proof `d8e60bc045265799d6ecf63da6a75e22c9287459`; main merge `73f2fef7dbec098d8fa9ab045f2d1750afbeab81`; root CI `30574007099`; deploy/smoke `30574006810`; bounded cache timestamps, endpoint-origin pins and signing-key rotation verified |
 
 ## Stream tracker
 
@@ -50,6 +51,7 @@ Historical checkpoint-by-checkpoint evidence through Wave 3 is preserved in [the
 | `AUTH-02` | post-integration | Authorization Code + PKCE contract passed; provider routes disabled | proof `fffd269a7f840f9f90cdca4c4268e46bec7f2a8e`; CI `30517446940`; deploy `30517446956` |
 | `AUTH-03` | post-integration | durable identity context and revocation gate passed; provider routes disabled | proof `9886f41d198772c684d3b245258964d4bcb0e83c`; CI `30530441477`; deploy `30530441742` |
 | `AUTH-04` | post-integration | browser session termination gate passed; provider routes disabled | proof `ea9093af5e2707edf45fde73a19af371d01cb8ac`; CI `30533390869`; deploy `30533390917` |
+| `AUTH-05` | post-integration | provider cache and signing-key rotation gate passed; provider routes disabled | proof `d8e60bc045265799d6ecf63da6a75e22c9287459`; main merge `73f2fef7dbec098d8fa9ab045f2d1750afbeab81`; CI `30574007099`; deploy `30574006810` |
 
 ## PILOT-01 gate closure
 
@@ -222,6 +224,31 @@ Verification evidence:
 - total route CSS: 73,158 bytes against an 85,000-byte limit;
 - no build-budget violation.
 
+## AUTH-05 provider cache and signing-key rotation gate closure
+
+Completed and verified on implementation proof `d8e60bc045265799d6ecf63da6a75e22c9287459` and main merge `73f2fef7dbec098d8fa9ab045f2d1750afbeab81`:
+
+- exact HTTPS origin pins for issuer, authorization, token and JWKS endpoints;
+- reviewed provider endpoint changes denied after cached discovery;
+- bounded discovery and JWKS freshness with conditional ETag revalidation;
+- bounded stale-if-error use only for previously approved provider data;
+- single-flight discovery and JWKS refreshes;
+- bounded retired signing-key overlap;
+- same-`kid` key-material reuse denied;
+- unknown token `kid` triggers exactly one forced refresh;
+- known-key signature failure does not refresh;
+- malformed, future-dated and overlong durable-cache records fail closed;
+- Cloudflare readiness exposes only generic cache/origin requirements while `loginEnabled` remains false.
+
+Verification evidence:
+
+- repository tests: 584 passed, with one environment-dependent direct-Neon test skipped in the ordinary suite and passed separately against live Neon;
+- TDD red gate proved both timestamp-poisoning regressions failed before implementation;
+- migrations: 40 canonical migrations plus one AUTH post-integration migration passed on fresh PostgreSQL;
+- all platform, SIS, finance, integrations, student-support and experience browser suites passed;
+- root CI `30574007099` and Cloudflare deploy/smoke `30574006810` passed;
+- all asset budgets remained within approved limits.
+
 ## Live staging routes
 
 - Role chooser: `https://international-school-platform-web-staging.rahmatullahzisan.workers.dev/`
@@ -252,12 +279,14 @@ Verification evidence:
 - AUTH-02 proof: `fffd269a7f840f9f90cdca4c4268e46bec7f2a8e`
 - AUTH-03 proof: `9886f41d198772c684d3b245258964d4bcb0e83c`
 - AUTH-04 proof: `ea9093af5e2707edf45fde73a19af371d01cb8ac`
+- AUTH-05 proof: `d8e60bc045265799d6ecf63da6a75e22c9287459`
+- AUTH-05 main merge: `73f2fef7dbec098d8fa9ab045f2d1750afbeab81`
 
 ## Final integrated system verification
 
 ### Application and browser evidence
 
-- Repository tests: 575 passed; AUTH-04 adds exact-origin logout, strict request-shape, current-session and account-wide termination coverage without changing domain invariants.
+- Repository tests: 584 passed, with one environment-dependent direct-Neon test skipped in the ordinary suite and passed separately; AUTH-05 adds cache revalidation, bounded timestamp, stale-if-error, endpoint-origin and signing-key rotation coverage without changing domain invariants.
 - Browser journeys: 22 passed.
 - Format, lint, architecture boundaries, typecheck, Worker/Vite builds, audit, licence, provenance and artifact validation passed.
 - Assets remain within approved initial and total budgets.
@@ -272,8 +301,7 @@ Verification evidence:
 
 ## Remaining production milestones
 
-- add approved discovery/JWKS caching and key-rotation governance;
-- configure a reviewed provider and production database binding;
+- configure a reviewed provider, production provider-cache binding and production database binding;
 - connect the verified membership context to database-backed permission evaluation;
 - add provider logout/back-channel revocation, step-up assurance and live negative authorization tests;
 - replace synthetic snapshots with database-backed read models and tenant-safe server caching;
@@ -287,4 +315,4 @@ No Git branch, worktree or Neon branch was deleted. Cleanup remains owner-review
 
 ## Production boundary
 
-No production deployment, real account, real tenant/student data, production database mutation, production cache purge or destructive cleanup was introduced. PILOT-03 remains a synthetic staging identity bridge. AUTH-01 through AUTH-04 provide provider-neutral verification, PKCE flow, durable identity state and browser session termination contracts with real login explicitly disabled. Production promotion requires all remaining provider, policy, data, monitoring, recovery and owner-authorization gates.
+No production deployment, real account, real tenant/student data, production database mutation, production cache purge or destructive cleanup was introduced. PILOT-03 remains a synthetic staging identity bridge. AUTH-01 through AUTH-05 provide provider-neutral verification, PKCE flow, durable identity state, browser session termination, bounded provider caching and signing-key rotation contracts with real login explicitly disabled. Production promotion requires all remaining provider, policy, data, monitoring, recovery and owner-authorization gates.
