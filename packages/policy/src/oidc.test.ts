@@ -19,7 +19,8 @@ let privateKey: CryptoKey;
 let publicJwk: OidcJsonWebKey;
 
 function encodeBase64Url(value: string | ArrayBuffer): string {
-  const bytes = typeof value === 'string' ? new TextEncoder().encode(value) : new Uint8Array(value);
+  const bytes =
+    typeof value === 'string' ? new TextEncoder().encode(value) : new Uint8Array(value);
   let binary = '';
   for (const byte of bytes) binary += String.fromCharCode(byte);
   return btoa(binary).replace(/\+/gu, '-').replace(/\//gu, '_').replace(/=+$/gu, '');
@@ -61,7 +62,7 @@ async function signToken(
 }
 
 beforeAll(async () => {
-  const pair = await crypto.subtle.generateKey(
+  const pair = (await crypto.subtle.generateKey(
     {
       name: 'RSASSA-PKCS1-v1_5',
       modulusLength: 2048,
@@ -70,7 +71,7 @@ beforeAll(async () => {
     },
     true,
     ['sign', 'verify'],
-  );
+  )) as CryptoKeyPair;
   privateKey = pair.privateKey;
   publicJwk = {
     ...(await crypto.subtle.exportKey('jwk', pair.publicKey)),
@@ -214,8 +215,11 @@ describe('OIDC trust boundary', () => {
 
     const segments = token.split('.');
     const signature = segments[2];
-    if (signature === undefined) throw new Error('Expected JWT signature.');
-    const tampered = `${segments[0]}.${segments[1]}.${signature.slice(0, -1)}x`;
+    if (segments[0] === undefined || segments[1] === undefined || signature === undefined) {
+      throw new Error('Expected complete JWT segments.');
+    }
+    const replacement = signature.startsWith('A') ? 'B' : 'A';
+    const tampered = `${segments[0]}.${segments[1]}.${replacement}${signature.slice(1)}`;
     const tamperedResult = await verifyOidcIdToken({
       idToken: tampered,
       nonce,
@@ -228,10 +232,7 @@ describe('OIDC trust boundary', () => {
 
   it('fails closed for insecure or non-canonical provider configuration', () => {
     expect(
-      validateOidcProviderConfiguration({
-        ...configuration,
-        issuer: 'http://identity.school.test',
-      }),
+      validateOidcProviderConfiguration({ ...configuration, issuer: 'http://identity.school.test' }),
     ).toMatchObject({ ok: false, code: 'oidc_configuration_invalid' });
     expect(
       validateOidcProviderConfiguration({ ...configuration, issuer: `${configuration.issuer}/` }),
