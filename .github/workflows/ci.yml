@@ -116,10 +116,16 @@ jobs:
               const cookie = `${BROWSER_SESSION_COOKIE_NAME}=${issued.token}`;
 
               await expect(
-                resolveAuthenticatedBrowserSession(completeBindings, cookie, async () => true),
+                resolveAuthenticatedBrowserSession(completeBindings, cookie, async () => {
+                  await Promise.resolve();
+                  return true;
+                }),
               ).resolves.toMatchObject({ ok: true });
               await expect(
-                resolveAuthenticatedBrowserSession(completeBindings, cookie, async () => false),
+                resolveAuthenticatedBrowserSession(completeBindings, cookie, async () => {
+                  await Promise.resolve();
+                  return false;
+                }),
               ).resolves.toMatchObject({
                 ok: false,
                 status: 401,
