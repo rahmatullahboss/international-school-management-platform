@@ -6,6 +6,18 @@ export type {
   RoleAssignment,
 } from './authorization.js';
 export { PolicyEngine } from './authorization.js';
+export type {
+  BrowserSessionClaims,
+  BrowserSessionIssueResult,
+  BrowserSessionVerificationResult,
+  IssueBrowserSessionInput,
+} from './browser-session.js';
+export {
+  BROWSER_SESSION_COOKIE_NAME,
+  clearBrowserSessionCookie,
+  issueBrowserSession,
+  verifyBrowserSession,
+} from './browser-session.js';
 export type { IdentityAccount } from './identity.js';
 export { IdentityDirectory } from './identity.js';
 export type {
