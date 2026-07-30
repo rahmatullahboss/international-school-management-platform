@@ -1,6 +1,6 @@
 # Whole-Module Multi-Agent Execution System
 
-**Status:** Pilot runtime scoped read API connected; production promotion gated  
+**Status:** Pilot runtime signed session context connected; production promotion gated  
 **Date:** 2026-07-30  
 **Operating rule:** one agent owns one complete large module; internal milestones are not separate agent assignments.
 
@@ -26,7 +26,9 @@ Owner operating decision: separate agents are used only for complete module stre
 12. [UX continuity release evidence](11-ux-continuity-release-evidence.md)
 13. [PILOT-02 scoped staging read API](12-pilot-read-api-v1.md)
 14. [PILOT-02 release evidence](13-pilot-read-api-release-evidence.md)
-15. Validation script: `scripts/validate_execution_artifacts.py`
+15. [PILOT-03 signed staging session](14-pilot-signed-session-v1.md)
+16. [PILOT-03 release evidence](15-pilot-signed-session-release-evidence.md)
+17. Validation script: `scripts/validate_execution_artifacts.py`
 
 ## 3. Repository baseline
 
@@ -85,6 +87,7 @@ After the APIs/read models from the previous waves are stable:
 - `PILOT-01` — Composes reviewed persona packages into the Cloudflare staging runtime, adds synthetic acceptance data and records the boundary before production authentication/API work.
 - `UX-01` — Refines the staged runtime with continuous client navigation, background preparation, task-led information architecture and accessible loading-state rules.
 - `PILOT-02` — Connects role portals to private, scope-checked synthetic Worker snapshots with tenant/campus/role/subject cache isolation and non-blocking revalidation.
+- `PILOT-03` — Replaces browser-declared scope headers with short-lived HMAC-signed synthetic staging sessions that bind tenant, campus, role and subject before a snapshot is read.
 
 ## 5. Whole-module completion boundary
 
@@ -154,6 +157,7 @@ All frontend work uses the repository-local Impeccable skill and the contracts u
 - `INTEG-01` rejects UI modules that lack the required design evidence.
 - `UX-01` may refine cross-persona navigation and loading infrastructure without moving domain rules or weakening capability filtering.
 - `PILOT-02` may add synthetic staging read infrastructure only when scope validation, cache isolation and current-view preservation are explicit and production endpoints remain disabled.
+- `PILOT-03` may add synthetic signed staging sessions only when expiry, signature, issuer/audience, role/subject binding, secret rotation and fail-closed production boundaries are executable and documented.
 
 ## 11. Hard stops
 
