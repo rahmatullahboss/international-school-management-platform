@@ -2,7 +2,7 @@
 
 ## Status
 
-Milestones 1 through 5 have passed on the client/native side. Family read journeys and capability-scoped document, form, guardian-consent and conversation production journeys are verified. Teacher Today, assigned roster and encrypted attendance-draft production journeys are verified. Durable sync includes platform-backed AES-GCM persistence, secure key lifecycle, account/school purge, operation-journal reconciliation and production Staff queue/transport UI. Milestone 6 now includes verified privacy-minimised notification routing plus a secret-free Firebase/APNs adapter boundary with explicit-offset timestamp normalization, permission handling and device-session token rotation/revocation lifecycle. Firebase/APNs project configuration, live notification issuance, native secure-document exchange, step-up completion and user preferences remain. All proposed mobile endpoints remain server-owned and are not live.
+Milestones 1 through 6 have passed on the client/native side. Family read and interaction journeys, Teacher Today/roster, encrypted attendance drafts, durable sync, privacy-minimised notification routing, the secret-free Firebase/APNs lifecycle and step-up authenticated secure-document exchange are verified. All proposed mobile endpoints, Firebase/APNs project activation and the platform-specific document presenter remain server/platform-owned and inactive. No production deployment, database mutation or real student data is authorized by this stream.
 
 ## Execution identity
 
@@ -21,7 +21,7 @@ Deliver two native Flutter applications on one shared workspace:
 1. **School Family** for guardian and student personas.
 2. **School Staff** for teacher-first operational workflows.
 
-The applications consume existing versioned platform APIs and read models. They must not connect directly to Neon, read module-private tables, duplicate authoritative academic or financial calculations, or weaken tenant and capability enforcement.
+The applications consume versioned platform APIs and read models. They must not connect directly to Neon, read module-private tables, duplicate authoritative academic or financial calculations, silently change server contracts or weaken tenant/capability enforcement.
 
 ## Owned paths
 
@@ -30,171 +30,120 @@ The applications consume existing versioned platform APIs and read models. They 
 - `docs/execution/09-mobile-stream-plan.md`
 - `.github/workflows/mobile-ci.yml`
 
-Any backend API, notification, identity or shared platform contract change requires an approved contract-change request and remains owned by the relevant existing module.
+Backend APIs, notification issuance, identity policy, server authorization and shared platform contracts remain owned by their existing modules and require an approved contract-change process.
 
 ## Ordered milestones
 
 1. **Workspace and shared foundation — passed**
-   - Dart pub workspace, strict analysis, shared mobile contracts, design system, API transport and CI.
+   - Dart workspace, strict analysis, shared contracts, design system, API transport and read-only CI.
    - Adaptive Family and Staff application shells.
 2. **Authentication and bootstrap — client/native passed; server activation remains**
-   - OIDC authorization-code flow with PKCE, secure token storage, device sessions, tenant/campus/persona selection and capability bootstrap.
-   - Android/iOS projects, reviewed redirect schemes, Android API 23 secure-storage baseline, iOS Keychain Sharing entitlements and native build verification.
+   - OIDC authorization-code flow with PKCE, secure token storage, refresh/end-session, account-scoped bootstrap and capability sessions.
+   - Android/iOS projects, separate identifiers/redirect schemes, Android API 23 secure-storage baseline, disabled backup, release-signing guard and iOS Keychain Sharing.
 3. **Family journeys — read and interaction production journeys passed; server activation remains**
-   - Multi-child guardian context, student context, timetable, attendance, published results, fees, receipts and message summaries.
-   - Capability-scoped document metadata and short-lived download grants, server-versioned dynamic forms, idempotent submission, guardian consent and paginated conversations/messages.
-   - Production failures hide unverifiable academic, financial and interaction data instead of substituting fixtures.
+   - Multi-child/student context, timetable, attendance, published results, exact money, fees/receipts and messages.
+   - Capability-scoped documents, forms, guardian consent and paginated conversations.
 4. **Teacher journeys — production Today, roster and encrypted attendance-draft UI passed; server activation remains**
-   - Assigned Today view, roster, timetable, substitutions, attendance batches and exact integer grade drafts.
-   - Attendance drafts are saved to encrypted device storage, explicitly synchronized and surfaced through pending/conflict/rejected/reconciliation states.
+   - Assigned meetings, substitutions, versioned roster, attendance batches and exact integer grade drafts.
    - Attendance finalization, grade publication and corrections remain server-authoritative.
 5. **Durable offline sync — client/native passed; live server delta activation remains**
-   - Encrypted payload envelopes, idempotent operation queue, scoped retry, delta cursor, duplicate handling, conflict, rejection and reconciliation states.
-   - Platform-backed AES-GCM file persistence, platform secure-storage key versions, key rotation, tamper quarantine, operation journal and account/school purge.
-6. **Notifications and documents — routing and secret-free provider lifecycle passed; secure exchange and live activation remain**
-   - Device registration contracts, privacy-minimised notification envelopes, provider-neutral launch/runtime inbox, exact capability-safe routes, documents, forms, guardian consent and conversations.
-   - Secret-free Firebase/APNs adapters, explicit-offset timestamp normalization, permission handling and installation-token registration/refresh/revocation lifecycle are verified.
-   - Firebase/APNs project configuration and credentials, live notification issuance, native secure-document transfer, step-up completion and user notification preferences remain.
+   - Encrypted operations, idempotency, retry/backoff, cursors, conflict/rejection/reconciliation and scoped journal.
+   - AES-GCM persistence, platform key lifecycle, rotation, tamper quarantine and account/school purge.
+6. **Notifications and documents — client/native contracts and journeys passed; live activation remains**
+   - Privacy-minimised notification envelopes, exact capability-safe routing and secret-free Firebase/APNs lifecycle.
+   - Transient OIDC step-up proof, opaque short-lived grant exchange, no-redirect HTTPS transport, bounded streaming, integrity verification and explicit no-store cleanup.
+   - Firebase/APNs project credentials, live notification issuance, the server exchange endpoint and approved native document presenter remain inactive.
 7. **Security, accessibility and release verification — pending**
-   - Mobile threat model, restricted-data cache rules, step-up authentication, localization/RTL, text scaling, screen readers, performance, Android/iOS integration tests and store-release evidence.
+   - Restricted-data threat model, accessibility, localization/RTL, text scaling, screen readers, performance, Android/iOS integration tests and store-release evidence.
 
 ## Checkpoint 1 evidence — shared foundation
 
-- Workspace initialized under `mobile/` with a committed root lockfile and generated state excluded.
-- `school_mobile_core` defines tenant, campus, persona, capability and sync-state contracts.
-- `school_design_system` ports the approved operational palette, accessible written statuses and adaptive navigation.
-- `school_api_client` enforces authenticated tenant/campus/persona-scoped Worker API calls and stable errors.
-- Family and Staff app shells include responsive navigation and recoverable teacher attendance drafts.
-- Mobile CI run `30480303165` passed the then-configured formatting, analysis and tests.
-- Root CI run `30480303673` passed repository verification, migrations, Neon, browser journeys and artifact validation.
+- `school_mobile_core`, `school_design_system` and `school_api_client` establish scoped mobile contracts, adaptive UI and authenticated API transport.
+- Mobile CI `30480303165` passed the configured formatting, analysis and tests.
+- Root CI `30480303673` passed repository verification, migrations, Neon, browser journeys and artifact validation.
 
 ## Checkpoint 2 evidence — authentication, native platforms and bootstrap
 
-- `school_authentication` implements compile-time OIDC configuration, AppAuth authorization-code exchange, PKCE-compatible native browser flow, refresh, end-session and stable failure codes.
-- Platform secure storage, redacted token diagnostics, refresh skew, concurrent refresh coalescing and local-first sign-out are implemented.
-- Account-scoped bootstrap requests do not invent tenant, campus or persona headers before authorized selection.
-- Android and iOS projects use separate Family/Staff application identifiers and lowercase redirect schemes.
-- Android requires API 23, disables application backup and prohibits debug signing in release configuration.
-- iOS registers URL schemes and Keychain Sharing entitlements through committed project configuration.
-- Native configuration is checked by `mobile/tool/verify_native_projects.py`.
-- `school_app_bootstrap` coordinates restore, sign-in, authorized access selection, capability-scoped sessions and safe sign-out.
-- Device-session registration/revocation client contracts are account-scoped, idempotent and exclude hardware, advertising and unrestricted personal identifiers; push credentials redact themselves from diagnostics.
-- Mobile CI `30481736792` and root CI `30481735986` passed authentication foundation verification.
-- Mobile CI `30482768167` and root CI `30482768058` passed bootstrap contract verification.
-- Mobile CI `30486745809` passed native static checks, configured tests and both Android debug APK builds.
-- Mobile CI `30488155470` passed signed-in composition analysis, lifecycle tests and both APK builds.
-- Mobile CI `30488862416` passed device-session privacy/idempotency tests and both APK builds.
-- Proposed endpoints `/v1/mobile/bootstrap` and `/v1/mobile/device-sessions` are not implemented or activated by MOB-01.
+- `school_authentication` implements AppAuth authorization-code exchange, refresh/end-session and redacted secure-token storage.
+- `school_app_bootstrap` coordinates restore, sign-in, authorized access selection, capability sessions and safe sign-out.
+- Native identifiers, redirect schemes, Android API 23/backup/signing guards and iOS URL/Keychain configuration are committed and statically verified.
+- Device-session contracts are account-scoped, idempotent and exclude hardware/advertising identifiers and unrestricted personal identifiers.
+- Mobile CI `30481736792`, `30482768167`, `30486745809`, `30488155470` and `30488862416` passed the authentication, bootstrap, native and device-session gates.
+- Root CI `30481735986` and `30482768058` passed the corresponding repository gates.
 
 ## Checkpoint 3 evidence — Family read models and production journeys
 
-- `school_family_domain` defines immutable multi-child profile directories, timetable items, authoritative attendance summaries, published results, exact integer minor-unit money, fees/receipts and message summaries.
-- `FamilyReadApi` proposes scoped read contracts for `/v1/mobile/family/profiles` and `/v1/mobile/family/students/{studentId}/dashboard` without implementing server endpoints.
-- Decoders reject cross-campus profiles, non-Family personas, malformed shapes and response sections not granted by the active capability set.
-- Production Family UI no longer substitutes hard-coded academic or financial values.
-- `FamilyJourneyController` preserves authorized profile directories while refreshing, rejects dashboard/profile identity mismatches and discards slower stale responses after a child switch.
-- Service failure hides academic and financial values rather than displaying cached fixtures as current data.
-- Secure document models expose short-lived download grants rather than permanent raw URLs.
-- Forms and guardian consent commands require operation identities and idempotency keys; clients do not grant themselves consent authority.
-- Conversation contracts use scoped pagination and reject malformed or cross-profile responses.
-- Mobile CI `30489830914` passed the read-only Family-domain gate, all configured tests, both APK builds and artifact upload.
-- Mobile CI `30490789540` passed repository-driven Family UI analysis, stale-response tests, all regression suites and both APK builds.
-- Mobile CI `30492794318` passed the final read-only Family interaction contract gate, all configured tests, both APK builds and artifact upload.
-- Root CI `30490789563` passed format, lint, boundaries, typecheck, repository tests, migrations, Neon, builds, audit/licences/provenance, browser journeys and execution-artifact validation.
+- Immutable Family profiles, timetable, finalized attendance summaries, published results, exact minor-unit money, fees/receipts and message summaries are defined.
+- Production Family UI is repository-driven, rejects cross-scope/malformed data, discards stale child responses and hides unverifiable values instead of substituting fixtures.
+- Document metadata exposes opaque grants rather than permanent URLs; forms use server-issued versions; consent remains guardian-authoritative; conversations are scoped and paginated.
+- Mobile CI `30489830914`, `30490789540` and `30492794318` passed Family domain, production UI and interaction contracts.
+- Root CI `30490789563` passed the complete repository gate.
 
 ## Checkpoint 4 evidence — Teacher journeys
 
-- `school_staff_domain` defines immutable assigned meetings, substitutions, versioned rosters, attendance batch commands, exact integer grade drafts and explicit accepted/duplicate/conflict/rejected/reconciliation receipts.
-- `TeacherMobileApi` proposes scoped contracts for teacher Today, meeting roster, attendance batches and grade drafts without implementing server endpoints.
-- Attendance commands carry operation ID, idempotency key, base version and client creation time; the client cannot finalize attendance.
-- Grade draft commands use exact integer score units and cannot publish grades.
-- Production Staff Today and roster screens are repository-driven and fail closed when authorized services cannot verify assignments.
-- `StaffJourneyController` rejects unassigned meeting roster requests, checks roster/section identity, discards stale roster responses and reloads on tenant/campus/capability scope changes.
-- Mobile CI `30494408130` passed the final read-only Teacher journey gate, all configured analyzers/tests, both APK builds and artifact upload.
+- Teacher Today, substitutions, assigned/versioned rosters, attendance commands and grade drafts are immutable and scoped.
+- Client commands carry operation/idempotency/base-version identities but cannot finalize attendance or publish grades.
+- Production Staff journeys fail closed and discard stale/unassigned roster responses.
+- Mobile CI `30494408130` passed all configured analyzers/tests and both APK builds.
 
 ## Checkpoint 5 evidence — encrypted durable sync and Staff write journey
 
-- `school_sync_engine` defines encrypted payload envelopes; diagnostic strings report metadata and byte counts without exposing ciphertext.
-- Operations are account/tenant/campus/persona scoped and carry operation ID, idempotency key, aggregate identity, base version, client creation time and encrypted payload schema metadata.
-- State transitions keep saved-on-device, waiting-for-network, in-flight, synced, duplicate, conflict, rejected and requires-reconciliation outcomes explicit.
-- Retry uses validated capped exponential backoff; terminal outcomes are immutable and cannot retain future retry timestamps.
-- Delta cursors are account/tenant/campus scoped and cannot cross school boundaries.
-- `OfflineSyncCoordinator` persists in-flight state before transport, converts transport failure to a retryable operation and preserves encrypted payload bytes.
-- `school_sync_storage` stores authenticated ciphertext in application-support files and versioned AES keys in platform secure storage; scope identities and operation payloads are not written as plaintext filenames or records.
-- Storage uses atomic replacement, key rotation, scope-bound authenticated data, corruption/tamper quarantine and explicit account/school purge of files, catalog entries and key versions.
-- `SyncOperationJournal` exposes only the active account/tenant/campus/persona operation history with kind/state filters and deterministic newest-first ordering.
-- `school_teacher_sync` encrypts attendance and grade-draft commands, rejects operation-ID collisions, decrypts only inside the scoped transport boundary and maps server receipts to accepted, duplicate, conflict, rejected or reconciliation outcomes.
-- Production Staff attendance UI binds only to an authorized versioned roster, saves encrypted drafts, synchronizes explicitly and displays pending, accepted, duplicate, conflict, rejected and reconciliation states without finalizing attendance client-side.
-- Tests cover ciphertext redaction, storage reopen, retry/persona filtering, cursor persistence, key rotation, tamper quarantine, account/school purge, cross-school rejection, queue idempotency, command collision, receipt mismatch, retry backoff, grade duplicate, controller scope reset and conflict visibility.
-- Mobile CI `30495682242` and root CI `30495682281` passed the durable sync contract/state-machine gate.
-- Final permanent read-only Mobile CI `30501424447` passed formatting, generated/native guards, all Family/Staff/shared/domain/storage/teacher-sync analyzers and tests, both Android debug APK builds and artifact upload.
-- Final root CI `30501424403` passed format, lint, boundaries, typecheck, repository tests, fresh migration replay, live Neon driver, builds, audit/licences/provenance, browser journeys and execution-artifact validation.
-- Real student data used: no.
-- Production deployment or database mutation performed: no.
+- Sync operations are account/tenant/campus/persona scoped and expose explicit queued, retrying, synced, duplicate, conflict, rejected and reconciliation states.
+- Platform-backed storage uses AES-GCM, secure versioned keys, atomic replacement, rotation, tamper quarantine and account/school purge.
+- Teacher attendance/grade payloads remain encrypted until scoped transport; production attendance UI uses only authorized rosters and explicit synchronization.
+- Mobile CI `30495682242` and root CI `30495682281` passed the durable sync gate.
+- Permanent read-only Mobile CI `30501424447` and root CI `30501424403` passed the full checkpoint.
 
 ## Checkpoint 6 evidence — Family interaction production journeys
 
-- `FamilyInteractionController` keeps document, form, consent, conversation and message state scoped to the active account, tenant, campus, persona and student profile; slower responses from a previous child selection are discarded.
-- Production navigation exposes a capability-scoped Services hub plus Conversations destination without substituting fixture data when the interaction service is unavailable.
-- Document screens display authorized metadata and request opaque, short-lived download grants; raw URLs, access tokens and storage credentials are never exposed. Restricted documents remain no-store.
-- Form definitions include the server-issued base version as well as schema version. Dynamic text, boolean, single-choice and date fields submit exact validated answers with idempotency and never invent a newer revision.
-- Guardian consent screens require the guardian persona and `forms.consent` capability before transport, preserve the policy version and expose explicit grant or decline decisions.
-- Conversation screens use scoped cursor pagination, verify conversation membership in the active directory, require `messages.send` before sending and append only server-returned messages.
-- Tests cover stale child-response rejection, server-issued form-version use, student consent rejection before transport and capability-authorized conversation sending.
-- Final permanent read-only Mobile CI `30518088954` passed strict formatting, clean-tree/native guards, every configured analyzer and test, both Android debug APK builds and artifact upload.
-- Final root CI `30518088899` passed format, lint, boundaries, typecheck, repository tests, fresh migration replay, live Neon driver, builds, audit/licences/provenance, browser journeys and execution-artifact validation.
-- Real student data used: no.
-- Production deployment or database mutation performed: no.
+- Family document, form, consent, conversation and message state is scoped to the active account/school/persona/student and protects against stale responses.
+- The Services and Conversations UI is capability-scoped and fail closed.
+- Dynamic forms submit exact validated answers with server-issued base/schema versions; guardian consent and message send authority are checked before transport.
+- Mobile CI `30518088954` and root CI `30518088899` passed the permanent production interaction gate.
 
 ## Checkpoint 7 evidence — privacy-minimised notification routing
 
-- `MobileNotificationEnvelope` accepts only an allow-listed data payload containing opaque notification, application, tenant, campus, persona, kind, optional resource and bounded issued/expiry timestamps.
-- Provider display titles and bodies, student or staff names, amounts, document names, message bodies, raw URLs, bearer tokens, storage credentials and arbitrary extra fields are rejected before routing.
-- Lock-screen presentation is generated locally with generic Family or Staff text and diagnostics redact school scope and resource identity.
-- `MobileNotificationRouteResolver` requires the exact application, active tenant, campus, persona and capability set; it never selects another school or role on behalf of a notification.
-- Expired, excessively long-lived, materially future-dated, cross-application, cross-school, wrong-persona and unauthorized-capability intents fail closed without navigation.
-- Resource identifiers are accepted only for Family forms and conversations and are URI-encoded before route construction. Interaction routes remain unavailable when the authorized interaction repository is not configured.
-- `MobileNotificationInbox` provides a provider-neutral one-time launch intent and runtime-open stream. `MobileNotificationOpenTracker` bounds memory and suppresses duplicate provider callbacks.
-- Family and Staff production apps consume an injected notification source, clear duplicate state when authorization scope changes and route only after the active session passes the resolver.
-- Tests cover privacy-field rejection, redacted diagnostics, exact Family form routing, wrong-campus/persona/capability blocking, expiry/future/application rejection, Staff any-of message capability rules, one-time launch consumption and bounded duplicate handling.
-- Source checkpoint Mobile CI `30519588980` passed all configured analyzers/tests, both Android debug APK builds and artifact upload.
-- Permanent read-only Mobile CI `30520102717` repeated strict formatting, clean-tree/native guards, all analyzers/tests, both Android debug APK builds and artifact upload successfully.
-- Root CI `30520102721` passed format, lint, boundaries, typecheck, repository tests, fresh migration replay, live Neon driver, builds, audit/licences/provenance, browser journeys and execution-artifact validation.
-- Final immutable-head Mobile CI `30521496997` passed strict formatting, clean-tree/native guards, all configured analyzers/tests, both Android debug APK builds and artifact upload.
-- Final immutable-head root CI `30521497150` passed the complete repository, migration, Neon, build, supply-chain, browser and execution-artifact gate.
-- Cloudflare staging run `30521497079` was skipped; no application deployment occurred.
-- Real student data used: no.
-- Production deployment or database mutation performed: no.
+- Notification data accepts only opaque allow-listed fields; names, amounts, filenames, message bodies, display text, raw URLs, bearer tokens and storage credentials are rejected.
+- Routing requires the exact app, tenant, campus, persona, capability set and validity window and never switches school or role.
+- Launch/runtime inbox handling and bounded duplicate suppression are verified in both apps.
+- Source Mobile CI `30519588980`, permanent read-only Mobile CI `30520102717`, root CI `30520102721`, immutable-head Mobile CI `30521496997` and root CI `30521497150` passed.
+- Staging `30521497079` was skipped.
 
 ## Checkpoint 8 evidence — secret-free native notification provider lifecycle
 
-- `school_native_notifications` defines an inactive-by-default Firebase Messaging adapter boundary without committing Firebase options, APNs credentials or provider secrets.
-- Adapter creation fails closed unless a Firebase application has already been initialized by an explicitly configured host application.
-- Android credentials use the Firebase Cloud Messaging token. Apple targets use the APNs token, while Firebase token-refresh callbacks trigger a fresh platform credential read.
-- Provider launch and opened-message data is normalized through the existing privacy-minimised envelope. Both `issuedAt` and `expiresAt` require an explicit `Z` or `±HH:MM` offset before UTC normalization.
-- Denied or undetermined notification permission does not register a server device session. An unavailable provider token remains an explicit awaiting-token state.
-- Token rotation registers the new scoped device session before revoking the previous server session. Explicit revocation removes the current server session before deleting the provider token.
-- Push credentials redact token values from diagnostics, and the adapter never accepts provider display titles, message bodies, names, amounts, raw URLs or storage credentials as routable data.
-- Tests cover explicit-offset acceptance and naive-time rejection, malformed provider payload rejection, permission denial, APNs registration, refresh rotation, old/current session revocation and provider-token deletion.
-- Source checkpoint Mobile CI `30525975216` passed all configured analyzers/tests, both Android debug APK builds and artifact upload; root CI `30525975223` passed the complete repository gate. Staging `30525975268` was skipped.
-- Final permanent read-only Mobile CI `30526970294` passed formatting, clean-tree/native guards, every app/shared/domain/storage/teacher-sync/native-notification analyzer and test, both Android debug APK builds and artifact upload.
-- Final root CI `30526970286` passed format, lint, boundaries, typecheck, repository tests, fresh migration replay, live Neon driver, builds, audit/licences/provenance, browser journeys and execution-artifact validation.
-- Cloudflare staging run `30526970393` was skipped; no application deployment occurred.
+- `school_native_notifications` provides an inactive-by-default Firebase Messaging/APNs boundary without Firebase options, APNs credentials or provider secrets.
+- Android uses FCM tokens; Apple uses APNs tokens. Permission denial blocks registration; refresh registers the new scoped session before revoking the previous one; explicit revocation removes the server session before deleting the provider token.
+- Provider timestamps require explicit `Z` or `±HH:MM` offsets and payloads are normalized through the privacy-minimised contract.
+- Source Mobile CI `30525975216`, root CI `30525975223`, permanent read-only Mobile CI `30526970294` and root CI `30526970286` passed.
+- Staging `30525975268` and `30526970393` were skipped.
+
+## Checkpoint 9 evidence — step-up authenticated secure-document exchange
+
+- `school_authentication` now provides transient AppAuth step-up authorization using a fresh login prompt, `max_age=0`, nonce and optional ACR values. Step-up access tokens are redacted, bounded to a short proof window and are not written into the normal persisted session.
+- `school_secure_documents` proposes `POST /v1/mobile/family/document-download-grants/{grantId}/exchange` over HTTPS with redirects disabled, scoped headers, idempotency and a bearer token selected from ordinary or step-up authorization according to the grant.
+- Responses must be `200`, `Cache-Control: no-store`, contain the expected document identity, bounded content length, allow-listed media type and SHA-256 digest. Streams exceeding the declared/maximum size or failing digest/length checks are rejected.
+- Restricted documents require a single-use grant and no-store classification. Completed and concurrent grant replay is blocked.
+- Bytes are written to an opaque random temporary lease, presented only through an injected native presenter interface and deleted in `finally` after presentation or any failure. Paths, bearer tokens and digests are redacted from diagnostics.
+- Family UI exposes **Verify and open securely** for step-up grants, clears consumed grants, reports no-store cleanup and remains disabled/fail closed when the secure runtime/presenter is not configured.
+- Tests cover transient proof expiry, step-up token selection, integrity success/failure, lease cleanup, replay blocking, restricted-policy rejection and Family controller grant consumption.
+- Source Mobile CI `30535072709` passed formatting, every configured analyzer/test, both Android debug APK builds and artifact upload. Root CI `30535072784` passed format, lint, boundaries, tests, migrations, AUTH revocation contracts, Neon, builds, supply-chain checks and browser journeys.
+- Final permanent read-only Mobile CI `30535727677` repeated formatting, clean-tree/native guards, every app/shared/domain/storage/notification/secure-document analyzer and test, both APK builds and artifact upload.
+- Final root CI `30535727688` passed the complete repository gate. Cloudflare staging `30535727669` was skipped.
 - Real student data used: no.
 - Production deployment or database mutation performed: no.
 
-## Server-owned contract boundary
+## Server/platform-owned contract boundary
 
 The following proposed endpoints remain unimplemented and inactive in MOB-01:
 
 - `/v1/mobile/bootstrap`
 - `/v1/mobile/device-sessions`
-- `/v1/mobile/family/**`
+- `/v1/mobile/family/**`, including the proposed document-grant exchange route
 - `/v1/mobile/teacher/**`
 - future `/v1/mobile/sync` delta and operation endpoints
 
-MOB-01 may define and test clients, domain contracts and fail-closed UI states. The owning server and platform modules must review and implement authorization, audit, publication/finalization rules, notification issuance, provider project configuration, data minimization and persistence.
+MOB-01 may define and test clients, domain contracts and fail-closed UI. Owning server/platform modules must review and implement authorization, audit, notification issuance, provider project configuration, exchange response headers/integrity policy, native viewer/presenter integration, data minimization and persistence.
 
 ## Exact next action
 
-Implement native secure-document exchange with step-up authentication, opaque short-lived grants, explicit no-store handling and lifecycle cleanup without exposing raw URLs, bearer tokens or storage credentials. Then complete restricted-data threat-model evidence, accessibility, localization/RTL, text-scaling and screen-reader verification, Android/iOS integration tests and store-release evidence. Firebase/APNs project configuration, live notification issuance, Bootstrap, Family, Teacher, device-session, notification and sync endpoint proposals must still pass the existing server/platform ownership process before live account data is used.
+Complete restricted-data threat-model evidence, accessibility, localization/RTL, text-scaling and screen-reader verification, Android/iOS integration tests and store-release evidence. Separately obtain server/platform-owner review for Bootstrap, Family, Teacher, device-session, notification, sync and secure-document exchange activation, plus approved Firebase/APNs configuration and a native document presenter, before live account data is used.
