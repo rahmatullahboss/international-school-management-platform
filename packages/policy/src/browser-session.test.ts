@@ -111,7 +111,9 @@ describe('browser session contract', () => {
       ok: false,
       code: 'browser_session_required',
     });
-    expect(await verifyBrowserSession('weak', `${BROWSER_SESSION_COOKIE_NAME}=value`, now)).toMatchObject({
+    expect(
+      await verifyBrowserSession('weak', `${BROWSER_SESSION_COOKIE_NAME}=value`, now),
+    ).toMatchObject({
       ok: false,
       code: 'browser_session_configuration_invalid',
     });

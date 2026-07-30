@@ -106,7 +106,8 @@ function parseClaims(value: unknown): BrowserSessionClaims | undefined {
     !value.roleIds.every((role) => typeof role === 'string' && role.trim() !== '') ||
     (value.assurance !== 'aal1' && value.assurance !== 'aal2') ||
     (value.authenticationTime !== undefined &&
-      (typeof value.authenticationTime !== 'number' || !Number.isInteger(value.authenticationTime))) ||
+      (typeof value.authenticationTime !== 'number' ||
+        !Number.isInteger(value.authenticationTime))) ||
     typeof value.issuedAt !== 'number' ||
     !Number.isInteger(value.issuedAt) ||
     typeof value.expiresAt !== 'number' ||
@@ -183,9 +184,7 @@ export async function issueBrowserSession(
     identityIssuer: input.identity.issuer,
     identitySubject: input.identity.subject,
     tenantId: input.membership.tenantId,
-    ...(input.membership.campusId === undefined
-      ? {}
-      : { campusId: input.membership.campusId }),
+    ...(input.membership.campusId === undefined ? {} : { campusId: input.membership.campusId }),
     roleIds: [...input.membership.roleIds],
     assurance: input.identity.assurance,
     ...(input.identity.authenticationTime === undefined

@@ -140,10 +140,7 @@ export async function resolveAuthenticatedBrowserSession(
       readonly message: string;
     }
 > {
-  const verification = await verifyBrowserSession(
-    bindings.AUTH_SESSION_SECRET,
-    cookieHeader,
-  );
+  const verification = await verifyBrowserSession(bindings.AUTH_SESSION_SECRET, cookieHeader);
   if (!verification.ok) {
     return {
       ok: false,

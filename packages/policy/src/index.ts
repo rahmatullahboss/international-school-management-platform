@@ -31,6 +31,7 @@ export type {
 export { MembershipDirectory } from './membership.js';
 export type {
   OidcIdentity,
+  OidcJsonWebKey,
   OidcJsonWebKeySet,
   OidcProviderConfiguration,
   OidcVerificationFailureCode,

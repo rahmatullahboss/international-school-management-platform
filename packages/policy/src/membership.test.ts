@@ -19,9 +19,7 @@ function directory(): MembershipDirectory {
 
 describe('membership directory', () => {
   it('resolves the only active tenant and campus without browser-declared roles', () => {
-    expect(
-      directory().resolve('https://identity.school.test', 'provider-user-123'),
-    ).toEqual({
+    expect(directory().resolve('https://identity.school.test', 'provider-user-123')).toEqual({
       ok: true,
       context: {
         membershipId: 'membership-main-admin',

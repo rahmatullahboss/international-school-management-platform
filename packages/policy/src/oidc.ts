@@ -9,8 +9,14 @@ export interface OidcProviderConfiguration {
   readonly redirectUri: string;
 }
 
+export type OidcJsonWebKey = JsonWebKey & {
+  readonly kid?: string;
+  readonly alg?: string;
+  readonly use?: string;
+};
+
 export interface OidcJsonWebKeySet {
-  readonly keys: readonly JsonWebKey[];
+  readonly keys: readonly OidcJsonWebKey[];
 }
 
 export interface OidcIdentity {
@@ -81,10 +87,7 @@ interface JwtClaims {
 const DEFAULT_CLOCK_SKEW_SECONDS = 60;
 const MAX_TOKEN_LIFETIME_SECONDS = 60 * 60;
 
-function failure(
-  code: OidcVerificationFailureCode,
-  message: string,
-): OidcVerificationResult {
+function failure(code: OidcVerificationFailureCode, message: string): OidcVerificationResult {
   return { ok: false, code, message };
 }
 
@@ -112,8 +115,7 @@ function isAllowedEndpoint(value: string): boolean {
     const url = new URL(value);
     if (url.protocol === 'https:') return true;
     return (
-      url.protocol === 'http:' &&
-      (url.hostname === 'localhost' || url.hostname === '127.0.0.1')
+      url.protocol === 'http:' && (url.hostname === 'localhost' || url.hostname === '127.0.0.1')
     );
   } catch {
     return false;
@@ -355,9 +357,7 @@ export async function verifyOidcIdToken(
       issuer: claims.iss,
       subject: claims.sub,
       ...(claims.email === undefined ? {} : { email: claims.email }),
-      ...(claims.email_verified === undefined
-        ? {}
-        : { emailVerified: claims.email_verified }),
+      ...(claims.email_verified === undefined ? {} : { emailVerified: claims.email_verified }),
       ...(claims.name === undefined ? {} : { displayName: claims.name }),
       assurance: resolveAssurance(claims),
       ...(claims.auth_time === undefined ? {} : { authenticationTime: claims.auth_time }),

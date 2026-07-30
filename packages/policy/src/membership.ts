@@ -108,7 +108,8 @@ export class MembershipDirectory {
     providerSubject: string,
     selection: MembershipSelection = {},
   ): MembershipResolution {
-    const membershipIds = this.#identityMembershipIds.get(identityKey(issuer, providerSubject)) ?? [];
+    const membershipIds =
+      this.#identityMembershipIds.get(identityKey(issuer, providerSubject)) ?? [];
     const memberships = membershipIds
       .map((membershipId) => this.#memberships.get(membershipId))
       .filter((membership): membership is IdentityMembership => membership !== undefined);
@@ -123,7 +124,10 @@ export class MembershipDirectory {
         : active.filter((membership) => membership.tenantId === selection.tenantId);
     if (tenantScoped.length === 0) return { ok: false, code: 'membership_scope_denied' };
 
-    if (selection.tenantId === undefined && new Set(tenantScoped.map((item) => item.tenantId)).size > 1) {
+    if (
+      selection.tenantId === undefined &&
+      new Set(tenantScoped.map((item) => item.tenantId)).size > 1
+    ) {
       return {
         ok: false,
         code: 'membership_selection_required',
