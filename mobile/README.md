@@ -10,7 +10,7 @@ This workspace contains the native Flutter clients for the International School 
 ## Shared packages
 
 - `packages/mobile_core`: tenant, campus, persona, capability, sync and fail-closed platform-lifecycle contracts.
-- `packages/design_system`: Flutter implementation of the approved `DESIGN.md` operational design language, shared localization runtime, exact locale-aware presentation helpers, cardinal plural rules and accessibility source gates.
+- `packages/design_system`: Flutter implementation of the approved `DESIGN.md` operational design language, shared localization runtime, secure locale preference, localized count copy, exact locale-aware presentation helpers, cardinal plural rules and accessibility source gates.
 - `packages/api_client`: authenticated, tenant-scoped HTTP client for versioned Cloudflare Worker APIs.
 - `packages/authentication`: OIDC/PKCE, secure session lifecycle and transient step-up proof.
 - `packages/sync_engine`, `packages/sync_storage` and `packages/teacher_sync`: scoped durable offline operations, encrypted persistence and Teacher reconciliation.
@@ -40,9 +40,13 @@ The shared runtime and production applications now provide:
 - English, Bangla and Arabic shell labels with deterministic English fallback and ordered device-locale resolution;
 - explicit Arabic RTL and English/Bangla LTR direction through bounded Widgets localization;
 - bounded Material/Cupertino fallbacks that keep framework control labels English instead of failing on Bangla or Arabic;
-- a presentation-only explicit locale controller that accepts approved locales only and never changes account, tenant, campus, persona, capability, student or server authority;
-- integer cardinal plural categories for approved English, Bangla and Arabic presentation copy;
+- a presentation-only locale controller that accepts approved locales only and never changes account, tenant, campus, persona, capability, student or server authority;
+- application-separated secure locale preferences containing only `en`, `bn`, `ar`, or no stored override;
+- invalid/read/write preference recovery with redacted reason codes and no stored authority values;
+- a 56 logical-pixel language control that cycles device preference, English, Bangla and Arabic while preserving the authorized application and page state;
+- integer cardinal plural categories and reviewed localized count sentences for English, Bangla and Arabic;
 - Family and Staff production app titles, navigation, profile actions and sign-out labels wired to the shared runtime;
+- Staff pending-attendance status using a reviewed plural sentence instead of an English `(s)` placeholder;
 - bidirectional-control sanitization and first-strong isolation for identifiers and user-controlled text, including Family production student, timetable, result and invoice/receipt values;
 - exact integer minor-unit money presentation in the Family fees/receipts journey with English, Bangla and Arabic digits/separators and no floating-point financial conversion;
 - explicit-offset timestamp presentation helpers from authoritative UTC instants and server-provided timezone identifiers without device-timezone inference;
@@ -53,7 +57,7 @@ The shared runtime and production applications now provide:
 
 The mobile-core lifecycle policy separately verifies fail-closed decisions for backgrounding, process detachment, stale/fresh authorization, memory pressure, restricted-content obscuring, presentation cancellation and transient-byte purge. Android/iOS hosts still need approved wiring and device integration evidence.
 
-This is not complete domain translation or device certification. Reviewed global Material/Cupertino translations, persisted locale-selection UX, authoritative currency fraction metadata, pluralized domain copy, production timestamp adoption, TalkBack/VoiceOver passes, Android/iOS integration tests and signed store-release evidence remain required.
+This is not complete domain translation or device certification. Reviewed global Material/Cupertino translations, broader translated and pluralized domain copy, authoritative currency fraction metadata, production timestamp adoption, TalkBack/VoiceOver passes, secure-storage lifecycle tests, Android/iOS integration tests and signed store-release evidence remain required.
 
 ## Toolchain
 
@@ -91,5 +95,5 @@ The permanent GitHub Actions gate also analyzes and tests authentication, bootst
 4. Teacher timetable and offline attendance.
 5. Gradebook drafts, communication, documents and push notifications.
 6. Durable sync, conflict reconciliation and secure-document exchange.
-7. Restricted-data threat modelling, accessibility/localization runtime, production shell composition, platform-lifecycle policy and native security guards.
+7. Restricted-data threat modelling, accessibility/localization runtime, production shell composition, persisted locale preference, platform-lifecycle policy and native security guards.
 8. Remaining complete domain translation, platform-owner activation, device integration, screen-reader certification and signed store release.
