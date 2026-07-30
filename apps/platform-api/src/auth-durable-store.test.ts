@@ -59,10 +59,11 @@ describe('DurableAuthStore', () => {
     await expect(
       store.consumeTransaction(ids.transaction, identity.issuer, 1_785_382_700),
     ).resolves.toBe(true);
-    expect(query).toHaveBeenCalledWith(
-      expect.stringContaining('iam.consume_oauth_transaction'),
-      [ids.transaction, identity.issuer, 1_785_382_700],
-    );
+    expect(query).toHaveBeenCalledWith(expect.stringContaining('iam.consume_oauth_transaction'), [
+      ids.transaction,
+      identity.issuer,
+      1_785_382_700,
+    ]);
   });
 
   it('resolves exact server-owned membership scope and roles', async () => {

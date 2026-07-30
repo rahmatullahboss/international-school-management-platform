@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveAuthReadiness } from './auth-boundary.js';
+import { BROWSER_SESSION_COOKIE_NAME, issueBrowserSession } from '@school/policy';
+
+import { resolveAuthenticatedBrowserSession, resolveAuthReadiness } from './auth-boundary.js';
 
 const completeBindings = {
   OIDC_ISSUER: 'https://identity.school.test',
@@ -13,6 +15,7 @@ const completeBindings = {
   AUTH_TRANSACTION_SECRET: 'transaction-signing-secret-with-at-least-32-characters',
   AUTH_TRANSACTION_REPLAY_SOURCE: 'database',
   AUTH_SESSION_SECRET: 'session-signing-secret-with-at-least-32-characters',
+  AUTH_SESSION_REGISTRY_SOURCE: 'database',
   AUTH_MEMBERSHIP_SOURCE: 'database',
 };
 
@@ -30,6 +33,7 @@ describe('OIDC BFF readiness', () => {
         highEntropyStateNonceVerifier: true,
         browserBoundTransactionCookie: true,
         transactionReplayProtection: true,
+        durableReplayLedger: true,
         authorizationResponseIssuerValidation: true,
         confidentialClientAuthentication: true,
         serverSideTokenExchange: true,
@@ -39,7 +43,10 @@ describe('OIDC BFF readiness', () => {
         jwksSignatureValidation: true,
         nonceValidation: true,
         membershipResolution: true,
+        databaseMembershipProjection: true,
         httpOnlyHostCookie: true,
+        browserSessionRegistry: true,
+        sessionRevocation: true,
         providerTokensWithheldFromBrowser: true,
         stepUpAssurance: true,
       },
@@ -49,6 +56,7 @@ describe('OIDC BFF readiness', () => {
         'transaction-signing-key',
         'transaction-replay-source',
         'session-signing-key',
+        'session-registry-source',
         'membership-source',
       ],
     });
@@ -80,6 +88,54 @@ describe('OIDC BFF readiness', () => {
     ).toMatchObject({
       state: 'incomplete',
       missingConfiguration: ['transaction-signing-key', 'session-signing-key'],
+    });
+  });
+});
+
+describe('durable browser-session introspection', () => {
+  it('requires a live registry record after cryptographic cookie verification', async () => {
+    const issued = await issueBrowserSession({
+      secret: completeBindings.AUTH_SESSION_SECRET,
+      identity: {
+        issuer: completeBindings.OIDC_ISSUER,
+        subject: 'provider-user-123',
+        assurance: 'aal2',
+        issuedAt: Math.floor(Date.now() / 1000),
+        expiresAt: Math.floor(Date.now() / 1000) + 600,
+      },
+      membership: {
+        membershipId: '40000000-0000-4000-8000-000000000001',
+        principalId: '40000000-0000-4000-8000-000000000002',
+        tenantId: '40000000-0000-4000-8000-000000000003',
+        campusId: '40000000-0000-4000-8000-000000000004',
+        roleIds: ['40000000-0000-4000-8000-000000000005'],
+      },
+    });
+    if (!issued.ok) throw new Error(issued.message);
+    const cookie = `${BROWSER_SESSION_COOKIE_NAME}=${issued.token}`;
+
+    await expect(
+      resolveAuthenticatedBrowserSession(completeBindings, cookie, async () => {
+        await Promise.resolve();
+        return true;
+      }),
+    ).resolves.toMatchObject({ ok: true });
+    await expect(
+      resolveAuthenticatedBrowserSession(completeBindings, cookie, async () => {
+        await Promise.resolve();
+        return false;
+      }),
+    ).resolves.toMatchObject({
+      ok: false,
+      status: 401,
+      code: 'browser_session_revoked',
+    });
+    await expect(
+      resolveAuthenticatedBrowserSession(completeBindings, cookie),
+    ).resolves.toMatchObject({
+      ok: false,
+      status: 503,
+      code: 'session_registry_unavailable',
     });
   });
 });

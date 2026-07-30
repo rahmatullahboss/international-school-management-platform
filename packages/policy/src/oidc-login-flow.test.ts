@@ -145,6 +145,10 @@ function dependencies(
       await Promise.resolve();
       return membership;
     },
+    registerSession: async () => {
+      await Promise.resolve();
+      return true;
+    },
   };
 }
 

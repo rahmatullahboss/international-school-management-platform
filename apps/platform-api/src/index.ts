@@ -93,9 +93,7 @@ app.get('/auth/v1/session', async (context) => {
     context.env.DATABASE_URL !== undefined &&
     context.env.DATABASE_URL.trim() !== ''
   ) {
-    const store = new DurableAuthStore(
-      createHttpDatabase({ databaseUrl: context.env.DATABASE_URL }),
-    );
+    const store = new DurableAuthStore(createHttpDatabase(context.env.DATABASE_URL));
     activityCheck = (sessionId) => store.isSessionActive(sessionId);
   }
 

@@ -8,7 +8,7 @@
       "order": 1,
       "id": "202607300301_AUTH-03_durable_identity_context",
       "stream": "AUTH-03",
-      "path": "infra/database/migrations/202607300301_AUTH-03_durable_identity_context.sql"
+      "path": "infra/database/post-integration-migrations/202607300301_AUTH-03_durable_identity_context.sql"
     }
   ]
 }
