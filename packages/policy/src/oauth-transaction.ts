@@ -310,7 +310,10 @@ export async function verifyOAuthCallbackTransaction(
     const transaction = parseClaims(
       JSON.parse(new TextDecoder().decode(decodeBase64Url(encodedClaims))) as unknown,
     );
-    if (transaction === undefined || transaction.issuedAt > Math.floor((input.now ?? Date.now()) / 1000) + 60) {
+    if (
+      transaction === undefined ||
+      transaction.issuedAt > Math.floor((input.now ?? Date.now()) / 1000) + 60
+    ) {
       throw new Error('Invalid transaction claims');
     }
     if (transaction.expiresAt <= Math.floor((input.now ?? Date.now()) / 1000)) {
@@ -328,7 +331,8 @@ export async function verifyOAuthCallbackTransaction(
       };
     }
     if (
-      (transaction.requireAuthorizationResponseIssuer && input.authorizationResponseIssuer === undefined) ||
+      (transaction.requireAuthorizationResponseIssuer &&
+        input.authorizationResponseIssuer === undefined) ||
       (input.authorizationResponseIssuer !== undefined &&
         input.authorizationResponseIssuer !== transaction.providerIssuer)
     ) {

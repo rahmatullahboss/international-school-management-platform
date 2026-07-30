@@ -32,8 +32,7 @@ let privateKey: CryptoKey;
 let publicJwk: OidcJsonWebKey;
 
 function encodeBase64Url(value: string | ArrayBuffer): string {
-  const bytes =
-    typeof value === 'string' ? new TextEncoder().encode(value) : new Uint8Array(value);
+  const bytes = typeof value === 'string' ? new TextEncoder().encode(value) : new Uint8Array(value);
   let binary = '';
   for (const byte of bytes) binary += String.fromCharCode(byte);
   return btoa(binary).replace(/\+/gu, '-').replace(/\//gu, '_').replace(/=+$/gu, '');
@@ -105,7 +104,9 @@ async function preparedFlow(options: { nonceOverride?: string } = {}): Promise<{
   if (state === null || nonce === null) throw new Error('Expected OAuth state and nonce.');
   const signedIdToken = await idToken(options.nonceOverride ?? nonce);
   const fetcher = vi.fn<typeof fetch>(async (input) => {
-    const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+    await Promise.resolve();
+    const url =
+      typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
     if (url === flowConfiguration.provider.configuration.tokenEndpoint) {
       return jsonResponse({
         access_token: 'server-access-token',
@@ -135,16 +136,20 @@ function dependencies(
   return {
     fetcher: prepared.fetcher,
     consumeTransaction: async (transactionId) => {
+      await Promise.resolve();
       if (prepared.consumed.has(transactionId)) return false;
       prepared.consumed.add(transactionId);
       return true;
     },
-    resolveMembership: async () => membership,
+    resolveMembership: async () => {
+      await Promise.resolve();
+      return membership;
+    },
   };
 }
 
 beforeAll(async () => {
-  const pair = (await crypto.subtle.generateKey(
+  const pair = await crypto.subtle.generateKey(
     {
       name: 'RSASSA-PKCS1-v1_5',
       modulusLength: 2048,
@@ -153,7 +158,7 @@ beforeAll(async () => {
     },
     true,
     ['sign', 'verify'],
-  )) as CryptoKeyPair;
+  );
   privateKey = pair.privateKey;
   publicJwk = {
     ...(await crypto.subtle.exportKey('jwk', pair.publicKey)),
@@ -250,7 +255,9 @@ describe('OIDC login flow orchestration', () => {
   });
 
   it('rejects an ID token that is not bound to the transaction nonce', async () => {
-    const prepared = await preparedFlow({ nonceOverride: 'different-nonce-value-123456789012345678901234567890' });
+    const prepared = await preparedFlow({
+      nonceOverride: 'different-nonce-value-123456789012345678901234567890',
+    });
     const result = await completeOidcLogin({
       configuration: flowConfiguration,
       callback: {

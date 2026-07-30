@@ -1,11 +1,5 @@
-import {
-  issueBrowserSession,
-  type BrowserSessionClaims,
-} from './browser-session.js';
-import type {
-  MembershipResolution,
-  MembershipSelection,
-} from './membership.js';
+import { issueBrowserSession, type BrowserSessionClaims } from './browser-session.js';
+import type { MembershipResolution, MembershipSelection } from './membership.js';
 import {
   clearOAuthTransactionCookie,
   issueOAuthTransaction,
@@ -53,10 +47,7 @@ export interface OidcCallbackParameters {
 
 export interface OidcLoginFlowDependencies {
   readonly fetcher?: typeof fetch;
-  readonly consumeTransaction: (
-    transactionId: string,
-    expiresAt: number,
-  ) => Promise<boolean>;
+  readonly consumeTransaction: (transactionId: string, expiresAt: number) => Promise<boolean>;
   readonly resolveMembership: (
     identity: OidcIdentity,
     selection: MembershipSelection,
@@ -101,9 +92,7 @@ function callbackFailure(
   };
 }
 
-export async function beginOidcLogin(
-  input: BeginOidcLoginInput,
-): Promise<BeginOidcLoginResult> {
+export async function beginOidcLogin(input: BeginOidcLoginInput): Promise<BeginOidcLoginResult> {
   if (input.configuration.clientSecret === '') {
     return {
       ok: false,
@@ -115,7 +104,7 @@ export async function beginOidcLogin(
   const transaction = await issueOAuthTransaction({
     configuration: input.configuration.provider.configuration,
     secret: input.configuration.transactionSecret,
-    returnTo: input.returnTo,
+    ...(input.returnTo === undefined ? {} : { returnTo: input.returnTo }),
     requireAuthorizationResponseIssuer:
       input.configuration.provider.authorizationResponseIssuerParameterSupported,
     ...(input.now === undefined ? {} : { now: input.now }),
@@ -161,7 +150,9 @@ export async function completeOidcLogin(
     secret: input.configuration.transactionSecret,
     cookieHeader: input.cookieHeader,
     state: input.callback.state,
-    authorizationResponseIssuer: input.callback.issuer,
+    ...(input.callback.issuer === undefined
+      ? {}
+      : { authorizationResponseIssuer: input.callback.issuer }),
     ...(input.now === undefined ? {} : { now: input.now }),
   });
   if (!transaction.ok) {
@@ -185,9 +176,7 @@ export async function completeOidcLogin(
     clientSecret: input.configuration.clientSecret,
     code: input.callback.code,
     codeVerifier: transaction.transaction.codeVerifier,
-    ...(input.dependencies.fetcher === undefined
-      ? {}
-      : { fetcher: input.dependencies.fetcher }),
+    ...(input.dependencies.fetcher === undefined ? {} : { fetcher: input.dependencies.fetcher }),
   });
   if (!tokenExchange.ok) {
     return callbackFailure(502, tokenExchange.code, tokenExchange.message);

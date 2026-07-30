@@ -56,13 +56,13 @@ describe('OIDC BFF readiness', () => {
   });
 
   it('distinguishes incomplete configuration from a provider-test-ready contract', () => {
-    expect(
-      resolveAuthReadiness({ ...completeBindings, AUTH_MEMBERSHIP_SOURCE: undefined }),
-    ).toMatchObject({
-      state: 'incomplete',
-      loginEnabled: false,
-      missingConfiguration: ['membership-source'],
-    });
+    expect(resolveAuthReadiness({ ...completeBindings, AUTH_MEMBERSHIP_SOURCE: '' })).toMatchObject(
+      {
+        state: 'incomplete',
+        loginEnabled: false,
+        missingConfiguration: ['membership-source'],
+      },
+    );
     expect(resolveAuthReadiness(completeBindings)).toMatchObject({
       state: 'provider-test-ready',
       loginEnabled: false,

@@ -1,8 +1,4 @@
-import type {
-  OidcJsonWebKey,
-  OidcJsonWebKeySet,
-  OidcProviderConfiguration,
-} from './oidc.js';
+import type { OidcJsonWebKey, OidcJsonWebKeySet, OidcProviderConfiguration } from './oidc.js';
 import { validateOidcProviderConfiguration } from './oidc.js';
 
 const MAX_METADATA_BYTES = 128 * 1024;
@@ -207,7 +203,10 @@ export async function fetchOidcJwks(
   fetcher: typeof fetch = fetch,
 ): Promise<OidcJwksResult> {
   if (validateOidcProviderConfiguration(configuration) !== undefined) {
-    return failure('oidc_provider_configuration_invalid', 'OIDC provider configuration is invalid.');
+    return failure(
+      'oidc_provider_configuration_invalid',
+      'OIDC provider configuration is invalid.',
+    );
   }
   let response: Response;
   try {
@@ -238,7 +237,10 @@ export async function fetchOidcJwks(
   }
   const keys = value.keys.filter(isAllowedJwk);
   if (keys.length === 0) {
-    return failure('oidc_provider_capability_missing', 'No approved RS256 signing key is available.');
+    return failure(
+      'oidc_provider_capability_missing',
+      'No approved RS256 signing key is available.',
+    );
   }
   const keyIds = keys.map((key) => key.kid);
   if (new Set(keyIds).size !== keyIds.length) {
@@ -296,7 +298,10 @@ export async function exchangeOidcAuthorizationCode(
     input.code.length > 4096 ||
     !PKCE_VERIFIER_PATTERN.test(input.codeVerifier)
   ) {
-    return failure('oidc_token_exchange_invalid', 'OIDC authorization-code exchange input is invalid.');
+    return failure(
+      'oidc_token_exchange_invalid',
+      'OIDC authorization-code exchange input is invalid.',
+    );
   }
   const body = new URLSearchParams({
     grant_type: 'authorization_code',
@@ -311,10 +316,7 @@ export async function exchangeOidcAuthorizationCode(
       method: 'POST',
       headers: {
         accept: 'application/json',
-        authorization: basicAuthorization(
-          input.configuration.clientId,
-          input.clientSecret,
-        ),
+        authorization: basicAuthorization(input.configuration.clientId, input.clientSecret),
         'content-type': 'application/x-www-form-urlencoded',
       },
       body,
@@ -335,7 +337,10 @@ export async function exchangeOidcAuthorizationCode(
     return failure('oidc_provider_response_invalid', 'OIDC token response is invalid.');
   }
   if (!response.ok) {
-    return failure('oidc_token_exchange_rejected', 'OIDC authorization-code exchange was rejected.');
+    return failure(
+      'oidc_token_exchange_rejected',
+      'OIDC authorization-code exchange was rejected.',
+    );
   }
   const tokenSet = parseTokenSet(value);
   if (tokenSet === undefined) {

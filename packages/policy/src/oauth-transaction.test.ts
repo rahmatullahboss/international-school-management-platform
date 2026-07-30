@@ -164,13 +164,15 @@ describe('OAuth PKCE transaction', () => {
       '//attacker.test/path',
       '/safe\\@attacker.test',
     ]) {
-      expect(
-        await issueOAuthTransaction({ configuration, secret, returnTo, now }),
-      ).toMatchObject({ ok: false, code: 'oauth_return_path_invalid' });
+      expect(await issueOAuthTransaction({ configuration, secret, returnTo, now })).toMatchObject({
+        ok: false,
+        code: 'oauth_return_path_invalid',
+      });
     }
-    expect(
-      await issueOAuthTransaction({ configuration, secret: 'weak', now }),
-    ).toMatchObject({ ok: false, code: 'oauth_transaction_configuration_invalid' });
+    expect(await issueOAuthTransaction({ configuration, secret: 'weak', now })).toMatchObject({
+      ok: false,
+      code: 'oauth_transaction_configuration_invalid',
+    });
     expect(
       await issueOAuthTransaction({ configuration, secret, now, ttlSeconds: 59 }),
     ).toMatchObject({ ok: false, code: 'oauth_transaction_configuration_invalid' });

@@ -155,9 +155,9 @@ describe('OIDC provider client', () => {
     expect(
       await fetchOidcJwks(
         configuration,
-        vi.fn<typeof fetch>().mockResolvedValue(
-          jsonResponse({ keys: [duplicateKey, duplicateKey] }),
-        ),
+        vi
+          .fn<typeof fetch>()
+          .mockResolvedValue(jsonResponse({ keys: [duplicateKey, duplicateKey] })),
       ),
     ).toMatchObject({ ok: false, code: 'oidc_provider_response_invalid' });
 
@@ -165,7 +165,12 @@ describe('OIDC provider client', () => {
       await fetchOidcJwks(
         configuration,
         vi.fn<typeof fetch>().mockResolvedValue(
-          jsonResponse({ keys: Array.from({ length: 21 }, (_, index) => ({ ...duplicateKey, kid: `key-${index}` })) }),
+          jsonResponse({
+            keys: Array.from({ length: 21 }, (_, index) => ({
+              ...duplicateKey,
+              kid: `key-${index}`,
+            })),
+          }),
         ),
       ),
     ).toMatchObject({ ok: false, code: 'oidc_provider_response_invalid' });
@@ -173,9 +178,11 @@ describe('OIDC provider client', () => {
     expect(
       await fetchOidcJwks(
         configuration,
-        vi.fn<typeof fetch>().mockResolvedValue(
-          new Response('<html></html>', { headers: { 'content-type': 'text/html' } }),
-        ),
+        vi
+          .fn<typeof fetch>()
+          .mockResolvedValue(
+            new Response('<html></html>', { headers: { 'content-type': 'text/html' } }),
+          ),
       ),
     ).toMatchObject({ ok: false, code: 'oidc_provider_response_invalid' });
   });
@@ -234,12 +241,14 @@ describe('OIDC provider client', () => {
       clientSecret: 'client-secret',
       code: 'authorization-code',
       codeVerifier: verifier,
-      fetcher: vi.fn<typeof fetch>().mockResolvedValue(
-        jsonResponse(
-          { error: 'invalid_grant', error_description: 'sensitive provider detail' },
-          { status: 400 },
+      fetcher: vi
+        .fn<typeof fetch>()
+        .mockResolvedValue(
+          jsonResponse(
+            { error: 'invalid_grant', error_description: 'sensitive provider detail' },
+            { status: 400 },
+          ),
         ),
-      ),
     });
     expect(rejected).toEqual({
       ok: false,
@@ -252,9 +261,11 @@ describe('OIDC provider client', () => {
       clientSecret: 'client-secret',
       code: 'authorization-code',
       codeVerifier: verifier,
-      fetcher: vi.fn<typeof fetch>().mockResolvedValue(
-        jsonResponse({ access_token: 'token', token_type: 'bearer', expires_in: 300 }),
-      ),
+      fetcher: vi
+        .fn<typeof fetch>()
+        .mockResolvedValue(
+          jsonResponse({ access_token: 'token', token_type: 'bearer', expires_in: 300 }),
+        ),
     });
     expect(malformed).toMatchObject({ ok: false, code: 'oidc_provider_response_invalid' });
   });
