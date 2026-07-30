@@ -13,10 +13,10 @@ permissions:
   contents: write
 
 jobs:
-  author-auth-07-policy:
+  author-auth-07-durable:
     if: github.event_name == 'pull_request' && github.head_ref == 'auth/backchannel-logout-v1' && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
     services:
       postgres:
         image: postgres:16-alpine
@@ -39,24 +39,21 @@ jobs:
           node-version: '22.22.2'
           cache: npm
       - run: npm ci
-      - name: Add Logout Token policy regression tests
-        run: python3 scripts/implement_auth_07_policy.py test
-      - name: Prove Logout Token regressions fail before implementation
+      - name: Add durable AUTH-07 regression tests
+        run: python3 scripts/implement_auth_07_durable.py test
+      - name: Prove provider sid and durable store regressions fail before implementation
         shell: bash
         run: |
           set +e
-          npx vitest run packages/policy/src/oidc-backchannel-logout.test.ts > auth-07-policy-red.log 2>&1
+          npx vitest run packages/policy/src/oidc.test.ts packages/policy/src/browser-session.test.ts apps/platform-api/src/auth-durable-store.test.ts > auth-07-durable-red.log 2>&1
           status=$?
           set -e
-          cat auth-07-policy-red.log
+          cat auth-07-durable-red.log
           test "$status" -ne 0
-          grep -q 'verifies a typed signed token containing both provider subject and session id' auth-07-policy-red.log
-          grep -q 'atomically consumes the jti and revokes exact provider sessions only once' auth-07-policy-red.log
-      - name: Apply Logout Token policy implementation
-        run: python3 scripts/implement_auth_07_policy.py implementation
-      - name: Apply lint-safe async test doubles
-        run: python3 scripts/fix_auth_07_policy_lint.py
-      - run: rm scripts/implement_auth_07_policy.py scripts/fix_auth_07_policy_lint.py
+          grep -q 'providerSessionId' auth-07-durable-red.log
+      - name: Apply durable AUTH-07 implementation
+        run: python3 scripts/implement_auth_07_durable.py implementation
+      - run: rm scripts/implement_auth_07_durable.py
       - run: npm run format
       - run: npm run lint -- --fix
       - run: npm run format
@@ -80,18 +77,18 @@ jobs:
       - run: npm run provenance:generate
       - run: git diff --exit-code -- artifacts THIRD_PARTY_NOTICES.md
       - run: python3 scripts/validate_execution_artifacts.py
-      - name: Commit verified AUTH-07 policy checkpoint
+      - name: Commit verified AUTH-07 durable checkpoint
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
-          git commit -m 'feat(auth): verify OIDC back-channel Logout Tokens'
+          git commit -m 'feat(auth): persist provider sessions and logout replay state'
           git push origin HEAD:auth/backchannel-logout-v1
 
   verify:
-    needs: author-auth-07-policy
-    if: always() && needs.author-auth-07-policy.result == 'skipped'
+    needs: author-auth-07-durable
+    if: always() && needs.author-auth-07-durable.result == 'skipped'
     runs-on: ubuntu-latest
     steps:
-      - run: echo 'Canonical repository verification resumes after AUTH-07 policy synchronization.'
+      - run: echo 'Canonical repository verification resumes after AUTH-07 durable synchronization.'
