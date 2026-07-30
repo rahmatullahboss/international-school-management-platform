@@ -1,14 +1,18 @@
 import { Hono } from 'hono';
 
 import { createHttpDatabase } from '@school/database';
+import { OidcProviderCache, processOidcBackchannelLogout } from '@school/policy';
 import { parseRuntimeEnvironment } from '@school/platform';
 
 import {
   resolveAuthenticatedBrowserSession,
+  resolveAuthProviderConfiguration,
+  resolveAuthProviderEndpointOrigins,
   resolveAuthReadiness,
   type AuthBindings,
 } from './auth-boundary.js';
-import { DurableAuthStore } from './auth-durable-store.js';
+import { handleOidcBackchannelLogoutRequest } from './auth-backchannel.js';
+import { DurableAuthStore, DurableOidcProviderCacheStore } from './auth-durable-store.js';
 import {
   hasValidAuthMutationOrigins,
   isAllowedAuthMutationOrigin,
@@ -103,6 +107,63 @@ function applyAuthMutationCors(
   headers('access-control-max-age', '600');
   return true;
 }
+
+app.post('/auth/v1/backchannel-logout', async (context) => {
+  context.header('cache-control', 'no-store');
+  context.header('vary', 'Content-Type');
+  const configuration = resolveAuthProviderConfiguration(context.env);
+  const allowedOrigins = resolveAuthProviderEndpointOrigins(context.env);
+  const configured =
+    configuration !== undefined &&
+    allowedOrigins !== undefined &&
+    context.env.OIDC_PROVIDER_CACHE_SOURCE === 'database' &&
+    context.env.OIDC_BACKCHANNEL_LOGOUT_SOURCE === 'database' &&
+    context.env.DATABASE_URL !== undefined &&
+    context.env.DATABASE_URL.trim() !== '';
+
+  let rawBody = '';
+  if (configured) {
+    try {
+      rawBody = await context.req.text();
+    } catch {
+      rawBody = '';
+    }
+  }
+  const result = await handleOidcBackchannelLogoutRequest({
+    configured,
+    contentType: context.req.header('content-type'),
+    ...(context.req.header('content-length') === undefined
+      ? {}
+      : { contentLength: context.req.header('content-length')! }),
+    rawBody,
+    processor: async (logoutToken) => {
+      if (
+        configuration === undefined ||
+        allowedOrigins === undefined ||
+        context.env.DATABASE_URL === undefined
+      ) {
+        throw new Error('Back-channel logout configuration disappeared.');
+      }
+      const database = createHttpDatabase(context.env.DATABASE_URL);
+      const durableAuth = new DurableAuthStore(database);
+      const cache = new OidcProviderCache({
+        store: new DurableOidcProviderCacheStore(database),
+        allowedEndpointOrigins: allowedOrigins,
+      });
+      return processOidcBackchannelLogout({
+        logoutToken,
+        configuration,
+        resolveJwks: (forceRefresh) =>
+          cache.resolveJwks({ configuration, ...(forceRefresh ? { forceRefresh: true } : {}) }),
+        consumeToken: (claims) => durableAuth.consumeBackchannelLogoutToken(claims),
+        revokeSessions: (claims) =>
+          durableAuth.revokeProviderSessions(claims, 'provider back-channel logout'),
+      });
+    },
+  });
+  if (result.ok) return context.body(null, result.status);
+  return context.json({ error: { code: result.code, message: result.message } }, result.status);
+});
 
 app.options('/auth/v1/logout', (context) => {
   context.header('cache-control', 'no-store');
@@ -350,6 +411,7 @@ app.get('/pilot/v1/snapshots/:role', async (context) => {
 
 export default app;
 
+export * from './auth-backchannel.js';
 export * from './auth-boundary.js';
 export * from './auth-durable-store.js';
 export * from './auth-logout.js';

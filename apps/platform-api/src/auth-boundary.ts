@@ -16,6 +16,7 @@ export interface AuthBindings {
   readonly OIDC_REDIRECT_URI?: string;
   readonly OIDC_ENDPOINT_ORIGINS?: string;
   readonly OIDC_PROVIDER_CACHE_SOURCE?: string;
+  readonly OIDC_BACKCHANNEL_LOGOUT_SOURCE?: string;
   readonly AUTH_TRANSACTION_SECRET?: string;
   readonly AUTH_TRANSACTION_REPLAY_SOURCE?: string;
   readonly AUTH_SESSION_SECRET?: string;
@@ -28,6 +29,7 @@ export type AuthReadinessRequirement =
   | 'provider-metadata'
   | 'provider-endpoint-origins'
   | 'provider-cache-source'
+  | 'backchannel-logout-source'
   | 'provider-client-credential'
   | 'transaction-signing-key'
   | 'transaction-replay-source'
@@ -77,6 +79,11 @@ export interface AuthReadiness {
     readonly forcedReauthentication: true;
     readonly boundedFreshAuthentication: true;
     readonly reviewedAcrValues: true;
+    readonly backChannelLogout: true;
+    readonly typedLogoutTokens: true;
+    readonly logoutTokenReplayProtection: true;
+    readonly providerSessionRevocation: true;
+    readonly durableProviderCache: true;
   };
   readonly missingConfiguration: readonly AuthReadinessRequirement[];
 }
@@ -91,6 +98,7 @@ type AuthBindingName =
   | 'OIDC_REDIRECT_URI'
   | 'OIDC_ENDPOINT_ORIGINS'
   | 'OIDC_PROVIDER_CACHE_SOURCE'
+  | 'OIDC_BACKCHANNEL_LOGOUT_SOURCE'
   | 'AUTH_TRANSACTION_SECRET'
   | 'AUTH_TRANSACTION_REPLAY_SOURCE'
   | 'AUTH_SESSION_SECRET'
@@ -103,7 +111,9 @@ function configuredValue(bindings: AuthBindings, name: AuthBindingName): string 
   return value === undefined || value === '' ? undefined : value;
 }
 
-function providerConfiguration(bindings: AuthBindings): OidcProviderConfiguration | undefined {
+export function resolveAuthProviderConfiguration(
+  bindings: AuthBindings,
+): OidcProviderConfiguration | undefined {
   const issuer = configuredValue(bindings, 'OIDC_ISSUER');
   const clientId = configuredValue(bindings, 'OIDC_CLIENT_ID');
   const authorizationEndpoint = configuredValue(bindings, 'OIDC_AUTHORIZATION_ENDPOINT');
@@ -158,6 +168,12 @@ function exactHttpsOrigins(value: string | undefined): readonly string[] | undef
   return [...origins];
 }
 
+export function resolveAuthProviderEndpointOrigins(
+  bindings: AuthBindings,
+): readonly string[] | undefined {
+  return exactHttpsOrigins(configuredValue(bindings, 'OIDC_ENDPOINT_ORIGINS'));
+}
+
 function hasValidProviderEndpointOrigins(
   value: string | undefined,
   configuration: OidcProviderConfiguration | undefined,
@@ -175,7 +191,7 @@ function hasValidProviderEndpointOrigins(
 
 export function resolveAuthReadiness(bindings: AuthBindings): AuthReadiness {
   const missingConfiguration: AuthReadinessRequirement[] = [];
-  const configuration = providerConfiguration(bindings);
+  const configuration = resolveAuthProviderConfiguration(bindings);
   if (
     configuration === undefined ||
     validateOidcProviderConfiguration(configuration) !== undefined
@@ -190,8 +206,11 @@ export function resolveAuthReadiness(bindings: AuthBindings): AuthReadiness {
   ) {
     missingConfiguration.push('provider-endpoint-origins');
   }
-  if (configuredValue(bindings, 'OIDC_PROVIDER_CACHE_SOURCE') === undefined) {
+  if (configuredValue(bindings, 'OIDC_PROVIDER_CACHE_SOURCE') !== 'database') {
     missingConfiguration.push('provider-cache-source');
+  }
+  if (configuredValue(bindings, 'OIDC_BACKCHANNEL_LOGOUT_SOURCE') !== 'database') {
+    missingConfiguration.push('backchannel-logout-source');
   }
   if (configuredValue(bindings, 'OIDC_CLIENT_SECRET') === undefined) {
     missingConfiguration.push('provider-client-credential');
@@ -219,7 +238,7 @@ export function resolveAuthReadiness(bindings: AuthBindings): AuthReadiness {
     schemaVersion: 1,
     mode: 'oidc-bff',
     state:
-      missingConfiguration.length === 10
+      missingConfiguration.length === 11
         ? 'disabled'
         : missingConfiguration.length > 0
           ? 'incomplete'
@@ -261,6 +280,11 @@ export function resolveAuthReadiness(bindings: AuthBindings): AuthReadiness {
       forcedReauthentication: true,
       boundedFreshAuthentication: true,
       reviewedAcrValues: true,
+      backChannelLogout: true,
+      typedLogoutTokens: true,
+      logoutTokenReplayProtection: true,
+      providerSessionRevocation: true,
+      durableProviderCache: true,
     },
     missingConfiguration,
   };
