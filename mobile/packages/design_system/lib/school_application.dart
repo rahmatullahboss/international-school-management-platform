@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:school_design_system/school_design_system.dart';
+import 'package:school_design_system/school_localization.dart';
 
 typedef SchoolApplicationTitleBuilder =
     String Function(SchoolShellStrings strings);
