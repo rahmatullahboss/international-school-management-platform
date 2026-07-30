@@ -30,14 +30,8 @@ jobs:
           cache: true
       - name: Show Flutter toolchain
         run: flutter --version
-      - name: Author secure document checkpoint
-        run: |
-          python3 mobile/tool/add_step_up_auth.py
-          python3 mobile/tool/add_secure_documents_core.py
-          python3 mobile/tool/fix_secure_document_replay.py
-          python3 mobile/tool/add_secure_document_tests.py
-          python3 mobile/tool/wire_secure_documents.py
-          python3 mobile/tool/add_secure_document_app_test.py
+      - name: Canonicalize secure document replay guard
+        run: python3 mobile/tool/fix_secure_document_replay.py
       - name: Resolve workspace dependencies
         working-directory: mobile
         run: flutter pub get
@@ -48,9 +42,9 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add mobile/pubspec.yaml mobile/pubspec.lock mobile/packages/authentication mobile/packages/secure_documents mobile/apps/family_app
+          git add mobile/pubspec.lock mobile/packages/secure_documents
           if ! git diff --cached --quiet; then
-            git commit -m "feat(mobile): add step-up secure document exchange"
+            git commit -m "fix(mobile): harden secure document replay guard"
             git push origin HEAD:${{ github.event.pull_request.head.ref || github.ref_name }}
           fi
       - name: Verify formatting
