@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   verify-deploy-smoke:
-    if: github.event_name == 'workflow_dispatch' || github.head_ref == 'deploy/cloudflare-staging-pilot' || github.head_ref == 'pilot/runtime-portal-composition' || github.head_ref == 'ux/smooth-operational-experience-v1' || github.head_ref == 'pilot/permission-aware-read-api-v1' || github.head_ref == 'pilot/signed-session-context-v1' || github.head_ref == 'pilot/oidc-trust-boundary-v1' || github.head_ref == 'pilot/oidc-pkce-flow-v1' || github.head_ref == 'pilot/auth-durable-context-v1' || github.head_ref == 'pilot/auth-session-termination-v1' || github.head_ref == 'pilot/oidc-key-rotation-v1' || github.head_ref == 'auth/provider-backchannel-stepup-v1'
+    if: github.event_name == 'workflow_dispatch' || github.head_ref == 'deploy/cloudflare-staging-pilot' || github.head_ref == 'pilot/runtime-portal-composition' || github.head_ref == 'ux/smooth-operational-experience-v1' || github.head_ref == 'pilot/permission-aware-read-api-v1' || github.head_ref == 'pilot/signed-session-context-v1' || github.head_ref == 'pilot/oidc-trust-boundary-v1' || github.head_ref == 'pilot/oidc-pkce-flow-v1' || github.head_ref == 'pilot/auth-durable-context-v1' || github.head_ref == 'pilot/auth-session-termination-v1' || github.head_ref == 'pilot/oidc-key-rotation-v1' || github.head_ref == 'auth/provider-backchannel-stepup-v1' || github.head_ref == 'auth/backchannel-logout-v1'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     environment: cloudflare-staging
@@ -145,6 +145,16 @@ jobs:
             --data '{"scope":"current"}' \
             "$API_URL/auth/v1/logout")
           test "$logout_status" = '503'
+          backchannel_status=$(curl --silent --show-error \
+            --dump-header backchannel-headers.txt \
+            --output auth-backchannel-error.json \
+            --write-out '%{http_code}' \
+            --request POST \
+            -H "Origin: $staging_origin" \
+            -H 'Content-Type: application/x-www-form-urlencoded' \
+            --data 'logout_token=header.claims.signature' \
+            "$API_URL/auth/v1/backchannel-logout")
+          test "$backchannel_status" = '503'
           fetch_signed_admin_snapshot
           fetch_with_retry "$WEB_URL/" web-index.html "Pilot role chooser"
           fetch_with_retry "$WEB_URL/admin" web-admin.html "Admin portal"
@@ -182,14 +192,17 @@ jobs:
               'browserSessionRegistry', 'sessionRevocation', 'originCheckedLogout',
               'accountWideLogout', 'secureCookieDeletion',
               'providerTokensWithheldFromBrowser', 'stepUpAssurance',
-              'forcedReauthentication', 'boundedFreshAuthentication', 'reviewedAcrValues'
+              'forcedReauthentication', 'boundedFreshAuthentication', 'reviewedAcrValues',
+              'backChannelLogout', 'typedLogoutTokens', 'logoutTokenReplayProtection',
+              'providerSessionRevocation', 'durableProviderCache'
           ]:
               assert controls.get(control) is True, (control, readiness)
           assert readiness.get('missingConfiguration') == [
               'provider-metadata', 'provider-endpoint-origins', 'provider-cache-source',
-              'provider-client-credential', 'transaction-signing-key',
-              'transaction-replay-source', 'session-signing-key',
-              'session-registry-source', 'membership-source', 'allowed-web-origins'
+              'backchannel-logout-source', 'provider-client-credential',
+              'transaction-signing-key', 'transaction-replay-source',
+              'session-signing-key', 'session-registry-source',
+              'membership-source', 'allowed-web-origins'
           ], readiness
           serialized_readiness = json.dumps(readiness).lower()
           for forbidden in ['oidc_', 'auth_', 'secret-value', 'client-secret-value']:
@@ -201,6 +214,13 @@ jobs:
           logout_error = json.loads(Path('auth-logout-error.json').read_text(encoding='utf-8'))
           assert logout_error.get('error', {}).get('code') == 'logout_configuration_invalid', logout_error
           assert 'set-cookie' not in logout_error, logout_error
+
+          backchannel_error = json.loads(Path('auth-backchannel-error.json').read_text(encoding='utf-8'))
+          assert backchannel_error.get('error', {}).get('code') == 'backchannel_logout_configuration_invalid', backchannel_error
+          backchannel_headers = Path('backchannel-headers.txt').read_text(encoding='utf-8').lower()
+          assert 'access-control-allow-origin:' not in backchannel_headers, backchannel_headers
+          assert 'set-cookie:' not in backchannel_headers, backchannel_headers
+          assert 'cache-control: no-store' in backchannel_headers, backchannel_headers
 
           session = json.loads(Path('admin-session.json').read_text(encoding='utf-8'))
           assert session.get('schemaVersion') == 1, session
@@ -244,7 +264,8 @@ jobs:
             echo "- OIDC readiness: $API_URL/auth/v1/readiness"
             echo "- Browser session introspection: $API_URL/auth/v1/session"
             echo "- Browser logout: $API_URL/auth/v1/logout"
+            echo "- Provider back-channel logout: $API_URL/auth/v1/backchannel-logout"
             echo "- Signed pilot session: $API_URL/pilot/v1/sessions/admin"
             echo "- Signed scoped admin snapshot: $API_URL/pilot/v1/snapshots/admin"
-            echo '- Scope: fail-closed provider cache/key rotation, forced reauthentication and bounded fresh AAL2 step-up controls are verified; real login remains disabled until approved provider endpoints, cache, database binding, web origins and secrets are configured.'
+            echo '- Scope: typed signed Logout Tokens, durable replay denial, provider sid/sub session revocation, database-backed provider cache, fail-closed back-channel HTTP handling and fresh AAL2 step-up controls are verified; real provider login remains disabled until approved provider endpoints, credentials and production bindings are configured.'
           } >> "$GITHUB_STEP_SUMMARY"
