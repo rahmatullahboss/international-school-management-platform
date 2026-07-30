@@ -4,6 +4,7 @@ import {
   clearOAuthTransactionCookie,
   issueOAuthTransaction,
   verifyOAuthCallbackTransaction,
+  type OidcStepUpRequest,
 } from './oauth-transaction.js';
 import {
   exchangeOidcAuthorizationCode,
@@ -28,6 +29,7 @@ export interface OidcLoginFlowConfiguration {
 export interface BeginOidcLoginInput {
   readonly configuration: OidcLoginFlowConfiguration;
   readonly returnTo?: string;
+  readonly stepUp?: OidcStepUpRequest;
   readonly now?: number;
 }
 
@@ -183,6 +185,7 @@ export async function beginOidcLogin(input: BeginOidcLoginInput): Promise<BeginO
     ...(input.returnTo === undefined ? {} : { returnTo: input.returnTo }),
     requireAuthorizationResponseIssuer:
       input.configuration.provider.authorizationResponseIssuerParameterSupported,
+    ...(input.stepUp === undefined ? {} : { stepUp: input.stepUp }),
     ...(input.now === undefined ? {} : { now: input.now }),
   });
   if (!transaction.ok) {
@@ -285,6 +288,25 @@ export async function completeOidcLogin(
         ? 401
         : signingKeyFailureStatus(identity.code);
     return callbackFailure(status, identity.code, identity.message);
+  }
+
+  if (transaction.transaction.requestedAssurance === 'aal2') {
+    const authenticationTime = identity.identity.authenticationTime;
+    const nowSeconds = Math.floor((input.now ?? Date.now()) / 1000);
+    const freshnessSeconds = transaction.transaction.stepUpFreshnessSeconds;
+    if (
+      freshnessSeconds === undefined ||
+      identity.identity.assurance !== 'aal2' ||
+      authenticationTime === undefined ||
+      authenticationTime > nowSeconds + 60 ||
+      authenticationTime < nowSeconds - freshnessSeconds
+    ) {
+      return callbackFailure(
+        401,
+        'oidc_step_up_required',
+        'Fresh multi-factor authentication is required.',
+      );
+    }
   }
 
   let membership: MembershipResolution;

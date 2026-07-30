@@ -68,6 +68,55 @@ describe('OAuth PKCE transaction', () => {
     expect(result.request.setCookie).toContain('Max-Age=300');
   });
 
+  it('requests a fresh reviewed AAL2 provider authentication for step-up', async () => {
+    const result = await issueOAuthTransaction({
+      configuration,
+      secret,
+      returnTo: '/admin/finance/close',
+      stepUp: {
+        assurance: 'aal2',
+        freshnessSeconds: 300,
+        acrValues: ['urn:school:aal2', 'urn:school:phishing-resistant'],
+      },
+      now,
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error(result.message);
+    const url = new URL(result.request.authorizationUrl);
+    expect(url.searchParams.get('prompt')).toBe('login');
+    expect(url.searchParams.get('max_age')).toBe('0');
+    expect(url.searchParams.get('acr_values')).toBe(
+      'urn:school:aal2 urn:school:phishing-resistant',
+    );
+    expect(result.request.transaction).toMatchObject({
+      requestedAssurance: 'aal2',
+      stepUpFreshnessSeconds: 300,
+      acrValues: ['urn:school:aal2', 'urn:school:phishing-resistant'],
+    });
+  });
+
+  it('rejects unbounded freshness and malformed reviewed ACR values', async () => {
+    for (const stepUp of [
+      { assurance: 'aal2', freshnessSeconds: 301 },
+      { assurance: 'aal2', freshnessSeconds: 0 },
+      { assurance: 'aal2', freshnessSeconds: 300, acrValues: [] },
+      { assurance: 'aal2', freshnessSeconds: 300, acrValues: ['urn:school:aal2 bad'] },
+    ]) {
+      await expect(
+        issueOAuthTransaction({
+          configuration,
+          secret,
+          stepUp,
+          now,
+        } as Parameters<typeof issueOAuthTransaction>[0]),
+      ).resolves.toMatchObject({
+        ok: false,
+        code: 'oauth_transaction_configuration_invalid',
+      });
+    }
+  });
+
   it('verifies the browser-bound state and exact authorization response issuer', async () => {
     const issued = await issueOAuthTransaction({
       configuration,

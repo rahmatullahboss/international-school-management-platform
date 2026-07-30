@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   verify-deploy-smoke:
-    if: github.event_name == 'workflow_dispatch' || github.head_ref == 'deploy/cloudflare-staging-pilot' || github.head_ref == 'pilot/runtime-portal-composition' || github.head_ref == 'ux/smooth-operational-experience-v1' || github.head_ref == 'pilot/permission-aware-read-api-v1' || github.head_ref == 'pilot/signed-session-context-v1' || github.head_ref == 'pilot/oidc-trust-boundary-v1' || github.head_ref == 'pilot/oidc-pkce-flow-v1' || github.head_ref == 'pilot/auth-durable-context-v1' || github.head_ref == 'pilot/auth-session-termination-v1' || github.head_ref == 'pilot/oidc-key-rotation-v1'
+    if: github.event_name == 'workflow_dispatch' || github.head_ref == 'deploy/cloudflare-staging-pilot' || github.head_ref == 'pilot/runtime-portal-composition' || github.head_ref == 'ux/smooth-operational-experience-v1' || github.head_ref == 'pilot/permission-aware-read-api-v1' || github.head_ref == 'pilot/signed-session-context-v1' || github.head_ref == 'pilot/oidc-trust-boundary-v1' || github.head_ref == 'pilot/oidc-pkce-flow-v1' || github.head_ref == 'pilot/auth-durable-context-v1' || github.head_ref == 'pilot/auth-session-termination-v1' || github.head_ref == 'pilot/oidc-key-rotation-v1' || github.head_ref == 'auth/provider-backchannel-stepup-v1'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     environment: cloudflare-staging
@@ -181,7 +181,8 @@ jobs:
               'databaseMembershipProjection', 'httpOnlyHostCookie',
               'browserSessionRegistry', 'sessionRevocation', 'originCheckedLogout',
               'accountWideLogout', 'secureCookieDeletion',
-              'providerTokensWithheldFromBrowser', 'stepUpAssurance'
+              'providerTokensWithheldFromBrowser', 'stepUpAssurance',
+              'forcedReauthentication', 'boundedFreshAuthentication', 'reviewedAcrValues'
           ]:
               assert controls.get(control) is True, (control, readiness)
           assert readiness.get('missingConfiguration') == [
@@ -245,5 +246,5 @@ jobs:
             echo "- Browser logout: $API_URL/auth/v1/logout"
             echo "- Signed pilot session: $API_URL/pilot/v1/sessions/admin"
             echo "- Signed scoped admin snapshot: $API_URL/pilot/v1/snapshots/admin"
-            echo '- Scope: fail-closed OIDC discovery/JWKS caching, signing-key rotation controls, origin-checked logout and secure cookie deletion are verified; real login remains disabled until approved provider endpoints, cache, database binding, web origins and secrets are configured.'
+            echo '- Scope: fail-closed provider cache/key rotation, forced reauthentication and bounded fresh AAL2 step-up controls are verified; real login remains disabled until approved provider endpoints, cache, database binding, web origins and secrets are configured.'
           } >> "$GITHUB_STEP_SUMMARY"

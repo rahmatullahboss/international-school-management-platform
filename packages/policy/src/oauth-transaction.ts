@@ -7,6 +7,16 @@ const MINIMUM_SECRET_LENGTH = 32;
 const DEFAULT_TRANSACTION_TTL_SECONDS = 5 * 60;
 const MAXIMUM_TRANSACTION_TTL_SECONDS = 10 * 60;
 const RANDOM_BYTE_LENGTH = 32;
+const DEFAULT_STEP_UP_FRESHNESS_SECONDS = 5 * 60;
+const MAX_STEP_UP_FRESHNESS_SECONDS = 5 * 60;
+const MAX_ACR_VALUES = 5;
+const MAX_ACR_VALUE_LENGTH = 256;
+
+export interface OidcStepUpRequest {
+  readonly assurance: 'aal2';
+  readonly freshnessSeconds?: number;
+  readonly acrValues?: readonly string[];
+}
 
 export interface OAuthTransactionClaims {
   readonly version: 1;
@@ -19,6 +29,9 @@ export interface OAuthTransactionClaims {
   readonly codeVerifier: string;
   readonly returnTo: string;
   readonly requireAuthorizationResponseIssuer: boolean;
+  readonly requestedAssurance?: 'aal2';
+  readonly stepUpFreshnessSeconds?: number;
+  readonly acrValues?: readonly string[];
   readonly issuedAt: number;
   readonly expiresAt: number;
 }
@@ -28,6 +41,7 @@ export interface IssueOAuthTransactionInput {
   readonly secret: string;
   readonly returnTo?: string;
   readonly requireAuthorizationResponseIssuer?: boolean;
+  readonly stepUp?: OidcStepUpRequest;
   readonly now?: number;
   readonly ttlSeconds?: number;
 }
@@ -138,6 +152,41 @@ function safeReturnPath(value: string | undefined): string | undefined {
   }
 }
 
+function hasControlCharacter(value: string): boolean {
+  for (let index = 0; index < value.length; index += 1) {
+    const code = value.charCodeAt(index);
+    if (code < 0x20 || code === 0x7f) return true;
+  }
+  return false;
+}
+
+function validAcrValues(values: readonly string[] | undefined): boolean {
+  return (
+    values === undefined ||
+    (values.length > 0 &&
+      values.length <= MAX_ACR_VALUES &&
+      values.every(
+        (value) =>
+          value.length > 0 &&
+          value.length <= MAX_ACR_VALUE_LENGTH &&
+          !/\s/u.test(value) &&
+          !hasControlCharacter(value),
+      ))
+  );
+}
+
+function validStepUpRequest(value: OidcStepUpRequest | undefined): boolean {
+  if (value === undefined) return true;
+  const freshnessSeconds = value.freshnessSeconds ?? DEFAULT_STEP_UP_FRESHNESS_SECONDS;
+  return (
+    value.assurance === 'aal2' &&
+    Number.isInteger(freshnessSeconds) &&
+    freshnessSeconds >= 1 &&
+    freshnessSeconds <= MAX_STEP_UP_FRESHNESS_SECONDS &&
+    validAcrValues(value.acrValues)
+  );
+}
+
 function transactionCookie(token: string, maxAge: number): string {
   return `${OAUTH_TRANSACTION_COOKIE_NAME}=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}`;
 }
@@ -182,6 +231,18 @@ function parseClaims(value: unknown): OAuthTransactionClaims | undefined {
     typeof value.returnTo !== 'string' ||
     safeReturnPath(value.returnTo) !== value.returnTo ||
     typeof value.requireAuthorizationResponseIssuer !== 'boolean' ||
+    (value.requestedAssurance !== undefined && value.requestedAssurance !== 'aal2') ||
+    (value.stepUpFreshnessSeconds !== undefined &&
+      (typeof value.stepUpFreshnessSeconds !== 'number' ||
+        !Number.isInteger(value.stepUpFreshnessSeconds) ||
+        value.stepUpFreshnessSeconds < 1 ||
+        value.stepUpFreshnessSeconds > MAX_STEP_UP_FRESHNESS_SECONDS)) ||
+    (value.acrValues !== undefined &&
+      (!Array.isArray(value.acrValues) ||
+        !value.acrValues.every((entry) => typeof entry === 'string') ||
+        !validAcrValues(value.acrValues))) ||
+    (value.requestedAssurance === undefined) !== (value.stepUpFreshnessSeconds === undefined) ||
+    (value.requestedAssurance === undefined && value.acrValues !== undefined) ||
     typeof value.issuedAt !== 'number' ||
     !Number.isInteger(value.issuedAt) ||
     typeof value.expiresAt !== 'number' ||
@@ -206,6 +267,7 @@ export async function issueOAuthTransaction(
   const ttlSeconds = input.ttlSeconds ?? DEFAULT_TRANSACTION_TTL_SECONDS;
   if (
     input.secret.length < MINIMUM_SECRET_LENGTH ||
+    !validStepUpRequest(input.stepUp) ||
     !Number.isInteger(ttlSeconds) ||
     ttlSeconds < 60 ||
     ttlSeconds > MAXIMUM_TRANSACTION_TTL_SECONDS
@@ -231,6 +293,16 @@ export async function issueOAuthTransaction(
     codeVerifier: verifier,
     returnTo,
     requireAuthorizationResponseIssuer: input.requireAuthorizationResponseIssuer ?? false,
+    ...(input.stepUp === undefined
+      ? {}
+      : {
+          requestedAssurance: input.stepUp.assurance,
+          stepUpFreshnessSeconds:
+            input.stepUp.freshnessSeconds ?? DEFAULT_STEP_UP_FRESHNESS_SECONDS,
+          ...(input.stepUp.acrValues === undefined
+            ? {}
+            : { acrValues: [...input.stepUp.acrValues] }),
+        }),
     issuedAt,
     expiresAt: issuedAt + ttlSeconds,
   };
@@ -251,6 +323,13 @@ export async function issueOAuthTransaction(
   authorizationUrl.searchParams.set('nonce', transaction.nonce);
   authorizationUrl.searchParams.set('code_challenge', challenge);
   authorizationUrl.searchParams.set('code_challenge_method', 'S256');
+  if (input.stepUp !== undefined) {
+    authorizationUrl.searchParams.set('prompt', 'login');
+    authorizationUrl.searchParams.set('max_age', '0');
+    if (input.stepUp.acrValues !== undefined) {
+      authorizationUrl.searchParams.set('acr_values', input.stepUp.acrValues.join(' '));
+    }
+  }
 
   return {
     ok: true,

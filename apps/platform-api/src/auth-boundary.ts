@@ -74,6 +74,9 @@ export interface AuthReadiness {
     readonly secureCookieDeletion: true;
     readonly providerTokensWithheldFromBrowser: true;
     readonly stepUpAssurance: true;
+    readonly forcedReauthentication: true;
+    readonly boundedFreshAuthentication: true;
+    readonly reviewedAcrValues: true;
   };
   readonly missingConfiguration: readonly AuthReadinessRequirement[];
 }
@@ -255,6 +258,9 @@ export function resolveAuthReadiness(bindings: AuthBindings): AuthReadiness {
       secureCookieDeletion: true,
       providerTokensWithheldFromBrowser: true,
       stepUpAssurance: true,
+      forcedReauthentication: true,
+      boundedFreshAuthentication: true,
+      reviewedAcrValues: true,
     },
     missingConfiguration,
   };

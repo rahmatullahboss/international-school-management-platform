@@ -343,7 +343,8 @@ export async function verifyOidcIdToken(
   }
   if (
     claims.iat > nowSeconds + skew ||
-    (claims.nbf !== undefined && claims.nbf > nowSeconds + skew)
+    (claims.nbf !== undefined && claims.nbf > nowSeconds + skew) ||
+    (claims.auth_time !== undefined && claims.auth_time > nowSeconds + skew)
   ) {
     return failure('oidc_token_not_yet_valid', 'The OIDC ID token is not yet valid.');
   }

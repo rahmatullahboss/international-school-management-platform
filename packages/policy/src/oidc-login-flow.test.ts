@@ -86,7 +86,13 @@ function activeMembership(): MembershipResolution {
   };
 }
 
-async function preparedFlow(options: { nonceOverride?: string } = {}): Promise<{
+async function preparedFlow(
+  options: {
+    nonceOverride?: string;
+    stepUp?: unknown;
+    tokenOverrides?: Record<string, unknown>;
+  } = {},
+): Promise<{
   state: string;
   cookie: string;
   fetcher: ReturnType<typeof vi.fn<typeof fetch>>;
@@ -95,14 +101,15 @@ async function preparedFlow(options: { nonceOverride?: string } = {}): Promise<{
   const started = await beginOidcLogin({
     configuration: flowConfiguration,
     returnTo: '/admin/academics',
+    ...(options.stepUp === undefined ? {} : { stepUp: options.stepUp }),
     now,
-  });
+  } as Parameters<typeof beginOidcLogin>[0]);
   if (!started.ok) throw new Error(started.message);
   const authorizationUrl = new URL(started.authorizationUrl);
   const state = authorizationUrl.searchParams.get('state');
   const nonce = authorizationUrl.searchParams.get('nonce');
   if (state === null || nonce === null) throw new Error('Expected OAuth state and nonce.');
-  const signedIdToken = await idToken(options.nonceOverride ?? nonce);
+  const signedIdToken = await idToken(options.nonceOverride ?? nonce, options.tokenOverrides);
   const fetcher = vi.fn<typeof fetch>(async (input) => {
     await Promise.resolve();
     const url =
@@ -205,6 +212,66 @@ describe('OIDC login flow orchestration', () => {
     expect(JSON.stringify(result)).not.toContain('server-refresh-token');
     expect(JSON.stringify(result)).not.toContain('signed.id.token');
     expect(prepared.fetcher).toHaveBeenCalledTimes(2);
+  });
+
+  it('accepts only fresh AAL2 authentication for a step-up transaction', async () => {
+    const prepared = await preparedFlow({
+      stepUp: {
+        assurance: 'aal2',
+        freshnessSeconds: 300,
+        acrValues: ['urn:school:aal2'],
+      },
+    });
+    const result = await completeOidcLogin({
+      configuration: flowConfiguration,
+      callback: {
+        code: 'authorization-code',
+        state: prepared.state,
+        issuer: flowConfiguration.provider.configuration.issuer,
+      },
+      cookieHeader: prepared.cookie,
+      dependencies: dependencies(prepared),
+      now,
+    });
+
+    expect(result).toMatchObject({
+      ok: true,
+      session: { assurance: 'aal2', authenticationTime: nowSeconds - 30 },
+    });
+  });
+
+  it('denies stale or AAL1 authentication for a step-up transaction', async () => {
+    for (const tokenOverrides of [
+      { auth_time: nowSeconds - 301 },
+      { auth_time: nowSeconds - 30, acr: 'urn:school:aal1', amr: ['pwd'] },
+      { auth_time: undefined },
+    ]) {
+      const prepared = await preparedFlow({
+        stepUp: {
+          assurance: 'aal2',
+          freshnessSeconds: 300,
+          acrValues: ['urn:school:aal2'],
+        },
+        tokenOverrides,
+      });
+      await expect(
+        completeOidcLogin({
+          configuration: flowConfiguration,
+          callback: {
+            code: 'authorization-code',
+            state: prepared.state,
+            issuer: flowConfiguration.provider.configuration.issuer,
+          },
+          cookieHeader: prepared.cookie,
+          dependencies: dependencies(prepared),
+          now,
+        }),
+      ).resolves.toMatchObject({
+        ok: false,
+        status: 401,
+        code: 'oidc_step_up_required',
+      });
+    }
   });
 
   it('denies replay before another provider request is made', async () => {
