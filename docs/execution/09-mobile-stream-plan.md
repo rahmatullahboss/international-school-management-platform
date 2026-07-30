@@ -2,7 +2,7 @@
 
 ## Status
 
-Milestones 1 through 5 have passed on the client/native side. Family read journeys and capability-scoped document, form, guardian-consent and conversation production journeys are verified. Teacher Today, assigned roster and encrypted attendance-draft production journeys are verified. Durable sync includes platform-backed AES-GCM persistence, secure key lifecycle, account/school purge, operation-journal reconciliation and production Staff queue/transport UI. Milestone 6 now includes a verified privacy-minimised notification envelope, provider-neutral notification inbox and capability-safe Family/Staff launch and runtime routing. Native Firebase/APNs adapters, notification permission and token lifecycle, secure-document exchange and step-up completion remain. All proposed mobile endpoints remain server-owned and are not live.
+Milestones 1 through 5 have passed on the client/native side. Family read journeys and capability-scoped document, form, guardian-consent and conversation production journeys are verified. Teacher Today, assigned roster and encrypted attendance-draft production journeys are verified. Durable sync includes platform-backed AES-GCM persistence, secure key lifecycle, account/school purge, operation-journal reconciliation and production Staff queue/transport UI. Milestone 6 now includes a verified privacy-minimised notification envelope, provider-neutral notification inbox and capability-safe Family/Staff launch and runtime routing. Native Firebase/APNs adapters, strict provider timestamp normalization, notification permission and token lifecycle, secure-document exchange and step-up completion remain. All proposed mobile endpoints remain server-owned and are not live.
 
 ## Execution identity
 
@@ -53,7 +53,7 @@ Any backend API, notification, identity or shared platform contract change requi
    - Platform-backed AES-GCM file persistence, platform secure-storage key versions, key rotation, tamper quarantine, operation journal and account/school purge.
 6. **Notifications and documents — interaction UI and client routing passed; native delivery and exchange remain**
    - Device registration contracts, privacy-minimised notification envelopes, provider-neutral launch/runtime inbox, exact capability-safe routes, documents, forms, guardian consent and conversations.
-   - Native Firebase/APNs adapters, notification permission and token lifecycle, native secure-document transfer, step-up completion and user notification preferences remain.
+   - Native Firebase/APNs adapters, explicit-offset timestamp normalization, notification permission and token lifecycle, native secure-document transfer, step-up completion and user notification preferences remain.
 7. **Security, accessibility and release verification — pending**
    - Mobile threat model, restricted-data cache rules, step-up authentication, localization/RTL, text scaling, screen readers, performance, Android/iOS integration tests and store-release evidence.
 
@@ -177,4 +177,4 @@ MOB-01 may define and test clients, domain contracts and fail-closed UI states. 
 
 ## Exact next action
 
-Add native Firebase/APNs adapters and notification permission, installation-token refresh and revocation lifecycle on top of the verified provider-neutral inbox without committing provider secrets or activating server endpoints. Then implement native secure-document exchange with step-up authentication and explicit no-store handling. After that, complete restricted-data threat-model evidence, accessibility, localization/RTL, text-scaling and screen-reader verification, Android/iOS integration tests and store-release evidence. Bootstrap, Family, Teacher, device-session, notification and sync endpoint proposals must still pass the existing server-module ownership process before live account data is used.
+Add native Firebase/APNs adapters with explicit-offset timestamp normalization and notification permission, installation-token refresh and revocation lifecycle on top of the verified provider-neutral inbox without committing provider secrets or activating server endpoints. Then implement native secure-document exchange with step-up authentication and explicit no-store handling. After that, complete restricted-data threat-model evidence, accessibility, localization/RTL, text-scaling and screen-reader verification, Android/iOS integration tests and store-release evidence. Bootstrap, Family, Teacher, device-session, notification and sync endpoint proposals must still pass the existing server-module ownership process before live account data is used.
