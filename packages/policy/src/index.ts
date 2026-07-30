@@ -30,6 +30,20 @@ export type {
 } from './membership.js';
 export { MembershipDirectory } from './membership.js';
 export type {
+  IssueOAuthTransactionInput,
+  OAuthAuthorizationRequest,
+  OAuthCallbackVerificationResult,
+  OAuthTransactionClaims,
+  OAuthTransactionIssueResult,
+  VerifyOAuthCallbackInput,
+} from './oauth-transaction.js';
+export {
+  OAUTH_TRANSACTION_COOKIE_NAME,
+  clearOAuthTransactionCookie,
+  issueOAuthTransaction,
+  verifyOAuthCallbackTransaction,
+} from './oauth-transaction.js';
+export type {
   OidcIdentity,
   OidcJsonWebKey,
   OidcJsonWebKeySet,
