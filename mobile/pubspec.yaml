@@ -14,6 +14,7 @@ workspace:
   - packages/design_system
   - packages/family_domain
   - packages/mobile_core
+  - packages/native_notifications
   - packages/staff_domain
   - packages/sync_engine
   - packages/sync_storage

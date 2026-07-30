@@ -30,6 +30,22 @@ void main() {
     );
   });
 
+  test('requires explicit offsets for notification timestamps', () {
+    expect(
+      () => MobileNotificationEnvelope.fromData({
+        ...familyData(kind: MobileNotificationKind.familyHome),
+        'issuedAt': '2026-07-30T06:00:00',
+      }),
+      throwsA(
+        isA<MobileNotificationContractException>().having(
+          (error) => error.code,
+          'code',
+          'MOBILE_NOTIFICATION_DATETIME_OFFSET_REQUIRED:issuedAt',
+        ),
+      ),
+    );
+  });
+
   test('routes Family forms only inside exact authorized scope', () {
     final envelope = MobileNotificationEnvelope.fromData(
       familyData(

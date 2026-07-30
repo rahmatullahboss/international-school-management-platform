@@ -18,6 +18,7 @@ dependencies:
   school_authentication: ^0.1.0
   school_design_system: ^0.1.0
   school_mobile_core: ^0.1.0
+  school_native_notifications: ^0.1.0
   school_staff_domain: ^0.1.0
   school_teacher_sync: ^0.1.0
   school_sync_storage: ^0.1.0
