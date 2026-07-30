@@ -1,9 +1,9 @@
 import 'dart:async';
 
+import 'package:flutter_test/flutter_test.dart';
 import 'package:school_api_client/device_session_api.dart';
 import 'package:school_mobile_core/notification_routing.dart';
 import 'package:school_native_notifications/school_native_notifications.dart';
-import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('normalizes only timestamps with explicit offsets', () {
