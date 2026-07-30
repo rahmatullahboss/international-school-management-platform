@@ -86,6 +86,10 @@ function normalizeConfiguredOrigins(value: string | undefined): readonly string[
   return [...unique];
 }
 
+export function hasValidAuthMutationOrigins(allowedOrigins: string | undefined): boolean {
+  return normalizeConfiguredOrigins(allowedOrigins) !== undefined;
+}
+
 export function isAllowedAuthMutationOrigin(
   allowedOrigins: string | undefined,
   requestOrigin: string | undefined,
