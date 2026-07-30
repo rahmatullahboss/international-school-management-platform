@@ -39,6 +39,8 @@ jobs:
           node-version: '22.22.2'
           cache: npm
       - run: npm ci
+      - name: Align AUTH-08 authoring with the current session test shape
+        run: python3 scripts/fix_auth_08_http_authoring.py
       - name: Add AUTH-08 HTTP permission regression tests
         run: python3 scripts/implement_auth_08_http.py test
       - name: Prove HTTP permission regressions fail before implementation
@@ -55,7 +57,7 @@ jobs:
           grep -q 'keeps database permission evaluation fail-closed without approved bindings' auth-08-http-red.log
       - name: Apply AUTH-08 HTTP permission implementation
         run: python3 scripts/implement_auth_08_http.py implementation
-      - run: rm scripts/implement_auth_08_http.py
+      - run: rm scripts/implement_auth_08_http.py scripts/fix_auth_08_http_authoring.py
       - run: npm run format
       - run: npm run lint -- --fix
       - run: npm run format
