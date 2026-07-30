@@ -65,6 +65,13 @@ class _FamilyProductionAppState extends State<FamilyProductionApp> {
           appName: 'School Family',
           reasonCode: configurationReason,
         ),
+        localeListResolutionCallback:
+            SchoolLocalizationConfiguration.localeListResolutionCallback,
+        localizationsDelegates:
+            SchoolLocalizationConfiguration.localizationsDelegates,
+        onGenerateTitle: (context) =>
+            SchoolShellStrings.of(context).familyAppName,
+        supportedLocales: SchoolLocalizationConfiguration.supportedLocales,
         theme: SchoolTheme.light(),
       );
     }
@@ -94,6 +101,14 @@ class _FamilyProductionAppState extends State<FamilyProductionApp> {
                 appName: 'School Family',
                 reasonCode: 'FAMILY_REPOSITORY_CONFIGURATION_REQUIRED',
               ),
+              localeListResolutionCallback:
+                  SchoolLocalizationConfiguration.localeListResolutionCallback,
+              localizationsDelegates:
+                  SchoolLocalizationConfiguration.localizationsDelegates,
+              onGenerateTitle: (context) =>
+                  SchoolShellStrings.of(context).familyAppName,
+              supportedLocales:
+                  SchoolLocalizationConfiguration.supportedLocales,
               theme: SchoolTheme.light(),
             );
           }
@@ -117,6 +132,13 @@ class _FamilyProductionAppState extends State<FamilyProductionApp> {
             onSignOut: coordinator.signOut,
             state: state,
           ),
+          localeListResolutionCallback:
+              SchoolLocalizationConfiguration.localeListResolutionCallback,
+          localizationsDelegates:
+              SchoolLocalizationConfiguration.localizationsDelegates,
+          onGenerateTitle: (context) =>
+              SchoolShellStrings.of(context).familyAppName,
+          supportedLocales: SchoolLocalizationConfiguration.supportedLocales,
           theme: SchoolTheme.light(),
         );
       },
@@ -408,9 +430,14 @@ class _AuthorizedFamilyAppState extends State<_AuthorizedFamilyApp> {
   @override
   Widget build(BuildContext context) => MaterialApp.router(
     debugShowCheckedModeBanner: false,
+    localeListResolutionCallback:
+        SchoolLocalizationConfiguration.localeListResolutionCallback,
+    localizationsDelegates:
+        SchoolLocalizationConfiguration.localizationsDelegates,
+    onGenerateTitle: (context) => SchoolShellStrings.of(context).familyAppName,
     routerConfig: _router,
+    supportedLocales: SchoolLocalizationConfiguration.supportedLocales,
     theme: SchoolTheme.light(),
-    title: 'School Family',
   );
 
   @override
@@ -442,20 +469,21 @@ class _AuthorizedFamilyShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = SchoolShellStrings.of(context);
     final paths = <String>['/'];
     final destinations = <SchoolDestination>[
-      const SchoolDestination(
+      SchoolDestination(
         icon: Icons.home_outlined,
-        label: 'Home',
+        label: strings.home,
         selectedIcon: Icons.home,
       ),
     ];
     if (session.can(SchoolCapability.attendanceRead)) {
       paths.add('/attendance');
       destinations.add(
-        const SchoolDestination(
+        SchoolDestination(
           icon: Icons.fact_check_outlined,
-          label: 'Attendance',
+          label: strings.attendance,
           selectedIcon: Icons.fact_check,
         ),
       );
@@ -463,9 +491,9 @@ class _AuthorizedFamilyShell extends StatelessWidget {
     if (session.can(SchoolCapability.gradesReadPublished)) {
       paths.add('/results');
       destinations.add(
-        const SchoolDestination(
+        SchoolDestination(
           icon: Icons.school_outlined,
-          label: 'Results',
+          label: strings.results,
           selectedIcon: Icons.school,
         ),
       );
@@ -474,9 +502,9 @@ class _AuthorizedFamilyShell extends StatelessWidget {
         session.can(SchoolCapability.billingRead)) {
       paths.add('/fees');
       destinations.add(
-        const SchoolDestination(
+        SchoolDestination(
           icon: Icons.receipt_long_outlined,
-          label: 'Fees',
+          label: strings.fees,
           selectedIcon: Icons.receipt_long,
         ),
       );
@@ -486,9 +514,9 @@ class _AuthorizedFamilyShell extends StatelessWidget {
             session.can(SchoolCapability.formsConsent))) {
       paths.add('/services');
       destinations.add(
-        const SchoolDestination(
+        SchoolDestination(
           icon: Icons.dashboard_customize_outlined,
-          label: 'Services',
+          label: strings.services,
           selectedIcon: Icons.dashboard_customize,
         ),
       );
@@ -498,7 +526,7 @@ class _AuthorizedFamilyShell extends StatelessWidget {
       destinations.add(
         SchoolDestination(
           icon: Icons.forum_outlined,
-          label: interactionsAvailable ? 'Conversations' : 'Messages',
+          label: interactionsAvailable ? strings.conversations : strings.messages,
           selectedIcon: Icons.forum,
         ),
       );
@@ -533,14 +561,15 @@ class _AuthorizedFamilyShell extends StatelessWidget {
                       (student) => PopupMenuItem(
                         value: student.studentId,
                         child: Text(
-                          '${student.displayName} · ${student.gradeLabel}',
+                          '${SchoolBidirectionalText.isolate(student.displayName)} · '
+                          '${SchoolBidirectionalText.isolate(student.gradeLabel)}',
                         ),
                       ),
                     )
                     .toList(growable: false),
                 onSelected: (studentId) =>
                     unawaited(journey.selectStudent(studentId)),
-                tooltip: 'Switch student',
+                tooltip: strings.switchStudent,
               ),
             if (availablePersonas.length > 1)
               PopupMenuButton<SchoolPersona>(
@@ -550,17 +579,21 @@ class _AuthorizedFamilyShell extends StatelessWidget {
                     .map(
                       (persona) => PopupMenuItem(
                         value: persona,
-                        child: Text('${persona.label} profile'),
+                        child: Text(
+                          persona == SchoolPersona.guardian
+                              ? strings.guardianProfile
+                              : strings.studentProfile,
+                        ),
                       ),
                     )
                     .toList(growable: false),
                 onSelected: coordinator.switchPersona,
-                tooltip: 'Switch role',
+                tooltip: strings.switchRole,
               ),
             IconButton(
               icon: const Icon(Icons.logout),
               onPressed: () => unawaited(coordinator.signOut()),
-              tooltip: 'Sign out',
+              tooltip: strings.signOut,
             ),
           ],
           body: child,
@@ -571,7 +604,9 @@ class _AuthorizedFamilyShell extends StatelessWidget {
               .clamp(0, paths.length - 1)
               .toInt(),
           status: _journeyStatus(journey.state),
-          title: 'School Family · ${session.activePersona.label}',
+          title:
+              '${strings.familyAppName} · '
+              '${session.activePersona == SchoolPersona.guardian ? strings.guardianProfile : strings.studentProfile}',
         );
       },
     );
@@ -586,7 +621,9 @@ class _AuthorizedFamilyShell extends StatelessWidget {
     FamilyJourneyPhase.ready => SchoolStatusBanner(
       label: 'Published information',
       message:
-          'Showing ${state.directory!.activeStudent.displayName} · ${state.directory!.activeStudent.gradeLabel}',
+          'Showing '
+          '${SchoolBidirectionalText.isolate(state.directory!.activeStudent.displayName)} · '
+          '${SchoolBidirectionalText.isolate(state.directory!.activeStudent.gradeLabel)}',
       tone: SchoolStatusTone.success,
     ),
     FamilyJourneyPhase.failed => const SchoolStatusBanner(
@@ -692,7 +729,7 @@ class _FamilyHomeScreen extends StatelessWidget {
           Icons.fact_check_outlined,
           'Review attendance',
           '/attendance',
-          dashboard.attendance!.summaryLabel,
+          SchoolBidirectionalText.isolate(dashboard.attendance!.summaryLabel),
         );
       }
       if (dashboard.publishedResults.isNotEmpty) {
@@ -708,7 +745,7 @@ class _FamilyHomeScreen extends StatelessWidget {
           Icons.receipt_long_outlined,
           'Review fees and receipts',
           '/fees',
-          'Invoice ${dashboard.fees!.invoiceReference}',
+          'Invoice ${SchoolBidirectionalText.isolate(dashboard.fees!.invoiceReference)}',
         );
       }
       if (interactionsAvailable &&
@@ -734,8 +771,11 @@ class _FamilyHomeScreen extends StatelessWidget {
         children: [
           SchoolPageSection(
             description:
-                '${dashboard.student.gradeLabel} · ${dashboard.student.relationshipLabel}',
-            title: dashboard.student.displayName,
+                '${SchoolBidirectionalText.isolate(dashboard.student.gradeLabel)} · '
+                '${SchoolBidirectionalText.isolate(dashboard.student.relationshipLabel)}',
+            title: SchoolBidirectionalText.isolate(
+              dashboard.student.displayName,
+            ),
             child: SchoolPanel(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -752,8 +792,12 @@ class _FamilyHomeScreen extends StatelessWidget {
                       ListTile(
                         contentPadding: EdgeInsets.zero,
                         leading: const Icon(Icons.schedule_outlined),
-                        title: Text(item.subjectLabel),
-                        subtitle: Text(item.locationLabel),
+                        title: Text(
+                          SchoolBidirectionalText.isolate(item.subjectLabel),
+                        ),
+                        subtitle: Text(
+                          SchoolBidirectionalText.isolate(item.locationLabel),
+                        ),
                       ),
                   if (links.isNotEmpty) const Divider(),
                   ...links,
@@ -784,7 +828,7 @@ class _FamilyAttendanceScreen extends StatelessWidget {
             description:
                 'Published sessions only. Approved corrections may change these totals.',
             title: session.activePersona == SchoolPersona.guardian
-                ? '${dashboard.student.displayName} attendance'
+                ? '${SchoolBidirectionalText.isolate(dashboard.student.displayName)} attendance'
                 : 'My attendance',
             child: SchoolPanel(
               child: attendance == null
@@ -793,21 +837,26 @@ class _FamilyAttendanceScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Text(
-                          attendance.summaryLabel,
+                          SchoolBidirectionalText.isolate(
+                            attendance.summaryLabel,
+                          ),
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                         const Divider(height: SchoolSpacing.lg),
                         _countTile(
+                          context,
                           Icons.check_circle_outline,
                           'Present',
                           attendance.presentSessions,
                         ),
                         _countTile(
+                          context,
                           Icons.access_time_outlined,
                           'Late',
                           attendance.lateSessions,
                         ),
                         _countTile(
+                          context,
                           Icons.event_busy_outlined,
                           'Absent',
                           attendance.absentSessions,
@@ -824,11 +873,23 @@ class _FamilyAttendanceScreen extends StatelessWidget {
     },
   );
 
-  Widget _countTile(IconData icon, String label, int count) => ListTile(
-    contentPadding: EdgeInsets.zero,
-    leading: Icon(icon),
-    title: Text('$label · $count session(s)'),
-  );
+  Widget _countTile(
+    BuildContext context,
+    IconData icon,
+    String label,
+    int count,
+  ) {
+    final category = SchoolCardinalPluralRules.categoryFor(
+      Localizations.localeOf(context),
+      count,
+    );
+    final noun = category == SchoolPluralCategory.one ? 'session' : 'sessions';
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(icon),
+      title: Text('$label · $count $noun'),
+    );
+  }
 }
 
 class _FamilyResultsReadScreen extends StatelessWidget {
@@ -844,7 +905,8 @@ class _FamilyResultsReadScreen extends StatelessWidget {
         SchoolPageSection(
           description:
               'Only results released by the academic publication workflow are shown.',
-          title: '${dashboard.student.displayName} · Published results',
+          title:
+              '${SchoolBidirectionalText.isolate(dashboard.student.displayName)} · Published results',
           child: SchoolPanel(
             child: dashboard.publishedResults.isEmpty
                 ? const Text('No published results are available.')
@@ -855,9 +917,14 @@ class _FamilyResultsReadScreen extends StatelessWidget {
                           contentPadding: EdgeInsets.zero,
                           leading: const Icon(Icons.verified_outlined),
                           title: Text(
-                            '${result.subjectLabel} · ${result.gradeLabel}',
+                            '${SchoolBidirectionalText.isolate(result.subjectLabel)} · '
+                            '${SchoolBidirectionalText.isolate(result.gradeLabel)}',
                           ),
-                          subtitle: Text(result.assessmentLabel),
+                          subtitle: Text(
+                            SchoolBidirectionalText.isolate(
+                              result.assessmentLabel,
+                            ),
+                          ),
                         ),
                     ],
                   ),
@@ -891,20 +958,26 @@ class _FamilyFeesReadScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Text(
-                          'Outstanding · ${_moneyLabel(fees.outstanding)}',
+                          'Outstanding · ${_moneyLabel(context, fees.outstanding)}',
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                         const SizedBox(height: SchoolSpacing.xs),
-                        Text('Invoice ${fees.invoiceReference}'),
+                        Text(
+                          'Invoice ${SchoolBidirectionalText.isolate(fees.invoiceReference)}',
+                        ),
                         if (fees.lastReceipt != null) ...[
                           const Divider(height: SchoolSpacing.lg),
                           ListTile(
                             contentPadding: EdgeInsets.zero,
                             leading: const Icon(Icons.receipt_outlined),
                             title: Text(
-                              'Last receipt · ${_moneyLabel(fees.lastReceipt!)}',
+                              'Last receipt · ${_moneyLabel(context, fees.lastReceipt!)}',
                             ),
-                            subtitle: Text(fees.lastReceiptReference!),
+                            subtitle: Text(
+                              SchoolBidirectionalText.isolate(
+                                fees.lastReceiptReference!,
+                              ),
+                            ),
                           ),
                         ],
                       ],
@@ -916,11 +989,13 @@ class _FamilyFeesReadScreen extends StatelessWidget {
     },
   );
 
-  String _moneyLabel(FamilyMoneyAmount amount) {
-    final major = amount.minorUnits ~/ 100;
-    final fraction = (amount.minorUnits % 100).toString().padLeft(2, '0');
-    return '${amount.currencyCode} $major.$fraction';
-  }
+  String _moneyLabel(BuildContext context, FamilyMoneyAmount amount) =>
+      SchoolExactMoneyFormatter.format(
+        currencyCode: amount.currencyCode,
+        fractionDigits: 2,
+        locale: Localizations.localeOf(context),
+        minorUnits: amount.minorUnits,
+      );
 }
 
 class _FamilyMessagesReadScreen extends StatelessWidget {
