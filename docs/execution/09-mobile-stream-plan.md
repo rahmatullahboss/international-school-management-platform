@@ -2,7 +2,7 @@
 
 ## Status
 
-Milestones 1 through 5 have passed on the client/native side. Family read journeys and capability-scoped document, form, guardian-consent and conversation production journeys are verified. Teacher Today, assigned roster and encrypted attendance-draft production journeys are verified. Durable sync includes platform-backed AES-GCM persistence, secure key lifecycle, account/school purge, operation-journal reconciliation and production Staff queue/transport UI. Milestone 6 now includes a verified privacy-minimised notification envelope, provider-neutral notification inbox and capability-safe Family/Staff launch and runtime routing. Native Firebase/APNs adapters, strict provider timestamp normalization, notification permission and token lifecycle, secure-document exchange and step-up completion remain. All proposed mobile endpoints remain server-owned and are not live.
+Milestones 1 through 5 have passed on the client/native side. Family read journeys and capability-scoped document, form, guardian-consent and conversation production journeys are verified. Teacher Today, assigned roster and encrypted attendance-draft production journeys are verified. Durable sync includes platform-backed AES-GCM persistence, secure key lifecycle, account/school purge, operation-journal reconciliation and production Staff queue/transport UI. Milestone 6 now includes verified privacy-minimised notification routing plus a secret-free Firebase/APNs adapter boundary with explicit-offset timestamp normalization, permission handling and device-session token rotation/revocation lifecycle. Firebase/APNs project configuration, live notification issuance, native secure-document exchange, step-up completion and user preferences remain. All proposed mobile endpoints remain server-owned and are not live.
 
 ## Execution identity
 
@@ -51,9 +51,10 @@ Any backend API, notification, identity or shared platform contract change requi
 5. **Durable offline sync — client/native passed; live server delta activation remains**
    - Encrypted payload envelopes, idempotent operation queue, scoped retry, delta cursor, duplicate handling, conflict, rejection and reconciliation states.
    - Platform-backed AES-GCM file persistence, platform secure-storage key versions, key rotation, tamper quarantine, operation journal and account/school purge.
-6. **Notifications and documents — interaction UI and client routing passed; native delivery and exchange remain**
+6. **Notifications and documents — routing and secret-free provider lifecycle passed; secure exchange and live activation remain**
    - Device registration contracts, privacy-minimised notification envelopes, provider-neutral launch/runtime inbox, exact capability-safe routes, documents, forms, guardian consent and conversations.
-   - Native Firebase/APNs adapters, explicit-offset timestamp normalization, notification permission and token lifecycle, native secure-document transfer, step-up completion and user notification preferences remain.
+   - Secret-free Firebase/APNs adapters, explicit-offset timestamp normalization, permission handling and installation-token registration/refresh/revocation lifecycle are verified.
+   - Firebase/APNs project configuration and credentials, live notification issuance, native secure-document transfer, step-up completion and user notification preferences remain.
 7. **Security, accessibility and release verification — pending**
    - Mobile threat model, restricted-data cache rules, step-up authentication, localization/RTL, text scaling, screen readers, performance, Android/iOS integration tests and store-release evidence.
 
@@ -165,6 +166,23 @@ Any backend API, notification, identity or shared platform contract change requi
 - Real student data used: no.
 - Production deployment or database mutation performed: no.
 
+## Checkpoint 8 evidence — secret-free native notification provider lifecycle
+
+- `school_native_notifications` defines an inactive-by-default Firebase Messaging adapter boundary without committing Firebase options, APNs credentials or provider secrets.
+- Adapter creation fails closed unless a Firebase application has already been initialized by an explicitly configured host application.
+- Android credentials use the Firebase Cloud Messaging token. Apple targets use the APNs token, while Firebase token-refresh callbacks trigger a fresh platform credential read.
+- Provider launch and opened-message data is normalized through the existing privacy-minimised envelope. Both `issuedAt` and `expiresAt` require an explicit `Z` or `±HH:MM` offset before UTC normalization.
+- Denied or undetermined notification permission does not register a server device session. An unavailable provider token remains an explicit awaiting-token state.
+- Token rotation registers the new scoped device session before revoking the previous server session. Explicit revocation removes the current server session before deleting the provider token.
+- Push credentials redact token values from diagnostics, and the adapter never accepts provider display titles, message bodies, names, amounts, raw URLs or storage credentials as routable data.
+- Tests cover explicit-offset acceptance and naive-time rejection, malformed provider payload rejection, permission denial, APNs registration, refresh rotation, old/current session revocation and provider-token deletion.
+- Source checkpoint Mobile CI `30525975216` passed all configured analyzers/tests, both Android debug APK builds and artifact upload; root CI `30525975223` passed the complete repository gate. Staging `30525975268` was skipped.
+- Final permanent read-only Mobile CI `30526970294` passed formatting, clean-tree/native guards, every app/shared/domain/storage/teacher-sync/native-notification analyzer and test, both Android debug APK builds and artifact upload.
+- Final root CI `30526970286` passed format, lint, boundaries, typecheck, repository tests, fresh migration replay, live Neon driver, builds, audit/licences/provenance, browser journeys and execution-artifact validation.
+- Cloudflare staging run `30526970393` was skipped; no application deployment occurred.
+- Real student data used: no.
+- Production deployment or database mutation performed: no.
+
 ## Server-owned contract boundary
 
 The following proposed endpoints remain unimplemented and inactive in MOB-01:
@@ -175,8 +193,8 @@ The following proposed endpoints remain unimplemented and inactive in MOB-01:
 - `/v1/mobile/teacher/**`
 - future `/v1/mobile/sync` delta and operation endpoints
 
-MOB-01 may define and test clients, domain contracts and fail-closed UI states. The owning server modules must review and implement authorization, audit, publication/finalization rules, notification issuance, data minimization and persistence.
+MOB-01 may define and test clients, domain contracts and fail-closed UI states. The owning server and platform modules must review and implement authorization, audit, publication/finalization rules, notification issuance, provider project configuration, data minimization and persistence.
 
 ## Exact next action
 
-Add native Firebase/APNs adapters with explicit-offset timestamp normalization and notification permission, installation-token refresh and revocation lifecycle on top of the verified provider-neutral inbox without committing provider secrets or activating server endpoints. Then implement native secure-document exchange with step-up authentication and explicit no-store handling. After that, complete restricted-data threat-model evidence, accessibility, localization/RTL, text-scaling and screen-reader verification, Android/iOS integration tests and store-release evidence. Bootstrap, Family, Teacher, device-session, notification and sync endpoint proposals must still pass the existing server-module ownership process before live account data is used.
+Implement native secure-document exchange with step-up authentication, opaque short-lived grants, explicit no-store handling and lifecycle cleanup without exposing raw URLs, bearer tokens or storage credentials. Then complete restricted-data threat-model evidence, accessibility, localization/RTL, text-scaling and screen-reader verification, Android/iOS integration tests and store-release evidence. Firebase/APNs project configuration, live notification issuance, Bootstrap, Family, Teacher, device-session, notification and sync endpoint proposals must still pass the existing server/platform ownership process before live account data is used.
