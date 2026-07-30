@@ -95,49 +95,43 @@ BEGIN
 END
 $function$;
 
-CREATE OR REPLACE FUNCTION iam.consume_oidc_logout_token(
+CREATE OR REPLACE FUNCTION iam.process_oidc_backchannel_logout(
   p_token_id text,
-  p_provider_issuer text,
-  p_issued_at timestamptz,
-  p_expires_at timestamptz
-)
-RETURNS boolean
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = pg_catalog, iam
-AS $function$
-BEGIN
-  IF length(btrim(p_token_id)) = 0 OR length(p_token_id) > 512
-     OR length(btrim(p_provider_issuer)) = 0
-     OR p_issued_at > clock_timestamp() + interval '1 minute'
-     OR p_issued_at < clock_timestamp() - interval '6 minutes'
-     OR p_expires_at <= clock_timestamp() - interval '1 minute'
-     OR p_expires_at > p_issued_at + interval '10 minutes' THEN RETURN false; END IF;
-  INSERT INTO iam.oidc_logout_token_consumption(provider_issuer, token_id, issued_at, expires_at)
-  VALUES (btrim(p_provider_issuer), btrim(p_token_id), p_issued_at, p_expires_at)
-  ON CONFLICT DO NOTHING;
-  RETURN FOUND;
-END
-$function$;
-
-CREATE OR REPLACE FUNCTION iam.revoke_oidc_provider_sessions(
   p_provider_issuer text,
   p_provider_subject text,
   p_provider_session_id text,
+  p_issued_at timestamptz,
+  p_expires_at timestamptz,
   p_reason text
 )
-RETURNS integer
+RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = pg_catalog, iam
 AS $function$
-DECLARE revoked_count integer;
+DECLARE
+  revoked_count integer;
 BEGIN
-  IF length(btrim(p_provider_issuer)) = 0 OR length(btrim(p_reason)) = 0
+  IF length(btrim(p_token_id)) = 0 OR length(p_token_id) > 512
+     OR length(btrim(p_provider_issuer)) = 0
+     OR length(btrim(p_reason)) = 0
      OR (NULLIF(btrim(p_provider_subject), '') IS NULL AND NULLIF(btrim(p_provider_session_id), '') IS NULL)
-     OR length(coalesce(p_provider_subject, '')) > 512 OR length(coalesce(p_provider_session_id, '')) > 512 THEN
-    RETURN 0;
+     OR length(coalesce(p_provider_subject, '')) > 512
+     OR length(coalesce(p_provider_session_id, '')) > 512
+     OR p_issued_at > clock_timestamp() + interval '1 minute'
+     OR p_issued_at < clock_timestamp() - interval '6 minutes'
+     OR p_expires_at <= clock_timestamp() - interval '1 minute'
+     OR p_expires_at > p_issued_at + interval '10 minutes' THEN
+    RAISE EXCEPTION 'invalid back-channel logout request';
   END IF;
+
+  INSERT INTO iam.oidc_logout_token_consumption(provider_issuer, token_id, issued_at, expires_at)
+  VALUES (btrim(p_provider_issuer), btrim(p_token_id), p_issued_at, p_expires_at)
+  ON CONFLICT DO NOTHING;
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object('replayed', true, 'revokedSessions', 0);
+  END IF;
+
   UPDATE iam.browser_session_registry AS session
   SET revoked_at = clock_timestamp(), revoke_reason = btrim(p_reason)
   FROM iam.oidc_membership_binding AS binding
@@ -145,9 +139,10 @@ BEGIN
     AND binding.provider_issuer = btrim(p_provider_issuer)
     AND (NULLIF(btrim(p_provider_subject), '') IS NULL OR binding.provider_subject = btrim(p_provider_subject))
     AND (NULLIF(btrim(p_provider_session_id), '') IS NULL OR session.provider_session_id = btrim(p_provider_session_id))
-    AND session.revoked_at IS NULL AND session.expires_at > clock_timestamp();
+    AND session.revoked_at IS NULL
+    AND session.expires_at > clock_timestamp();
   GET DIAGNOSTICS revoked_count = ROW_COUNT;
-  RETURN revoked_count;
+  RETURN jsonb_build_object('replayed', false, 'revokedSessions', revoked_count);
 END
 $function$;
 
@@ -168,13 +163,11 @@ END
 $function$;
 
 REVOKE ALL ON FUNCTION iam.register_browser_session(uuid, uuid, uuid, uuid, uuid, text, uuid[], text, timestamptz, timestamptz) FROM PUBLIC;
-REVOKE ALL ON FUNCTION iam.consume_oidc_logout_token(text, text, timestamptz, timestamptz) FROM PUBLIC;
-REVOKE ALL ON FUNCTION iam.revoke_oidc_provider_sessions(text, text, text, text) FROM PUBLIC;
+REVOKE ALL ON FUNCTION iam.process_oidc_backchannel_logout(text, text, text, text, timestamptz, timestamptz, text) FROM PUBLIC;
 REVOKE ALL ON FUNCTION iam.read_oidc_provider_cache(text) FROM PUBLIC;
 REVOKE ALL ON FUNCTION iam.write_oidc_provider_cache(text, jsonb) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION iam.register_browser_session(uuid, uuid, uuid, uuid, uuid, text, uuid[], text, timestamptz, timestamptz) TO app_runtime;
-GRANT EXECUTE ON FUNCTION iam.consume_oidc_logout_token(text, text, timestamptz, timestamptz) TO app_runtime;
-GRANT EXECUTE ON FUNCTION iam.revoke_oidc_provider_sessions(text, text, text, text) TO app_runtime;
+GRANT EXECUTE ON FUNCTION iam.process_oidc_backchannel_logout(text, text, text, text, timestamptz, timestamptz, text) TO app_runtime;
 GRANT EXECUTE ON FUNCTION iam.read_oidc_provider_cache(text) TO app_runtime;
 GRANT EXECUTE ON FUNCTION iam.write_oidc_provider_cache(text, jsonb) TO app_runtime;
 

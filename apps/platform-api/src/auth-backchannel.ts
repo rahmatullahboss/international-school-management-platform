@@ -43,6 +43,13 @@ function isFormContentType(value: string | undefined): boolean {
   return parameters.every((parameter) => parameter === '' || parameter === 'charset=utf-8');
 }
 
+export function isOidcBackchannelDeclaredLengthAllowed(value: string | undefined): boolean {
+  if (value === undefined) return true;
+  if (!/^\d+$/u.test(value)) return false;
+  const length = Number(value);
+  return Number.isSafeInteger(length) && length >= 0 && length <= MAX_REQUEST_LENGTH;
+}
+
 function parseLogoutToken(rawBody: string): string | undefined {
   if (rawBody.length === 0 || rawBody.length > MAX_REQUEST_LENGTH) return undefined;
   const params = new URLSearchParams(rawBody);
@@ -64,8 +71,7 @@ function parseLogoutToken(rawBody: string): string | undefined {
 function processingUnavailable(code: string): boolean {
   return (
     code === 'oidc_backchannel_configuration_invalid' ||
-    code === 'oidc_backchannel_replay_unavailable' ||
-    code === 'oidc_backchannel_revocation_unavailable'
+    code === 'oidc_backchannel_persistence_unavailable'
   );
 }
 
@@ -81,11 +87,8 @@ export async function handleOidcBackchannelLogoutRequest(
     };
   }
   if (!isFormContentType(input.contentType)) return invalidRequest();
-  if (input.contentLength !== undefined) {
-    const length = Number.parseInt(input.contentLength, 10);
-    if (!Number.isSafeInteger(length) || length < 0 || length > MAX_REQUEST_LENGTH) {
-      return invalidRequest();
-    }
+  if (!isOidcBackchannelDeclaredLengthAllowed(input.contentLength)) {
+    return invalidRequest();
   }
   const logoutToken = parseLogoutToken(input.rawBody);
   if (logoutToken === undefined) return invalidRequest();

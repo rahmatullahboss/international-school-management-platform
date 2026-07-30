@@ -75,6 +75,32 @@ function requireCountRow(rows: readonly CountRow[], operation: string): number {
   return row.value;
 }
 
+function requireBackchannelLogoutResult(rows: readonly JsonRow[]): {
+  readonly replayed: boolean;
+  readonly revokedSessions: number;
+} {
+  const row = rows[0];
+  if (rows.length !== 1 || row === undefined || !isRecord(row.value)) {
+    throw new Error('Back-channel logout returned an invalid database response.');
+  }
+  const replayed = row.value.replayed;
+  const revokedSessions = row.value.revokedSessions;
+  if (
+    typeof replayed !== 'boolean' ||
+    typeof revokedSessions !== 'number' ||
+    !Number.isInteger(revokedSessions) ||
+    revokedSessions < 0 ||
+    (replayed && revokedSessions !== 0)
+  ) {
+    throw new Error('Back-channel logout returned an invalid database response.');
+  }
+  return { replayed, revokedSessions };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 function validateMembershipRow(row: MembershipRow): MembershipRow {
   requireUuid(row.membershipId, 'membershipId');
   requireUuid(row.accountId, 'accountId');
@@ -178,26 +204,13 @@ export class DurableAuthStore {
     return requireBooleanRow(rows, 'Browser session registration');
   }
 
-  async consumeBackchannelLogoutToken(claims: OidcBackchannelLogoutClaims): Promise<boolean> {
+  async processBackchannelLogout(
+    claims: OidcBackchannelLogoutClaims,
+    reason: string,
+  ): Promise<{ readonly replayed: boolean; readonly revokedSessions: number }> {
     if (claims.issuer.trim() === '' || claims.tokenId.trim() === '') {
       throw new Error('Logout Token identity is required.');
     }
-    const rows = await this.#database.query<BooleanRow>(
-      `SELECT iam.consume_oidc_logout_token(
-         $1::text,
-         $2::text,
-         to_timestamp($3::double precision),
-         to_timestamp($4::double precision)
-       ) AS value`,
-      [claims.tokenId, claims.issuer, claims.issuedAt, claims.expiresAt],
-    );
-    return requireBooleanRow(rows, 'Logout Token consumption');
-  }
-
-  async revokeProviderSessions(
-    claims: OidcBackchannelLogoutClaims,
-    reason: string,
-  ): Promise<number> {
     if (reason.trim() === '') throw new Error('A revocation reason is required.');
     const subject = requireProviderIdentifier(claims.subject, 'providerSubject');
     const providerSessionId = requireProviderIdentifier(
@@ -207,11 +220,27 @@ export class DurableAuthStore {
     if (subject === null && providerSessionId === null) {
       throw new Error('A provider subject or session id is required.');
     }
-    const rows = await this.#database.query<CountRow>(
-      'SELECT iam.revoke_oidc_provider_sessions($1::text, $2::text, $3::text, $4::text) AS value',
-      [claims.issuer, subject, providerSessionId, reason],
+    const rows = await this.#database.query<JsonRow>(
+      `SELECT iam.process_oidc_backchannel_logout(
+         $1::text,
+         $2::text,
+         $3::text,
+         $4::text,
+         to_timestamp($5::double precision),
+         to_timestamp($6::double precision),
+         $7::text
+       ) AS value`,
+      [
+        claims.tokenId,
+        claims.issuer,
+        subject,
+        providerSessionId,
+        claims.issuedAt,
+        claims.expiresAt,
+        reason,
+      ],
     );
-    return requireCountRow(rows, 'Provider session revocation');
+    return requireBackchannelLogoutResult(rows);
   }
 
   async isSessionActive(sessionId: string): Promise<boolean> {

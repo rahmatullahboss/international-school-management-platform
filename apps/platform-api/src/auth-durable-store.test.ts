@@ -159,11 +159,10 @@ describe('DurableAuthStore', () => {
     await expect(store.revokeAccountSessions(ids.account, 'credential reset')).resolves.toBe(3);
   });
 
-  it('consumes Logout Token ids and revokes exact provider sessions', async () => {
+  it('atomically consumes a Logout Token and revokes exact provider sessions', async () => {
     const query = vi
       .fn()
-      .mockResolvedValueOnce([{ value: true }])
-      .mockResolvedValueOnce([{ value: 2 }]);
+      .mockResolvedValueOnce([{ value: { replayed: false, revokedSessions: 2 } }]);
     const store = new DurableAuthStore({ query });
     const claims = {
       issuer: identity.issuer,
@@ -174,16 +173,17 @@ describe('DurableAuthStore', () => {
       expiresAt: 1_785_382_700,
     };
 
-    await expect(store.consumeBackchannelLogoutToken(claims)).resolves.toBe(true);
     await expect(
-      store.revokeProviderSessions(claims, 'provider back-channel logout'),
-    ).resolves.toBe(2);
-    expect(query.mock.calls[0]?.[0]).toContain('iam.consume_oidc_logout_token');
-    expect(query.mock.calls[1]?.[0]).toContain('iam.revoke_oidc_provider_sessions');
-    expect(query.mock.calls[1]?.[1]).toEqual([
+      store.processBackchannelLogout(claims, 'provider back-channel logout'),
+    ).resolves.toEqual({ replayed: false, revokedSessions: 2 });
+    expect(query.mock.calls[0]?.[0]).toContain('iam.process_oidc_backchannel_logout');
+    expect(query.mock.calls[0]?.[1]).toEqual([
+      'logout-token-123',
       identity.issuer,
       identity.subject,
-      identity.providerSessionId,
+      'provider-session-abc',
+      1_785_382_400,
+      1_785_382_700,
       'provider back-channel logout',
     ]);
   });

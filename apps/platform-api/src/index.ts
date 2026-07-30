@@ -11,7 +11,10 @@ import {
   resolveAuthReadiness,
   type AuthBindings,
 } from './auth-boundary.js';
-import { handleOidcBackchannelLogoutRequest } from './auth-backchannel.js';
+import {
+  handleOidcBackchannelLogoutRequest,
+  isOidcBackchannelDeclaredLengthAllowed,
+} from './auth-backchannel.js';
 import { DurableAuthStore, DurableOidcProviderCacheStore } from './auth-durable-store.js';
 import {
   hasValidAuthMutationOrigins,
@@ -121,8 +124,10 @@ app.post('/auth/v1/backchannel-logout', async (context) => {
     context.env.DATABASE_URL !== undefined &&
     context.env.DATABASE_URL.trim() !== '';
 
+  const contentLength = context.req.header('content-length');
+  const declaredLengthAllowed = isOidcBackchannelDeclaredLengthAllowed(contentLength);
   let rawBody = '';
-  if (configured) {
+  if (configured && declaredLengthAllowed) {
     try {
       rawBody = await context.req.text();
     } catch {
@@ -132,9 +137,7 @@ app.post('/auth/v1/backchannel-logout', async (context) => {
   const result = await handleOidcBackchannelLogoutRequest({
     configured,
     contentType: context.req.header('content-type'),
-    ...(context.req.header('content-length') === undefined
-      ? {}
-      : { contentLength: context.req.header('content-length')! }),
+    ...(contentLength === undefined ? {} : { contentLength }),
     rawBody,
     processor: async (logoutToken) => {
       if (
@@ -155,9 +158,8 @@ app.post('/auth/v1/backchannel-logout', async (context) => {
         configuration,
         resolveJwks: (forceRefresh) =>
           cache.resolveJwks({ configuration, ...(forceRefresh ? { forceRefresh: true } : {}) }),
-        consumeToken: (claims) => durableAuth.consumeBackchannelLogoutToken(claims),
-        revokeSessions: (claims) =>
-          durableAuth.revokeProviderSessions(claims, 'provider back-channel logout'),
+        applyLogout: (claims) =>
+          durableAuth.processBackchannelLogout(claims, 'provider back-channel logout'),
       });
     },
   });

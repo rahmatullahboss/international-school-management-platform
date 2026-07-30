@@ -112,6 +112,7 @@ describe('OIDC back-channel Logout Token policy', () => {
   it('requires the logout event, explicit token type, no nonce and a subject or session id', async () => {
     const cases = [
       signToken({ events: {} }),
+      signToken({ events: { [event]: { unexpected: true } } }),
       signToken({ nonce: 'forbidden' }),
       signToken({ sub: undefined, sid: undefined }),
       signToken({}, { typ: 'JWT' }),
@@ -176,14 +177,15 @@ describe('OIDC back-channel Logout Token policy', () => {
     expect(resolver).toHaveBeenCalledTimes(2);
   });
 
-  it('atomically consumes the jti and revokes exact provider sessions only once', async () => {
-    const consumeToken = vi
-      .fn<(claims: OidcBackchannelLogoutClaims) => Promise<boolean>>()
-      .mockResolvedValueOnce(true)
-      .mockResolvedValueOnce(false);
-    const revokeSessions = vi
-      .fn<(claims: OidcBackchannelLogoutClaims) => Promise<number>>()
-      .mockResolvedValue(2);
+  it('persists replay denial and provider-session revocation in one atomic operation', async () => {
+    const applyLogout = vi
+      .fn<
+        (
+          claims: OidcBackchannelLogoutClaims,
+        ) => Promise<{ readonly replayed: boolean; readonly revokedSessions: number }>
+      >()
+      .mockResolvedValueOnce({ replayed: false, revokedSessions: 2 })
+      .mockResolvedValueOnce({ replayed: true, revokedSessions: 0 });
     const input = {
       logoutToken: await signToken(),
       configuration,
@@ -191,8 +193,7 @@ describe('OIDC back-channel Logout Token policy', () => {
         await Promise.resolve();
         return jwksResult([publicJwk]);
       },
-      consumeToken,
-      revokeSessions,
+      applyLogout,
       now,
     };
 
@@ -206,49 +207,43 @@ describe('OIDC back-channel Logout Token policy', () => {
       replayed: true,
       revokedSessions: 0,
     });
-    expect(revokeSessions).toHaveBeenCalledOnce();
-    expect(consumeToken.mock.calls[0]?.[0]).toMatchObject({
+    expect(applyLogout).toHaveBeenCalledTimes(2);
+    expect(applyLogout.mock.calls[0]?.[0]).toMatchObject({
       tokenId: 'logout-token-123',
       subject: 'provider-user-123',
       providerSessionId: 'provider-session-abc',
     });
   });
 
-  it('fails closed when replay or session-revocation storage is unavailable', async () => {
-    const base = {
+  it('allows a provider retry after atomic persistence is unavailable', async () => {
+    const applyLogout = vi
+      .fn<
+        (
+          claims: OidcBackchannelLogoutClaims,
+        ) => Promise<{ readonly replayed: boolean; readonly revokedSessions: number }>
+      >()
+      .mockRejectedValueOnce(new Error('database unavailable'))
+      .mockResolvedValueOnce({ replayed: false, revokedSessions: 1 });
+    const input = {
       logoutToken: await signToken(),
       configuration,
       resolveJwks: async () => {
         await Promise.resolve();
         return jwksResult([publicJwk]);
       },
+      applyLogout,
       now,
     };
-    await expect(
-      processOidcBackchannelLogout({
-        ...base,
-        consumeToken: async () => {
-          await Promise.resolve();
-          throw new Error('database unavailable');
-        },
-        revokeSessions: async () => {
-          await Promise.resolve();
-          return 0;
-        },
-      }),
-    ).resolves.toMatchObject({ ok: false, code: 'oidc_backchannel_replay_unavailable' });
-    await expect(
-      processOidcBackchannelLogout({
-        ...base,
-        consumeToken: async () => {
-          await Promise.resolve();
-          return true;
-        },
-        revokeSessions: async () => {
-          await Promise.resolve();
-          throw new Error('database unavailable');
-        },
-      }),
-    ).resolves.toMatchObject({ ok: false, code: 'oidc_backchannel_revocation_unavailable' });
+
+    await expect(processOidcBackchannelLogout(input)).resolves.toMatchObject({
+      ok: false,
+      code: 'oidc_backchannel_persistence_unavailable',
+    });
+    await expect(processOidcBackchannelLogout(input)).resolves.toMatchObject({
+      ok: true,
+      replayed: false,
+      revokedSessions: 1,
+    });
+    expect(applyLogout).toHaveBeenCalledTimes(2);
   });
 });

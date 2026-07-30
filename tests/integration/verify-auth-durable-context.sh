@@ -207,19 +207,6 @@ BEGIN
     RAISE EXCEPTION 'expired OAuth transaction must be denied';
   END IF;
 
-
-  IF NOT iam.consume_oidc_logout_token(
-    'logout-token-verification',
-    'https://identity.school.test',
-    clock_timestamp() - interval '10 seconds',
-    clock_timestamp() + interval '5 minutes'
-  ) THEN RAISE EXCEPTION 'first Logout Token consumption must succeed'; END IF;
-  IF iam.consume_oidc_logout_token(
-    'logout-token-verification',
-    'https://identity.school.test',
-    clock_timestamp() - interval '10 seconds',
-    clock_timestamp() + interval '5 minutes'
-  ) THEN RAISE EXCEPTION 'Logout Token replay must be denied'; END IF;
   IF NOT iam.write_oidc_provider_cache('oidc-cache:test', '{"schemaVersion":1}'::jsonb) THEN
     RAISE EXCEPTION 'provider cache write must succeed';
   END IF;
@@ -258,14 +245,30 @@ BEGIN
   IF NOT iam.is_browser_session_active('30000000-0000-4000-8000-000000000009') THEN
     RAISE EXCEPTION 'registered session must be active';
   END IF;
-  IF NOT iam.revoke_browser_session(
-    '30000000-0000-4000-8000-000000000009',
-    'verification logout'
-  ) THEN
-    RAISE EXCEPTION 'session revocation must succeed';
+  IF iam.process_oidc_backchannel_logout(
+    'logout-token-verification',
+    'https://identity.school.test',
+    'provider-user-123',
+    'provider-session-abc',
+    clock_timestamp() - interval '10 seconds',
+    clock_timestamp() + interval '5 minutes',
+    'provider back-channel logout'
+  ) <> '{"replayed": false, "revokedSessions": 1}'::jsonb THEN
+    RAISE EXCEPTION 'atomic Logout Token processing must revoke the exact session';
   END IF;
   IF iam.is_browser_session_active('30000000-0000-4000-8000-000000000009') THEN
-    RAISE EXCEPTION 'revoked session must be inactive';
+    RAISE EXCEPTION 'provider-revoked session must be inactive';
+  END IF;
+  IF iam.process_oidc_backchannel_logout(
+    'logout-token-verification',
+    'https://identity.school.test',
+    'provider-user-123',
+    'provider-session-abc',
+    clock_timestamp() - interval '10 seconds',
+    clock_timestamp() + interval '5 minutes',
+    'provider back-channel logout'
+  ) <> '{"replayed": true, "revokedSessions": 0}'::jsonb THEN
+    RAISE EXCEPTION 'Logout Token replay must be idempotent';
   END IF;
 END
 $runtime_verification$;

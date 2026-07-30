@@ -61,8 +61,7 @@ export type OidcBackchannelLogoutFailureCode =
   | 'oidc_backchannel_token_expired'
   | 'oidc_backchannel_token_not_yet_valid'
   | 'oidc_backchannel_token_too_old'
-  | 'oidc_backchannel_replay_unavailable'
-  | 'oidc_backchannel_revocation_unavailable';
+  | 'oidc_backchannel_persistence_unavailable';
 
 export type OidcBackchannelLogoutVerificationResult =
   | { readonly ok: true; readonly claims: OidcBackchannelLogoutClaims }
@@ -79,9 +78,15 @@ export interface VerifyOidcBackchannelLogoutWithRotationInput extends Omit<
   readonly resolveJwks: (forceRefresh: boolean) => Promise<OidcCachedJwksResult>;
 }
 
+export interface OidcBackchannelLogoutPersistenceResult {
+  readonly replayed: boolean;
+  readonly revokedSessions: number;
+}
+
 export interface ProcessOidcBackchannelLogoutInput extends VerifyOidcBackchannelLogoutWithRotationInput {
-  readonly consumeToken: (claims: OidcBackchannelLogoutClaims) => Promise<boolean>;
-  readonly revokeSessions: (claims: OidcBackchannelLogoutClaims) => Promise<number>;
+  readonly applyLogout: (
+    claims: OidcBackchannelLogoutClaims,
+  ) => Promise<OidcBackchannelLogoutPersistenceResult>;
 }
 
 export type OidcBackchannelLogoutProcessResult =
@@ -160,6 +165,7 @@ function parseClaims(value: unknown): JwtClaims | undefined {
     !boundedIdentifier(value.jti) ||
     !isRecord(events) ||
     !isRecord(events[BACKCHANNEL_LOGOUT_EVENT]) ||
+    Object.keys(events[BACKCHANNEL_LOGOUT_EVENT]).length !== 0 ||
     (subject !== undefined && !boundedIdentifier(subject)) ||
     (sessionId !== undefined && !boundedIdentifier(sessionId)) ||
     (subject === undefined && sessionId === undefined) ||
@@ -385,34 +391,27 @@ export async function processOidcBackchannelLogout(
   const verification = await verifyOidcBackchannelLogoutTokenWithRotation(input);
   if (!verification.ok) return verification;
 
-  let consumed: boolean;
   try {
-    consumed = await input.consumeToken(verification.claims);
-  } catch {
-    return {
-      ok: false,
-      code: 'oidc_backchannel_replay_unavailable',
-      message: 'Back-channel logout replay protection is unavailable.',
-    };
-  }
-  if (!consumed) {
-    return { ok: true, replayed: true, revokedSessions: 0, claims: verification.claims };
-  }
-
-  try {
-    const revokedSessions = await input.revokeSessions(verification.claims);
-    if (!Number.isInteger(revokedSessions) || revokedSessions < 0) throw new Error('invalid count');
+    const persistence = await input.applyLogout(verification.claims);
+    if (
+      typeof persistence.replayed !== 'boolean' ||
+      !Number.isInteger(persistence.revokedSessions) ||
+      persistence.revokedSessions < 0 ||
+      (persistence.replayed && persistence.revokedSessions !== 0)
+    ) {
+      throw new Error('invalid persistence result');
+    }
     return {
       ok: true,
-      replayed: false,
-      revokedSessions,
+      replayed: persistence.replayed,
+      revokedSessions: persistence.revokedSessions,
       claims: verification.claims,
     };
   } catch {
     return {
       ok: false,
-      code: 'oidc_backchannel_revocation_unavailable',
-      message: 'Back-channel session revocation is unavailable.',
+      code: 'oidc_backchannel_persistence_unavailable',
+      message: 'Back-channel logout persistence is unavailable.',
     };
   }
 }

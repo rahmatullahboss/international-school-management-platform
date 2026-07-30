@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
   handleOidcBackchannelLogoutRequest,
+  isOidcBackchannelDeclaredLengthAllowed,
   type OidcBackchannelProcessor,
 } from './auth-backchannel.js';
 
@@ -45,6 +46,11 @@ describe('OIDC back-channel HTTP boundary', () => {
     const processor = successProcessor();
     for (const input of [
       { contentType: 'application/json', rawBody: `logout_token=${token}` },
+      {
+        contentType: 'application/x-www-form-urlencoded',
+        contentLength: '20garbage',
+        rawBody: `logout_token=${token}`,
+      },
       { contentType: 'application/x-www-form-urlencoded', rawBody: 'logout_token=' },
       {
         contentType: 'application/x-www-form-urlencoded',
@@ -69,6 +75,13 @@ describe('OIDC back-channel HTTP boundary', () => {
       });
     }
     expect(processor).not.toHaveBeenCalled();
+  });
+
+  it('rejects an oversized declared body before the route reads it', () => {
+    expect(isOidcBackchannelDeclaredLengthAllowed(undefined)).toBe(true);
+    expect(isOidcBackchannelDeclaredLengthAllowed('00042')).toBe(true);
+    expect(isOidcBackchannelDeclaredLengthAllowed('20garbage')).toBe(false);
+    expect(isOidcBackchannelDeclaredLengthAllowed(String(17 * 1024 + 1))).toBe(false);
   });
 
   it('fails closed before token processing when durable configuration is absent', async () => {
@@ -102,7 +115,7 @@ describe('OIDC back-channel HTTP boundary', () => {
       await Promise.resolve();
       return {
         ok: false,
-        code: 'oidc_backchannel_replay_unavailable',
+        code: 'oidc_backchannel_persistence_unavailable',
         message: 'internal database detail',
       };
     };
