@@ -38,6 +38,7 @@ async function signToken(
   const claims = {
     iss: configuration.issuer,
     sub: 'provider-user-123',
+    sid: 'provider-session-abc',
     aud: configuration.clientId,
     exp: nowSeconds + 600,
     iat: nowSeconds,
@@ -95,6 +96,7 @@ describe('OIDC trust boundary', () => {
       identity: {
         issuer: configuration.issuer,
         subject: 'provider-user-123',
+        providerSessionId: 'provider-session-abc',
         email: 'principal@school.test',
         emailVerified: true,
         displayName: 'Pilot Principal',

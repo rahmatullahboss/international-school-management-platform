@@ -22,6 +22,7 @@ export interface OidcJsonWebKeySet {
 export interface OidcIdentity {
   readonly issuer: string;
   readonly subject: string;
+  readonly providerSessionId?: string;
   readonly email?: string;
   readonly emailVerified?: boolean;
   readonly displayName?: string;
@@ -70,6 +71,7 @@ interface JwtHeader {
 interface JwtClaims {
   readonly iss: string;
   readonly sub: string;
+  readonly sid?: string;
   readonly aud: string | readonly string[];
   readonly azp?: string;
   readonly exp: number;
@@ -185,6 +187,11 @@ function parseClaims(value: unknown): JwtClaims | undefined {
     return undefined;
   }
   if (value.azp !== undefined && typeof value.azp !== 'string') return undefined;
+  if (
+    value.sid !== undefined &&
+    (typeof value.sid !== 'string' || value.sid.trim() === '' || value.sid.length > 512)
+  )
+    return undefined;
   if (value.nbf !== undefined && typeof value.nbf !== 'number') return undefined;
   if (value.auth_time !== undefined && typeof value.auth_time !== 'number') return undefined;
   if (value.email !== undefined && typeof value.email !== 'string') return undefined;
@@ -357,6 +364,7 @@ export async function verifyOidcIdToken(
     identity: {
       issuer: claims.iss,
       subject: claims.sub,
+      ...(claims.sid === undefined ? {} : { providerSessionId: claims.sid }),
       ...(claims.email === undefined ? {} : { email: claims.email }),
       ...(claims.email_verified === undefined ? {} : { emailVerified: claims.email_verified }),
       ...(claims.name === undefined ? {} : { displayName: claims.name }),

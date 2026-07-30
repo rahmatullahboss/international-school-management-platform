@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { HttpDatabase } from '@school/database';
 import type { BrowserSessionClaims, OidcIdentity } from '@school/policy';
 
-import { DurableAuthStore } from './auth-durable-store.js';
+import { DurableAuthStore, DurableOidcProviderCacheStore } from './auth-durable-store.js';
 
 const ids = {
   transaction: '40000000-0000-4000-8000-000000000001',
@@ -18,6 +18,7 @@ const ids = {
 const identity: OidcIdentity = {
   issuer: 'https://identity.school.test',
   subject: 'provider-user-123',
+  providerSessionId: 'provider-session-abc',
   assurance: 'aal2',
   issuedAt: 1_785_382_400,
   expiresAt: 1_785_383_000,
@@ -32,6 +33,7 @@ const session: BrowserSessionClaims = {
   membershipId: ids.membership,
   identityIssuer: identity.issuer,
   identitySubject: identity.subject,
+  providerSessionId: 'provider-session-abc',
   tenantId: ids.tenant,
   campusId: ids.campus,
   roleIds: [ids.role],
@@ -138,6 +140,7 @@ describe('DurableAuthStore', () => {
       ids.tenant,
       ids.membership,
       ids.campus,
+      'provider-session-abc',
       [ids.role],
       'aal2',
       session.issuedAt,
@@ -154,6 +157,52 @@ describe('DurableAuthStore', () => {
 
     await expect(store.revokeSession(ids.session, 'user logout')).resolves.toBe(true);
     await expect(store.revokeAccountSessions(ids.account, 'credential reset')).resolves.toBe(3);
+  });
+
+  it('consumes Logout Token ids and revokes exact provider sessions', async () => {
+    const query = vi
+      .fn()
+      .mockResolvedValueOnce([{ value: true }])
+      .mockResolvedValueOnce([{ value: 2 }]);
+    const store = new DurableAuthStore({ query });
+    const claims = {
+      issuer: identity.issuer,
+      subject: identity.subject,
+      providerSessionId: 'provider-session-abc',
+      tokenId: 'logout-token-123',
+      issuedAt: 1_785_382_400,
+      expiresAt: 1_785_382_700,
+    };
+
+    await expect(store.consumeBackchannelLogoutToken(claims)).resolves.toBe(true);
+    await expect(
+      store.revokeProviderSessions(claims, 'provider back-channel logout'),
+    ).resolves.toBe(2);
+    expect(query.mock.calls[0]?.[0]).toContain('iam.consume_oidc_logout_token');
+    expect(query.mock.calls[1]?.[0]).toContain('iam.revoke_oidc_provider_sessions');
+    expect(query.mock.calls[1]?.[1]).toEqual([
+      identity.issuer,
+      identity.subject,
+      identity.providerSessionId,
+      'provider back-channel logout',
+    ]);
+  });
+
+  it('stores provider cache records only through security-definer functions', async () => {
+    const query = vi
+      .fn()
+      .mockResolvedValueOnce([{ value: { kind: 'jwks', schemaVersion: 1 } }])
+      .mockResolvedValueOnce([{ value: true }]);
+    const store = new DurableOidcProviderCacheStore({ query });
+    await expect(store.read('oidc-cache:v1:jwks:test')).resolves.toEqual({
+      kind: 'jwks',
+      schemaVersion: 1,
+    });
+    await expect(
+      store.write('oidc-cache:v1:jwks:test', { kind: 'jwks', schemaVersion: 1 }),
+    ).resolves.toBeUndefined();
+    expect(query.mock.calls[0]?.[0]).toContain('iam.read_oidc_provider_cache');
+    expect(query.mock.calls[1]?.[0]).toContain('iam.write_oidc_provider_cache');
   });
 
   it('fails closed for malformed database responses and non-UUID claims', async () => {
