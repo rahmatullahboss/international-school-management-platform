@@ -24,3 +24,25 @@ source = source.replace(
     'async () => {\n      await Promise.resolve();\n      return response;\n    }',
 )
 cache.write_text(source, encoding='utf-8')
+
+tests = Path('packages/policy/src/oidc-provider-cache.test.ts')
+source = tests.read_text(encoding='utf-8')
+old_response_init = """    status: 200,
+    headers: {
+      'content-type': 'application/json',
+      'cache-control': 'max-age=60',
+      ...init.headers,
+    },
+    ...init,
+"""
+new_response_init = """    status: 200,
+    ...init,
+    headers: {
+      'content-type': 'application/json',
+      'cache-control': 'max-age=60',
+      ...init.headers,
+    },
+"""
+if source.count(old_response_init) != 1:
+    raise SystemExit('Expected the OIDC JSON response fixture initializer once.')
+tests.write_text(source.replace(old_response_init, new_response_init), encoding='utf-8')
