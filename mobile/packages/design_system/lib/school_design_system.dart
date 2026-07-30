@@ -3,7 +3,7 @@ library;
 import 'package:flutter/material.dart';
 
 export 'school_formatting.dart';
-export 'school_localization.dart';
+export 'school_localization.dart' hide SchoolLanguage, SchoolLocalePolicy;
 export 'school_pluralization.dart';
 
 abstract final class SchoolColors {
