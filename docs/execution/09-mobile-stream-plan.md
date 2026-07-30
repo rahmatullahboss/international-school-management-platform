@@ -159,7 +159,9 @@ Any backend API, notification, identity or shared platform contract change requi
 - Source checkpoint Mobile CI `30519588980` passed all configured analyzers/tests, both Android debug APK builds and artifact upload.
 - Permanent read-only Mobile CI `30520102717` repeated strict formatting, clean-tree/native guards, all analyzers/tests, both Android debug APK builds and artifact upload successfully.
 - Root CI `30520102721` passed format, lint, boundaries, typecheck, repository tests, fresh migration replay, live Neon driver, builds, audit/licences/provenance, browser journeys and execution-artifact validation.
-- Cloudflare staging run `30520102726` was skipped; no application deployment occurred.
+- Final documentation-head Mobile CI `30520988240` passed strict formatting, clean-tree/native guards, all configured analyzers/tests, both Android debug APK builds and artifact upload.
+- Final documentation-head root CI `30520988213` passed the complete repository, migration, Neon, build, supply-chain, browser and execution-artifact gate.
+- Cloudflare staging run `30520988217` was skipped; no application deployment occurred.
 - Real student data used: no.
 - Production deployment or database mutation performed: no.
 
