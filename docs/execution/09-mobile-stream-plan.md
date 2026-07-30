@@ -2,7 +2,7 @@
 
 ## Status
 
-Milestones 1 through 6 have passed on the client/native side. Milestone 7 now has passed source/static and production-composition tranches covering the restricted-data threat model, shared English/Bangla/Arabic localization runtime, Arabic RTL, deterministic locale fallback, integer cardinal plural rules, bidirectional isolation, exact locale-aware money/time presentation, Family/Staff localized production shells, 200% text scaling, written screen-reader semantics, minimum interaction targets, fail-closed platform lifecycle decisions and native transport/file-sharing guards. Complete translated domain copy, persisted locale selection, device-level TalkBack/VoiceOver verification, Android/iOS integration tests, approved restricted-document presenters and signed store-release evidence remain pending and release blocking.
+Milestones 1 through 6 have passed on the client/native side. Milestone 7 now has passed source/static and production-composition tranches covering the restricted-data threat model, shared English/Bangla/Arabic localization runtime, Arabic RTL, deterministic locale fallback, secure persisted locale selection, localized count copy, integer cardinal plural rules, bidirectional isolation, exact locale-aware money/time presentation, Family/Staff localized production shells, 200% text scaling, written screen-reader semantics, minimum interaction targets, fail-closed platform lifecycle decisions and native transport/file-sharing guards. Complete translated domain copy, reviewed global framework translations, device-level TalkBack/VoiceOver verification, Android/iOS integration tests, approved restricted-document presenters and signed store-release evidence remain pending and release blocking.
 
 Family read and interaction journeys, Teacher Today/roster, encrypted attendance drafts, durable sync, privacy-minimised notification routing, the secret-free Firebase/APNs lifecycle and step-up authenticated secure-document exchange are verified. All proposed mobile endpoints, Firebase/APNs project activation and platform-specific document presenters remain server/platform-owned and inactive. No production deployment, database mutation, provider activation or real student data is authorized by this stream.
 
@@ -58,11 +58,12 @@ Backend APIs, notification issuance, identity policy, server authorization and s
 7. **Security, accessibility and release verification — source/static and production-composition tranches passed; device/store evidence pending**
    - Restricted-data threat model and trust-boundary/abuse-case evidence.
    - Shared English, Bangla and Arabic shell runtime with deterministic English fallback, ordered device-locale resolution and explicit Arabic RTL.
-   - Bounded framework-label fallback delegates, approved-locale controller, integer cardinal plural categories, bidi sanitization/isolation, exact integer-money presentation and explicit-offset timestamp presentation.
-   - Family and Staff production application states adopt the localization runtime, localized shell navigation/actions and generated titles; Family fees/receipts adopt exact integer money presentation and dynamic read-model values use bidi isolation.
+   - Bounded framework-label fallback delegates, approved-locale controller, application-separated secure locale preference, localized count sentences, integer cardinal plural categories, bidi sanitization/isolation, exact integer-money presentation and explicit-offset timestamp presentation.
+   - Family and Staff production application states adopt the localization runtime, localized shell navigation/actions, generated titles and a 56-pixel state-preserving language control; Family fees/receipts adopt exact integer money presentation and dynamic read-model values use bidi isolation.
+   - Invalid/read/write locale-preference states fail safely using reason codes without storing authority values; Staff pending-attendance status uses reviewed pluralized copy.
    - Source tests for 200% text scaling, written status semantics, minimum 48 logical-pixel controls, reduced motion and lifecycle privacy decisions.
    - Android cleartext traffic disabled; iOS arbitrary transport loads, file sharing and open-in-place disabled; CI drift guards enforce the settings.
-   - Complete translated domain copy, persisted locale-selection UX, reviewed global framework translations, authoritative currency fraction metadata, TalkBack, VoiceOver, Dynamic Type device passes, Android/iOS integration tests, native restricted-document presenters, signed release artifacts, privacy declarations and rollback evidence remain pending.
+   - Complete translated domain copy, reviewed global framework translations, authoritative currency fraction metadata, TalkBack, VoiceOver, Dynamic Type device passes, secure-storage device evidence, Android/iOS integration tests, native restricted-document presenters, signed release artifacts, privacy declarations and rollback evidence remain pending.
 
 ## Checkpoint 1 evidence — shared foundation
 
@@ -172,7 +173,20 @@ Backend APIs, notification issuance, identity policy, server authorization and s
 - Attendance count copy uses the approved integer cardinal plural-category source rules instead of an English-only `(s)` suffix.
 - Implementation head `a7e26d9ef4ca906b9d37fee56c1973a3646d962c`: Mobile CI `30558182491` passed formatting, native drift checks, every analyzer/test, both Android debug APK builds and artifact upload. Root CI `30558168912` passed the complete repository gate.
 - APK artifact `8765934949`, digest `sha256:6ecb0b70fce4b294e6bd9be4303e24f9bd5f01388369978aa60e85324b91ea2f`.
-- The final documentation-head run IDs are recorded in PR #41 after immutable-head gates complete.
+- Final documentation-head Mobile CI `30558945829`, root CI `30558946767` and artifact `8766235645` passed; staging `30558948161` was skipped.
+- Production deployment, database mutation, provider activation and real student data use: none.
+
+## Checkpoint 13 evidence — persisted locale selection and reviewed count sentences
+
+- Family and Staff load presentation locale preferences before production composition from separate secure-storage keys. Stored values are limited to approved language codes and cannot carry account, tenant, campus, persona, capability, student, token, endpoint or other authority data.
+- The visible 56 logical-pixel language control cycles device preference, English, Bangla and Arabic and exposes the current and next preference through written semantics.
+- Invalid stored language codes are cleared. Read failure follows device preference. Write failure preserves the active locale. Diagnostics expose bounded reason codes only.
+- Locale changes update Material localization without recreating the authorized application coordinator or losing page state.
+- `SchoolCountStrings` supplies reviewed English, Bangla and Arabic count sentences with localized digits and Arabic cardinal categories. Negative counts are rejected.
+- Staff pending-attendance status now uses reviewed singular/plural copy instead of an English `(s)` placeholder.
+- Implementation head `d065e6439e32490e6ebe0535664e9dea72437afc`: Mobile CI `30564264280` passed formatting, native drift checks, every analyzer/test, state-preserving locale and semantics tests, both Android debug APK builds and artifact upload. Root CI `30564264098` passed the complete repository gate; staging `30564265365` was skipped.
+- APK artifact `8768391851`, digest `sha256:55f3aa8272161317aba8f82e92baf16fa02c3403818c282567a82f81bdc5fbed`.
+- Final documentation-head run IDs are recorded in PR #41 after immutable-head gates complete.
 - Production deployment, database mutation, provider activation and real student data use: none.
 
 ## Server/platform-owned contract boundary
@@ -189,4 +203,4 @@ MOB-01 may define and test clients, domain contracts and fail-closed UI. Owning 
 
 ## Exact next action
 
-Complete reviewed domain translations and pluralized copy, add persisted locale-selection UX without coupling locale to authority, extend exact money to authoritative currency fraction metadata, and adopt explicit-offset timestamp presentation where server read models supply the required fields. Wire platform lifecycle signals to privacy overlays, restricted-presentation cancellation, transient-byte purge and fresh-proof enforcement on Android/iOS. Complete device-level TalkBack, VoiceOver, Dynamic Type, switch-control, contrast, reduced-motion and representative RTL journeys. Add Android/iOS integration tests for backgrounding, interruption, process death, low storage, notification launches, encrypted sync recovery and restricted-document cleanup. Separately obtain server/platform-owner review for Bootstrap, Family, Teacher, device-session, notification, sync and secure-document exchange activation, approved Firebase/APNs configuration and Android/iOS native document presenters. Produce signed release artifacts, privacy declarations, provenance and rollback evidence before any live account or student data is used.
+Complete reviewed domain translations and broader pluralized copy, replace bounded English framework labels with reviewed Material/Cupertino translations, extend exact money to authoritative currency fraction metadata, and adopt explicit-offset timestamp presentation where server read models supply the required fields. Wire platform lifecycle signals to privacy overlays, restricted-presentation cancellation, transient-byte purge and fresh-proof enforcement on Android/iOS. Complete device-level TalkBack, VoiceOver, Dynamic Type, switch-control, contrast, reduced-motion, secure-storage and representative RTL journeys. Add Android/iOS integration tests for backgrounding, interruption, process death, low storage, notification launches, encrypted sync recovery and restricted-document cleanup. Separately obtain server/platform-owner review for Bootstrap, Family, Teacher, device-session, notification, sync and secure-document exchange activation, approved Firebase/APNs configuration and Android/iOS native document presenters. Produce signed release artifacts, privacy declarations, provenance and rollback evidence before any live account or student data is used.
