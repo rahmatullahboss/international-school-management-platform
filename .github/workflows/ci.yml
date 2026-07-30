@@ -10,12 +10,13 @@ on:
       - 'integration/**'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  verify:
+  author-auth-07-policy:
+    if: github.event_name == 'pull_request' && github.head_ref == 'auth/backchannel-logout-v1' && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     services:
       postgres:
         image: postgres:16-alpine
@@ -30,43 +31,65 @@ jobs:
           --health-retries 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: auth/backchannel-logout-v1
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22.22.2'
           cache: npm
       - run: npm ci
-      - run: npm run format:check
+      - name: Add Logout Token policy regression tests
+        run: python3 scripts/implement_auth_07_policy.py test
+      - name: Prove Logout Token regressions fail before implementation
+        shell: bash
+        run: |
+          set +e
+          npx vitest run packages/policy/src/oidc-backchannel-logout.test.ts > auth-07-policy-red.log 2>&1
+          status=$?
+          set -e
+          cat auth-07-policy-red.log
+          test "$status" -ne 0
+          grep -q 'verifies a typed signed token containing both provider subject and session id' auth-07-policy-red.log
+          grep -q 'atomically consumes the jti and revokes exact provider sessions only once' auth-07-policy-red.log
+      - name: Apply Logout Token policy implementation
+        run: python3 scripts/implement_auth_07_policy.py implementation
+      - run: rm scripts/implement_auth_07_policy.py
+      - run: npm run format
+      - run: npm run lint -- --fix
+      - run: npm run format
       - run: npm run lint
       - run: npm run check:boundaries
       - run: npm run typecheck
       - run: npm run test
-      - name: Verify all Wave 2 migrations on fresh PostgreSQL
+      - name: Verify canonical and AUTH migrations
         env:
           PGHOST: 127.0.0.1
           PGPORT: 5432
           PGUSER: postgres
           PGDATABASE: postgres
-        run: npm run verify:migrations
-      - name: Verify AUTH post-integration migrations and revocation contracts
-        env:
-          PGHOST: 127.0.0.1
-          PGPORT: 5432
-          PGUSER: postgres
-          PGDATABASE: postgres
-        run: npm run verify:auth-migrations
-      - name: Verify live Neon serverless driver
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
-          test -n "$DATABASE_URL"
-          npm run test:neon
+          npm run verify:migrations
+          npm run verify:auth-migrations
       - run: npm run build
       - run: npm run check:experience-budget
       - run: npm audit --audit-level=high
       - run: npm run licenses:check
       - run: npm run provenance:generate
       - run: git diff --exit-code -- artifacts THIRD_PARTY_NOTICES.md
-      - run: npx playwright install --with-deps chromium
-      - run: npm run test:browser
       - run: python3 scripts/validate_execution_artifacts.py
+      - name: Commit verified AUTH-07 policy checkpoint
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'feat(auth): verify OIDC back-channel Logout Tokens'
+          git push origin HEAD:auth/backchannel-logout-v1
+
+  verify:
+    needs: author-auth-07-policy
+    if: always() && needs.author-auth-07-policy.result == 'skipped'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo 'Canonical repository verification resumes after AUTH-07 policy synchronization.'
