@@ -54,7 +54,9 @@ jobs:
           grep -q 'denies stale or AAL1 authentication for a step-up transaction' auth-06-red.log
       - name: Apply AUTH-06 step-up implementation
         run: python3 scripts/implement_auth_06_step_up.py implementation
-      - run: rm scripts/implement_auth_06_step_up.py
+      - name: Apply lint-safe ACR validation
+        run: python3 scripts/fix_auth_06_lint.py
+      - run: rm scripts/implement_auth_06_step_up.py scripts/fix_auth_06_lint.py
       - run: npm run format
       - run: npm run lint -- --fix
       - run: npm run format
