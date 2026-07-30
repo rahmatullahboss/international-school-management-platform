@@ -52,15 +52,33 @@ def main() -> None:
         )
         prohibit(gradle, 'signingConfigs.getByName("debug")')
 
+        android_manifest = app_root / "android/app/src/main/AndroidManifest.xml"
         require(
-            app_root / "android/app/src/main/AndroidManifest.xml",
+            android_manifest,
             f'android:label="{config["label"]}"',
             'android:allowBackup="false"',
+            'android:usesCleartextTraffic="false"',
         )
+        prohibit(
+            android_manifest,
+            'android:allowBackup="true"',
+            'android:usesCleartextTraffic="true"',
+        )
+
+        info_plist = app_root / "ios/Runner/Info.plist"
         require(
-            app_root / "ios/Runner/Info.plist",
+            info_plist,
             "<key>CFBundleURLTypes</key>",
             f"<string>{config['scheme']}</string>",
+            "<key>LSSupportsOpeningDocumentsInPlace</key>\n\t<false/>",
+            "<key>NSAllowsArbitraryLoads</key>\n\t\t<false/>",
+            "<key>UIFileSharingEnabled</key>\n\t<false/>",
+        )
+        prohibit(
+            info_plist,
+            "<key>LSSupportsOpeningDocumentsInPlace</key>\n\t<true/>",
+            "<key>NSAllowsArbitraryLoads</key>\n\t\t<true/>",
+            "<key>UIFileSharingEnabled</key>\n\t<true/>",
         )
         require(
             app_root / "ios/Runner.xcodeproj/project.pbxproj",
