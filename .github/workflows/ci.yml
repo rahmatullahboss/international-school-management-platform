@@ -10,13 +10,12 @@ on:
       - 'integration/**'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  canonicalize-auth-03:
-    if: github.event_name == 'pull_request' && github.head_ref == 'pilot/auth-durable-context-v1' && github.actor != 'github-actions[bot]'
+  verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 20
     services:
       postgres:
         image: postgres:16-alpine
@@ -31,183 +30,43 @@ jobs:
           --health-retries 10
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: pilot/auth-durable-context-v1
-          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22.22.2'
           cache: npm
-      - run: npm install --ignore-scripts
-      - name: Synchronize AUTH-03 source and tests
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-
-          migration = Path('infra/database/migrations/202607300301_AUTH-03_durable_identity_context.sql')
-          post_migration = Path('infra/database/post-integration-migrations/202607300301_AUTH-03_durable_identity_context.sql')
-          post_migration.parent.mkdir(parents=True, exist_ok=True)
-          migration.rename(post_migration)
-          manifest = Path('infra/database/post-integration-migration-manifest.json')
-          manifest.write_text(
-              manifest.read_text(encoding='utf-8').replace(
-                  'infra/database/migrations/202607300301_AUTH-03_durable_identity_context.sql',
-                  'infra/database/post-integration-migrations/202607300301_AUTH-03_durable_identity_context.sql',
-              ),
-              encoding='utf-8',
-          )
-
-          def replace(path: str, old: str, new: str) -> None:
-              file = Path(path)
-              text = file.read_text(encoding='utf-8')
-              if old not in text:
-                  raise SystemExit(f'missing expected fragment in {path}: {old[:80]!r}')
-              file.write_text(text.replace(old, new), encoding='utf-8')
-
-          replace(
-              'apps/platform-api/src/index.ts',
-              "createHttpDatabase({ databaseUrl: context.env.DATABASE_URL })",
-              "createHttpDatabase(context.env.DATABASE_URL)",
-          )
-
-          replace(
-              'packages/policy/src/oidc-login-flow.test.ts',
-              "    resolveMembership: async () => {\n      await Promise.resolve();\n      return membership;\n    },\n",
-              "    resolveMembership: async () => {\n      await Promise.resolve();\n      return membership;\n    },\n    registerSession: async () => {\n      await Promise.resolve();\n      return true;\n    },\n",
-          )
-
-          replace(
-              'apps/platform-api/src/auth-boundary.test.ts',
-              "import { describe, expect, it } from 'vitest';\n\nimport { resolveAuthReadiness } from './auth-boundary.js';\n",
-              "import { describe, expect, it } from 'vitest';\n\nimport { BROWSER_SESSION_COOKIE_NAME, issueBrowserSession } from '@school/policy';\n\nimport { resolveAuthenticatedBrowserSession, resolveAuthReadiness } from './auth-boundary.js';\n",
-          )
-          replace(
-              'apps/platform-api/src/auth-boundary.test.ts',
-              "  AUTH_SESSION_SECRET: 'session-signing-secret-with-at-least-32-characters',\n  AUTH_MEMBERSHIP_SOURCE: 'database',\n",
-              "  AUTH_SESSION_SECRET: 'session-signing-secret-with-at-least-32-characters',\n  AUTH_SESSION_REGISTRY_SOURCE: 'database',\n  AUTH_MEMBERSHIP_SOURCE: 'database',\n",
-          )
-          replace(
-              'apps/platform-api/src/auth-boundary.test.ts',
-              "        transactionReplayProtection: true,\n        authorizationResponseIssuerValidation: true,\n",
-              "        transactionReplayProtection: true,\n        durableReplayLedger: true,\n        authorizationResponseIssuerValidation: true,\n",
-          )
-          replace(
-              'apps/platform-api/src/auth-boundary.test.ts',
-              "        membershipResolution: true,\n        httpOnlyHostCookie: true,\n",
-              "        membershipResolution: true,\n        databaseMembershipProjection: true,\n        httpOnlyHostCookie: true,\n        browserSessionRegistry: true,\n        sessionRevocation: true,\n",
-          )
-          replace(
-              'apps/platform-api/src/auth-boundary.test.ts',
-              "        'session-signing-key',\n        'membership-source',\n",
-              "        'session-signing-key',\n        'session-registry-source',\n        'membership-source',\n",
-          )
-          boundary = Path('apps/platform-api/src/auth-boundary.test.ts')
-          boundary_text = boundary.read_text(encoding='utf-8')
-          boundary_text += """
-
-          describe('durable browser-session introspection', () => {
-            it('requires a live registry record after cryptographic cookie verification', async () => {
-              const issued = await issueBrowserSession({
-                secret: completeBindings.AUTH_SESSION_SECRET,
-                identity: {
-                  issuer: completeBindings.OIDC_ISSUER,
-                  subject: 'provider-user-123',
-                  assurance: 'aal2',
-                  issuedAt: Math.floor(Date.now() / 1000),
-                  expiresAt: Math.floor(Date.now() / 1000) + 600,
-                },
-                membership: {
-                  membershipId: '40000000-0000-4000-8000-000000000001',
-                  principalId: '40000000-0000-4000-8000-000000000002',
-                  tenantId: '40000000-0000-4000-8000-000000000003',
-                  campusId: '40000000-0000-4000-8000-000000000004',
-                  roleIds: ['40000000-0000-4000-8000-000000000005'],
-                },
-              });
-              if (!issued.ok) throw new Error(issued.message);
-              const cookie = `${BROWSER_SESSION_COOKIE_NAME}=${issued.token}`;
-
-              await expect(
-                resolveAuthenticatedBrowserSession(completeBindings, cookie, async () => {
-                  await Promise.resolve();
-                  return true;
-                }),
-              ).resolves.toMatchObject({ ok: true });
-              await expect(
-                resolveAuthenticatedBrowserSession(completeBindings, cookie, async () => {
-                  await Promise.resolve();
-                  return false;
-                }),
-              ).resolves.toMatchObject({
-                ok: false,
-                status: 401,
-                code: 'browser_session_revoked',
-              });
-              await expect(
-                resolveAuthenticatedBrowserSession(completeBindings, cookie),
-              ).resolves.toMatchObject({
-                ok: false,
-                status: 503,
-                code: 'session_registry_unavailable',
-              });
-            });
-          });
-          """
-          boundary.write_text(boundary_text, encoding='utf-8')
-
-          index_test = Path('apps/platform-api/src/index.test.ts')
-          text = index_test.read_text(encoding='utf-8')
-          text = text.replace(
-              "import { describe, expect, it } from 'vitest';\n",
-              "import { beforeEach, describe, expect, it, vi } from 'vitest';\n",
-          )
-          text = text.replace(
-              "import { BROWSER_SESSION_COOKIE_NAME, issueBrowserSession } from '@school/policy';\n\nimport app from './index.js';\n",
-              "import { BROWSER_SESSION_COOKIE_NAME, issueBrowserSession } from '@school/policy';\n\nconst databaseQuery = vi.hoisted(() => vi.fn());\nvi.mock('@school/database', () => ({\n  createHttpDatabase: () => ({ query: databaseQuery }),\n}));\n\nimport app from './index.js';\n",
-          )
-          text = text.replace(
-              "  AUTH_SESSION_SECRET: authSessionSecret,\n};\n",
-              "  AUTH_SESSION_SECRET: authSessionSecret,\n  AUTH_SESSION_REGISTRY_SOURCE: 'database',\n  DATABASE_URL: 'postgresql://test.invalid/school',\n};\n",
-          )
-          text = text.replace(
-              "describe('platform API', () => {\n",
-              "describe('platform API', () => {\n  beforeEach(() => {\n    databaseQuery.mockReset();\n    databaseQuery.mockResolvedValue([{ value: true }]);\n  });\n\n",
-          )
-          text = text.replace(
-              "        membershipResolution: true,\n        httpOnlyHostCookie: true,\n        stepUpAssurance: true,\n",
-              "        membershipResolution: true,\n        databaseMembershipProjection: true,\n        httpOnlyHostCookie: true,\n        browserSessionRegistry: true,\n        sessionRevocation: true,\n        stepUpAssurance: true,\n",
-          )
-          index_test.write_text(text, encoding='utf-8')
-          PY
-      - run: npm run format
-      - run: npm run lint -- --fix
-      - run: npm run format
+      - run: npm ci
+      - run: npm run format:check
       - run: npm run lint
       - run: npm run check:boundaries
       - run: npm run typecheck
       - run: npm run test
-      - name: Verify canonical and AUTH-03 migrations
+      - name: Verify all Wave 2 migrations on fresh PostgreSQL
         env:
           PGHOST: 127.0.0.1
           PGPORT: 5432
           PGUSER: postgres
           PGDATABASE: postgres
+        run: npm run verify:migrations
+      - name: Verify AUTH post-integration migrations and revocation contracts
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: 5432
+          PGUSER: postgres
+          PGDATABASE: postgres
+        run: npm run verify:auth-migrations
+      - name: Verify live Neon serverless driver
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
-          npm run verify:migrations
-          npm run verify:auth-migrations
-      - name: Commit canonical AUTH-03 checkpoint
-        shell: bash
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A
-          git commit -m 'test(auth): verify durable identity context'
-          git push origin HEAD:pilot/auth-durable-context-v1
-
-  verify:
-    needs: canonicalize-auth-03
-    if: always() && needs.canonicalize-auth-03.result == 'skipped'
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo 'Canonical repository verification resumes after AUTH-03 synchronization.'
+          test -n "$DATABASE_URL"
+          npm run test:neon
+      - run: npm run build
+      - run: npm run check:experience-budget
+      - run: npm audit --audit-level=high
+      - run: npm run licenses:check
+      - run: npm run provenance:generate
+      - run: git diff --exit-code -- artifacts THIRD_PARTY_NOTICES.md
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:browser
+      - run: python3 scripts/validate_execution_artifacts.py
