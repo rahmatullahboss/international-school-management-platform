@@ -8,6 +8,8 @@ import 'package:school_api_client/school_api_client.dart';
 import 'package:school_api_client/teacher_mobile_api.dart';
 import 'package:school_app_bootstrap/school_app_bootstrap.dart';
 import 'package:school_authentication/school_authentication.dart';
+import 'package:school_design_system/school_application.dart';
+import 'package:school_design_system/school_count_strings.dart';
 import 'package:school_design_system/school_design_system.dart';
 import 'package:school_mobile_core/mobile_core.dart';
 import 'package:school_mobile_core/notification_routing.dart';
@@ -21,8 +23,20 @@ part 'staff_journey_controller.dart';
 part 'staff_sync_controller.dart';
 part 'teacher_production_journeys.dart';
 
-void main() {
-  runApp(const ProviderScope(child: StaffProductionApp()));
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final localeController = SchoolLocaleController.secure(
+    storageKey: 'school.mobile.staff.locale.v1',
+  );
+  await localeController.initialize();
+
+  runApp(
+    SchoolLocalePreferenceHost(
+      controller: localeController,
+      appBuilder: (context, controller) =>
+          ProviderScope(child: StaffProductionApp()),
+    ),
+  );
 }
 
 enum AttendanceMark { present, absent, late }
@@ -153,6 +167,7 @@ class StaffShell extends ConsumerWidget {
     final pendingCount = ref.watch(
       attendanceDraftProvider.select((state) => state.pendingCount),
     );
+    final countStrings = SchoolCountStrings.of(context);
     final routeIndex = _paths.indexOf(location);
 
     return SchoolAdaptiveScaffold(
@@ -175,8 +190,7 @@ class StaffShell extends ConsumerWidget {
             )
           : SchoolStatusBanner(
               label: 'Saved on device',
-              message:
-                  '$pendingCount attendance change(s) are waiting to sync.',
+              message: countStrings.attendanceChangesWaiting(pendingCount),
               tone: SchoolStatusTone.warning,
             ),
       title: 'School Staff · Teacher',
