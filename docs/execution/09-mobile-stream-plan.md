@@ -2,7 +2,9 @@
 
 ## Status
 
-Milestones 1 through 6 have passed on the client/native side. Family read and interaction journeys, Teacher Today/roster, encrypted attendance drafts, durable sync, privacy-minimised notification routing, the secret-free Firebase/APNs lifecycle and step-up authenticated secure-document exchange are verified. All proposed mobile endpoints, Firebase/APNs project activation and the platform-specific document presenter remain server/platform-owned and inactive. No production deployment, database mutation or real student data is authorized by this stream.
+Milestones 1 through 6 have passed on the client/native side. Milestone 7 now has a passed source/static tranche covering the restricted-data threat model, shared English/Bangla/Arabic localization policy, Arabic RTL, 200% text scaling, written screen-reader semantics, minimum interaction targets and native transport/file-sharing guards. Device-level TalkBack/VoiceOver verification, Android/iOS integration tests, approved restricted-document presenters and signed store-release evidence remain pending and release blocking.
+
+Family read and interaction journeys, Teacher Today/roster, encrypted attendance drafts, durable sync, privacy-minimised notification routing, the secret-free Firebase/APNs lifecycle and step-up authenticated secure-document exchange are verified. All proposed mobile endpoints, Firebase/APNs project activation and platform-specific document presenters remain server/platform-owned and inactive. No production deployment, database mutation, provider activation or real student data is authorized by this stream.
 
 ## Execution identity
 
@@ -52,9 +54,13 @@ Backend APIs, notification issuance, identity policy, server authorization and s
 6. **Notifications and documents — client/native contracts and journeys passed; live activation remains**
    - Privacy-minimised notification envelopes, exact capability-safe routing and secret-free Firebase/APNs lifecycle.
    - Transient OIDC step-up proof, opaque short-lived grant exchange, no-redirect HTTPS transport, bounded streaming, integrity verification and explicit no-store cleanup.
-   - Firebase/APNs project credentials, live notification issuance, the server exchange endpoint and approved native document presenter remain inactive.
-7. **Security, accessibility and release verification — pending**
-   - Restricted-data threat model, accessibility, localization/RTL, text scaling, screen readers, performance, Android/iOS integration tests and store-release evidence.
+   - Firebase/APNs project credentials, live notification issuance, the server exchange endpoint and approved native document presenters remain inactive.
+7. **Security, accessibility and release verification — source/static tranche passed; device/store evidence pending**
+   - Restricted-data threat model and trust-boundary/abuse-case evidence.
+   - Shared English, Bangla and Arabic shell policy with deterministic English fallback and explicit Arabic RTL.
+   - Source tests for 200% text scaling, written status semantics and minimum 48 logical-pixel controls.
+   - Android cleartext traffic disabled; iOS arbitrary transport loads, file sharing and open-in-place disabled; CI drift guards enforce the settings.
+   - TalkBack, VoiceOver, Dynamic Type device passes, Android/iOS integration tests, native restricted-document presenters, signed release artifacts, privacy declarations and rollback evidence remain pending.
 
 ## Checkpoint 1 evidence — shared foundation
 
@@ -119,7 +125,7 @@ Backend APIs, notification issuance, identity policy, server authorization and s
 
 ## Checkpoint 9 evidence — step-up authenticated secure-document exchange
 
-- `school_authentication` now provides transient AppAuth step-up authorization using a fresh login prompt, `max_age=0`, nonce and optional ACR values. Step-up access tokens are redacted, bounded to a short proof window and are not written into the normal persisted session.
+- `school_authentication` provides transient AppAuth step-up authorization using a fresh login prompt, `max_age=0`, nonce and optional ACR values. Step-up access tokens are redacted, bounded to a short proof window and are not written into the normal persisted session.
 - `school_secure_documents` proposes `POST /v1/mobile/family/document-download-grants/{grantId}/exchange` over HTTPS with redirects disabled, scoped headers, idempotency and a bearer token selected from ordinary or step-up authorization according to the grant.
 - Responses must be `200`, `Cache-Control: no-store`, contain the expected document identity, bounded content length, allow-listed media type and SHA-256 digest. Streams exceeding the declared/maximum size or failing digest/length checks are rejected.
 - Restricted documents require a single-use grant and no-store classification. Completed and concurrent grant replay is blocked.
@@ -131,6 +137,18 @@ Backend APIs, notification issuance, identity policy, server authorization and s
 - Final root CI `30535727688` passed the complete repository gate. Cloudflare staging `30535727669` was skipped.
 - Real student data used: no.
 - Production deployment or database mutation performed: no.
+
+## Checkpoint 10 evidence — restricted-data, accessibility, localization and native release guards
+
+- `docs/mobile/restricted-data-threat-model.md` records protected assets, trust boundaries, spoofing/tampering/repudiation/disclosure/denial/elevation threats, client mitigations, abuse cases, owner activation gates, residual risks and release blockers.
+- `school_design_system` adds an explicit `en`/`bn`/`ar` shell policy, deterministic English fallback and Arabic RTL without inferring tenant, account, campus, persona, student or authorization scope.
+- Source tests verify Bangla/Arabic copy, RTL direction, a five-destination adaptive shell at 200% text scaling, explicit written status semantics and 48 logical-pixel interactive controls.
+- Android manifests prohibit cleartext transport and backup. iOS manifests prohibit arbitrary transport loads, unrestricted file sharing and open-in-place document access. `verify_native_projects.py` fails closed if these settings drift.
+- `docs/mobile/accessibility-localization-release-evidence.md` records the source evidence matrix, critical journeys, screen-reader/localization acceptance criteria, platform integration requirements and store-release blockers.
+- Root CI `30543231291` passed format, lint, boundaries, typecheck, repository tests, migrations, AUTH revocation contracts, live Neon driver, builds, supply-chain checks, browser journeys and execution-artifact validation for the implementation head.
+- The permanent documentation-head Mobile/root run IDs are recorded in PR #41 after the final immutable-head gates complete.
+- Cloudflare staging remains skipped; no application deployment occurred.
+- Production deployment, database mutation, notification-provider activation, secure-document server activation and real student data use: none.
 
 ## Server/platform-owned contract boundary
 
@@ -146,4 +164,4 @@ MOB-01 may define and test clients, domain contracts and fail-closed UI. Owning 
 
 ## Exact next action
 
-Complete restricted-data threat-model evidence, accessibility, localization/RTL, text-scaling and screen-reader verification, Android/iOS integration tests and store-release evidence. Separately obtain server/platform-owner review for Bootstrap, Family, Teacher, device-session, notification, sync and secure-document exchange activation, plus approved Firebase/APNs configuration and a native document presenter, before live account data is used.
+Adopt approved localization delegates and translated domain copy in production composition, then complete device-level TalkBack, VoiceOver, Dynamic Type, switch-control, contrast and RTL journeys. Add Android/iOS integration tests for backgrounding, interruption, process death, low storage, notification launches, encrypted sync recovery and restricted-document cleanup. Separately obtain server/platform-owner review for Bootstrap, Family, Teacher, device-session, notification, sync and secure-document exchange activation, approved Firebase/APNs configuration and Android/iOS native document presenters. Produce signed release artifacts, privacy declarations, provenance and rollback evidence before any live account or student data is used.
