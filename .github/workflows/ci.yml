@@ -54,7 +54,9 @@ jobs:
           grep -q 'atomically consumes the jti and revokes exact provider sessions only once' auth-07-policy-red.log
       - name: Apply Logout Token policy implementation
         run: python3 scripts/implement_auth_07_policy.py implementation
-      - run: rm scripts/implement_auth_07_policy.py
+      - name: Apply lint-safe async test doubles
+        run: python3 scripts/fix_auth_07_policy_lint.py
+      - run: rm scripts/implement_auth_07_policy.py scripts/fix_auth_07_policy_lint.py
       - run: npm run format
       - run: npm run lint -- --fix
       - run: npm run format
