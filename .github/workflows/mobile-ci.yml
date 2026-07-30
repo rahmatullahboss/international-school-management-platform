@@ -32,6 +32,7 @@ jobs:
         run: |
           python3 mobile/tool/continue_family_interactions_ui.py
           python3 mobile/tool/fix_family_interactions_ui.py
+          python3 mobile/tool/fix_family_form_base_version.py
       - name: Resolve workspace dependencies
         working-directory: mobile
         run: flutter pub get
@@ -47,7 +48,7 @@ jobs:
           if git diff --cached --quiet; then
             exit 0
           fi
-          git commit -m "feat(MOB-01): add Family interaction production journeys"
+          git commit -m "fix(MOB-01): expose server-versioned Family forms"
           git push origin HEAD:module/flutter-mobile-apps
       - name: Verify generated files remain ignored
         run: git diff --exit-code -- mobile
