@@ -1,5 +1,5 @@
+import 'package:flutter_test/flutter_test.dart';
 import 'package:school_authentication/school_authentication.dart';
-import 'package:test/test.dart';
 
 void main() {
   test(
