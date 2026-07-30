@@ -12,16 +12,20 @@ enum SchoolPluralCategory { zero, one, two, few, many, other }
 abstract final class SchoolCardinalPluralRules {
   static SchoolPluralCategory categoryFor(Locale locale, int count) {
     if (count < 0) {
-      throw RangeError.value(count, 'count', 'A non-negative count is required.');
+      throw RangeError.value(
+        count,
+        'count',
+        'A non-negative count is required.',
+      );
     }
 
     return switch (SchoolLocalePolicy.resolve(locale)) {
-      SchoolLanguage.english => count == 1
-          ? SchoolPluralCategory.one
-          : SchoolPluralCategory.other,
-      SchoolLanguage.bangla => count == 0 || count == 1
-          ? SchoolPluralCategory.one
-          : SchoolPluralCategory.other,
+      SchoolLanguage.english =>
+        count == 1 ? SchoolPluralCategory.one : SchoolPluralCategory.other,
+      SchoolLanguage.bangla =>
+        count == 0 || count == 1
+            ? SchoolPluralCategory.one
+            : SchoolPluralCategory.other,
       SchoolLanguage.arabic => _arabic(count),
     };
   }
