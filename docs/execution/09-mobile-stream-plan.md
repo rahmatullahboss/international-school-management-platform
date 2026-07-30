@@ -2,7 +2,7 @@
 
 ## Status
 
-Milestones 1 through 5 have passed on the client/native side. Family read journeys and capability-scoped document, form, guardian-consent and conversation production journeys are verified. Teacher Today, assigned roster and encrypted attendance-draft production journeys are verified. Durable sync includes platform-backed AES-GCM persistence, secure key lifecycle, account/school purge, operation-journal reconciliation and production Staff queue/transport UI. Milestone 6 Family interaction UI is complete; push delivery, deep links and native secure-document exchange remain. All proposed mobile endpoints remain server-owned and are not live.
+Milestones 1 through 5 have passed on the client/native side. Family read journeys and capability-scoped document, form, guardian-consent and conversation production journeys are verified. Teacher Today, assigned roster and encrypted attendance-draft production journeys are verified. Durable sync includes platform-backed AES-GCM persistence, secure key lifecycle, account/school purge, operation-journal reconciliation and production Staff queue/transport UI. Milestone 6 now includes a verified privacy-minimised notification envelope, provider-neutral notification inbox and capability-safe Family/Staff launch and runtime routing. Native Firebase/APNs adapters, notification permission and token lifecycle, secure-document exchange and step-up completion remain. All proposed mobile endpoints remain server-owned and are not live.
 
 ## Execution identity
 
@@ -51,9 +51,9 @@ Any backend API, notification, identity or shared platform contract change requi
 5. **Durable offline sync — client/native passed; live server delta activation remains**
    - Encrypted payload envelopes, idempotent operation queue, scoped retry, delta cursor, duplicate handling, conflict, rejection and reconciliation states.
    - Platform-backed AES-GCM file persistence, platform secure-storage key versions, key rotation, tamper quarantine, operation journal and account/school purge.
-6. **Notifications and documents — Family interaction UI passed; push/deep-link delivery and native exchange remain**
-   - Device registration contracts, safe notification payloads, capability-scoped documents, forms, guardian consent and conversations.
-   - Native secure-document transfer, step-up completion, push routing and notification preferences remain.
+6. **Notifications and documents — interaction UI and client routing passed; native delivery and exchange remain**
+   - Device registration contracts, privacy-minimised notification envelopes, provider-neutral launch/runtime inbox, exact capability-safe routes, documents, forms, guardian consent and conversations.
+   - Native Firebase/APNs adapters, notification permission and token lifecycle, native secure-document transfer, step-up completion and user notification preferences remain.
 7. **Security, accessibility and release verification — pending**
    - Mobile threat model, restricted-data cache rules, step-up authentication, localization/RTL, text scaling, screen readers, performance, Android/iOS integration tests and store-release evidence.
 
@@ -136,12 +136,30 @@ Any backend API, notification, identity or shared platform contract change requi
 - `FamilyInteractionController` keeps document, form, consent, conversation and message state scoped to the active account, tenant, campus, persona and student profile; slower responses from a previous child selection are discarded.
 - Production navigation exposes a capability-scoped Services hub plus Conversations destination without substituting fixture data when the interaction service is unavailable.
 - Document screens display authorized metadata and request opaque, short-lived download grants; raw URLs, access tokens and storage credentials are never exposed. Restricted documents remain no-store.
-- Form definitions now include the server-issued base version as well as schema version. Dynamic text, boolean, single-choice and date fields submit exact validated answers with idempotency and never invent a newer revision.
+- Form definitions include the server-issued base version as well as schema version. Dynamic text, boolean, single-choice and date fields submit exact validated answers with idempotency and never invent a newer revision.
 - Guardian consent screens require the guardian persona and `forms.consent` capability before transport, preserve the policy version and expose explicit grant or decline decisions.
 - Conversation screens use scoped cursor pagination, verify conversation membership in the active directory, require `messages.send` before sending and append only server-returned messages.
 - Tests cover stale child-response rejection, server-issued form-version use, student consent rejection before transport and capability-authorized conversation sending.
 - Final permanent read-only Mobile CI `30518088954` passed strict formatting, clean-tree/native guards, every configured analyzer and test, both Android debug APK builds and artifact upload.
 - Final root CI `30518088899` passed format, lint, boundaries, typecheck, repository tests, fresh migration replay, live Neon driver, builds, audit/licences/provenance, browser journeys and execution-artifact validation.
+- Real student data used: no.
+- Production deployment or database mutation performed: no.
+
+## Checkpoint 7 evidence — privacy-minimised notification routing
+
+- `MobileNotificationEnvelope` accepts only an allow-listed data payload containing opaque notification, application, tenant, campus, persona, kind, optional resource and bounded issued/expiry timestamps.
+- Provider display titles and bodies, student or staff names, amounts, document names, message bodies, raw URLs, bearer tokens, storage credentials and arbitrary extra fields are rejected before routing.
+- Lock-screen presentation is generated locally with generic Family or Staff text and diagnostics redact school scope and resource identity.
+- `MobileNotificationRouteResolver` requires the exact application, active tenant, campus, persona and capability set; it never selects another school or role on behalf of a notification.
+- Expired, excessively long-lived, materially future-dated, cross-application, cross-school, wrong-persona and unauthorized-capability intents fail closed without navigation.
+- Resource identifiers are accepted only for Family forms and conversations and are URI-encoded before route construction. Interaction routes remain unavailable when the authorized interaction repository is not configured.
+- `MobileNotificationInbox` provides a provider-neutral one-time launch intent and runtime-open stream. `MobileNotificationOpenTracker` bounds memory and suppresses duplicate provider callbacks.
+- Family and Staff production apps consume an injected notification source, clear duplicate state when authorization scope changes and route only after the active session passes the resolver.
+- Tests cover privacy-field rejection, redacted diagnostics, exact Family form routing, wrong-campus/persona/capability blocking, expiry/future/application rejection, Staff any-of message capability rules, one-time launch consumption and bounded duplicate handling.
+- Source checkpoint Mobile CI `30519588980` passed all configured analyzers/tests, both Android debug APK builds and artifact upload.
+- Permanent read-only Mobile CI `30520102717` repeated strict formatting, clean-tree/native guards, all analyzers/tests, both Android debug APK builds and artifact upload successfully.
+- Root CI `30520102721` passed format, lint, boundaries, typecheck, repository tests, fresh migration replay, live Neon driver, builds, audit/licences/provenance, browser journeys and execution-artifact validation.
+- Cloudflare staging run `30520102726` was skipped; no application deployment occurred.
 - Real student data used: no.
 - Production deployment or database mutation performed: no.
 
@@ -155,8 +173,8 @@ The following proposed endpoints remain unimplemented and inactive in MOB-01:
 - `/v1/mobile/teacher/**`
 - future `/v1/mobile/sync` delta and operation endpoints
 
-MOB-01 may define and test clients, domain contracts and fail-closed UI states. The owning server modules must review and implement authorization, audit, publication/finalization rules, data minimization and persistence.
+MOB-01 may define and test clients, domain contracts and fail-closed UI states. The owning server modules must review and implement authorization, audit, publication/finalization rules, notification issuance, data minimization and persistence.
 
 ## Exact next action
 
-Complete push notification delivery, capability-safe deep-link routing and native secure-document exchange with step-up authentication without exposing raw credentials. Then add restricted-data threat-model evidence, accessibility, localization/RTL, text-scaling and screen-reader verification, Android/iOS integration tests and store-release evidence. Bootstrap, Family, Teacher, device-session and sync endpoint proposals must still pass the existing server-module ownership process before live account data is used.
+Add native Firebase/APNs adapters and notification permission, installation-token refresh and revocation lifecycle on top of the verified provider-neutral inbox without committing provider secrets or activating server endpoints. Then implement native secure-document exchange with step-up authentication and explicit no-store handling. After that, complete restricted-data threat-model evidence, accessibility, localization/RTL, text-scaling and screen-reader verification, Android/iOS integration tests and store-release evidence. Bootstrap, Family, Teacher, device-session, notification and sync endpoint proposals must still pass the existing server-module ownership process before live account data is used.
