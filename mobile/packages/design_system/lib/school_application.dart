@@ -60,7 +60,11 @@ final class SecureSchoolLocalePreferenceStore
   static String _validateStorageKey(String value) {
     final normalized = value.trim();
     if (normalized.isEmpty) {
-      throw ArgumentError.value(value, 'storageKey', 'A storage key is required.');
+      throw ArgumentError.value(
+        value,
+        'storageKey',
+        'A storage key is required.',
+      );
     }
     return normalized;
   }
@@ -317,7 +321,9 @@ final class _SchoolLocaleCycleControl extends StatelessWidget {
           enabled: !controller.isBusy,
           label: controller.cycleSemanticLabel,
           liveRegion: hasError,
-          value: hasError ? 'Preference was not saved.' : controller.compactLabel,
+          value: hasError
+              ? 'Preference was not saved.'
+              : controller.compactLabel,
           child: Material(
             clipBehavior: Clip.antiAlias,
             color: SchoolColors.paper,
