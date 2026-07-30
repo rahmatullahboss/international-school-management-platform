@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/widgets.dart';
 
 /// Languages approved for the first mobile localization verification tranche.
