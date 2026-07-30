@@ -160,7 +160,11 @@ export async function terminateBrowserSession(
     return failure(403, 'logout_origin_denied', 'The requesting origin is not permitted.');
   }
   if (!isJsonContentType(input.contentType)) {
-    return failure(400, 'logout_content_type_invalid', 'Logout requires an application/json request.');
+    return failure(
+      400,
+      'logout_content_type_invalid',
+      'Logout requires an application/json request.',
+    );
   }
 
   const claims = await requireActiveClaims(input);

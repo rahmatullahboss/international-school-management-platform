@@ -216,6 +216,7 @@ app.post('/auth/v1/logout', async (context) => {
     );
   }
 
+  const registry = durableLogoutRegistry(context.env);
   const result = await terminateBrowserSession({
     sessionSecret: context.env.AUTH_SESSION_SECRET,
     registrySource: context.env.AUTH_SESSION_REGISTRY_SOURCE,
@@ -224,9 +225,7 @@ app.post('/auth/v1/logout', async (context) => {
     contentType: context.req.header('content-type'),
     cookieHeader: context.req.header('cookie'),
     scope,
-    ...(durableLogoutRegistry(context.env) === undefined
-      ? {}
-      : { registry: durableLogoutRegistry(context.env) }),
+    ...(registry === undefined ? {} : { registry }),
   });
   if (result.setCookie !== undefined) context.header('set-cookie', result.setCookie);
   if (!result.ok) {

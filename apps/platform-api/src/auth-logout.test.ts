@@ -179,7 +179,7 @@ describe('AUTH-04 browser logout', () => {
         scope: 'current',
         registry: registry(),
       }),
-    ).resolves.toMatchObject({ ok: false, status: 401, code: 'browser_session_missing' });
+    ).resolves.toMatchObject({ ok: false, status: 401, code: 'browser_session_required' });
 
     await expect(
       terminateBrowserSession({

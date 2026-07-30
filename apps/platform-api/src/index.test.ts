@@ -219,9 +219,7 @@ describe('platform API', () => {
   });
 
   it('revokes every account session using only the signed principal context', async () => {
-    databaseQuery
-      .mockResolvedValueOnce([{ value: true }])
-      .mockResolvedValueOnce([{ value: 3 }]);
+    databaseQuery.mockResolvedValueOnce([{ value: true }]).mockResolvedValueOnce([{ value: 3 }]);
     const response = await app.request(
       '/auth/v1/logout',
       {
