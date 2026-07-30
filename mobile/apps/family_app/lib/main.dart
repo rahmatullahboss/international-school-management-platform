@@ -9,6 +9,7 @@ import 'package:school_api_client/family_read_api.dart';
 import 'package:school_api_client/school_api_client.dart';
 import 'package:school_app_bootstrap/school_app_bootstrap.dart';
 import 'package:school_authentication/school_authentication.dart';
+import 'package:school_design_system/school_application.dart';
 import 'package:school_design_system/school_design_system.dart';
 import 'package:school_family_domain/family_interactions.dart';
 import 'package:school_family_domain/school_family_domain.dart';
@@ -21,8 +22,20 @@ part 'family_interaction_screens.dart';
 part 'family_journey_controller.dart';
 part 'production_app.dart';
 
-void main() {
-  runApp(const ProviderScope(child: FamilyProductionApp()));
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final localeController = SchoolLocaleController.secure(
+    storageKey: 'school.mobile.family.locale.v1',
+  );
+  await localeController.initialize();
+
+  runApp(
+    SchoolLocalePreferenceHost(
+      controller: localeController,
+      appBuilder: (context, controller) =>
+          ProviderScope(child: FamilyProductionApp()),
+    ),
+  );
 }
 
 final familyPersonaProvider =
