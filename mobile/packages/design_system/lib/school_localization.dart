@@ -18,13 +18,12 @@ abstract final class SchoolLocalePolicy {
     Locale('ar'),
   ];
 
-  static SchoolLanguage resolve(Locale locale) => switch (
-    locale.languageCode.toLowerCase()
-  ) {
-    'bn' => SchoolLanguage.bangla,
-    'ar' => SchoolLanguage.arabic,
-    _ => SchoolLanguage.english,
-  };
+  static SchoolLanguage resolve(Locale locale) =>
+      switch (locale.languageCode.toLowerCase()) {
+        'bn' => SchoolLanguage.bangla,
+        'ar' => SchoolLanguage.arabic,
+        _ => SchoolLanguage.english,
+      };
 
   static bool isSupported(Locale locale) => supportedLocales.any(
     (supported) =>
@@ -46,8 +45,7 @@ abstract final class SchoolLocalePolicy {
     }
 
     for (final supported in supportedLocales) {
-      if (supported.languageCode.toLowerCase() ==
-          fallbackLocale.languageCode) {
+      if (supported.languageCode.toLowerCase() == fallbackLocale.languageCode) {
         return supported;
       }
     }
@@ -236,9 +234,8 @@ final class _SchoolWidgetsLocalizationsDelegate
   bool isSupported(Locale locale) => SchoolLocalePolicy.isSupported(locale);
 
   @override
-  Future<WidgetsLocalizations> load(Locale locale) => SynchronousFuture(
-    SchoolWidgetsLocalizations._(locale),
-  );
+  Future<WidgetsLocalizations> load(Locale locale) =>
+      SynchronousFuture(SchoolWidgetsLocalizations._(locale));
 
   @override
   bool shouldReload(_SchoolWidgetsLocalizationsDelegate old) => false;
