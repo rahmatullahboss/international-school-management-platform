@@ -30,6 +30,44 @@ export type {
 } from './membership.js';
 export { MembershipDirectory } from './membership.js';
 export type {
+  IssueOAuthTransactionInput,
+  OAuthAuthorizationRequest,
+  OAuthCallbackVerificationResult,
+  OAuthTransactionClaims,
+  OAuthTransactionIssueResult,
+  VerifyOAuthCallbackInput,
+} from './oauth-transaction.js';
+export {
+  OAUTH_TRANSACTION_COOKIE_NAME,
+  clearOAuthTransactionCookie,
+  issueOAuthTransaction,
+  verifyOAuthCallbackTransaction,
+} from './oauth-transaction.js';
+export type {
+  BeginOidcLoginInput,
+  BeginOidcLoginResult,
+  CompleteOidcLoginInput,
+  CompleteOidcLoginResult,
+  OidcCallbackParameters,
+  OidcLoginFlowConfiguration,
+  OidcLoginFlowDependencies,
+} from './oidc-login-flow.js';
+export { beginOidcLogin, completeOidcLogin } from './oidc-login-flow.js';
+export type {
+  ExchangeOidcAuthorizationCodeInput,
+  OidcDiscoveredProvider,
+  OidcDiscoveryResult,
+  OidcJwksResult,
+  OidcProviderFailureCode,
+  OidcTokenExchangeResult,
+  OidcTokenSet,
+} from './oidc-provider-client.js';
+export {
+  discoverOidcProvider,
+  exchangeOidcAuthorizationCode,
+  fetchOidcJwks,
+} from './oidc-provider-client.js';
+export type {
   OidcIdentity,
   OidcJsonWebKey,
   OidcJsonWebKeySet,

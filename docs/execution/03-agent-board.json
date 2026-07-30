@@ -5,7 +5,7 @@
   "execution_mode": "whole-module-agent-ownership",
   "microtask_agents_allowed": false,
   "agent_delegation_allowed": false,
-  "program_status": "oidc_trust_boundary_verified",
+  "program_status": "oidc_pkce_flow_verified_login_disabled",
   "parallel_execution": {
     "allowed": true,
     "assignment_unit": "complete_module_stream",
@@ -584,5 +584,43 @@
     "production_identity_enabled": false,
     "production_mutations_enabled": false,
     "remaining_release_gate": "Authorization Code with PKCE transaction and callback, token exchange, approved discovery/JWKS retrieval and rotation, reviewed provider credentials, database-backed memberships and policy, revocation and logout propagation, step-up initiation, monitoring, rollback, owner-led UAT and explicit production authorization"
+  },
+  "auth_oidc_pkce": {
+    "id": "AUTH-02",
+    "status": "gate_passed_provider_routes_disabled",
+    "gate": "GATE-OIDC-PKCE-FLOW-V1",
+    "branch": "pilot/oidc-pkce-flow-v1",
+    "reviewed_base_sha": "48f3fb311a60b87faad3ec4f643b4a32b323099f",
+    "implementation_proof_sha": "fffd269a7f840f9f90cdca4c4268e46bec7f2a8e",
+    "root_ci_run": "30517446940",
+    "cloudflare_deploy_run": "30517446956",
+    "repository_tests_passed": 557,
+    "browser_journeys_passed": 22,
+    "authorization_code": true,
+    "pkce_method": "S256",
+    "random_entropy_bits": 256,
+    "transaction_cookie": "__Host-school_oauth",
+    "transaction_replay_dependency_required": true,
+    "authorization_response_issuer_verified": true,
+    "same_origin_return_path_only": true,
+    "discovery_exact_issuer": true,
+    "discovery_required_capabilities": [
+      "code",
+      "RS256",
+      "S256"
+    ],
+    "provider_response_redirects_allowed": false,
+    "bounded_provider_responses": true,
+    "jwks_unique_key_ids": true,
+    "token_endpoint_authentication": "client_secret_basic",
+    "provider_tokens_returned_to_browser": false,
+    "complete_orchestration_verified": true,
+    "login_enabled": false,
+    "real_provider_configured": false,
+    "durable_replay_source_configured": false,
+    "real_membership_source_configured": false,
+    "production_identity_enabled": false,
+    "production_mutations_enabled": false,
+    "remaining_release_gate": "durable OAuth replay ledger, approved JWKS cache and rotation, reviewed provider configuration, database-backed memberships and permissions, session revocation and refresh-token governance, step-up, monitoring, rollback, owner-led UAT and explicit production authorization"
   }
 }

@@ -1,6 +1,6 @@
 # Whole-Module Multi-Agent Execution System
 
-**Status:** Provider-neutral OIDC trust boundary verified; real login and production promotion gated  
+**Status:** Authorization Code + PKCE contracts verified; durable identity adapters and real login gated  
 **Date:** 2026-07-30  
 **Operating rule:** one agent owns one complete large module; internal milestones are not separate agent assignments.
 
@@ -30,7 +30,9 @@ Owner operating decision: separate agents are used only for complete module stre
 16. [PILOT-03 release evidence](15-pilot-signed-session-release-evidence.md)
 17. [AUTH-01 OIDC trust boundary](16-oidc-trust-boundary-v1.md)
 18. [AUTH-01 release evidence](17-oidc-trust-boundary-release-evidence.md)
-19. Validation script: `scripts/validate_execution_artifacts.py`
+19. [AUTH-02 Authorization Code + PKCE](18-oidc-pkce-flow-v1.md)
+20. [AUTH-02 release evidence](19-oidc-pkce-flow-release-evidence.md)
+21. Validation script: `scripts/validate_execution_artifacts.py`
 
 ## 3. Repository baseline
 
@@ -91,6 +93,7 @@ After the APIs/read models from the previous waves are stable:
 - `PILOT-02` — Connects role portals to private, scope-checked synthetic Worker snapshots with tenant/campus/role/subject cache isolation and non-blocking revalidation.
 - `PILOT-03` — Replaces browser-declared scope headers with short-lived HMAC-signed synthetic staging sessions that bind tenant, campus, role and subject before a snapshot is read.
 - `AUTH-01` — Establishes strict provider-neutral OIDC token verification, server-owned tenant/campus membership resolution and secure host-cookie browser-session contracts while real login remains disabled.
+- `AUTH-02` — Verifies browser-bound Authorization Code + PKCE transactions, provider discovery, bounded JWKS retrieval, confidential code exchange, replay protection and secure login orchestration while real provider routes remain disabled.
 
 ## 5. Whole-module completion boundary
 

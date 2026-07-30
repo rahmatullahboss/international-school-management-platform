@@ -120,3 +120,20 @@ AUTH-01 establishes a provider-neutral authentication trust boundary without ena
 - The staged readiness endpoint reports `loginEnabled: false`; no provider credential, membership source or production session key is deployed.
 
 `GATE-OIDC-TRUST-BOUNDARY-V1` passes. Authorization Code + PKCE transactions, callback and token exchange, approved discovery/JWKS retrieval and rotation, a real provider, database-backed memberships and permissions, revocation, step-up, monitoring, recovery rehearsal, owner-led UAT and explicit production authorization remain blocked.
+
+
+## Post-gate Authorization Code and PKCE Evidence
+
+AUTH-02 completes the provider-neutral Authorization Code + PKCE contract without enabling a real provider.
+
+- Reviewed base: `48f3fb311a60b87faad3ec4f643b4a32b323099f`.
+- Implementation proof: `fffd269a7f840f9f90cdca4c4268e46bec7f2a8e`.
+- Root CI `30517446940` passed all 21 gates with 557 repository tests, 40 migrations, live Neon, builds, budgets, 22 browser journeys and artifact validation.
+- Cloudflare `30517446956` passed extended readiness, fail-closed session, pilot bearer, persona, PWA and health smoke tests.
+- The browser transaction uses high-entropy state, nonce, verifier, S256 and a signed host-only cookie.
+- Discovery, JWKS and token responses are no-redirect, JSON-only and size bounded.
+- The confidential code exchange sends the exact redirect URI and verifier and never returns provider tokens to browser-facing results.
+- Atomic replay consumption occurs before a provider request.
+- Staging continues to report `loginEnabled: false` with no provider or durable identity adapter configured.
+
+`GATE-OIDC-PKCE-FLOW-V1` passes. Durable replay, JWKS cache/rotation, database-backed membership and policy adapters, reviewed provider configuration, session revocation, refresh-token governance, step-up, monitoring, rollback, UAT and production authorization remain blocked.
