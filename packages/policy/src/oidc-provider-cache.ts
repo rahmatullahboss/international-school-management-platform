@@ -36,14 +36,14 @@ export type OidcProviderCacheFailureCode =
   | 'oidc_key_rotation_conflict';
 
 export interface OidcProviderCacheStore {
-  read(key: string): Promise<unknown | undefined>;
+  read(key: string): Promise<unknown>;
   write(key: string, value: unknown): Promise<void>;
 }
 
 export class MemoryOidcProviderCacheStore implements OidcProviderCacheStore {
   readonly #values = new Map<string, unknown>();
 
-  async read(key: string): Promise<unknown | undefined> {
+  async read(key: string): Promise<unknown> {
     await Promise.resolve();
     return this.#values.get(key);
   }
@@ -111,7 +111,7 @@ interface DiscoveryCacheRecord {
   readonly fetchedAt: number;
   readonly freshUntil: number;
   readonly staleUntil: number;
-  readonly etag?: string;
+  readonly etag?: string | undefined;
 }
 
 interface RetiredKeyRecord {
@@ -129,7 +129,7 @@ interface JwksCacheRecord {
   readonly fetchedAt: number;
   readonly freshUntil: number;
   readonly staleUntil: number;
-  readonly etag?: string;
+  readonly etag?: string | undefined;
 }
 
 function failure<T extends OidcCachedDiscoveryResult | OidcCachedJwksResult>(
@@ -181,17 +181,22 @@ function validTimes(value: Record<string, unknown>): boolean {
   );
 }
 
-function providerMatches(value: unknown, issuer: string, clientId: string, redirectUri: string): value is OidcDiscoveredProvider {
+function providerMatches(
+  value: unknown,
+  issuer: string,
+  clientId: string,
+  redirectUri: string,
+): value is OidcDiscoveredProvider {
   if (!isRecord(value) || !isRecord(value.configuration)) return false;
   const configuration = value.configuration as unknown as OidcProviderConfiguration;
   return (
-    value.authorizationResponseIssuerParameterSupported === true ||
-    value.authorizationResponseIssuerParameterSupported === false
-  ) &&
+    (value.authorizationResponseIssuerParameterSupported === true ||
+      value.authorizationResponseIssuerParameterSupported === false) &&
     configuration.issuer === issuer &&
     configuration.clientId === clientId &&
     configuration.redirectUri === redirectUri &&
-    validateOidcProviderConfiguration(configuration) === undefined;
+    validateOidcProviderConfiguration(configuration) === undefined
+  );
 }
 
 function discoveryRecord(
@@ -214,7 +219,10 @@ function discoveryRecord(
   return value as unknown as DiscoveryCacheRecord;
 }
 
-function jwksRecord(value: unknown, configuration: OidcProviderConfiguration): JwksCacheRecord | undefined {
+function jwksRecord(
+  value: unknown,
+  configuration: OidcProviderConfiguration,
+): JwksCacheRecord | undefined {
   if (!isRecord(value)) return undefined;
   if (
     value.schemaVersion !== CACHE_SCHEMA_VERSION ||
@@ -328,7 +336,10 @@ function responseEtag(response: Response): string | undefined {
   return isValidEtag(etag) ? etag : undefined;
 }
 
-function freshness(now: number, response: Response): {
+function freshness(
+  now: number,
+  response: Response,
+): {
   readonly fetchedAt: number;
   readonly freshUntil: number;
   readonly staleUntil: number;
@@ -364,7 +375,9 @@ function keyMaterial(key: OidcJsonWebKey): string {
 }
 
 function combinedJwks(record: JwksCacheRecord, now: number): OidcJsonWebKeySet {
-  const retired = record.retiredKeys.filter((entry) => entry.retireAt > now).map((entry) => entry.key);
+  const retired = record.retiredKeys
+    .filter((entry) => entry.retireAt > now)
+    .map((entry) => entry.key);
   return { keys: [...record.activeKeys, ...retired] };
 }
 
@@ -415,7 +428,10 @@ export class OidcProviderCache {
     const now = this.#now();
     if (!input.forceRefresh && cached !== undefined && cached.freshUntil > now) {
       if (!providerOriginsAllowed(cached.provider, this.#allowedOrigins)) {
-        return failure('oidc_endpoint_origin_denied', 'OIDC provider endpoint origin is not approved.');
+        return failure(
+          'oidc_endpoint_origin_denied',
+          'OIDC provider endpoint origin is not approved.',
+        );
       }
       return {
         ok: true,
@@ -467,9 +483,9 @@ export class OidcProviderCache {
       const updated: DiscoveryCacheRecord = {
         ...cached,
         ...times,
-        ...(responseEtag(response) ?? cached.etag) === undefined
+        ...((responseEtag(response) ?? cached.etag) === undefined
           ? {}
-          : { etag: responseEtag(response) ?? cached.etag },
+          : { etag: responseEtag(response) ?? cached.etag }),
       };
       try {
         await this.#store.write(key, updated);
@@ -488,7 +504,10 @@ export class OidcProviderCache {
       input.issuer,
       input.clientId,
       input.redirectUri,
-      async () => response,
+      async () => {
+        await Promise.resolve();
+        return response;
+      },
     );
     if (!parsed.ok) {
       if (
@@ -507,7 +526,10 @@ export class OidcProviderCache {
       return parsed;
     }
     if (!providerOriginsAllowed(parsed.provider, this.#allowedOrigins!)) {
-      return failure('oidc_endpoint_origin_denied', 'OIDC provider endpoint origin is not approved.');
+      return failure(
+        'oidc_endpoint_origin_denied',
+        'OIDC provider endpoint origin is not approved.',
+      );
     }
     if (cached !== undefined && !sameProvider(cached.provider, parsed.provider)) {
       return failure(
@@ -574,9 +596,7 @@ export class OidcProviderCache {
         source: 'cache',
         freshUntil: cached.freshUntil,
         activeKeyIds: cached.activeKeys.map((key) => key.kid!),
-        retiredKeyIds: jwks.keys
-          .slice(cached.activeKeys.length)
-          .map((key) => key.kid!),
+        retiredKeyIds: jwks.keys.slice(cached.activeKeys.length).map((key) => key.kid!),
       };
     }
 
@@ -644,7 +664,10 @@ export class OidcProviderCache {
       };
     }
 
-    const parsed: OidcJwksResult = await fetchOidcJwks(input.configuration, async () => response);
+    const parsed: OidcJwksResult = await fetchOidcJwks(input.configuration, async () => {
+      await Promise.resolve();
+      return response;
+    });
     if (!parsed.ok) {
       if (
         cached !== undefined &&
@@ -726,8 +749,7 @@ export class OidcProviderCache {
   }
 }
 
-export interface VerifyOidcIdTokenWithRotationInput
-  extends Omit<VerifyOidcIdTokenInput, 'jwks'> {
+export interface VerifyOidcIdTokenWithRotationInput extends Omit<VerifyOidcIdTokenInput, 'jwks'> {
   readonly resolveJwks: (forceRefresh: boolean) => Promise<OidcCachedJwksResult>;
 }
 
@@ -742,9 +764,7 @@ export async function verifyOidcIdTokenWithRotation(
     configuration: input.configuration,
     jwks: initialKeys.jwks,
     ...(input.now === undefined ? {} : { now: input.now }),
-    ...(input.clockSkewSeconds === undefined
-      ? {}
-      : { clockSkewSeconds: input.clockSkewSeconds }),
+    ...(input.clockSkewSeconds === undefined ? {} : { clockSkewSeconds: input.clockSkewSeconds }),
   });
   if (initialVerification.ok || initialVerification.code !== 'oidc_signing_key_not_found') {
     return initialVerification;
@@ -758,8 +778,6 @@ export async function verifyOidcIdTokenWithRotation(
     configuration: input.configuration,
     jwks: refreshedKeys.jwks,
     ...(input.now === undefined ? {} : { now: input.now }),
-    ...(input.clockSkewSeconds === undefined
-      ? {}
-      : { clockSkewSeconds: input.clockSkewSeconds }),
+    ...(input.clockSkewSeconds === undefined ? {} : { clockSkewSeconds: input.clockSkewSeconds }),
   });
 }

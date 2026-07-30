@@ -24,12 +24,12 @@ const nonce = 'nonce-with-sufficient-entropy-for-the-login-transaction';
 function jsonResponse(value: unknown, init: ResponseInit = {}): Response {
   return new Response(JSON.stringify(value), {
     status: 200,
+    ...init,
     headers: {
       'content-type': 'application/json',
       'cache-control': 'max-age=60',
       ...init.headers,
     },
-    ...init,
   });
 }
 

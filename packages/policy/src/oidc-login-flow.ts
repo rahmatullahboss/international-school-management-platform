@@ -148,7 +148,7 @@ async function verifyIdentityWithSingleRefresh(
   input: CompleteOidcLoginInput,
   idToken: string,
   nonce: string,
-): Promise<OidcVerificationResult | OidcSigningKeyResolution> {
+): Promise<OidcVerificationResult | Extract<OidcSigningKeyResolution, { readonly ok: false }>> {
   const initialKeys = await resolveSigningKeys(input, false);
   if (!initialKeys.ok) return initialKeys;
   const verify = (jwks: OidcJsonWebKeySet): Promise<OidcVerificationResult> =>
@@ -274,15 +274,16 @@ export async function completeOidcLogin(
     transaction.transaction.nonce,
   );
   if (!identity.ok) {
-    const status = identity.code.startsWith('oidc_token_') ||
+    const status =
+      identity.code.startsWith('oidc_token_') ||
       identity.code === 'oidc_signing_key_not_found' ||
       identity.code === 'oidc_signature_invalid' ||
       identity.code === 'oidc_claims_invalid' ||
       identity.code === 'oidc_issuer_mismatch' ||
       identity.code === 'oidc_audience_mismatch' ||
       identity.code === 'oidc_nonce_mismatch'
-      ? 401
-      : signingKeyFailureStatus(identity.code);
+        ? 401
+        : signingKeyFailureStatus(identity.code);
     return callbackFailure(status, identity.code, identity.message);
   }
 
