@@ -127,8 +127,6 @@ void main() {
     tester,
   ) async {
     final strings = SchoolShellStrings.forLocale(const Locale('ar', 'SA'));
-    final semantics = tester.ensureSemantics();
-    addTearDown(semantics.dispose);
 
     await tester.pumpWidget(
       MaterialApp(
