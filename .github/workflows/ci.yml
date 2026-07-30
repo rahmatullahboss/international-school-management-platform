@@ -10,13 +10,12 @@ on:
       - 'integration/**'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  author-auth-06-step-up:
-    if: github.event_name == 'pull_request' && github.head_ref == 'auth/provider-backchannel-stepup-v1' && github.actor != 'github-actions[bot]'
+  verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 20
     services:
       postgres:
         image: postgres:16-alpine
@@ -31,50 +30,37 @@ jobs:
           --health-retries 10
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: auth/provider-backchannel-stepup-v1
-          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22.22.2'
           cache: npm
       - run: npm ci
-      - name: Add AUTH-06 step-up regression tests
-        run: python3 scripts/implement_auth_06_step_up.py test
-      - name: Prove step-up regressions fail before implementation
-        shell: bash
-        run: |
-          set +e
-          npx vitest run packages/policy/src/oauth-transaction.test.ts packages/policy/src/oidc-login-flow.test.ts > auth-06-red.log 2>&1
-          status=$?
-          set -e
-          cat auth-06-red.log
-          test "$status" -ne 0
-          grep -q 'requests a fresh reviewed AAL2 provider authentication for step-up' auth-06-red.log
-          grep -q 'denies stale or AAL1 authentication for a step-up transaction' auth-06-red.log
-      - name: Apply AUTH-06 step-up implementation
-        run: python3 scripts/implement_auth_06_step_up.py implementation
-      - name: Apply lint-safe ACR validation
-        run: python3 scripts/fix_auth_06_lint.py
-      - name: Keep staging workflow outside the bot-authored commit
-        run: git checkout -- .github/workflows/deploy-cloudflare-staging.yml
-      - run: rm scripts/implement_auth_06_step_up.py scripts/fix_auth_06_lint.py
-      - run: npm run format
-      - run: npm run lint -- --fix
-      - run: npm run format
+      - run: npm run format:check
       - run: npm run lint
       - run: npm run check:boundaries
       - run: npm run typecheck
       - run: npm run test
-      - name: Verify canonical and AUTH migrations
+      - name: Verify all Wave 2 migrations on fresh PostgreSQL
         env:
           PGHOST: 127.0.0.1
           PGPORT: 5432
           PGUSER: postgres
           PGDATABASE: postgres
+        run: npm run verify:migrations
+      - name: Verify AUTH post-integration migrations and revocation contracts
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: 5432
+          PGUSER: postgres
+          PGDATABASE: postgres
+        run: npm run verify:auth-migrations
+      - name: Verify live Neon serverless driver
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
-          npm run verify:migrations
-          npm run verify:auth-migrations
+          test -n "$DATABASE_URL"
+          npm run test:neon
       - run: npm run build
       - run: npm run check:experience-budget
       - run: npm audit --audit-level=high
@@ -84,18 +70,3 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
       - run: python3 scripts/validate_execution_artifacts.py
-      - name: Commit verified AUTH-06 checkpoint
-        shell: bash
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A
-          git commit -m 'feat(auth): enforce fresh AAL2 step-up authentication'
-          git push origin HEAD:auth/provider-backchannel-stepup-v1
-
-  verify:
-    needs: author-auth-06-step-up
-    if: always() && needs.author-auth-06-step-up.result == 'skipped'
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo 'Canonical repository verification resumes after AUTH-06 synchronization.'
