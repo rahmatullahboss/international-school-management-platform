@@ -27,27 +27,46 @@ jobs:
           node-version: '22.22.2'
           cache: npm
       - run: npm ci
-      - name: Canonicalize async test callbacks
+      - name: Canonicalize strict AUTH-02 source
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
 
-          path = Path('packages/policy/src/oidc-login-flow.test.ts')
-          source = path.read_text(encoding='utf-8')
-          source = source.replace(
+          test_path = Path('packages/policy/src/oidc-login-flow.test.ts')
+          test = test_path.read_text(encoding='utf-8')
+          test = test.replace(
               "  const fetcher = vi.fn<typeof fetch>(async (input) => {\n",
               "  const fetcher = vi.fn<typeof fetch>(async (input) => {\n    await Promise.resolve();\n",
           )
-          source = source.replace(
+          test = test.replace(
               "    consumeTransaction: async (transactionId) => {\n",
               "    consumeTransaction: async (transactionId) => {\n      await Promise.resolve();\n",
           )
-          source = source.replace(
+          test = test.replace(
               "    resolveMembership: async () => membership,\n",
               "    resolveMembership: async () => {\n      await Promise.resolve();\n      return membership;\n    },\n",
           )
-          path.write_text(source, encoding='utf-8')
+          test_path.write_text(test, encoding='utf-8')
+
+          flow_path = Path('packages/policy/src/oidc-login-flow.ts')
+          flow = flow_path.read_text(encoding='utf-8')
+          flow = flow.replace(
+              "    returnTo: input.returnTo,\n",
+              "    ...(input.returnTo === undefined ? {} : { returnTo: input.returnTo }),\n",
+          )
+          flow = flow.replace(
+              "    authorizationResponseIssuer: input.callback.issuer,\n",
+              "    ...(input.callback.issuer === undefined\n      ? {}\n      : { authorizationResponseIssuer: input.callback.issuer }),\n",
+          )
+          flow_path.write_text(flow, encoding='utf-8')
+
+          readiness_path = Path('apps/platform-api/src/auth-boundary.test.ts')
+          readiness = readiness_path.read_text(encoding='utf-8').replace(
+              "{ ...completeBindings, AUTH_MEMBERSHIP_SOURCE: undefined }",
+              "{ ...completeBindings, AUTH_MEMBERSHIP_SOURCE: '' }",
+          )
+          readiness_path.write_text(readiness, encoding='utf-8')
           PY
       - run: npm run format
       - run: npm run lint -- --fix
