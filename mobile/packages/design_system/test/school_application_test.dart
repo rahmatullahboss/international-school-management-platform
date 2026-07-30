@@ -165,10 +165,17 @@ void main() {
       expect(find.text('الرئيسية'), findsOneWidget);
       expect(find.text('ع'), findsOneWidget);
 
-      final control = find.bySemanticsLabel(
-        'Language preference: Arabic. Activate to use device language.',
+      const semanticLabel =
+          'Language preference: Arabic. Activate to use device language.';
+      final control = find.byWidgetPredicate(
+        (widget) =>
+            widget is Semantics && widget.properties.label == semanticLabel,
       );
       expect(control, findsOneWidget);
+      final semantics = tester.widget<Semantics>(control);
+      expect(semantics.properties.button, isTrue);
+      expect(semantics.properties.enabled, isTrue);
+      expect(semantics.properties.value, 'ع');
       expect(tester.getSize(control).width, greaterThanOrEqualTo(48));
       expect(tester.getSize(control).height, greaterThanOrEqualTo(48));
     },
