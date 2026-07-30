@@ -74,6 +74,35 @@ abstract final class SchoolLocalePolicy {
       : TextDirection.ltr;
 }
 
+/// Process-local presentation override populated by the persisted locale
+/// controller before application composition.
+///
+/// The value contains only an approved language code. It cannot carry or infer
+/// account, tenant, campus, persona, capability, student, or server authority.
+abstract final class SchoolLocaleRuntime {
+  static Locale? _preferredLocale;
+
+  static Locale? get preferredLocale => _preferredLocale;
+
+  static void prefer(Locale? locale) {
+    if (locale == null) {
+      _preferredLocale = null;
+      return;
+    }
+    if (!SchoolLocalePolicy.isSupported(locale)) {
+      throw ArgumentError.value(
+        locale,
+        'locale',
+        'Only approved School mobile locales may be preferred.',
+      );
+    }
+    _preferredLocale = SchoolLocalePolicy.resolveSupportedLocale(
+      locale,
+      SchoolLocalePolicy.supportedLocales,
+    );
+  }
+}
+
 /// Localized shell copy that can be adopted without moving authoritative
 /// academic, financial, identity, or authorization decisions to the client.
 final class SchoolShellStrings {
@@ -292,12 +321,24 @@ abstract final class SchoolLocalizationConfiguration {
   static Locale localeResolutionCallback(
     Locale? locale,
     Iterable<Locale> supportedLocales,
-  ) => SchoolLocalePolicy.resolveSupportedLocale(locale, supportedLocales);
+  ) => SchoolLocalePolicy.resolveSupportedLocale(
+    SchoolLocaleRuntime.preferredLocale ?? locale,
+    supportedLocales,
+  );
 
   static Locale localeListResolutionCallback(
     List<Locale>? locales,
     Iterable<Locale> supportedLocales,
-  ) => SchoolLocalePolicy.resolvePreferredLocales(locales, supportedLocales);
+  ) {
+    final preferred = SchoolLocaleRuntime.preferredLocale;
+    if (preferred != null) {
+      return SchoolLocalePolicy.resolveSupportedLocale(
+        preferred,
+        supportedLocales,
+      );
+    }
+    return SchoolLocalePolicy.resolvePreferredLocales(locales, supportedLocales);
+  }
 }
 
 /// Removes directional control characters from dynamic content and encloses it
