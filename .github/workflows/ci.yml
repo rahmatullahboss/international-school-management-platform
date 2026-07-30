@@ -28,6 +28,38 @@ jobs:
           cache: npm
       - run: npm install --package-lock-only --ignore-scripts
       - run: npm ci
+      - name: Apply explicit JOSE key metadata type
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          source_path = Path('packages/policy/src/oidc.ts')
+          source = source_path.read_text(encoding='utf-8')
+          source = source.replace(
+              "export interface OidcJsonWebKeySet {\n  readonly keys: readonly JsonWebKey[];\n}",
+              "export type OidcJsonWebKey = JsonWebKey & {\n  readonly kid?: string;\n  readonly alg?: string;\n  readonly use?: string;\n};\n\nexport interface OidcJsonWebKeySet {\n  readonly keys: readonly OidcJsonWebKey[];\n}",
+          )
+          source_path.write_text(source, encoding='utf-8')
+
+          test_path = Path('packages/policy/src/oidc.test.ts')
+          test = test_path.read_text(encoding='utf-8')
+          test = test.replace(
+              "import type { OidcProviderConfiguration } from './oidc.js';",
+              "import type { OidcJsonWebKey, OidcProviderConfiguration } from './oidc.js';",
+          )
+          test = test.replace('let publicJwk: JsonWebKey;', 'let publicJwk: OidcJsonWebKey;')
+          test_path.write_text(test, encoding='utf-8')
+
+          index_path = Path('packages/policy/src/index.ts')
+          index = index_path.read_text(encoding='utf-8')
+          index = index.replace(
+              '  OidcIdentity,\n  OidcJsonWebKeySet,',
+              '  OidcIdentity,\n  OidcJsonWebKey,\n  OidcJsonWebKeySet,',
+          )
+          index_path.write_text(index, encoding='utf-8')
+          Path('packages/policy/src/jose-types.ts').unlink(missing_ok=True)
+          PY
       - run: npm run format
       - run: npm run lint -- --fix
       - run: npm run format
