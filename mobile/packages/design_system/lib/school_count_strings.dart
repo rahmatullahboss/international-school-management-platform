@@ -35,9 +35,10 @@ final class SchoolCountStrings {
         0 => 'কোনো উপস্থিতি পরিবর্তন সিঙ্কের অপেক্ষায় নেই।',
         _ => '$digitsটি উপস্থিতি পরিবর্তন সিঙ্কের অপেক্ষায় আছে।',
       },
-      SchoolLanguage.arabic => switch (
-        SchoolCardinalPluralRules.categoryFor(locale, count)
-      ) {
+      SchoolLanguage.arabic => switch (SchoolCardinalPluralRules.categoryFor(
+        locale,
+        count,
+      )) {
         SchoolPluralCategory.zero =>
           'لا توجد تغييرات حضور بانتظار المزامنة.',
         SchoolPluralCategory.one => 'تغيير حضور واحد بانتظار المزامنة.',
@@ -65,9 +66,10 @@ final class SchoolCountStrings {
         0 => 'কোনো অপঠিত বার্তা নেই',
         _ => '$digitsটি অপঠিত বার্তা',
       },
-      SchoolLanguage.arabic => switch (
-        SchoolCardinalPluralRules.categoryFor(locale, count)
-      ) {
+      SchoolLanguage.arabic => switch (SchoolCardinalPluralRules.categoryFor(
+        locale,
+        count,
+      )) {
         SchoolPluralCategory.zero => 'لا رسائل غير مقروءة',
         SchoolPluralCategory.one => 'رسالة واحدة غير مقروءة',
         SchoolPluralCategory.two => 'رسالتان غير مقروءتين',
@@ -91,9 +93,10 @@ final class SchoolCountStrings {
         0 => 'কোনো প্রকাশিত ফলাফল নেই',
         _ => '$digitsটি প্রকাশিত ফলাফল',
       },
-      SchoolLanguage.arabic => switch (
-        SchoolCardinalPluralRules.categoryFor(locale, count)
-      ) {
+      SchoolLanguage.arabic => switch (SchoolCardinalPluralRules.categoryFor(
+        locale,
+        count,
+      )) {
         SchoolPluralCategory.zero => 'لا نتائج منشورة',
         SchoolPluralCategory.one => 'نتيجة منشورة واحدة',
         SchoolPluralCategory.two => 'نتيجتان منشورتان',
@@ -117,9 +120,10 @@ final class SchoolCountStrings {
         0 => 'কোনো চূড়ান্ত সেশন নেই',
         _ => '$digitsটি চূড়ান্ত সেশন',
       },
-      SchoolLanguage.arabic => switch (
-        SchoolCardinalPluralRules.categoryFor(locale, count)
-      ) {
+      SchoolLanguage.arabic => switch (SchoolCardinalPluralRules.categoryFor(
+        locale,
+        count,
+      )) {
         SchoolPluralCategory.zero => 'لا حصص نهائية',
         SchoolPluralCategory.one => 'حصة نهائية واحدة',
         SchoolPluralCategory.two => 'حصتان نهائيتان',
@@ -145,7 +149,11 @@ final class SchoolCountStrings {
 
   static void _validateCount(int count) {
     if (count < 0) {
-      throw RangeError.value(count, 'count', 'A non-negative count is required.');
+      throw RangeError.value(
+        count,
+        'count',
+        'A non-negative count is required.',
+      );
     }
   }
 }
