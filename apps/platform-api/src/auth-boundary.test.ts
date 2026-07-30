@@ -63,6 +63,9 @@ describe('OIDC BFF readiness', () => {
         secureCookieDeletion: true,
         providerTokensWithheldFromBrowser: true,
         stepUpAssurance: true,
+        forcedReauthentication: true,
+        boundedFreshAuthentication: true,
+        reviewedAcrValues: true,
       },
       missingConfiguration: [
         'provider-metadata',

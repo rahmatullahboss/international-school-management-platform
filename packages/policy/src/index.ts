@@ -35,6 +35,7 @@ export type {
   OAuthCallbackVerificationResult,
   OAuthTransactionClaims,
   OAuthTransactionIssueResult,
+  OidcStepUpRequest,
   VerifyOAuthCallbackInput,
 } from './oauth-transaction.js';
 export {
