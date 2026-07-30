@@ -10,73 +10,10 @@ on:
       - 'integration/**'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  canonicalize-auth-01:
-    if: github.event_name == 'pull_request' && github.head_ref == 'pilot/oidc-trust-boundary-v1' && github.actor != 'github-actions[bot]'
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: pilot/oidc-trust-boundary-v1
-          fetch-depth: 0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22.22.2'
-          cache: npm
-      - run: npm install --package-lock-only --ignore-scripts
-      - run: npm ci
-      - name: Apply explicit JOSE key metadata type
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-
-          source_path = Path('packages/policy/src/oidc.ts')
-          source = source_path.read_text(encoding='utf-8')
-          source = source.replace(
-              "export interface OidcJsonWebKeySet {\n  readonly keys: readonly JsonWebKey[];\n}",
-              "export type OidcJsonWebKey = JsonWebKey & {\n  readonly kid?: string;\n  readonly alg?: string;\n  readonly use?: string;\n};\n\nexport interface OidcJsonWebKeySet {\n  readonly keys: readonly OidcJsonWebKey[];\n}",
-          )
-          source_path.write_text(source, encoding='utf-8')
-
-          test_path = Path('packages/policy/src/oidc.test.ts')
-          test = test_path.read_text(encoding='utf-8')
-          test = test.replace(
-              "import type { OidcProviderConfiguration } from './oidc.js';",
-              "import type { OidcJsonWebKey, OidcProviderConfiguration } from './oidc.js';",
-          )
-          test = test.replace('let publicJwk: JsonWebKey;', 'let publicJwk: OidcJsonWebKey;')
-          test_path.write_text(test, encoding='utf-8')
-
-          index_path = Path('packages/policy/src/index.ts')
-          index = index_path.read_text(encoding='utf-8')
-          index = index.replace(
-              '  OidcIdentity,\n  OidcJsonWebKeySet,',
-              '  OidcIdentity,\n  OidcJsonWebKey,\n  OidcJsonWebKeySet,',
-          )
-          index_path.write_text(index, encoding='utf-8')
-          Path('packages/policy/src/jose-types.ts').unlink(missing_ok=True)
-          PY
-      - run: npm run format
-      - run: npm run lint -- --fix
-      - run: npm run format
-      - run: npm run lint
-      - run: npm run typecheck
-      - name: Commit canonical AUTH-01 source
-        shell: bash
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A
-          git commit -m 'style(auth): canonicalize OIDC trust boundary'
-          git push origin HEAD:pilot/oidc-trust-boundary-v1
-
   verify:
-    needs: canonicalize-auth-01
-    if: always() && needs.canonicalize-auth-01.result == 'skipped'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     services:
