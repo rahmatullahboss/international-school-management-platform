@@ -60,6 +60,13 @@ class _StaffProductionAppState extends State<StaffProductionApp> {
           appName: 'School Staff',
           reasonCode: configurationReason,
         ),
+        localeListResolutionCallback:
+            SchoolLocalizationConfiguration.localeListResolutionCallback,
+        localizationsDelegates:
+            SchoolLocalizationConfiguration.localizationsDelegates,
+        onGenerateTitle: (context) =>
+            SchoolShellStrings.of(context).staffAppName,
+        supportedLocales: SchoolLocalizationConfiguration.supportedLocales,
         theme: SchoolTheme.light(),
       );
     }
@@ -83,6 +90,14 @@ class _StaffProductionAppState extends State<StaffProductionApp> {
                 appName: 'School Staff',
                 reasonCode: 'TEACHER_REPOSITORY_CONFIGURATION_REQUIRED',
               ),
+              localeListResolutionCallback:
+                  SchoolLocalizationConfiguration.localeListResolutionCallback,
+              localizationsDelegates:
+                  SchoolLocalizationConfiguration.localizationsDelegates,
+              onGenerateTitle: (context) =>
+                  SchoolShellStrings.of(context).staffAppName,
+              supportedLocales:
+                  SchoolLocalizationConfiguration.supportedLocales,
               theme: SchoolTheme.light(),
             );
           }
@@ -105,6 +120,13 @@ class _StaffProductionAppState extends State<StaffProductionApp> {
             onSignOut: coordinator.signOut,
             state: state,
           ),
+          localeListResolutionCallback:
+              SchoolLocalizationConfiguration.localeListResolutionCallback,
+          localizationsDelegates:
+              SchoolLocalizationConfiguration.localizationsDelegates,
+          onGenerateTitle: (context) =>
+              SchoolShellStrings.of(context).staffAppName,
+          supportedLocales: SchoolLocalizationConfiguration.supportedLocales,
           theme: SchoolTheme.light(),
         );
       },
@@ -283,9 +305,14 @@ class _AuthorizedStaffAppState extends State<_AuthorizedStaffApp> {
   @override
   Widget build(BuildContext context) => MaterialApp.router(
     debugShowCheckedModeBanner: false,
+    localeListResolutionCallback:
+        SchoolLocalizationConfiguration.localeListResolutionCallback,
+    localizationsDelegates:
+        SchoolLocalizationConfiguration.localizationsDelegates,
+    onGenerateTitle: (context) => SchoolShellStrings.of(context).staffAppName,
     routerConfig: _router,
+    supportedLocales: SchoolLocalizationConfiguration.supportedLocales,
     theme: SchoolTheme.light(),
-    title: 'School Staff',
   );
 
   @override
@@ -318,20 +345,21 @@ class _AuthorizedStaffShell extends StatelessWidget {
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: sync,
     builder: (context, _) {
+      final strings = SchoolShellStrings.of(context);
       final paths = <String>['/'];
       final destinations = <SchoolDestination>[
-        const SchoolDestination(
+        SchoolDestination(
           icon: Icons.home_outlined,
-          label: 'Today',
+          label: strings.today,
           selectedIcon: Icons.home,
         ),
       ];
       if (session.can(SchoolCapability.attendanceTake)) {
         paths.add('/attendance');
         destinations.add(
-          const SchoolDestination(
+          SchoolDestination(
             icon: Icons.fact_check_outlined,
-            label: 'Attendance',
+            label: strings.attendance,
             selectedIcon: Icons.fact_check,
           ),
         );
@@ -339,9 +367,9 @@ class _AuthorizedStaffShell extends StatelessWidget {
       if (session.can(SchoolCapability.gradesWrite)) {
         paths.add('/gradebook');
         destinations.add(
-          const SchoolDestination(
+          SchoolDestination(
             icon: Icons.edit_note_outlined,
-            label: 'Gradebook',
+            label: strings.gradebook,
             selectedIcon: Icons.edit_note,
           ),
         );
@@ -350,9 +378,9 @@ class _AuthorizedStaffShell extends StatelessWidget {
           session.can(SchoolCapability.messagesSend)) {
         paths.add('/messages');
         destinations.add(
-          const SchoolDestination(
+          SchoolDestination(
             icon: Icons.forum_outlined,
-            label: 'Messages',
+            label: strings.messages,
             selectedIcon: Icons.forum,
           ),
         );
@@ -366,8 +394,9 @@ class _AuthorizedStaffShell extends StatelessWidget {
       )) {
         (StaffSyncPhase.failed, _, _) => SchoolStatusBanner(
           label: 'Sync unavailable',
-          message:
-              syncState.reasonCode ?? 'Attendance sync could not be verified.',
+          message: SchoolBidirectionalText.isolate(
+            syncState.reasonCode ?? 'Attendance sync could not be verified.',
+          ),
           tone: SchoolStatusTone.error,
         ),
         (_, final attention, _) when attention > 0 => SchoolStatusBanner(
@@ -393,7 +422,7 @@ class _AuthorizedStaffShell extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () => unawaited(coordinator.signOut()),
-            tooltip: 'Sign out',
+            tooltip: strings.signOut,
           ),
         ],
         body: child,
@@ -404,7 +433,7 @@ class _AuthorizedStaffShell extends StatelessWidget {
             .clamp(0, paths.length - 1)
             .toInt(),
         status: status,
-        title: 'School Staff · Teacher',
+        title: '${strings.staffAppName} · ${strings.teacherProfile}',
       );
     },
   );
