@@ -41,7 +41,7 @@ void main() {
     expect(detached.purgeTransientBytes, isTrue);
     expect(
       resumedWithoutProof.reasonCode,
-      'MOBILE_LIFECYCLE_FRESH_AUTHORIZATION_REQUIRED',
+      'MOBILE_LIFECYCLE_FRESH_AUTHORIZATION_REQUIRED_AFTER_DETACH',
     );
     expect(resumedWithoutProof.obscureRestrictedContent, isTrue);
     expect(resumedWithoutProof.requireFreshAuthorization, isTrue);
@@ -63,7 +63,8 @@ void main() {
     );
 
     expect(resumed.state, MobilePrivacyLifecycleState.active);
-    expect(resumed.requireFreshAuthorization, isTrue);
+    expect(resumed.requireFreshAuthorization, isFalse);
+    expect(resumed.reasonCode, 'MOBILE_LIFECYCLE_RESUMED');
     expect(nextResume.requireFreshAuthorization, isFalse);
     expect(nextResume.reasonCode, 'MOBILE_LIFECYCLE_RESUMED');
   });
@@ -83,6 +84,10 @@ void main() {
     expect(decision.cancelRestrictedPresentation, isTrue);
     expect(decision.obscureRestrictedContent, isTrue);
     expect(decision.purgeTransientBytes, isTrue);
+    expect(
+      decision.reasonCode,
+      'MOBILE_LIFECYCLE_FRESH_AUTHORIZATION_REQUIRED',
+    );
   });
 
   test('memory pressure reduces exposure without inventing authorization', () {
