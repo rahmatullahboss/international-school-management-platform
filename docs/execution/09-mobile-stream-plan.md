@@ -2,7 +2,7 @@
 
 ## Status
 
-Milestones 1 and 2 have passed on the client/native side. Milestone 3 Family read and interaction contracts have passed, including repository-driven multi-child production journeys and domain/API contracts for documents, forms, consent and paginated conversations. Milestone 4 Teacher read/write contracts and repository-driven Today/roster production journeys have passed. Milestone 5 now has a verified durable sync contract/state-machine foundation; encrypted on-device persistence, platform key management and live delta transport remain. All proposed mobile endpoints remain server-owned and are not live.
+Milestones 1 through 5 have passed on the client/native side. Family read journeys and secure interaction contracts are verified, while Family document/form/consent/conversation production UI remains. Teacher Today, assigned roster and encrypted attendance-draft production journeys are verified. Durable sync now includes platform-backed AES-GCM persistence, secure key lifecycle, account/school purge, operation-journal reconciliation and production Staff queue/transport UI. All proposed mobile endpoints remain server-owned and are not live.
 
 ## Execution identity
 
@@ -44,12 +44,13 @@ Any backend API, notification, identity or shared platform contract change requi
    - Multi-child guardian context, student context, timetable, attendance, published results, fees, receipts and message summaries.
    - Secure document metadata/download grants, forms, idempotent submission, guardian consent and paginated conversations.
    - Production failures hide unverifiable academic and financial values instead of substituting fixtures.
-4. **Teacher journeys — client contracts and Today/roster journeys passed; write UI integration remains**
+4. **Teacher journeys — production Today, roster and encrypted attendance-draft UI passed; server activation remains**
    - Assigned Today view, roster, timetable, substitutions, attendance batches and exact integer grade drafts.
+   - Attendance drafts are saved to encrypted device storage, explicitly synchronized and surfaced through pending/conflict/rejected/reconciliation states.
    - Attendance finalization, grade publication and corrections remain server-authoritative.
-5. **Durable offline sync — contract/state-machine foundation passed; encrypted store and transport integration remain**
-   - Encrypted payload envelopes, idempotent operation queue contracts, scoped retry, delta cursor, duplicate handling, conflict, rejection and reconciliation states.
-   - Platform-backed encrypted persistence and key lifecycle are not yet implemented.
+5. **Durable offline sync — client/native passed; live server delta activation remains**
+   - Encrypted payload envelopes, idempotent operation queue, scoped retry, delta cursor, duplicate handling, conflict, rejection and reconciliation states.
+   - Platform-backed AES-GCM file persistence, platform secure-storage key versions, key rotation, tamper quarantine, operation journal and account/school purge.
 6. **Notifications and documents — Family document contracts passed; interaction UI and push/deep-link delivery remain**
    - Device registration contracts, safe notification payloads, push routing, secure document download and notification preferences.
 7. **Security, accessibility and release verification — pending**
@@ -109,7 +110,7 @@ Any backend API, notification, identity or shared platform contract change requi
 - `StaffJourneyController` rejects unassigned meeting roster requests, checks roster/section identity, discards stale roster responses and reloads on tenant/campus/capability scope changes.
 - Mobile CI `30494408130` passed the final read-only Teacher journey gate, all configured analyzers/tests, both APK builds and artifact upload.
 
-## Checkpoint 5 evidence — durable offline sync contracts
+## Checkpoint 5 evidence — encrypted durable sync and Staff write journey
 
 - `school_sync_engine` defines encrypted payload envelopes; diagnostic strings report metadata and byte counts without exposing ciphertext.
 - Operations are account/tenant/campus/persona scoped and carry operation ID, idempotency key, aggregate identity, base version, client creation time and encrypted payload schema metadata.
@@ -117,9 +118,15 @@ Any backend API, notification, identity or shared platform contract change requi
 - Retry uses validated capped exponential backoff; terminal outcomes are immutable and cannot retain future retry timestamps.
 - Delta cursors are account/tenant/campus scoped and cannot cross school boundaries.
 - `OfflineSyncCoordinator` persists in-flight state before transport, converts transport failure to a retryable operation and preserves encrypted payload bytes.
-- Tests cover defensive ciphertext copying, redacted diagnostics, scope mismatch, retry timing, accepted/duplicate/conflict terminals, cursor isolation, transport recovery and duplicate receipt rejection.
-- Mobile CI `30495682242` passed the permanent read-only durable sync gate, all configured analyzers/tests, both Android debug APK builds and artifact upload.
-- Root CI `30495682281` passed format, lint, boundaries, typecheck, repository tests, fresh migration replay, live Neon driver, builds, audit/licences/provenance, browser journeys and execution-artifact validation.
+- `school_sync_storage` stores authenticated ciphertext in application-support files and versioned AES keys in platform secure storage; scope identities and operation payloads are not written as plaintext filenames or records.
+- Storage uses atomic replacement, key rotation, scope-bound authenticated data, corruption/tamper quarantine and explicit account/school purge of files, catalog entries and key versions.
+- `SyncOperationJournal` exposes only the active account/tenant/campus/persona operation history with kind/state filters and deterministic newest-first ordering.
+- `school_teacher_sync` encrypts attendance and grade-draft commands, rejects operation-ID collisions, decrypts only inside the scoped transport boundary and maps server receipts to accepted, duplicate, conflict, rejected or reconciliation outcomes.
+- Production Staff attendance UI binds only to an authorized versioned roster, saves encrypted drafts, synchronizes explicitly and displays pending, accepted, duplicate, conflict, rejected and reconciliation states without finalizing attendance client-side.
+- Tests cover ciphertext redaction, storage reopen, retry/persona filtering, cursor persistence, key rotation, tamper quarantine, account/school purge, cross-school rejection, queue idempotency, command collision, receipt mismatch, retry backoff, grade duplicate, controller scope reset and conflict visibility.
+- Mobile CI `30495682242` and root CI `30495682281` passed the durable sync contract/state-machine gate.
+- Final permanent read-only Mobile CI `30501424447` passed formatting, generated/native guards, all Family/Staff/shared/domain/storage/teacher-sync analyzers and tests, both Android debug APK builds and artifact upload.
+- Final root CI `30501424403` passed format, lint, boundaries, typecheck, repository tests, fresh migration replay, live Neon driver, builds, audit/licences/provenance, browser journeys and execution-artifact validation.
 - Real student data used: no.
 - Production deployment or database mutation performed: no.
 
@@ -137,4 +144,4 @@ MOB-01 may define and test clients, domain contracts and fail-closed UI states. 
 
 ## Exact next action
 
-Implement a platform-backed encrypted sync store with explicit key lifecycle and account/school purge semantics, then connect teacher attendance drafts to the operation queue and reconciliation states without granting client-side finalization authority. In parallel, add Family document/form/consent/conversation UI on top of the verified contracts and submit bootstrap, Family, Teacher, device-session and sync endpoint proposals through the existing server-module ownership process before live account data is used. After encrypted persistence is verified, continue push/deep-link delivery, secure document exchange, accessibility/localization and store-release evidence.
+Add capability-scoped Family document, short-lived download-grant, form submission, guardian consent and paginated conversation production UI on top of the verified contracts. Then complete push/deep-link routing, secure document exchange, restricted-data threat-model evidence, accessibility/localization/RTL and store-release verification. Bootstrap, Family, Teacher, device-session and sync endpoint proposals must still pass the existing server-module ownership process before live account data is used.
