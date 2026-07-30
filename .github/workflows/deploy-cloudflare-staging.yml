@@ -99,26 +99,46 @@ jobs:
             done
           }
 
+          fetch_signed_admin_snapshot() {
+            for attempt in {1..12}; do
+              if curl --location --fail --silent --show-error \
+                --request POST \
+                -H "Origin: $staging_origin" \
+                "$API_URL/pilot/v1/sessions/admin" \
+                --output admin-session.json; then
+                if admin_token=$(python3 - <<'PY'
+          import json
+          from pathlib import Path
+          payload = json.loads(Path('admin-session.json').read_text(encoding='utf-8'))
+          token = payload.get('accessToken')
+          if not isinstance(token, str) or len(token) <= 32:
+              raise SystemExit(1)
+          print(token)
+          PY
+                ); then
+                  if curl --location --fail --silent --show-error \
+                    -H "Origin: $staging_origin" \
+                    -H "Authorization: Bearer $admin_token" \
+                    "$API_URL/pilot/v1/snapshots/admin" \
+                    --output admin-snapshot.json; then
+                    return 0
+                  fi
+                fi
+              fi
+              if [[ "$attempt" == "12" ]]; then
+                echo "A fresh signed session and scoped snapshot pair did not become ready." >&2
+                return 1
+              fi
+              sleep 5
+            done
+          }
+
           staging_origin='https://international-school-platform-web-staging.rahmatullahzisan.workers.dev'
           fetch_with_retry "$API_URL/health" api-health.json "API health endpoint"
           fetch_with_retry "$API_URL/auth/v1/readiness" auth-readiness.json "OIDC readiness endpoint"
           unauthenticated_status=$(curl --silent --show-error --output auth-session-error.json --write-out '%{http_code}' "$API_URL/auth/v1/session")
           test "$unauthenticated_status" = '503'
-          fetch_with_retry "$API_URL/pilot/v1/sessions/admin" admin-session.json "Signed admin session" \
-            --request POST \
-            -H "Origin: $staging_origin"
-          admin_token=$(python3 - <<'PY'
-          import json
-          from pathlib import Path
-          payload = json.loads(Path('admin-session.json').read_text(encoding='utf-8'))
-          token = payload.get('accessToken')
-          assert isinstance(token, str) and len(token) > 32, payload
-          print(token)
-          PY
-          )
-          fetch_with_retry "$API_URL/pilot/v1/snapshots/admin" admin-snapshot.json "Signed scoped admin snapshot" \
-            -H "Origin: $staging_origin" \
-            -H "Authorization: Bearer $admin_token"
+          fetch_signed_admin_snapshot
           fetch_with_retry "$WEB_URL/" web-index.html "Pilot role chooser"
           fetch_with_retry "$WEB_URL/admin" web-admin.html "Admin portal"
           fetch_with_retry "$WEB_URL/teacher" web-teacher.html "Teacher portal"
