@@ -418,12 +418,17 @@ final class SchoolLocalizedMaterialApp extends StatelessWidget {
   }
 
   Widget _buildApplication(Locale? locale) {
+    final effectiveLocale = locale ?? SchoolLocaleRuntime.preferredLocale;
+    final applicationKey = ValueKey<String>(
+      effectiveLocale?.languageCode ?? 'device',
+    );
     final router = routerConfig;
     if (router != null) {
       return MaterialApp.router(
+        key: applicationKey,
         builder: builder,
         debugShowCheckedModeBanner: debugShowCheckedModeBanner,
-        locale: locale,
+        locale: effectiveLocale,
         localeListResolutionCallback:
             SchoolLocalizationConfiguration.localeListResolutionCallback,
         localizationsDelegates:
@@ -436,10 +441,11 @@ final class SchoolLocalizedMaterialApp extends StatelessWidget {
     }
 
     return MaterialApp(
+      key: applicationKey,
       builder: builder,
       debugShowCheckedModeBanner: debugShowCheckedModeBanner,
       home: home,
-      locale: locale,
+      locale: effectiveLocale,
       localeListResolutionCallback:
           SchoolLocalizationConfiguration.localeListResolutionCallback,
       localizationsDelegates:
