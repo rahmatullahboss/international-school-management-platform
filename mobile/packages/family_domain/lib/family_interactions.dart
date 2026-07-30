@@ -95,6 +95,7 @@ final class FamilyFormSummary {
   final String formId;
   final String title;
   final FamilyFormStatus status;
+  final int baseVersion;
   final DateTime? dueAt;
 }
 
@@ -130,13 +131,15 @@ final class FamilyFormFieldDefinition {
 
 final class FamilyFormDefinition {
   FamilyFormDefinition({
+    required int baseVersion,
     required Iterable<FamilyFormFieldDefinition> fields,
     required String formId,
     required int schemaVersion,
     required FamilyFormStatus status,
     required String title,
     DateTime? dueAt,
-  }) : dueAt = dueAt?.toUtc(),
+  }) : baseVersion = _nonNegativeInteraction(baseVersion, 'baseVersion'),
+       dueAt = dueAt?.toUtc(),
        fields = List<FamilyFormFieldDefinition>.unmodifiable(fields),
        formId = _requiredInteraction(formId, 'formId'),
        schemaVersion = _positiveInteraction(schemaVersion, 'schemaVersion'),

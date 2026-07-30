@@ -118,6 +118,7 @@ final class FamilyInteractionApi {
     );
     try {
       final definition = FamilyFormDefinition(
+        baseVersion: _requiredInt(response, 'baseVersion'),
         dueAt: _optionalDateTime(response, 'dueAt'),
         fields: _objectList(response, 'fields').map(_formField),
         formId: _requiredString(response, 'formId'),

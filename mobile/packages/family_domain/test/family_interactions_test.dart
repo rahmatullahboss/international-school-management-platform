@@ -42,6 +42,7 @@ void main() {
 
   test('form definitions enforce schema and choice invariants', () {
     final definition = FamilyFormDefinition(
+      baseVersion: 2,
       fields: [
         FamilyFormFieldDefinition(
           fieldId: 'transport.mode',
@@ -57,6 +58,7 @@ void main() {
       title: 'Transport form',
     );
 
+    expect(definition.baseVersion, 2);
     expect(definition.schemaVersion, 3);
     expect(definition.fields.single.options, hasLength(2));
     expect(

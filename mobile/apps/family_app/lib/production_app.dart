@@ -4,12 +4,14 @@ class FamilyProductionApp extends StatefulWidget {
   const FamilyProductionApp({
     this.coordinator,
     this.initializeCoordinator = true,
+    this.interactionRepository,
     this.repository,
     super.key,
   });
 
   final MobileAppCoordinator? coordinator;
   final bool initializeCoordinator;
+  final FamilyInteractionRepository? interactionRepository;
   final FamilyReadRepository? repository;
 
   @override
@@ -68,11 +70,17 @@ class _FamilyProductionAppState extends State<FamilyProductionApp> {
         final state = coordinator.state;
         final session = state.session;
         if (state.isReady && session != null) {
+          final apiClient = coordinator.apiClient;
           final repository =
               widget.repository ??
-              (coordinator.apiClient == null
+              (apiClient == null ? null : FamilyReadApi(apiClient));
+          final interactionRepository =
+              widget.interactionRepository ??
+              (apiClient == null
                   ? null
-                  : FamilyReadApi(coordinator.apiClient!));
+                  : FamilyInteractionApiRepository(
+                      FamilyInteractionApi(apiClient),
+                    ));
           if (repository == null) {
             return MaterialApp(
               debugShowCheckedModeBanner: false,
@@ -85,6 +93,7 @@ class _FamilyProductionAppState extends State<FamilyProductionApp> {
           }
           return _AuthorizedFamilyApp(
             coordinator: coordinator,
+            interactionRepository: interactionRepository,
             repository: repository,
             session: session,
           );
@@ -118,10 +127,12 @@ class _AuthorizedFamilyApp extends StatefulWidget {
   const _AuthorizedFamilyApp({
     required this.coordinator,
     required this.repository,
+    this.interactionRepository,
     required this.session,
   });
 
   final MobileAppCoordinator coordinator;
+  final FamilyInteractionRepository? interactionRepository;
   final FamilyReadRepository repository;
   final SchoolSession session;
 
@@ -130,6 +141,7 @@ class _AuthorizedFamilyApp extends StatefulWidget {
 }
 
 class _AuthorizedFamilyAppState extends State<_AuthorizedFamilyApp> {
+  FamilyInteractionController? _interactions;
   late FamilyJourneyController _journey;
   late GoRouter _router;
 
@@ -140,6 +152,13 @@ class _AuthorizedFamilyAppState extends State<_AuthorizedFamilyApp> {
       repository: widget.repository,
       session: widget.session,
     );
+    final interactionRepository = widget.interactionRepository;
+    if (interactionRepository != null) {
+      _interactions = FamilyInteractionController(
+        repository: interactionRepository,
+        session: widget.session,
+      );
+    }
     _router = _createRouter();
     unawaited(_journey.initialize());
   }
@@ -148,6 +167,8 @@ class _AuthorizedFamilyAppState extends State<_AuthorizedFamilyApp> {
   void didUpdateWidget(covariant _AuthorizedFamilyApp oldWidget) {
     super.didUpdateWidget(oldWidget);
     final scopeChanged = !_sameSession(oldWidget.session, widget.session);
+    final interactionChanged =
+        oldWidget.interactionRepository != widget.interactionRepository;
     if (oldWidget.repository != widget.repository) {
       _journey.dispose();
       _journey = FamilyJourneyController(
@@ -158,7 +179,22 @@ class _AuthorizedFamilyAppState extends State<_AuthorizedFamilyApp> {
     } else if (scopeChanged) {
       unawaited(_journey.updateSession(widget.session));
     }
-    if (scopeChanged) {
+    if (interactionChanged) {
+      _interactions?.dispose();
+      final interactionRepository = widget.interactionRepository;
+      _interactions = interactionRepository == null
+          ? null
+          : FamilyInteractionController(
+              repository: interactionRepository,
+              session: widget.session,
+            );
+    } else if (scopeChanged && widget.interactionRepository != null) {
+      _interactions?.updateScope(
+        repository: widget.interactionRepository!,
+        session: widget.session,
+      );
+    }
+    if (scopeChanged || interactionChanged) {
       _router.dispose();
       _router = _createRouter();
     }
@@ -171,12 +207,14 @@ class _AuthorizedFamilyAppState extends State<_AuthorizedFamilyApp> {
       setEquals(first.capabilities, second.capabilities);
 
   GoRouter _createRouter() {
+    final interactions = _interactions;
     final session = widget.session;
     return GoRouter(
       routes: [
         ShellRoute(
           builder: (context, state, child) => _AuthorizedFamilyShell(
             coordinator: widget.coordinator,
+            interactionsAvailable: interactions != null,
             journey: _journey,
             location: state.uri.path,
             session: session,
@@ -185,8 +223,11 @@ class _AuthorizedFamilyAppState extends State<_AuthorizedFamilyApp> {
           routes: [
             GoRoute(
               path: '/',
-              builder: (context, state) =>
-                  _FamilyHomeScreen(journey: _journey, session: session),
+              builder: (context, state) => _FamilyHomeScreen(
+                interactionsAvailable: interactions != null,
+                journey: _journey,
+                session: session,
+              ),
             ),
             if (session.can(SchoolCapability.attendanceRead))
               GoRoute(
@@ -209,12 +250,77 @@ class _AuthorizedFamilyAppState extends State<_AuthorizedFamilyApp> {
                 builder: (context, state) =>
                     _FamilyFeesReadScreen(journey: _journey),
               ),
+            if (interactions != null &&
+                (session.can(SchoolCapability.documentsRead) ||
+                    session.can(SchoolCapability.formsConsent)))
+              GoRoute(
+                path: '/services',
+                builder: (context, state) => _FamilyServicesScreen(
+                  interactions: interactions,
+                  journey: _journey,
+                  session: session,
+                ),
+              ),
+            if (interactions != null &&
+                session.can(SchoolCapability.documentsRead))
+              GoRoute(
+                path: '/documents',
+                builder: (context, state) => _FamilyDocumentsScreen(
+                  interactions: interactions,
+                  journey: _journey,
+                ),
+              ),
+            if (interactions != null &&
+                session.can(SchoolCapability.formsConsent)) ...[
+              GoRoute(
+                path: '/forms',
+                builder: (context, state) => _FamilyFormsScreen(
+                  interactions: interactions,
+                  journey: _journey,
+                ),
+              ),
+              GoRoute(
+                path: '/forms/:formId',
+                builder: (context, state) => _FamilyFormScreen(
+                  formId: state.pathParameters['formId']!,
+                  interactions: interactions,
+                  journey: _journey,
+                ),
+              ),
+              if (session.activePersona == SchoolPersona.guardian)
+                GoRoute(
+                  path: '/consents',
+                  builder: (context, state) => _FamilyConsentsScreen(
+                    interactions: interactions,
+                    journey: _journey,
+                  ),
+                ),
+            ],
             if (session.can(SchoolCapability.messagesRead))
               GoRoute(
                 path: '/messages',
                 builder: (context, state) =>
                     _FamilyMessagesReadScreen(journey: _journey),
               ),
+            if (interactions != null &&
+                session.can(SchoolCapability.messagesRead)) ...[
+              GoRoute(
+                path: '/conversations',
+                builder: (context, state) => _FamilyConversationsScreen(
+                  interactions: interactions,
+                  journey: _journey,
+                ),
+              ),
+              GoRoute(
+                path: '/conversations/:conversationId',
+                builder: (context, state) => _FamilyConversationScreen(
+                  conversationId: state.pathParameters['conversationId']!,
+                  interactions: interactions,
+                  journey: _journey,
+                  session: session,
+                ),
+              ),
+            ],
           ],
         ),
       ],
@@ -241,6 +347,7 @@ class _AuthorizedFamilyShell extends StatelessWidget {
   const _AuthorizedFamilyShell({
     required this.child,
     required this.coordinator,
+    required this.interactionsAvailable,
     required this.journey,
     required this.location,
     required this.session,
@@ -248,6 +355,7 @@ class _AuthorizedFamilyShell extends StatelessWidget {
 
   final Widget child;
   final MobileAppCoordinator coordinator;
+  final bool interactionsAvailable;
   final FamilyJourneyController journey;
   final String location;
   final SchoolSession session;
@@ -293,12 +401,24 @@ class _AuthorizedFamilyShell extends StatelessWidget {
         ),
       );
     }
-    if (session.can(SchoolCapability.messagesRead)) {
-      paths.add('/messages');
+    if (interactionsAvailable &&
+        (session.can(SchoolCapability.documentsRead) ||
+            session.can(SchoolCapability.formsConsent))) {
+      paths.add('/services');
       destinations.add(
         const SchoolDestination(
+          icon: Icons.dashboard_customize_outlined,
+          label: 'Services',
+          selectedIcon: Icons.dashboard_customize,
+        ),
+      );
+    }
+    if (session.can(SchoolCapability.messagesRead)) {
+      paths.add(interactionsAvailable ? '/conversations' : '/messages');
+      destinations.add(
+        SchoolDestination(
           icon: Icons.forum_outlined,
-          label: 'Messages',
+          label: interactionsAvailable ? 'Conversations' : 'Messages',
           selectedIcon: Icons.forum,
         ),
       );
@@ -453,8 +573,13 @@ class _FamilyJourneyView extends StatelessWidget {
 }
 
 class _FamilyHomeScreen extends StatelessWidget {
-  const _FamilyHomeScreen({required this.journey, required this.session});
+  const _FamilyHomeScreen({
+    required this.interactionsAvailable,
+    required this.journey,
+    required this.session,
+  });
 
+  final bool interactionsAvailable;
   final FamilyJourneyController journey;
   final SchoolSession session;
 
@@ -506,11 +631,21 @@ class _FamilyHomeScreen extends StatelessWidget {
           'Invoice ${dashboard.fees!.invoiceReference}',
         );
       }
+      if (interactionsAvailable &&
+          (session.can(SchoolCapability.documentsRead) ||
+              session.can(SchoolCapability.formsConsent))) {
+        addLink(
+          Icons.dashboard_customize_outlined,
+          'Documents and forms',
+          '/services',
+          'Capability-scoped Family services',
+        );
+      }
       if (dashboard.messages != null) {
         addLink(
           Icons.forum_outlined,
-          'Open messages',
-          '/messages',
+          interactionsAvailable ? 'Open conversations' : 'Open messages',
+          interactionsAvailable ? '/conversations' : '/messages',
           '${dashboard.messages!.unreadCount} unread message(s)',
         );
       }

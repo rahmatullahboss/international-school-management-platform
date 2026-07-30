@@ -81,6 +81,44 @@ void main() {
     client.close();
   });
 
+  test(
+    'loads server-versioned form definitions without inventing authority',
+    () async {
+      final client = clientFor(
+        (request) => <String, Object?>{
+          'formId': 'form-1',
+          'title': 'Transport form',
+          'status': 'open',
+          'baseVersion': 7,
+          'schemaVersion': 3,
+          'dueAt': null,
+          'fields': <Object?>[
+            <String, Object?>{
+              'fieldId': 'transport.mode',
+              'label': 'Preferred transport',
+              'type': 'singleChoice',
+              'required': true,
+              'options': <Object?>['School bus', 'Private'],
+            },
+          ],
+        },
+      );
+
+      final definition = await FamilyInteractionApi(client).loadForm(
+        correlationId: 'forms-load-1',
+        formId: 'form-1',
+        session: familySession(
+          capabilities: const {SchoolCapability.formsConsent},
+        ),
+      );
+
+      expect(definition.baseVersion, 7);
+      expect(definition.schemaVersion, 3);
+      expect(definition.fields.single.fieldId, 'transport.mode');
+      client.close();
+    },
+  );
+
   test('submits a versioned form with idempotency and exact answers', () async {
     late http.Request captured;
     final client = clientFor((request) {
