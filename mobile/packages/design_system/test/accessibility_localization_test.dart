@@ -14,6 +14,30 @@ void main() {
         SchoolLocalePolicy.resolve(const Locale('fr', 'FR')),
         SchoolLanguage.english,
       );
+      expect(
+        SchoolLocalePolicy.resolveSupportedLocale(
+          const Locale('fr', 'FR'),
+          SchoolLocalePolicy.supportedLocales,
+        ),
+        SchoolLocalePolicy.fallbackLocale,
+      );
+    });
+
+    test('uses the first supported device preference without scope inference', () {
+      expect(
+        SchoolLocalePolicy.resolvePreferredLocales(
+          const [Locale('fr', 'FR'), Locale('bn', 'BD'), Locale('ar', 'SA')],
+          SchoolLocalePolicy.supportedLocales,
+        ),
+        const Locale('bn'),
+      );
+      expect(
+        SchoolLocalePolicy.resolvePreferredLocales(
+          const [Locale('fr', 'FR')],
+          SchoolLocalePolicy.supportedLocales,
+        ),
+        SchoolLocalePolicy.fallbackLocale,
+      );
     });
 
     test('uses RTL only for the approved Arabic locale', () {
@@ -38,10 +62,45 @@ void main() {
 
       expect(bangla.attendance, 'উপস্থিতি');
       expect(bangla.signOut, 'সাইন আউট');
+      expect(bangla.teacherProfile, 'শিক্ষক প্রোফাইল');
       expect(arabic.home, 'الرئيسية');
       expect(arabic.signOut, 'تسجيل الخروج');
+      expect(arabic.teacherProfile, 'ملف المعلم');
       expect(fallback.familyAppName, 'School Family');
     });
+  });
+
+  testWidgets('localization delegates load Arabic copy and RTL direction', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ar', 'SA'),
+        localeResolutionCallback:
+            SchoolLocalizationConfiguration.localeResolutionCallback,
+        localizationsDelegates:
+            SchoolLocalizationConfiguration.localizationsDelegates,
+        supportedLocales: SchoolLocalizationConfiguration.supportedLocales,
+        home: Builder(
+          builder: (context) {
+            final strings = SchoolShellStrings.of(context);
+            return Scaffold(body: Center(child: Text(strings.home)));
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final home = find.text('الرئيسية');
+    expect(home, findsOneWidget);
+    expect(
+      Directionality.of(tester.element(home)),
+      TextDirection.rtl,
+    );
+    expect(
+      WidgetsLocalizations.of(tester.element(home)).textDirection,
+      TextDirection.rtl,
+    );
   });
 
   testWidgets('adaptive scaffold survives 200 percent text scaling', (
@@ -126,37 +185,41 @@ void main() {
   testWidgets('Arabic shell follows RTL reading order and written semantics', (
     tester,
   ) async {
-    final strings = SchoolShellStrings.forLocale(const Locale('ar', 'SA'));
-
     await tester.pumpWidget(
       MaterialApp(
-        home: Directionality(
-          textDirection: SchoolLocalePolicy.textDirectionFor(
-            const Locale('ar', 'SA'),
-          ),
-          child: SchoolAdaptiveScaffold(
-            body: const Center(child: Text('معلومات منشورة')),
-            destinations: [
-              SchoolDestination(
-                icon: Icons.home_outlined,
-                label: strings.home,
-                selectedIcon: Icons.home,
+        locale: const Locale('ar', 'SA'),
+        localeResolutionCallback:
+            SchoolLocalizationConfiguration.localeResolutionCallback,
+        localizationsDelegates:
+            SchoolLocalizationConfiguration.localizationsDelegates,
+        supportedLocales: SchoolLocalizationConfiguration.supportedLocales,
+        home: Builder(
+          builder: (context) {
+            final strings = SchoolShellStrings.of(context);
+            return SchoolAdaptiveScaffold(
+              body: const Center(child: Text('معلومات منشورة')),
+              destinations: [
+                SchoolDestination(
+                  icon: Icons.home_outlined,
+                  label: strings.home,
+                  selectedIcon: Icons.home,
+                ),
+                SchoolDestination(
+                  icon: Icons.fact_check_outlined,
+                  label: strings.attendance,
+                  selectedIcon: Icons.fact_check,
+                ),
+              ],
+              onDestinationSelected: (_) {},
+              selectedIndex: 0,
+              status: const SchoolStatusBanner(
+                label: 'تم التحقق',
+                message: 'المعلومات المدرسية المنشورة متاحة.',
+                tone: SchoolStatusTone.success,
               ),
-              SchoolDestination(
-                icon: Icons.fact_check_outlined,
-                label: strings.attendance,
-                selectedIcon: Icons.fact_check,
-              ),
-            ],
-            onDestinationSelected: (_) {},
-            selectedIndex: 0,
-            status: const SchoolStatusBanner(
-              label: 'تم التحقق',
-              message: 'المعلومات المدرسية المنشورة متاحة.',
-              tone: SchoolStatusTone.success,
-            ),
-            title: strings.familyAppName,
-          ),
+              title: strings.familyAppName,
+            );
+          },
         ),
       ),
     );
@@ -164,11 +227,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      Directionality.of(tester.element(find.text(strings.familyAppName))),
+      Directionality.of(tester.element(find.text('عائلة المدرسة'))),
       TextDirection.rtl,
     );
-    expect(find.text(strings.home), findsOneWidget);
-    expect(find.text(strings.attendance), findsOneWidget);
+    expect(find.text('الرئيسية'), findsOneWidget);
+    expect(find.text('الحضور'), findsOneWidget);
 
     const statusLabel = 'تم التحقق. المعلومات المدرسية المنشورة متاحة.';
     final statusSemantics = tester.widget<Semantics>(
@@ -178,6 +241,36 @@ void main() {
       ),
     );
     expect(statusSemantics.properties.label, statusLabel);
+  });
+
+  test('bidirectional dynamic content is sanitized and isolated', () {
+    const maliciousIdentifier = 'invoice\u202Ecod.exe\u2069';
+    final isolated = SchoolBidirectionalText.isolate(maliciousIdentifier);
+
+    expect(isolated, startsWith('\u2068'));
+    expect(isolated, endsWith('\u2069'));
+    expect(isolated, isNot(contains('\u202E')));
+    expect(isolated.substring(1, isolated.length - 1), 'invoicecod.exe');
+  });
+
+  test('reduced-motion preference removes nonessential animation duration', () {
+    final preferences = SchoolAccessibilityPreferences.fromMediaQuery(
+      const MediaQueryData().copyWith(
+        boldText: true,
+        disableAnimations: true,
+        highContrast: true,
+        textScaler: const TextScaler.linear(2),
+      ),
+    );
+
+    expect(preferences.boldText, isTrue);
+    expect(preferences.highContrast, isTrue);
+    expect(preferences.reduceMotion, isTrue);
+    expect(
+      preferences.motionDuration(const Duration(milliseconds: 250)),
+      Duration.zero,
+    );
+    expect(preferences.textScaler.scale(10), 20);
   });
 
   testWidgets('interactive controls preserve the 48 logical pixel target', (
