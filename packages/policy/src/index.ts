@@ -44,6 +44,20 @@ export {
   verifyOAuthCallbackTransaction,
 } from './oauth-transaction.js';
 export type {
+  ExchangeOidcAuthorizationCodeInput,
+  OidcDiscoveredProvider,
+  OidcDiscoveryResult,
+  OidcJwksResult,
+  OidcProviderFailureCode,
+  OidcTokenExchangeResult,
+  OidcTokenSet,
+} from './oidc-provider-client.js';
+export {
+  discoverOidcProvider,
+  exchangeOidcAuthorizationCode,
+  fetchOidcJwks,
+} from './oidc-provider-client.js';
+export type {
   OidcIdentity,
   OidcJsonWebKey,
   OidcJsonWebKeySet,
