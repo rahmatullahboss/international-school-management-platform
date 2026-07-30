@@ -50,7 +50,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(360, 800));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    const strings = SchoolShellStrings._testEnglish;
+    final strings = SchoolShellStrings.forLocale(const Locale('en', 'US'));
     await tester.pumpWidget(
       MaterialApp(
         builder: (context, child) => MediaQuery(
@@ -136,7 +136,7 @@ void main() {
             const Locale('ar', 'SA'),
           ),
           child: SchoolAdaptiveScaffold(
-            body: const Center(child: Text('معلومات منشورة')), 
+            body: const Center(child: Text('معلومات منشورة')),
             destinations: [
               SchoolDestination(
                 icon: Icons.home_outlined,
@@ -170,7 +170,12 @@ void main() {
     );
     expect(find.text(strings.home), findsOneWidget);
     expect(find.text(strings.attendance), findsOneWidget);
-    expect(find.bySemanticsLabel('تم التحقق. المعلومات المدرسية المنشورة متاحة.'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(
+        'تم التحقق. المعلومات المدرسية المنشورة متاحة.',
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('interactive controls preserve the 48 logical pixel target', (
@@ -181,36 +186,27 @@ void main() {
         theme: SchoolTheme.light(),
         home: Scaffold(
           body: Center(
-            child: FilledButton(onPressed: () {}, child: const Text('Continue')),
+            child: FilledButton(
+              onPressed: () {},
+              child: const Text('Continue'),
+            ),
           ),
         ),
       ),
     );
 
     final size = tester.getSize(find.byType(FilledButton));
-    expect(size.width, greaterThanOrEqualTo(SchoolAccessibilityTargets.minimumInteractiveExtent));
-    expect(size.height, greaterThanOrEqualTo(SchoolAccessibilityTargets.minimumInteractiveExtent));
+    expect(
+      size.width,
+      greaterThanOrEqualTo(
+        SchoolAccessibilityTargets.minimumInteractiveExtent,
+      ),
+    );
+    expect(
+      size.height,
+      greaterThanOrEqualTo(
+        SchoolAccessibilityTargets.minimumInteractiveExtent,
+      ),
+    );
   });
-}
-
-extension on SchoolShellStrings {
-  static const _testEnglish = SchoolShellStrings._(
-    attendance: 'Attendance',
-    conversations: 'Conversations',
-    familyAppName: 'School Family',
-    fees: 'Fees',
-    gradebook: 'Gradebook',
-    guardianProfile: 'Guardian profile',
-    home: 'Home',
-    messages: 'Messages',
-    results: 'Results',
-    services: 'Services',
-    signOut: 'Sign out',
-    staffAppName: 'School Staff',
-    studentProfile: 'Student profile',
-    switchProfile: 'Switch profile',
-    switchRole: 'Switch role',
-    switchStudent: 'Switch student',
-    today: 'Today',
-  );
 }
