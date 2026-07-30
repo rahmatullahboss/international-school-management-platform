@@ -5,6 +5,8 @@ class FamilyProductionApp extends StatefulWidget {
     this.coordinator,
     this.initializeCoordinator = true,
     this.interactionRepository,
+    this.notificationSource,
+    this.onNotificationDecision,
     this.repository,
     super.key,
   });
@@ -12,6 +14,8 @@ class FamilyProductionApp extends StatefulWidget {
   final MobileAppCoordinator? coordinator;
   final bool initializeCoordinator;
   final FamilyInteractionRepository? interactionRepository;
+  final MobileNotificationSource? notificationSource;
+  final ValueChanged<MobileNotificationRouteDecision>? onNotificationDecision;
   final FamilyReadRepository? repository;
 
   @override
@@ -94,6 +98,8 @@ class _FamilyProductionAppState extends State<FamilyProductionApp> {
           return _AuthorizedFamilyApp(
             coordinator: coordinator,
             interactionRepository: interactionRepository,
+            notificationSource: widget.notificationSource,
+            onNotificationDecision: widget.onNotificationDecision,
             repository: repository,
             session: session,
           );
@@ -128,11 +134,15 @@ class _AuthorizedFamilyApp extends StatefulWidget {
     required this.coordinator,
     required this.repository,
     this.interactionRepository,
+    this.notificationSource,
+    this.onNotificationDecision,
     required this.session,
   });
 
   final MobileAppCoordinator coordinator;
   final FamilyInteractionRepository? interactionRepository;
+  final MobileNotificationSource? notificationSource;
+  final ValueChanged<MobileNotificationRouteDecision>? onNotificationDecision;
   final FamilyReadRepository repository;
   final SchoolSession session;
 
@@ -143,6 +153,9 @@ class _AuthorizedFamilyApp extends StatefulWidget {
 class _AuthorizedFamilyAppState extends State<_AuthorizedFamilyApp> {
   FamilyInteractionController? _interactions;
   late FamilyJourneyController _journey;
+  final MobileNotificationOpenTracker _notificationTracker =
+      MobileNotificationOpenTracker();
+  StreamSubscription<MobileNotificationEnvelope>? _notificationSubscription;
   late GoRouter _router;
 
   @override
@@ -160,6 +173,7 @@ class _AuthorizedFamilyAppState extends State<_AuthorizedFamilyApp> {
       );
     }
     _router = _createRouter();
+    _bindNotifications();
     unawaited(_journey.initialize());
   }
 
@@ -169,6 +183,8 @@ class _AuthorizedFamilyAppState extends State<_AuthorizedFamilyApp> {
     final scopeChanged = !_sameSession(oldWidget.session, widget.session);
     final interactionChanged =
         oldWidget.interactionRepository != widget.interactionRepository;
+    final notificationSourceChanged =
+        oldWidget.notificationSource != widget.notificationSource;
     if (oldWidget.repository != widget.repository) {
       _journey.dispose();
       _journey = FamilyJourneyController(
@@ -198,7 +214,60 @@ class _AuthorizedFamilyAppState extends State<_AuthorizedFamilyApp> {
       _router.dispose();
       _router = _createRouter();
     }
+    if (scopeChanged) {
+      _notificationTracker.clear();
+    }
+    if (notificationSourceChanged) {
+      final subscription = _notificationSubscription;
+      if (subscription != null) unawaited(subscription.cancel());
+      _notificationSubscription = null;
+      _notificationTracker.clear();
+      _bindNotifications();
+    }
   }
+
+  void _bindNotifications() {
+    final source = widget.notificationSource;
+    if (source == null) return;
+    _notificationSubscription = source.openedNotifications.listen(
+      _handleNotification,
+    );
+    final initial = source.takeInitial();
+    if (initial != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _handleNotification(initial);
+      });
+    }
+  }
+
+  void _handleNotification(MobileNotificationEnvelope envelope) {
+    if (!_notificationTracker.claim(envelope.notificationId)) return;
+    var decision = const MobileNotificationRouteResolver().resolve(
+      application: MobileNotificationApplication.family,
+      envelope: envelope,
+      session: widget.session,
+    );
+    if (decision.isAllowed &&
+        _requiresFamilyInteractions(envelope.kind) &&
+        widget.interactionRepository == null) {
+      decision = const MobileNotificationRouteDecision.blocked(
+        MobileNotificationRouteStatus.routeUnavailable,
+        'MOBILE_NOTIFICATION_INTERACTION_ROUTE_UNAVAILABLE',
+      );
+    }
+    widget.onNotificationDecision?.call(decision);
+    final location = decision.location;
+    if (mounted && location != null) _router.go(location);
+  }
+
+  bool _requiresFamilyInteractions(MobileNotificationKind kind) =>
+      switch (kind) {
+        MobileNotificationKind.familyDocuments ||
+        MobileNotificationKind.familyForms ||
+        MobileNotificationKind.familyConsent ||
+        MobileNotificationKind.familyConversation => true,
+        _ => false,
+      };
 
   bool _sameSession(SchoolSession first, SchoolSession second) =>
       first.tenantId == second.tenantId &&
@@ -337,6 +406,8 @@ class _AuthorizedFamilyAppState extends State<_AuthorizedFamilyApp> {
 
   @override
   void dispose() {
+    final subscription = _notificationSubscription;
+    if (subscription != null) unawaited(subscription.cancel());
     _router.dispose();
     _journey.dispose();
     super.dispose();

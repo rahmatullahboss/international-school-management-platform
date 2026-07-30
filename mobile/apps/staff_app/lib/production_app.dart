@@ -4,6 +4,8 @@ class StaffProductionApp extends StatefulWidget {
   const StaffProductionApp({
     this.coordinator,
     this.initializeCoordinator = true,
+    this.notificationSource,
+    this.onNotificationDecision,
     this.repository,
     this.syncRuntimeLoader,
     super.key,
@@ -11,6 +13,8 @@ class StaffProductionApp extends StatefulWidget {
 
   final MobileAppCoordinator? coordinator;
   final bool initializeCoordinator;
+  final MobileNotificationSource? notificationSource;
+  final ValueChanged<MobileNotificationRouteDecision>? onNotificationDecision;
   final TeacherJourneyRepository? repository;
   final StaffSyncRuntimeLoader? syncRuntimeLoader;
 
@@ -84,6 +88,8 @@ class _StaffProductionAppState extends State<StaffProductionApp> {
           }
           return _AuthorizedStaffApp(
             coordinator: coordinator,
+            notificationSource: widget.notificationSource,
+            onNotificationDecision: widget.onNotificationDecision,
             repository: repository,
             session: session,
             syncRuntimeLoader: widget.syncRuntimeLoader,
@@ -117,12 +123,16 @@ class _StaffProductionAppState extends State<StaffProductionApp> {
 class _AuthorizedStaffApp extends StatefulWidget {
   const _AuthorizedStaffApp({
     required this.coordinator,
+    this.notificationSource,
+    this.onNotificationDecision,
     required this.repository,
     required this.session,
     this.syncRuntimeLoader,
   });
 
   final MobileAppCoordinator coordinator;
+  final MobileNotificationSource? notificationSource;
+  final ValueChanged<MobileNotificationRouteDecision>? onNotificationDecision;
   final TeacherJourneyRepository repository;
   final SchoolSession session;
   final StaffSyncRuntimeLoader? syncRuntimeLoader;
@@ -133,6 +143,9 @@ class _AuthorizedStaffApp extends StatefulWidget {
 
 class _AuthorizedStaffAppState extends State<_AuthorizedStaffApp> {
   late StaffJourneyController _journey;
+  final MobileNotificationOpenTracker _notificationTracker =
+      MobileNotificationOpenTracker();
+  StreamSubscription<MobileNotificationEnvelope>? _notificationSubscription;
   late GoRouter _router;
   late StaffAttendanceSyncController _sync;
 
@@ -149,6 +162,7 @@ class _AuthorizedStaffAppState extends State<_AuthorizedStaffApp> {
       session: widget.session,
     );
     _router = _createRouter();
+    _bindNotifications();
     unawaited(_journey.initialize());
     unawaited(_sync.initialize());
   }
@@ -162,6 +176,8 @@ class _AuthorizedStaffAppState extends State<_AuthorizedStaffApp> {
         oldWidget.session.activePersona != widget.session.activePersona ||
         !setEquals(oldWidget.session.capabilities, widget.session.capabilities);
     final repositoryChanged = oldWidget.repository != widget.repository;
+    final notificationSourceChanged =
+        oldWidget.notificationSource != widget.notificationSource;
     if (repositoryChanged) {
       _journey.dispose();
       _journey = StaffJourneyController(
@@ -182,6 +198,42 @@ class _AuthorizedStaffAppState extends State<_AuthorizedStaffApp> {
       _router.dispose();
       _router = _createRouter();
     }
+    if (scopeChanged) {
+      _notificationTracker.clear();
+    }
+    if (notificationSourceChanged) {
+      final subscription = _notificationSubscription;
+      if (subscription != null) unawaited(subscription.cancel());
+      _notificationSubscription = null;
+      _notificationTracker.clear();
+      _bindNotifications();
+    }
+  }
+
+  void _bindNotifications() {
+    final source = widget.notificationSource;
+    if (source == null) return;
+    _notificationSubscription = source.openedNotifications.listen(
+      _handleNotification,
+    );
+    final initial = source.takeInitial();
+    if (initial != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _handleNotification(initial);
+      });
+    }
+  }
+
+  void _handleNotification(MobileNotificationEnvelope envelope) {
+    if (!_notificationTracker.claim(envelope.notificationId)) return;
+    final decision = const MobileNotificationRouteResolver().resolve(
+      application: MobileNotificationApplication.staff,
+      envelope: envelope,
+      session: widget.session,
+    );
+    widget.onNotificationDecision?.call(decision);
+    final location = decision.location;
+    if (mounted && location != null) _router.go(location);
   }
 
   GoRouter _createRouter() {
@@ -238,6 +290,8 @@ class _AuthorizedStaffAppState extends State<_AuthorizedStaffApp> {
 
   @override
   void dispose() {
+    final subscription = _notificationSubscription;
+    if (subscription != null) unawaited(subscription.cancel());
     _router.dispose();
     _journey.dispose();
     _sync.dispose();

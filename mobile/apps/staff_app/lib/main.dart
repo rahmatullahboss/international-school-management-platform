@@ -10,6 +10,7 @@ import 'package:school_app_bootstrap/school_app_bootstrap.dart';
 import 'package:school_authentication/school_authentication.dart';
 import 'package:school_design_system/school_design_system.dart';
 import 'package:school_mobile_core/mobile_core.dart';
+import 'package:school_mobile_core/notification_routing.dart';
 import 'package:school_staff_domain/school_staff_domain.dart';
 import 'package:school_sync_engine/school_sync_engine.dart';
 import 'package:school_sync_storage/school_sync_storage.dart';
