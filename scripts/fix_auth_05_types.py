@@ -14,6 +14,9 @@ source = cache.read_text(encoding='utf-8')
 if source.count('Promise<unknown | undefined>') != 2:
     raise SystemExit('Expected two redundant unknown unions in cache store.')
 source = source.replace('Promise<unknown | undefined>', 'Promise<unknown>')
+if source.count('readonly etag?: string;') != 2:
+    raise SystemExit('Expected two optional ETag cache fields.')
+source = source.replace('readonly etag?: string;', 'readonly etag?: string | undefined;')
 if source.count('async () => response') != 2:
     raise SystemExit('Expected two delegated response callbacks.')
 source = source.replace(
