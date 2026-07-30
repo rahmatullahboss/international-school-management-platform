@@ -1,5 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 
 /// Languages approved for the first mobile localization verification tranche.
 enum SchoolLanguage { english, bangla, arabic }
@@ -247,6 +248,8 @@ abstract final class SchoolLocalizationConfiguration {
   static const localizationsDelegates = <LocalizationsDelegate<dynamic>>[
     SchoolShellStrings.delegate,
     SchoolWidgetsLocalizations.delegate,
+    DefaultMaterialLocalizations.delegate,
+    DefaultCupertinoLocalizations.delegate,
   ];
 
   static const supportedLocales = SchoolLocalePolicy.supportedLocales;
