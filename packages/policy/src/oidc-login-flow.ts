@@ -10,7 +10,13 @@ import {
   fetchOidcJwks,
   type OidcDiscoveredProvider,
 } from './oidc-provider-client.js';
-import { verifyOidcIdToken, type OidcIdentity } from './oidc.js';
+import {
+  verifyOidcIdToken,
+  type OidcIdentity,
+  type OidcJsonWebKeySet,
+  type OidcProviderConfiguration,
+  type OidcVerificationResult,
+} from './oidc.js';
 
 export interface OidcLoginFlowConfiguration {
   readonly provider: OidcDiscoveredProvider;
@@ -45,6 +51,10 @@ export interface OidcCallbackParameters {
   readonly error?: string;
 }
 
+export type OidcSigningKeyResolution =
+  | { readonly ok: true; readonly jwks: OidcJsonWebKeySet }
+  | { readonly ok: false; readonly code: string; readonly message: string };
+
 export interface OidcLoginFlowDependencies {
   readonly fetcher?: typeof fetch;
   readonly consumeTransaction: (
@@ -52,6 +62,10 @@ export interface OidcLoginFlowDependencies {
     providerIssuer: string,
     expiresAt: number,
   ) => Promise<boolean>;
+  readonly resolveSigningKeys?: (
+    configuration: OidcProviderConfiguration,
+    forceRefresh: boolean,
+  ) => Promise<OidcSigningKeyResolution>;
   readonly resolveMembership: (
     identity: OidcIdentity,
     selection: MembershipSelection,
@@ -95,6 +109,63 @@ function callbackFailure(
     message,
     setCookie: clearOAuthTransactionCookie(),
   };
+}
+
+function signingKeyFailureStatus(code: string): 502 | 503 {
+  return code === 'oidc_provider_network_error' ||
+    code === 'oidc_provider_http_error' ||
+    code === 'oidc_provider_response_invalid' ||
+    code === 'oidc_provider_capability_missing'
+    ? 502
+    : 503;
+}
+
+async function resolveSigningKeys(
+  input: CompleteOidcLoginInput,
+  forceRefresh: boolean,
+): Promise<OidcSigningKeyResolution> {
+  try {
+    if (input.dependencies.resolveSigningKeys !== undefined) {
+      return await input.dependencies.resolveSigningKeys(
+        input.configuration.provider.configuration,
+        forceRefresh,
+      );
+    }
+    return await fetchOidcJwks(
+      input.configuration.provider.configuration,
+      input.dependencies.fetcher,
+    );
+  } catch {
+    return {
+      ok: false,
+      code: 'oidc_signing_key_cache_unavailable',
+      message: 'OIDC signing keys are unavailable.',
+    };
+  }
+}
+
+async function verifyIdentityWithSingleRefresh(
+  input: CompleteOidcLoginInput,
+  idToken: string,
+  nonce: string,
+): Promise<OidcVerificationResult | OidcSigningKeyResolution> {
+  const initialKeys = await resolveSigningKeys(input, false);
+  if (!initialKeys.ok) return initialKeys;
+  const verify = (jwks: OidcJsonWebKeySet): Promise<OidcVerificationResult> =>
+    verifyOidcIdToken({
+      idToken,
+      nonce,
+      configuration: input.configuration.provider.configuration,
+      jwks,
+      ...(input.now === undefined ? {} : { now: input.now }),
+    });
+
+  const initial = await verify(initialKeys.jwks);
+  if (initial.ok || initial.code !== 'oidc_signing_key_not_found') return initial;
+
+  const refreshedKeys = await resolveSigningKeys(input, true);
+  if (!refreshedKeys.ok) return refreshedKeys;
+  return verify(refreshedKeys.jwks);
 }
 
 export async function beginOidcLogin(input: BeginOidcLoginInput): Promise<BeginOidcLoginResult> {
@@ -197,23 +268,22 @@ export async function completeOidcLogin(
     return callbackFailure(502, tokenExchange.code, tokenExchange.message);
   }
 
-  const signingKeys = await fetchOidcJwks(
-    input.configuration.provider.configuration,
-    input.dependencies.fetcher,
+  const identity = await verifyIdentityWithSingleRefresh(
+    input,
+    tokenExchange.tokenSet.idToken,
+    transaction.transaction.nonce,
   );
-  if (!signingKeys.ok) {
-    return callbackFailure(502, signingKeys.code, signingKeys.message);
-  }
-
-  const identity = await verifyOidcIdToken({
-    idToken: tokenExchange.tokenSet.idToken,
-    nonce: transaction.transaction.nonce,
-    configuration: input.configuration.provider.configuration,
-    jwks: signingKeys.jwks,
-    ...(input.now === undefined ? {} : { now: input.now }),
-  });
   if (!identity.ok) {
-    return callbackFailure(401, identity.code, identity.message);
+    const status = identity.code.startsWith('oidc_token_') ||
+      identity.code === 'oidc_signing_key_not_found' ||
+      identity.code === 'oidc_signature_invalid' ||
+      identity.code === 'oidc_claims_invalid' ||
+      identity.code === 'oidc_issuer_mismatch' ||
+      identity.code === 'oidc_audience_mismatch' ||
+      identity.code === 'oidc_nonce_mismatch'
+      ? 401
+      : signingKeyFailureStatus(identity.code);
+    return callbackFailure(status, identity.code, identity.message);
   }
 
   let membership: MembershipResolution;
