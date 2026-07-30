@@ -9,6 +9,7 @@
     "typecheck": "tsc -b"
   },
   "dependencies": {
+    "@school/database": "*",
     "@school/platform": "*",
     "@school/policy": "*",
     "hono": "^4.0.0"
