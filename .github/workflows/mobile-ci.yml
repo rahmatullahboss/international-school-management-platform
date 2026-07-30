@@ -31,24 +31,24 @@ jobs:
       - name: Show Flutter toolchain
         run: flutter --version
       - name: Author native notification adapter checkpoint
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'push'
         run: python3 mobile/tool/add_native_notifications.py
       - name: Resolve workspace dependencies
         working-directory: mobile
         run: flutter pub get
       - name: Format authored sources
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'push'
         working-directory: mobile
-        run: dart format packages/native_notifications packages/mobile_core apps/family_app/pubspec.yaml apps/staff_app/pubspec.yaml pubspec.yaml
+        run: dart format packages/native_notifications packages/mobile_core
       - name: Commit canonical authored sources
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'push'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add mobile/pubspec.yaml mobile/pubspec.lock mobile/apps/family_app/pubspec.yaml mobile/apps/staff_app/pubspec.yaml mobile/packages/mobile_core/lib/notification_routing.dart mobile/packages/mobile_core/test/notification_routing_test.dart mobile/packages/native_notifications
           if ! git diff --cached --quiet; then
             git commit -m "feat(mobile): add native notification provider lifecycle"
-            git push origin HEAD:${{ github.event.pull_request.head.ref }}
+            git push origin HEAD:${{ github.ref_name }}
           fi
       - name: Verify formatting
         working-directory: mobile
