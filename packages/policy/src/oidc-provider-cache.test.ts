@@ -355,6 +355,78 @@ describe('OIDC provider cache governance', () => {
       code: 'oidc_cache_entry_invalid',
     });
   });
+
+  it('rejects discovery cache records outside bounded freshness windows', async () => {
+    const unboundedStore: OidcProviderCacheStore = {
+      read: async () => {
+        await Promise.resolve();
+        return {
+          schemaVersion: 1,
+          kind: 'discovery',
+          issuer: configuration.issuer,
+          clientId: configuration.clientId,
+          redirectUri: configuration.redirectUri,
+          provider: {
+            configuration,
+            authorizationResponseIssuerParameterSupported: true,
+          },
+          fetchedAt: initialNow,
+          freshUntil: initialNow + 3_601_000,
+          staleUntil: initialNow + 5_401_000,
+        };
+      },
+      write: async () => {
+        await Promise.resolve();
+      },
+    };
+    const cache = new OidcProviderCache({
+      store: unboundedStore,
+      allowedEndpointOrigins: allowedOrigins,
+      fetcher: vi.fn<typeof fetch>(),
+      now: () => initialNow,
+    });
+
+    await expect(
+      cache.resolveDiscovery({
+        issuer: configuration.issuer,
+        clientId: configuration.clientId,
+        redirectUri: configuration.redirectUri,
+      }),
+    ).resolves.toMatchObject({ ok: false, code: 'oidc_cache_entry_invalid' });
+  });
+
+  it('rejects future-dated JWKS cache records', async () => {
+    const futureStore: OidcProviderCacheStore = {
+      read: async () => {
+        await Promise.resolve();
+        return {
+          schemaVersion: 1,
+          kind: 'jwks',
+          issuer: configuration.issuer,
+          jwksUri: configuration.jwksUri,
+          activeKeys: [rsaKey('key-1')],
+          retiredKeys: [],
+          fetchedAt: initialNow + 60_000,
+          freshUntil: initialNow + 90_000,
+          staleUntil: initialNow + 1_890_000,
+        };
+      },
+      write: async () => {
+        await Promise.resolve();
+      },
+    };
+    const cache = new OidcProviderCache({
+      store: futureStore,
+      allowedEndpointOrigins: allowedOrigins,
+      fetcher: vi.fn<typeof fetch>(),
+      now: () => initialNow,
+    });
+
+    await expect(cache.resolveJwks({ configuration })).resolves.toMatchObject({
+      ok: false,
+      code: 'oidc_cache_entry_invalid',
+    });
+  });
 });
 
 describe('OIDC unknown-kid rotation verification', () => {

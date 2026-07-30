@@ -168,16 +168,27 @@ function isValidEtag(value: unknown): value is string {
   );
 }
 
-function validTimes(value: Record<string, unknown>): boolean {
+function validTimes(value: Record<string, unknown>, now: number): boolean {
+  const fetchedAt = value.fetchedAt;
+  const freshUntil = value.freshUntil;
+  const staleUntil = value.staleUntil;
+  if (
+    typeof fetchedAt !== 'number' ||
+    !Number.isInteger(fetchedAt) ||
+    typeof freshUntil !== 'number' ||
+    !Number.isInteger(freshUntil) ||
+    typeof staleUntil !== 'number' ||
+    !Number.isInteger(staleUntil)
+  ) {
+    return false;
+  }
+  const freshDuration = freshUntil - fetchedAt;
+  const staleDuration = staleUntil - freshUntil;
   return (
-    typeof value.fetchedAt === 'number' &&
-    Number.isInteger(value.fetchedAt) &&
-    typeof value.freshUntil === 'number' &&
-    Number.isInteger(value.freshUntil) &&
-    typeof value.staleUntil === 'number' &&
-    Number.isInteger(value.staleUntil) &&
-    value.fetchedAt <= value.freshUntil &&
-    value.freshUntil <= value.staleUntil
+    fetchedAt <= now &&
+    freshDuration >= MIN_FRESH_SECONDS * 1000 &&
+    freshDuration <= MAX_FRESH_SECONDS * 1000 &&
+    staleDuration === STALE_IF_ERROR_SECONDS * 1000
   );
 }
 
@@ -202,6 +213,7 @@ function providerMatches(
 function discoveryRecord(
   value: unknown,
   input: ResolveCachedDiscoveryInput,
+  now: number,
 ): DiscoveryCacheRecord | undefined {
   if (!isRecord(value)) return undefined;
   if (
@@ -211,7 +223,7 @@ function discoveryRecord(
     value.clientId !== input.clientId ||
     value.redirectUri !== input.redirectUri ||
     !providerMatches(value.provider, input.issuer, input.clientId, input.redirectUri) ||
-    !validTimes(value) ||
+    !validTimes(value, now) ||
     (value.etag !== undefined && !isValidEtag(value.etag))
   ) {
     return undefined;
@@ -222,6 +234,7 @@ function discoveryRecord(
 function jwksRecord(
   value: unknown,
   configuration: OidcProviderConfiguration,
+  now: number,
 ): JwksCacheRecord | undefined {
   if (!isRecord(value)) return undefined;
   if (
@@ -239,7 +252,7 @@ function jwksRecord(
         typeof entry.retireAt === 'number' &&
         Number.isInteger(entry.retireAt),
     ) ||
-    !validTimes(value) ||
+    !validTimes(value, now) ||
     (value.etag !== undefined && !isValidEtag(value.etag))
   ) {
     return undefined;
@@ -412,11 +425,12 @@ export class OidcProviderCache {
       );
     }
     const key = cacheKey(['discovery', input.issuer, input.clientId, input.redirectUri]);
+    const now = this.#now();
     let cached: DiscoveryCacheRecord | undefined;
     try {
       const raw = await this.#store.read(key);
       if (raw !== undefined) {
-        cached = discoveryRecord(raw, input);
+        cached = discoveryRecord(raw, input, now);
         if (cached === undefined) {
           return failure('oidc_cache_entry_invalid', 'Cached OIDC discovery metadata is invalid.');
         }
@@ -425,7 +439,6 @@ export class OidcProviderCache {
       return failure('oidc_cache_unavailable', 'The OIDC provider cache is unavailable.');
     }
 
-    const now = this.#now();
     if (!input.forceRefresh && cached !== undefined && cached.freshUntil > now) {
       if (!providerOriginsAllowed(cached.provider, this.#allowedOrigins)) {
         return failure(
@@ -574,11 +587,12 @@ export class OidcProviderCache {
       );
     }
     const key = cacheKey(['jwks', input.configuration.issuer, input.configuration.jwksUri]);
+    const now = this.#now();
     let cached: JwksCacheRecord | undefined;
     try {
       const raw = await this.#store.read(key);
       if (raw !== undefined) {
-        cached = jwksRecord(raw, input.configuration);
+        cached = jwksRecord(raw, input.configuration, now);
         if (cached === undefined) {
           return failure('oidc_cache_entry_invalid', 'Cached OIDC signing keys are invalid.');
         }
@@ -587,7 +601,6 @@ export class OidcProviderCache {
       return failure('oidc_cache_unavailable', 'The OIDC provider cache is unavailable.');
     }
 
-    const now = this.#now();
     if (!input.forceRefresh && cached !== undefined && cached.freshUntil > now) {
       const jwks = combinedJwks(cached, now);
       return {
