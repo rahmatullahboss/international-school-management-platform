@@ -34,6 +34,7 @@ jobs:
         run: |
           python3 mobile/tool/add_step_up_auth.py
           python3 mobile/tool/add_secure_documents_core.py
+          python3 mobile/tool/fix_secure_document_replay.py
           python3 mobile/tool/add_secure_document_tests.py
           python3 mobile/tool/wire_secure_documents.py
           python3 mobile/tool/add_secure_document_app_test.py
