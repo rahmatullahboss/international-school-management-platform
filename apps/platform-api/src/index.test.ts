@@ -16,6 +16,7 @@ const environment = {
   PILOT_SESSION_SECRET: 'pilot-test-session-secret-with-at-least-32-characters',
   AUTH_SESSION_SECRET: authSessionSecret,
   AUTH_SESSION_REGISTRY_SOURCE: 'database',
+  AUTH_ALLOWED_WEB_ORIGINS: 'https://school.test',
   DATABASE_URL: 'postgresql://test.invalid/school',
 };
 
@@ -31,6 +32,28 @@ async function issueSession(role: string): Promise<string> {
     throw new Error('Expected a signed pilot access token.');
   }
   return payload.accessToken;
+}
+
+async function issueBrowserCookie(): Promise<string> {
+  const issued = await issueBrowserSession({
+    secret: authSessionSecret,
+    identity: {
+      issuer: 'https://identity.school.test',
+      subject: 'provider-user-123',
+      assurance: 'aal2',
+      issuedAt: Math.floor(Date.now() / 1000),
+      expiresAt: Math.floor(Date.now() / 1000) + 600,
+    },
+    membership: {
+      membershipId: '40000000-0000-4000-8000-000000000001',
+      principalId: '40000000-0000-4000-8000-000000000002',
+      tenantId: '40000000-0000-4000-8000-000000000003',
+      campusId: '40000000-0000-4000-8000-000000000004',
+      roleIds: ['40000000-0000-4000-8000-000000000005'],
+    },
+  });
+  if (!issued.ok) throw new Error(issued.message);
+  return `${BROWSER_SESSION_COOKIE_NAME}=${issued.token}`;
 }
 
 function bearer(token: string): HeadersInit {
@@ -81,6 +104,9 @@ describe('platform API', () => {
         httpOnlyHostCookie: true,
         browserSessionRegistry: true,
         sessionRevocation: true,
+        originCheckedLogout: true,
+        accountWideLogout: true,
+        secureCookieDeletion: true,
         stepUpAssurance: true,
       },
     });
@@ -136,6 +162,186 @@ describe('platform API', () => {
         assurance: 'aal2',
       },
     });
+  });
+
+  it('permits only the exact configured logout origin during preflight', async () => {
+    const accepted = await app.request(
+      '/auth/v1/logout',
+      { method: 'OPTIONS', headers: { origin: 'https://school.test' } },
+      environment,
+    );
+    expect(accepted.status).toBe(204);
+    expect(accepted.headers.get('access-control-allow-origin')).toBe('https://school.test');
+    expect(accepted.headers.get('access-control-allow-credentials')).toBe('true');
+    expect(accepted.headers.get('access-control-allow-methods')).toContain('POST');
+    expect(accepted.headers.get('access-control-allow-headers')).toBe('content-type');
+
+    const denied = await app.request(
+      '/auth/v1/logout',
+      { method: 'OPTIONS', headers: { origin: 'https://evil.test' } },
+      environment,
+    );
+    expect(denied.status).toBe(403);
+    expect(denied.headers.get('access-control-allow-origin')).toBeNull();
+
+    const unconfigured = await app.request(
+      '/auth/v1/logout',
+      { method: 'OPTIONS', headers: { origin: 'https://school.test' } },
+      { APP_ENV: 'test', APP_REGION: 'local' },
+    );
+    expect(unconfigured.status).toBe(503);
+  });
+
+  it('revokes the current browser session and securely deletes its cookie', async () => {
+    const response = await app.request(
+      '/auth/v1/logout',
+      {
+        method: 'POST',
+        headers: {
+          origin: 'https://school.test',
+          'content-type': 'application/json',
+          cookie: await issueBrowserCookie(),
+        },
+        body: JSON.stringify({ scope: 'current' }),
+      },
+      environment,
+    );
+
+    expect(response.status).toBe(204);
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(response.headers.get('access-control-allow-origin')).toBe('https://school.test');
+    expect(response.headers.get('access-control-allow-credentials')).toBe('true');
+    expect(response.headers.get('set-cookie')).toContain(`${BROWSER_SESSION_COOKIE_NAME}=`);
+    expect(response.headers.get('set-cookie')).toContain('Max-Age=0');
+    expect(databaseQuery).toHaveBeenCalledTimes(2);
+    expect(databaseQuery.mock.calls[0]?.[0]).toContain('iam.is_browser_session_active');
+    expect(databaseQuery.mock.calls[1]?.[0]).toContain('iam.revoke_browser_session');
+  });
+
+  it('revokes every account session using only the signed principal context', async () => {
+    databaseQuery
+      .mockResolvedValueOnce([{ value: true }])
+      .mockResolvedValueOnce([{ value: 3 }]);
+    const response = await app.request(
+      '/auth/v1/logout',
+      {
+        method: 'POST',
+        headers: {
+          origin: 'https://school.test',
+          'content-type': 'application/json; charset=utf-8',
+          cookie: await issueBrowserCookie(),
+        },
+        body: JSON.stringify({ scope: 'all' }),
+      },
+      environment,
+    );
+
+    expect(response.status).toBe(204);
+    expect(databaseQuery).toHaveBeenCalledTimes(2);
+    expect(databaseQuery.mock.calls[1]?.[0]).toContain('iam.revoke_account_browser_sessions');
+    expect(databaseQuery.mock.calls[1]?.[1]).toEqual([
+      '40000000-0000-4000-8000-000000000002',
+      'user logout all sessions',
+    ]);
+  });
+
+  it('denies unsafe logout requests without reading or revoking the session', async () => {
+    const cookie = await issueBrowserCookie();
+    const wrongOrigin = await app.request(
+      '/auth/v1/logout',
+      {
+        method: 'POST',
+        headers: {
+          origin: 'https://evil.test',
+          'content-type': 'application/json',
+          cookie,
+        },
+        body: JSON.stringify({ scope: 'current' }),
+      },
+      environment,
+    );
+    expect(wrongOrigin.status).toBe(403);
+    expect(wrongOrigin.headers.get('access-control-allow-origin')).toBeNull();
+    expect(databaseQuery).not.toHaveBeenCalled();
+
+    const wrongType = await app.request(
+      '/auth/v1/logout',
+      {
+        method: 'POST',
+        headers: {
+          origin: 'https://school.test',
+          'content-type': 'text/plain',
+          cookie,
+        },
+        body: JSON.stringify({ scope: 'current' }),
+      },
+      environment,
+    );
+    expect(wrongType.status).toBe(400);
+    expect(databaseQuery).not.toHaveBeenCalled();
+
+    const extraField = await app.request(
+      '/auth/v1/logout',
+      {
+        method: 'POST',
+        headers: {
+          origin: 'https://school.test',
+          'content-type': 'application/json',
+          cookie,
+        },
+        body: JSON.stringify({ scope: 'current', accountId: 'attacker-controlled' }),
+      },
+      environment,
+    );
+    expect(extraField.status).toBe(400);
+    expect(databaseQuery).not.toHaveBeenCalled();
+  });
+
+  it('fails logout closed when its origin or registry configuration is unavailable', async () => {
+    const cookie = await issueBrowserCookie();
+    const noOriginConfiguration = await app.request(
+      '/auth/v1/logout',
+      {
+        method: 'POST',
+        headers: {
+          origin: 'https://school.test',
+          'content-type': 'application/json',
+          cookie,
+        },
+        body: JSON.stringify({ scope: 'current' }),
+      },
+      {
+        APP_ENV: 'test',
+        APP_REGION: 'local',
+        AUTH_SESSION_SECRET: authSessionSecret,
+        AUTH_SESSION_REGISTRY_SOURCE: 'database',
+        DATABASE_URL: environment.DATABASE_URL,
+      },
+    );
+    expect(noOriginConfiguration.status).toBe(503);
+    expect(databaseQuery).not.toHaveBeenCalled();
+
+    const noRegistry = await app.request(
+      '/auth/v1/logout',
+      {
+        method: 'POST',
+        headers: {
+          origin: 'https://school.test',
+          'content-type': 'application/json',
+          cookie,
+        },
+        body: JSON.stringify({ scope: 'current' }),
+      },
+      {
+        APP_ENV: 'test',
+        APP_REGION: 'local',
+        AUTH_SESSION_SECRET: authSessionSecret,
+        AUTH_ALLOWED_WEB_ORIGINS: environment.AUTH_ALLOWED_WEB_ORIGINS,
+      },
+    );
+    expect(noRegistry.status).toBe(503);
+    expect(noRegistry.headers.get('set-cookie')).toContain('Max-Age=0');
+    expect(databaseQuery).not.toHaveBeenCalled();
   });
 
   it('issues a short-lived synthetic session with fixed tenant, campus, role and subject context', async () => {
