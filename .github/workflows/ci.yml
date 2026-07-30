@@ -43,6 +43,8 @@ jobs:
         run: python3 scripts/fix_auth_07_endpoint_authoring.py
       - name: Add AUTH-07 endpoint regression tests
         run: python3 scripts/implement_auth_07_endpoint.py test
+      - name: Make the endpoint red gate behavioral
+        run: python3 scripts/fix_auth_07_endpoint_red.py
       - name: Prove endpoint and readiness regressions fail before implementation
         shell: bash
         run: |
@@ -56,7 +58,7 @@ jobs:
           grep -q 'keeps provider back-channel logout fail-closed and free of browser CORS' auth-07-endpoint-red.log
       - name: Apply AUTH-07 endpoint implementation
         run: python3 scripts/implement_auth_07_endpoint.py implementation
-      - run: rm scripts/implement_auth_07_endpoint.py scripts/fix_auth_07_endpoint_authoring.py
+      - run: rm scripts/implement_auth_07_endpoint.py scripts/fix_auth_07_endpoint_authoring.py scripts/fix_auth_07_endpoint_red.py
       - run: npm run format
       - run: npm run lint -- --fix
       - run: npm run format
