@@ -155,3 +155,20 @@ AUTH-03 adds durable server-owned identity context without enabling a real provi
 - The staged readiness endpoint reports `loginEnabled: false`; no provider credential, production database binding or session key is deployed.
 
 `GATE-AUTH-DURABLE-CONTEXT-V1` passes. Reviewed provider configuration, public login/callback routing, production secrets, JWKS rotation, permission evaluation, provider logout/revocation, refresh-token governance, step-up, monitoring, recovery rehearsal, UAT and production authorization remain blocked.
+
+
+## Post-gate Browser Session Termination Evidence
+
+AUTH-04 adds a reviewed browser logout endpoint without enabling a real provider or production identity configuration.
+
+- Reviewed base: `958b81a786b55286d0c41085d6258be17796ccd1`.
+- Implementation proof: `ea9093af5e2707edf45fde73a19af371d01cb8ac`.
+- Root CI `30533390869` passed with 575 repository tests, canonical and post-integration migrations, live Neon, builds, budgets, 22 browser journeys and artifact validation.
+- Cloudflare `30533390917` passed exact-origin logout readiness, unconfigured logout denial, existing pilot bearer, persona, PWA and health smoke tests.
+- Logout requires an exact configured HTTPS origin and `application/json`; wildcard credentialed CORS is forbidden.
+- Current-session revocation checks the signed cookie and durable registry before deleting the host cookie.
+- Account-wide revocation derives the account id from the signed session and accepts no browser account identifier.
+- Invalid origins, malformed bodies, missing cookies, revoked sessions and database failures remain fail-closed and sanitized.
+- Staging continues to report `loginEnabled: false` and has no approved origin, provider, production session key or real identity database binding.
+
+`GATE-AUTH-SESSION-TERMINATION-V1` passes. Provider logout/back-channel revocation, refresh-token governance, reviewed provider activation, production origins/secrets, step-up, monitoring, recovery rehearsal, UAT and production authorization remain blocked.

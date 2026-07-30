@@ -1,6 +1,6 @@
 # Whole-Module Multi-Agent Execution System
 
-**Status:** Durable identity context and revocable session contracts verified; real login and production promotion gated  
+**Status:** Origin-checked browser logout and durable session termination verified; real login and production promotion gated  
 **Date:** 2026-07-30  
 **Operating rule:** one agent owns one complete large module; internal milestones are not separate agent assignments.
 
@@ -34,7 +34,9 @@ Owner operating decision: separate agents are used only for complete module stre
 20. [AUTH-02 release evidence](19-oidc-pkce-flow-release-evidence.md)
 21. [AUTH-03 durable identity context](20-auth-durable-context-v1.md)
 22. [AUTH-03 release evidence](21-auth-durable-context-release-evidence.md)
-23. Validation script: `scripts/validate_execution_artifacts.py`
+23. [AUTH-04 browser session termination](22-auth-session-termination-v1.md)
+24. [AUTH-04 release evidence](23-auth-session-termination-release-evidence.md)
+25. Validation script: `scripts/validate_execution_artifacts.py`
 
 ## 3. Repository baseline
 
@@ -97,6 +99,7 @@ After the APIs/read models from the previous waves are stable:
 - `AUTH-01` — Establishes strict provider-neutral OIDC token verification, server-owned tenant/campus membership resolution and secure host-cookie browser-session contracts while real login remains disabled.
 - `AUTH-02` — Verifies browser-bound Authorization Code + PKCE transactions, provider discovery, bounded JWKS retrieval, confidential code exchange, replay protection and secure login orchestration while real provider routes remain disabled.
 - `AUTH-03` — Adds a durable OAuth replay ledger, database-owned identity membership projection, mandatory browser-session registration and session revocation while real provider routes remain disabled.
+- `AUTH-04` — Adds exact-origin JSON browser logout, current-session and account-wide registry revocation and secure host-cookie deletion while real provider routes remain disabled.
 
 ## 5. Whole-module completion boundary
 

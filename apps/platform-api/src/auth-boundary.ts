@@ -4,6 +4,8 @@ import {
   type OidcProviderConfiguration,
 } from '@school/policy';
 
+import { hasValidAuthMutationOrigins } from './auth-logout.js';
+
 export interface AuthBindings {
   readonly OIDC_ISSUER?: string;
   readonly OIDC_CLIENT_ID?: string;
@@ -17,6 +19,7 @@ export interface AuthBindings {
   readonly AUTH_SESSION_SECRET?: string;
   readonly AUTH_SESSION_REGISTRY_SOURCE?: string;
   readonly AUTH_MEMBERSHIP_SOURCE?: string;
+  readonly AUTH_ALLOWED_WEB_ORIGINS?: string;
 }
 
 export type AuthReadinessRequirement =
@@ -26,7 +29,8 @@ export type AuthReadinessRequirement =
   | 'transaction-replay-source'
   | 'session-signing-key'
   | 'session-registry-source'
-  | 'membership-source';
+  | 'membership-source'
+  | 'allowed-web-origins';
 
 export interface AuthReadiness {
   readonly schemaVersion: 1;
@@ -53,6 +57,9 @@ export interface AuthReadiness {
     readonly httpOnlyHostCookie: true;
     readonly browserSessionRegistry: true;
     readonly sessionRevocation: true;
+    readonly originCheckedLogout: true;
+    readonly accountWideLogout: true;
+    readonly secureCookieDeletion: true;
     readonly providerTokensWithheldFromBrowser: true;
     readonly stepUpAssurance: true;
   };
@@ -71,7 +78,8 @@ type AuthBindingName =
   | 'AUTH_TRANSACTION_REPLAY_SOURCE'
   | 'AUTH_SESSION_SECRET'
   | 'AUTH_SESSION_REGISTRY_SOURCE'
-  | 'AUTH_MEMBERSHIP_SOURCE';
+  | 'AUTH_MEMBERSHIP_SOURCE'
+  | 'AUTH_ALLOWED_WEB_ORIGINS';
 
 function configuredValue(bindings: AuthBindings, name: AuthBindingName): string | undefined {
   const value = bindings[name]?.trim();
@@ -129,12 +137,15 @@ export function resolveAuthReadiness(bindings: AuthBindings): AuthReadiness {
   if (configuredValue(bindings, 'AUTH_MEMBERSHIP_SOURCE') === undefined) {
     missingConfiguration.push('membership-source');
   }
+  if (!hasValidAuthMutationOrigins(configuredValue(bindings, 'AUTH_ALLOWED_WEB_ORIGINS'))) {
+    missingConfiguration.push('allowed-web-origins');
+  }
 
   return {
     schemaVersion: 1,
     mode: 'oidc-bff',
     state:
-      missingConfiguration.length === 7
+      missingConfiguration.length === 8
         ? 'disabled'
         : missingConfiguration.length > 0
           ? 'incomplete'
@@ -160,6 +171,9 @@ export function resolveAuthReadiness(bindings: AuthBindings): AuthReadiness {
       httpOnlyHostCookie: true,
       browserSessionRegistry: true,
       sessionRevocation: true,
+      originCheckedLogout: true,
+      accountWideLogout: true,
+      secureCookieDeletion: true,
       providerTokensWithheldFromBrowser: true,
       stepUpAssurance: true,
     },
