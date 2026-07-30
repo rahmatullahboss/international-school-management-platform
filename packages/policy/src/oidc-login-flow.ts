@@ -47,11 +47,16 @@ export interface OidcCallbackParameters {
 
 export interface OidcLoginFlowDependencies {
   readonly fetcher?: typeof fetch;
-  readonly consumeTransaction: (transactionId: string, expiresAt: number) => Promise<boolean>;
+  readonly consumeTransaction: (
+    transactionId: string,
+    providerIssuer: string,
+    expiresAt: number,
+  ) => Promise<boolean>;
   readonly resolveMembership: (
     identity: OidcIdentity,
     selection: MembershipSelection,
   ) => Promise<MembershipResolution>;
+  readonly registerSession: (claims: BrowserSessionClaims) => Promise<boolean>;
 }
 
 export interface CompleteOidcLoginInput {
@@ -159,10 +164,20 @@ export async function completeOidcLogin(
     return callbackFailure(401, transaction.code, transaction.message);
   }
 
-  const consumed = await input.dependencies.consumeTransaction(
-    transaction.transaction.transactionId,
-    transaction.transaction.expiresAt,
-  );
+  let consumed: boolean;
+  try {
+    consumed = await input.dependencies.consumeTransaction(
+      transaction.transaction.transactionId,
+      transaction.transaction.providerIssuer,
+      transaction.transaction.expiresAt,
+    );
+  } catch {
+    return callbackFailure(
+      503,
+      'oauth_replay_store_unavailable',
+      'The login transaction store is unavailable.',
+    );
+  }
   if (!consumed) {
     return callbackFailure(
       401,
@@ -201,10 +216,19 @@ export async function completeOidcLogin(
     return callbackFailure(401, identity.code, identity.message);
   }
 
-  const membership = await input.dependencies.resolveMembership(
-    identity.identity,
-    input.membershipSelection ?? {},
-  );
+  let membership: MembershipResolution;
+  try {
+    membership = await input.dependencies.resolveMembership(
+      identity.identity,
+      input.membershipSelection ?? {},
+    );
+  } catch {
+    return callbackFailure(
+      503,
+      'membership_source_unavailable',
+      'The identity membership source is unavailable.',
+    );
+  }
   if (!membership.ok) {
     const status = membership.code === 'membership_selection_required' ? 409 : 403;
     return callbackFailure(
@@ -224,6 +248,24 @@ export async function completeOidcLogin(
   });
   if (!browserSession.ok) {
     return callbackFailure(503, browserSession.code, browserSession.message);
+  }
+
+  let registered: boolean;
+  try {
+    registered = await input.dependencies.registerSession(browserSession.claims);
+  } catch {
+    return callbackFailure(
+      503,
+      'session_registry_unavailable',
+      'The browser session registry is unavailable.',
+    );
+  }
+  if (!registered) {
+    return callbackFailure(
+      403,
+      'browser_session_registration_denied',
+      'The current membership context cannot establish a browser session.',
+    );
   }
 
   return {

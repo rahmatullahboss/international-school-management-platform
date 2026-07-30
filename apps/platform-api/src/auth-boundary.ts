@@ -15,6 +15,7 @@ export interface AuthBindings {
   readonly AUTH_TRANSACTION_SECRET?: string;
   readonly AUTH_TRANSACTION_REPLAY_SOURCE?: string;
   readonly AUTH_SESSION_SECRET?: string;
+  readonly AUTH_SESSION_REGISTRY_SOURCE?: string;
   readonly AUTH_MEMBERSHIP_SOURCE?: string;
 }
 
@@ -24,6 +25,7 @@ export type AuthReadinessRequirement =
   | 'transaction-signing-key'
   | 'transaction-replay-source'
   | 'session-signing-key'
+  | 'session-registry-source'
   | 'membership-source';
 
 export interface AuthReadiness {
@@ -37,6 +39,7 @@ export interface AuthReadiness {
     readonly highEntropyStateNonceVerifier: true;
     readonly browserBoundTransactionCookie: true;
     readonly transactionReplayProtection: true;
+    readonly durableReplayLedger: true;
     readonly authorizationResponseIssuerValidation: true;
     readonly confidentialClientAuthentication: true;
     readonly serverSideTokenExchange: true;
@@ -46,7 +49,10 @@ export interface AuthReadiness {
     readonly jwksSignatureValidation: true;
     readonly nonceValidation: true;
     readonly membershipResolution: true;
+    readonly databaseMembershipProjection: true;
     readonly httpOnlyHostCookie: true;
+    readonly browserSessionRegistry: true;
+    readonly sessionRevocation: true;
     readonly providerTokensWithheldFromBrowser: true;
     readonly stepUpAssurance: true;
   };
@@ -64,6 +70,7 @@ type AuthBindingName =
   | 'AUTH_TRANSACTION_SECRET'
   | 'AUTH_TRANSACTION_REPLAY_SOURCE'
   | 'AUTH_SESSION_SECRET'
+  | 'AUTH_SESSION_REGISTRY_SOURCE'
   | 'AUTH_MEMBERSHIP_SOURCE';
 
 function configuredValue(bindings: AuthBindings, name: AuthBindingName): string | undefined {
@@ -116,6 +123,9 @@ export function resolveAuthReadiness(bindings: AuthBindings): AuthReadiness {
   if (!hasStrongKey(configuredValue(bindings, 'AUTH_SESSION_SECRET'))) {
     missingConfiguration.push('session-signing-key');
   }
+  if (configuredValue(bindings, 'AUTH_SESSION_REGISTRY_SOURCE') === undefined) {
+    missingConfiguration.push('session-registry-source');
+  }
   if (configuredValue(bindings, 'AUTH_MEMBERSHIP_SOURCE') === undefined) {
     missingConfiguration.push('membership-source');
   }
@@ -124,7 +134,7 @@ export function resolveAuthReadiness(bindings: AuthBindings): AuthReadiness {
     schemaVersion: 1,
     mode: 'oidc-bff',
     state:
-      missingConfiguration.length === 6
+      missingConfiguration.length === 7
         ? 'disabled'
         : missingConfiguration.length > 0
           ? 'incomplete'
@@ -136,6 +146,7 @@ export function resolveAuthReadiness(bindings: AuthBindings): AuthReadiness {
       highEntropyStateNonceVerifier: true,
       browserBoundTransactionCookie: true,
       transactionReplayProtection: true,
+      durableReplayLedger: true,
       authorizationResponseIssuerValidation: true,
       confidentialClientAuthentication: true,
       serverSideTokenExchange: true,
@@ -145,7 +156,10 @@ export function resolveAuthReadiness(bindings: AuthBindings): AuthReadiness {
       jwksSignatureValidation: true,
       nonceValidation: true,
       membershipResolution: true,
+      databaseMembershipProjection: true,
       httpOnlyHostCookie: true,
+      browserSessionRegistry: true,
+      sessionRevocation: true,
       providerTokensWithheldFromBrowser: true,
       stepUpAssurance: true,
     },
@@ -156,6 +170,7 @@ export function resolveAuthReadiness(bindings: AuthBindings): AuthReadiness {
 export async function resolveAuthenticatedBrowserSession(
   bindings: AuthBindings,
   cookieHeader: string | undefined,
+  isSessionActive?: (sessionId: string) => Promise<boolean>,
 ): Promise<
   | {
       readonly ok: true;
@@ -185,6 +200,38 @@ export async function resolveAuthenticatedBrowserSession(
       message: verification.message,
     };
   }
+  if (
+    configuredValue(bindings, 'AUTH_SESSION_REGISTRY_SOURCE') === undefined ||
+    isSessionActive === undefined
+  ) {
+    return {
+      ok: false,
+      status: 503,
+      code: 'session_registry_unavailable',
+      message: 'The browser session registry is unavailable.',
+    };
+  }
+
+  let active: boolean;
+  try {
+    active = await isSessionActive(verification.claims.sessionId);
+  } catch {
+    return {
+      ok: false,
+      status: 503,
+      code: 'session_registry_unavailable',
+      message: 'The browser session registry is unavailable.',
+    };
+  }
+  if (!active) {
+    return {
+      ok: false,
+      status: 401,
+      code: 'browser_session_revoked',
+      message: 'The browser session is no longer active.',
+    };
+  }
+
   return {
     ok: true,
     session: {

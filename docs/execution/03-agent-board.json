@@ -5,7 +5,7 @@
   "execution_mode": "whole-module-agent-ownership",
   "microtask_agents_allowed": false,
   "agent_delegation_allowed": false,
-  "program_status": "oidc_pkce_flow_verified_login_disabled",
+  "program_status": "auth_durable_context_verified_login_disabled",
   "parallel_execution": {
     "allowed": true,
     "assignment_unit": "complete_module_stream",
@@ -27,7 +27,10 @@
     "branch_per_stream": true,
     "production_data_in_agent_branches": false,
     "canonical_manifest_gate": "GATE-WAVE-2-INTEGRATED",
-    "canonical_migration_count": 40
+    "canonical_migration_count": 40,
+    "post_integration_manifest": "infra/database/post-integration-migration-manifest.json",
+    "post_integration_auth_migration_count": 1,
+    "total_verified_migration_count": 41
   },
   "design_baseline": {
     "skill": "impeccable",
@@ -94,7 +97,7 @@
       "neon_branch": "agent/fnd-01-foundation",
       "dependencies": [],
       "entry_gate": "GATE-DOCUMENTS-APPROVED",
-      "full_prompt_section": "FND-01 — Platform Foundation",
+      "full_prompt_section": "FND-01 \u2014 Platform Foundation",
       "owned_paths": [
         "apps/platform/**",
         "packages/platform/**",
@@ -132,7 +135,7 @@
         "FND-01"
       ],
       "entry_gate": "GATE-FOUNDATION-READY",
-      "full_prompt_section": "SIS-01 — Core SIS and Admissions",
+      "full_prompt_section": "SIS-01 \u2014 Core SIS and Admissions",
       "owned_paths": [
         "packages/modules/people/**",
         "packages/modules/admissions/**",
@@ -165,7 +168,7 @@
         "FND-01"
       ],
       "entry_gate": "GATE-FOUNDATION-READY",
-      "full_prompt_section": "FIN-01 — Billing and Accounting",
+      "full_prompt_section": "FIN-01 \u2014 Billing and Accounting",
       "owned_paths": [
         "packages/modules/billing/**",
         "packages/modules/ledger/**",
@@ -197,7 +200,7 @@
         "FND-01"
       ],
       "entry_gate": "GATE-FOUNDATION-READY",
-      "full_prompt_section": "INT-01 — Internationalization and Integration Platform",
+      "full_prompt_section": "INT-01 \u2014 Internationalization and Integration Platform",
       "owned_paths": [
         "packages/modules/country-packs/**",
         "packages/modules/integrations/**",
@@ -232,7 +235,7 @@
         "INTEG-01:wave-1"
       ],
       "entry_gate": "GATE-WAVE-1-INTEGRATED",
-      "full_prompt_section": "ACAD-01 — Academics, Attendance and Records",
+      "full_prompt_section": "ACAD-01 \u2014 Academics, Attendance and Records",
       "owned_paths": [
         "packages/modules/academics/**",
         "packages/modules/scheduling/**",
@@ -270,7 +273,7 @@
         "INTEG-01:wave-1"
       ],
       "entry_gate": "GATE-WAVE-1-INTEGRATED",
-      "full_prompt_section": "OPS-01 — School Operations ERP",
+      "full_prompt_section": "OPS-01 \u2014 School Operations ERP",
       "owned_paths": [
         "packages/modules/hr/**",
         "packages/modules/procurement/**",
@@ -309,7 +312,7 @@
         "INTEG-01:wave-1"
       ],
       "entry_gate": "GATE-STUDENT-SUPPORT-THREAT-MODEL",
-      "full_prompt_section": "CARE-01 — Health, Wellbeing and Safeguarding",
+      "full_prompt_section": "CARE-01 \u2014 Health, Wellbeing and Safeguarding",
       "owned_paths": [
         "packages/modules/health/**",
         "packages/modules/behavior/**",
@@ -346,7 +349,7 @@
         "INTEG-01:wave-2"
       ],
       "entry_gate": "GATE-WAVE-2-INTEGRATED",
-      "full_prompt_section": "EXP-01 — Portals, Communications and Reporting Experience",
+      "full_prompt_section": "EXP-01 \u2014 Portals, Communications and Reporting Experience",
       "owned_paths": [
         "apps/web-admin/**",
         "apps/web-teacher/**",
@@ -391,7 +394,7 @@
         "EXP-01"
       ],
       "entry_gate": "GATE-REVIEWED-SHAS-AVAILABLE",
-      "full_prompt_section": "INTEG-01 — Serial Integration and Release Verification",
+      "full_prompt_section": "INTEG-01 \u2014 Serial Integration and Release Verification",
       "owned_paths": [
         "integration-only conflict resolutions",
         "migration ordering manifests",
@@ -622,5 +625,34 @@
     "production_identity_enabled": false,
     "production_mutations_enabled": false,
     "remaining_release_gate": "durable OAuth replay ledger, approved JWKS cache and rotation, reviewed provider configuration, database-backed memberships and permissions, session revocation and refresh-token governance, step-up, monitoring, rollback, owner-led UAT and explicit production authorization"
+  },
+  "auth_durable_context": {
+    "id": "AUTH-03",
+    "status": "gate_passed_provider_routes_disabled",
+    "gate": "GATE-AUTH-DURABLE-CONTEXT-V1",
+    "branch": "pilot/auth-durable-context-v1",
+    "reviewed_base_sha": "84b637f6b5080476b2a015cf938fe8d2c60d1e3f",
+    "implementation_proof_sha": "9886f41d198772c684d3b245258964d4bcb0e83c",
+    "root_ci_run": "30530441477",
+    "cloudflare_deploy_run": "30530441742",
+    "repository_tests_passed": 565,
+    "browser_journeys_passed": 22,
+    "canonical_migrations_verified": 40,
+    "post_integration_migrations_verified": 1,
+    "oauth_replay_ledger_durable": true,
+    "database_membership_projection": true,
+    "direct_runtime_table_access": false,
+    "security_definer_function_access": true,
+    "session_registration_required_before_cookie": true,
+    "session_registry_checked_on_introspection": true,
+    "single_session_revocation": true,
+    "account_wide_revocation": true,
+    "role_or_membership_change_invalidates_session": true,
+    "login_enabled": false,
+    "real_provider_configured": false,
+    "production_database_binding_configured": false,
+    "production_identity_enabled": false,
+    "production_mutations_enabled": false,
+    "remaining_release_gate": "reviewed provider and public routes, production secret/database bindings, JWKS rotation, database-backed permission evaluation, provider logout and refresh-token governance, step-up, monitoring, recovery rehearsal, owner-led UAT and explicit production authorization"
   }
 }

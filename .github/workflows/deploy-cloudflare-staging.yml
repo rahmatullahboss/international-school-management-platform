@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   verify-deploy-smoke:
-    if: github.event_name == 'workflow_dispatch' || github.head_ref == 'deploy/cloudflare-staging-pilot' || github.head_ref == 'pilot/runtime-portal-composition' || github.head_ref == 'ux/smooth-operational-experience-v1' || github.head_ref == 'pilot/permission-aware-read-api-v1' || github.head_ref == 'pilot/signed-session-context-v1' || github.head_ref == 'pilot/oidc-trust-boundary-v1' || github.head_ref == 'pilot/oidc-pkce-flow-v1'
+    if: github.event_name == 'workflow_dispatch' || github.head_ref == 'deploy/cloudflare-staging-pilot' || github.head_ref == 'pilot/runtime-portal-composition' || github.head_ref == 'ux/smooth-operational-experience-v1' || github.head_ref == 'pilot/permission-aware-read-api-v1' || github.head_ref == 'pilot/signed-session-context-v1' || github.head_ref == 'pilot/oidc-trust-boundary-v1' || github.head_ref == 'pilot/oidc-pkce-flow-v1' || github.head_ref == 'pilot/auth-durable-context-v1'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     environment: cloudflare-staging
@@ -164,16 +164,19 @@ jobs:
           for control in [
               'authorizationCode', 'pkceS256', 'highEntropyStateNonceVerifier',
               'browserBoundTransactionCookie', 'transactionReplayProtection',
-              'authorizationResponseIssuerValidation', 'confidentialClientAuthentication',
-              'serverSideTokenExchange', 'providerDiscoveryValidation', 'issuerValidation',
-              'audienceValidation', 'jwksSignatureValidation', 'nonceValidation',
-              'membershipResolution', 'httpOnlyHostCookie',
+              'durableReplayLedger', 'authorizationResponseIssuerValidation',
+              'confidentialClientAuthentication', 'serverSideTokenExchange',
+              'providerDiscoveryValidation', 'issuerValidation', 'audienceValidation',
+              'jwksSignatureValidation', 'nonceValidation', 'membershipResolution',
+              'databaseMembershipProjection', 'httpOnlyHostCookie',
+              'browserSessionRegistry', 'sessionRevocation',
               'providerTokensWithheldFromBrowser', 'stepUpAssurance'
           ]:
               assert controls.get(control) is True, (control, readiness)
           assert readiness.get('missingConfiguration') == [
               'provider-metadata', 'provider-client-credential', 'transaction-signing-key',
-              'transaction-replay-source', 'session-signing-key', 'membership-source'
+              'transaction-replay-source', 'session-signing-key',
+              'session-registry-source', 'membership-source'
           ], readiness
           serialized_readiness = json.dumps(readiness).lower()
           for forbidden in ['oidc_', 'auth_', 'secret-value', 'client-secret-value']:
@@ -225,5 +228,5 @@ jobs:
             echo "- Browser session introspection: $API_URL/auth/v1/session"
             echo "- Signed pilot session: $API_URL/pilot/v1/sessions/admin"
             echo "- Signed scoped admin snapshot: $API_URL/pilot/v1/snapshots/admin"
-            echo '- Scope: Authorization Code + PKCE, discovery, confidential exchange, replay, membership and secure-session contracts are verified; real login remains disabled until approved provider and durable adapters are configured.'
+            echo '- Scope: durable OAuth replay, database membership projection and revocable session contracts are verified; real login remains disabled until approved provider, database binding and secrets are configured.'
           } >> "$GITHUB_STEP_SUMMARY"

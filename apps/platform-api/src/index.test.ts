@@ -1,6 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { BROWSER_SESSION_COOKIE_NAME, issueBrowserSession } from '@school/policy';
+
+const databaseQuery = vi.hoisted(() => vi.fn());
+vi.mock('@school/database', () => ({
+  createHttpDatabase: () => ({ query: databaseQuery }),
+}));
 
 import app from './index.js';
 
@@ -10,6 +15,8 @@ const environment = {
   APP_REGION: 'local',
   PILOT_SESSION_SECRET: 'pilot-test-session-secret-with-at-least-32-characters',
   AUTH_SESSION_SECRET: authSessionSecret,
+  AUTH_SESSION_REGISTRY_SOURCE: 'database',
+  DATABASE_URL: 'postgresql://test.invalid/school',
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -31,6 +38,11 @@ function bearer(token: string): HeadersInit {
 }
 
 describe('platform API', () => {
+  beforeEach(() => {
+    databaseQuery.mockReset();
+    databaseQuery.mockResolvedValue([{ value: true }]);
+  });
+
   it('returns a correlation id and non-sensitive health response', async () => {
     const response = await app.request('/health', {}, environment);
 
@@ -65,7 +77,10 @@ describe('platform API', () => {
         jwksSignatureValidation: true,
         nonceValidation: true,
         membershipResolution: true,
+        databaseMembershipProjection: true,
         httpOnlyHostCookie: true,
+        browserSessionRegistry: true,
+        sessionRevocation: true,
         stepUpAssurance: true,
       },
     });

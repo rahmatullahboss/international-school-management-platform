@@ -1,0 +1,14 @@
+{
+  "program": "international-school-platform-v1",
+  "gate": "GATE-AUTH-DURABLE-CONTEXT-V1",
+  "baseManifest": "infra/database/migration-manifest.json",
+  "orderingRule": "apply the reviewed 40-migration Wave 2 manifest first, then post-integration authentication migrations in contiguous order",
+  "migrations": [
+    {
+      "order": 1,
+      "id": "202607300301_AUTH-03_durable_identity_context",
+      "stream": "AUTH-03",
+      "path": "infra/database/post-integration-migrations/202607300301_AUTH-03_durable_identity_context.sql"
+    }
+  ]
+}

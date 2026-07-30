@@ -47,6 +47,13 @@ jobs:
           PGUSER: postgres
           PGDATABASE: postgres
         run: npm run verify:migrations
+      - name: Verify AUTH post-integration migrations and revocation contracts
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: 5432
+          PGUSER: postgres
+          PGDATABASE: postgres
+        run: npm run verify:auth-migrations
       - name: Verify live Neon serverless driver
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
         env:
