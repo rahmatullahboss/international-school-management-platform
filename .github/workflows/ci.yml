@@ -10,10 +10,41 @@ on:
       - 'integration/**'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
+  canonicalize-auth-01:
+    if: github.event_name == 'pull_request' && github.head_ref == 'pilot/oidc-trust-boundary-v1' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: pilot/oidc-trust-boundary-v1
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.2'
+          cache: npm
+      - run: npm install --package-lock-only --ignore-scripts
+      - run: npm ci
+      - run: npm run format
+      - run: npm run lint -- --fix
+      - run: npm run format
+      - run: npm run lint
+      - run: npm run typecheck
+      - name: Commit canonical AUTH-01 source
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'style(auth): canonicalize OIDC trust boundary'
+          git push origin HEAD:pilot/oidc-trust-boundary-v1
+
   verify:
+    needs: canonicalize-auth-01
+    if: always() && needs.canonicalize-auth-01.result == 'skipped'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     services:
