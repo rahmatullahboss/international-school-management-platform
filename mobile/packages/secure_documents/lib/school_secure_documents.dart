@@ -27,17 +27,15 @@ final class SecureDocumentException implements Exception {
 
 final class SecureDocumentStreamResponse {
   SecureDocumentStreamResponse({
-    required Stream<List<int>> bytes,
+    required this.bytes,
     required int contentLength,
     required String documentId,
     required String mediaType,
-    required bool noStore,
+    required this.noStore,
     required String sha256Hex,
-  }) : bytes = bytes,
-       contentLength = _positive(contentLength, 'contentLength'),
+  }) : contentLength = _positive(contentLength, 'contentLength'),
        documentId = _identifier(documentId, 'documentId'),
        mediaType = _mediaType(mediaType),
-       noStore = noStore,
        sha256Hex = _sha256(sha256Hex);
 
   final Stream<List<int>> bytes;
@@ -362,9 +360,7 @@ final class SecureDocumentExchangeCoordinator
       lease = await _leaseFactory.create();
       final completer = Completer<Digest>();
       final digestSink = sha256.startChunkedConversion(
-        ByteConversionSink.withCallback(
-          (bytes) => completer.complete(Digest(bytes)),
-        ),
+        _SingleDigestSink(completer),
       );
       var received = 0;
       await for (final chunk in response.bytes) {
@@ -457,6 +453,33 @@ final class SecureDocumentExchangeCoordinator
 
   String _identity(String prefix) =>
       '$prefix-${_clock().toUtc().microsecondsSinceEpoch}';
+}
+
+final class _SingleDigestSink implements Sink<Digest> {
+  _SingleDigestSink(this._completer);
+
+  final Completer<Digest> _completer;
+  bool _closed = false;
+
+  @override
+  void add(Digest data) {
+    if (_closed || _completer.isCompleted) {
+      throw const SecureDocumentException(
+        'SECURE_DOCUMENT_DIGEST_SINK_INVALID',
+      );
+    }
+    _completer.complete(data);
+  }
+
+  @override
+  void close() {
+    _closed = true;
+    if (!_completer.isCompleted) {
+      _completer.completeError(
+        const SecureDocumentException('SECURE_DOCUMENT_DIGEST_MISSING'),
+      );
+    }
+  }
 }
 
 String _identifier(String value, String field) {
