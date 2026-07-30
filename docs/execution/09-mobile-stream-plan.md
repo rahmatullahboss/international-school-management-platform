@@ -2,7 +2,7 @@
 
 ## Status
 
-Milestones 1 through 6 have passed on the client/native side. Milestone 7 now has a passed source/static tranche covering the restricted-data threat model, shared English/Bangla/Arabic localization policy, Arabic RTL, 200% text scaling, written screen-reader semantics, minimum interaction targets and native transport/file-sharing guards. Device-level TalkBack/VoiceOver verification, Android/iOS integration tests, approved restricted-document presenters and signed store-release evidence remain pending and release blocking.
+Milestones 1 through 6 have passed on the client/native side. Milestone 7 now has passed source/static tranches covering the restricted-data threat model, shared English/Bangla/Arabic localization runtime, Arabic RTL, deterministic locale fallback, bidirectional isolation, exact locale-aware money/time presentation, 200% text scaling, written screen-reader semantics, minimum interaction targets, fail-closed platform lifecycle decisions and native transport/file-sharing guards. Production composition adoption, complete translated domain copy, device-level TalkBack/VoiceOver verification, Android/iOS integration tests, approved restricted-document presenters and signed store-release evidence remain pending and release blocking.
 
 Family read and interaction journeys, Teacher Today/roster, encrypted attendance drafts, durable sync, privacy-minimised notification routing, the secret-free Firebase/APNs lifecycle and step-up authenticated secure-document exchange are verified. All proposed mobile endpoints, Firebase/APNs project activation and platform-specific document presenters remain server/platform-owned and inactive. No production deployment, database mutation, provider activation or real student data is authorized by this stream.
 
@@ -55,12 +55,13 @@ Backend APIs, notification issuance, identity policy, server authorization and s
    - Privacy-minimised notification envelopes, exact capability-safe routing and secret-free Firebase/APNs lifecycle.
    - Transient OIDC step-up proof, opaque short-lived grant exchange, no-redirect HTTPS transport, bounded streaming, integrity verification and explicit no-store cleanup.
    - Firebase/APNs project credentials, live notification issuance, the server exchange endpoint and approved native document presenters remain inactive.
-7. **Security, accessibility and release verification — source/static tranche passed; device/store evidence pending**
+7. **Security, accessibility and release verification — source/static tranches passed; device/store evidence pending**
    - Restricted-data threat model and trust-boundary/abuse-case evidence.
-   - Shared English, Bangla and Arabic shell policy with deterministic English fallback and explicit Arabic RTL.
-   - Source tests for 200% text scaling, written status semantics and minimum 48 logical-pixel controls.
+   - Shared English, Bangla and Arabic shell runtime with deterministic English fallback, ordered device-locale resolution and explicit Arabic RTL.
+   - Bounded framework-label fallback delegates, bidi sanitization/isolation, exact integer-money presentation and explicit-offset timestamp presentation.
+   - Source tests for 200% text scaling, written status semantics, minimum 48 logical-pixel controls, reduced motion and lifecycle privacy decisions.
    - Android cleartext traffic disabled; iOS arbitrary transport loads, file sharing and open-in-place disabled; CI drift guards enforce the settings.
-   - TalkBack, VoiceOver, Dynamic Type device passes, Android/iOS integration tests, native restricted-document presenters, signed release artifacts, privacy declarations and rollback evidence remain pending.
+   - Production composition, complete translated domain copy, TalkBack, VoiceOver, Dynamic Type device passes, Android/iOS integration tests, native restricted-document presenters, signed release artifacts, privacy declarations and rollback evidence remain pending.
 
 ## Checkpoint 1 evidence — shared foundation
 
@@ -145,10 +146,21 @@ Backend APIs, notification issuance, identity policy, server authorization and s
 - Source tests verify Bangla/Arabic copy, RTL direction, a five-destination adaptive shell at 200% text scaling, explicit written status semantics and 48 logical-pixel interactive controls.
 - Android manifests prohibit cleartext transport and backup. iOS manifests prohibit arbitrary transport loads, unrestricted file sharing and open-in-place document access. `verify_native_projects.py` fails closed if these settings drift.
 - `docs/mobile/accessibility-localization-release-evidence.md` records the source evidence matrix, critical journeys, screen-reader/localization acceptance criteria, platform integration requirements and store-release blockers.
-- Root CI `30543231291` passed format, lint, boundaries, typecheck, repository tests, migrations, AUTH revocation contracts, live Neon driver, builds, supply-chain checks, browser journeys and execution-artifact validation for the implementation head.
-- The permanent documentation-head Mobile/root run IDs are recorded in PR #41 after the final immutable-head gates complete.
-- Cloudflare staging remains skipped; no application deployment occurred.
+- Implementation Mobile CI `30543231293`, root CI `30543231291`, final documentation-head Mobile CI `30543798656` and root CI `30543798732` passed. Staging `30543798808` was skipped.
 - Production deployment, database mutation, notification-provider activation, secure-document server activation and real student data use: none.
+
+## Checkpoint 11 evidence — localization runtime, exact presentation and lifecycle interruption foundation
+
+- `school_design_system` now provides ordered supported-locale resolution, localized shell delegates, Arabic RTL Widgets localization and bounded English framework-label fallback delegates for Material/Cupertino controls.
+- Dynamic identifiers and user-controlled text strip directional overrides/isolate controls and are re-enclosed with first-strong isolation.
+- Exact money presentation accepts integer minor units only, localizes digits/separators for English, Bangla and Arabic and never performs floating-point conversion or authoritative financial calculation.
+- Timestamp presentation requires an authoritative UTC instant, explicit whole-minute offset and printable server-provided timezone identifier; it does not infer the school timezone from the device.
+- Accessibility preferences expose bold text, high contrast and reduced motion without affecting authorization, sync, document-security or authority decisions.
+- `school_mobile_core` adds platform-neutral lifecycle decisions for backgrounding, process detachment, memory pressure and stale/fresh authorization. Restricted content can be obscured, presentation cancelled and transient bytes purged using redacted reason codes only.
+- Tests cover unsupported/ordered locale resolution, delegates, RTL, bidi spoofing, integer money, explicit offsets, backgrounding, process death, memory pressure and authorization refresh.
+- Production composition wiring, complete translated domain copy, reviewed global framework translations, native lifecycle wiring and device certification remain incomplete.
+- The implementation and final documentation-head run IDs are recorded in PR #41 after immutable-head gates complete.
+- Production deployment, database mutation, provider activation and real student data use: none.
 
 ## Server/platform-owned contract boundary
 
@@ -164,4 +176,4 @@ MOB-01 may define and test clients, domain contracts and fail-closed UI. Owning 
 
 ## Exact next action
 
-Adopt approved localization delegates and translated domain copy in production composition, then complete device-level TalkBack, VoiceOver, Dynamic Type, switch-control, contrast and RTL journeys. Add Android/iOS integration tests for backgrounding, interruption, process death, low storage, notification launches, encrypted sync recovery and restricted-document cleanup. Separately obtain server/platform-owner review for Bootstrap, Family, Teacher, device-session, notification, sync and secure-document exchange activation, approved Firebase/APNs configuration and Android/iOS native document presenters. Produce signed release artifacts, privacy declarations, provenance and rollback evidence before any live account or student data is used.
+Adopt the reviewed localization configuration and localized shell strings in Family and Staff production composition, then complete translated domain copy, plural rules and locale-selection UX. Wire platform lifecycle signals to privacy overlays, restricted-presentation cancellation, transient-byte purge and fresh-proof enforcement on Android/iOS. Complete device-level TalkBack, VoiceOver, Dynamic Type, switch-control, contrast, reduced-motion and representative RTL journeys. Add Android/iOS integration tests for backgrounding, interruption, process death, low storage, notification launches, encrypted sync recovery and restricted-document cleanup. Separately obtain server/platform-owner review for Bootstrap, Family, Teacher, device-session, notification, sync and secure-document exchange activation, approved Firebase/APNs configuration and Android/iOS native document presenters. Produce signed release artifacts, privacy declarations, provenance and rollback evidence before any live account or student data is used.
