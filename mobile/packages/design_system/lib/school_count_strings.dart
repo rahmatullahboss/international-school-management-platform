@@ -39,16 +39,13 @@ final class SchoolCountStrings {
         locale,
         count,
       )) {
-        SchoolPluralCategory.zero =>
-          'لا توجد تغييرات حضور بانتظار المزامنة.',
+        SchoolPluralCategory.zero => 'لا توجد تغييرات حضور بانتظار المزامنة.',
         SchoolPluralCategory.one => 'تغيير حضور واحد بانتظار المزامنة.',
         SchoolPluralCategory.two => 'تغييران للحضور بانتظار المزامنة.',
-        SchoolPluralCategory.few =>
-          '$digits تغييرات حضور بانتظار المزامنة.',
+        SchoolPluralCategory.few => '$digits تغييرات حضور بانتظار المزامنة.',
         SchoolPluralCategory.many =>
           '$digits تغييرًا في الحضور بانتظار المزامنة.',
-        SchoolPluralCategory.other =>
-          '$digits تغيير حضور بانتظار المزامنة.',
+        SchoolPluralCategory.other => '$digits تغيير حضور بانتظار المزامنة.',
       },
     };
   }
