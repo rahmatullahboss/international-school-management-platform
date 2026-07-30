@@ -6,7 +6,7 @@ This evidence register tracks the client/native portion of MOB-01 milestone 7. I
 
 No production deployment, database mutation, provider activation, or real student data is authorized by this document.
 
-## Current source-gate tranche
+## Current source and production-composition tranche
 
 The shared design-system and mobile-core packages now contain:
 
@@ -15,6 +15,8 @@ The shared design-system and mobile-core packages now contain:
 - explicit RTL direction for Arabic and LTR direction for English and Bangla;
 - localized non-authority-bearing shell labels for Family and Staff navigation and account actions;
 - bounded Widgets, Material, and Cupertino delegates that prevent unsupported-locale failure while framework control labels remain English until reviewed global translations are adopted;
+- a presentation-only locale controller and localized Material application composition that cannot alter account, tenant, campus, persona, capability, student, or server authority;
+- integer cardinal plural categories for approved English, Bangla, and Arabic presentation copy;
 - bidirectional-control sanitization plus first-strong isolation for dynamic identifiers and user-controlled text;
 - exact integer minor-unit money presentation with English, Bangla, and Arabic digits/separators without floating-point conversion or client-side financial calculation;
 - timestamp presentation from an authoritative UTC instant, explicit whole-minute offset, and server-provided timezone identifier without device-timezone inference;
@@ -22,11 +24,19 @@ The shared design-system and mobile-core packages now contain:
 - presentation-only preferences for bold text, high contrast, and reduced motion;
 - a platform-neutral privacy lifecycle policy covering backgrounding, process detachment, memory pressure, stale authorization, restricted-content obscuring, restricted-presentation cancellation, and transient-byte purge decisions.
 
+The Family and Staff production compositions now adopt:
+
+- the approved locale list, ordered device-locale resolution, localized generated app titles, and bounded localization delegates for configuration, access-gate, and authorized application states;
+- localized capability-scoped navigation and sign-out/profile actions without changing route or authorization decisions;
+- RTL-safe isolation for Family student/profile, timetable, result, invoice, receipt, and failure-reason text;
+- exact integer minor-unit money formatting in the Family fees/receipts read journey, preserving the existing two-fraction-digit contract until authoritative currency metadata is added to the server read model.
+
 The source gates verify:
 
-- locale resolution, ordered device-locale preference, and fallback;
+- locale resolution, ordered device-locale preference, explicit locale preference, and fallback;
 - Bangla and Arabic shell-copy availability;
 - Arabic RTL reading direction through the configured localization runtime;
+- English, Bangla, and Arabic integer cardinal plural categories;
 - a five-destination adaptive mobile scaffold at 200% text scaling;
 - written security/status semantics that are discoverable without color-only meaning;
 - minimum interactive control dimensions;
@@ -35,7 +45,7 @@ The source gates verify:
 - reduced-motion preference behavior without changing authorization or security decisions;
 - background, process-death, memory-pressure, stale-proof, and fresh-proof lifecycle decisions with redacted reason codes only.
 
-These checks do not mean the production applications are fully localized or device certified. Production composition still needs reviewed delegate adoption, complete translated domain copy, plural rules, locale selection policy, and representative TalkBack/VoiceOver/device journeys. The lifecycle contract is platform-neutral source evidence; Android/iOS hosts still need to connect actual lifecycle and privacy-overlay signals through approved native integration tests.
+These checks do not mean the production applications are fully translated or device certified. Family and Staff now adopt the localization runtime and translated shell labels, but complete domain copy, reviewed global framework translations, persisted locale-selection UX, authoritative currency fraction metadata, pluralized domain sentences, and representative TalkBack/VoiceOver/device journeys remain incomplete. The lifecycle contract is platform-neutral source evidence; Android/iOS hosts still need to connect actual lifecycle and privacy-overlay signals through approved native integration tests.
 
 ## Evidence matrix
 
@@ -44,12 +54,14 @@ These checks do not mean the production applications are fully localized or devi
 | Written status, not color-only | `SchoolStatusBanner` semantics and widget tests | TalkBack and VoiceOver passes | Source gate present; device pass pending |
 | 200% text scaling | Adaptive scaffold widget test with five destinations | Representative small/large Android and iOS devices | Source gate present; device pass pending |
 | Interactive target size | Theme and widget size assertion at 48 logical pixels | Touch and switch-control validation | Source gate present; device pass pending |
-| RTL direction | Arabic locale runtime and RTL widget tests | Android/iOS Arabic device locale journeys | Source runtime present; production composition/device pass pending |
-| Bangla/Arabic shell copy | Shared catalog and delegate assertions | Android/iOS translated-copy review | Source runtime present; full domain translation pending |
+| RTL direction | Arabic locale runtime, production delegates, and RTL widget tests | Android/iOS Arabic device locale journeys | Production composition present; device pass pending |
+| Bangla/Arabic shell copy | Shared catalog plus Family/Staff production navigation adoption | Android/iOS translated-copy review | Production shell adoption present; full domain translation pending |
 | English fallback | Unsupported-locale and ordered-device-locale tests | Device locale fallback review | Source gate present; device pass pending |
+| Locale preference | Approved-locale controller and rejection tests | Persisted in-app locale-selection journey | Source controller present; UX/persistence pending |
 | Framework localization fallback | Bounded Material/Cupertino delegates for `en`/`bn`/`ar` | Reviewed translated framework controls | English fallback present; translated global delegates pending |
-| Bidirectional isolation | Control-character sanitization and FSI/PDI tests | Representative mixed-script content review | Source gate present; device pass pending |
-| Exact money presentation | Integer minor-unit formatter and locale-digit tests | Screen-reader and visual review for supported currencies | Source gate present; production adoption pending |
+| Plural categories | Integer cardinal category tests for English, Bangla, and Arabic | Reviewed translated pluralized domain copy | Source rules present; domain copy adoption pending |
+| Bidirectional isolation | Control-character sanitization and Family production identifier isolation | Representative mixed-script content review | Production Family adoption present; broader/device pass pending |
+| Exact money presentation | Integer minor-unit formatter and Family fees/receipts adoption | Screen-reader and visual review for supported currencies | Family production adoption present; authoritative currency metadata/device review pending |
 | Date/time presentation | UTC instant plus explicit offset/timezone formatter tests | DST/locale/device review from authoritative read models | Source gate present; production adoption pending |
 | Screen-reader navigation | Written semantics available in shared components | TalkBack traversal and VoiceOver rotor order | Pending |
 | Dynamic type | 200% source test | iOS Larger Accessibility Sizes | Pending |
@@ -102,7 +114,7 @@ Each journey must be exercised in English, Bangla, and Arabic where translated c
 - Bidirectional strings isolate identifiers, dates, amounts, codes, and user-provided content.
 - Exact money remains integer minor-unit data; locale formatting is presentation-only.
 - Dates and times preserve the authoritative UTC instant, explicit offset, and timezone identifier without device inference.
-- Plurals do not rely on English-only `(s)` suffixes in production copy.
+- Plurals do not rely on English-only `(s)` suffixes in completed production copy.
 - Truncation never removes status, error, consent, security, or irreversible-action meaning.
 - Translation files contain no secrets, endpoints with credentials, real student data, or production provider values.
 - English framework-label fallback must remain visibly documented until reviewed Material/Cupertino translations replace it.
@@ -130,11 +142,12 @@ Each journey must be exercised in English, Bangla, and Arabic where translated c
 
 ## Remaining implementation boundary
 
-The source-gate tranche establishes shared policy and regression tests. The following remain incomplete and release blocking:
+The localization runtime and production shell composition are now adopted. The following remain incomplete and release blocking:
 
-- production composition adoption of the localization configuration and localized shell strings in both applications;
-- reviewed global Material/Cupertino translations, full domain translation, pluralization, and locale-selection UX;
-- production adoption of exact money, explicit-offset timestamp, and bidi-isolation helpers across all relevant read models;
+- reviewed global Material/Cupertino translations, complete domain translation, pluralized domain copy, and persisted locale-selection UX;
+- authoritative currency fraction metadata and broader exact-money adoption across relevant read models;
+- production adoption of explicit-offset timestamp presentation;
+- broader bidi-isolation adoption where additional server/user-controlled mixed-script values are introduced;
 - native Android/iOS wiring of lifecycle privacy decisions and device-level verification;
 - device-level TalkBack, VoiceOver, Dynamic Type, switch-control, contrast, and reduced-motion evidence;
 - Android/iOS integration tests;
