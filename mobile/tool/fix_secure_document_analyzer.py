@@ -87,4 +87,5 @@ if helper not in text:
         raise RuntimeError("digest helper insertion anchor not found")
     text = text.replace(marker, helper, 1)
 
+text = text.replace("import 'dart:convert';\n", "", 1)
 path.write_text(text, encoding="utf-8")
