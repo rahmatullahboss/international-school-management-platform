@@ -9,6 +9,15 @@ export { PolicyEngine } from './authorization.js';
 export type { IdentityAccount } from './identity.js';
 export { IdentityDirectory } from './identity.js';
 export type {
+  IdentityMembership,
+  MembershipOption,
+  MembershipResolution,
+  MembershipSelection,
+  MembershipStatus,
+  ResolvedMembershipContext,
+} from './membership.js';
+export { MembershipDirectory } from './membership.js';
+export type {
   OidcIdentity,
   OidcJsonWebKeySet,
   OidcProviderConfiguration,
