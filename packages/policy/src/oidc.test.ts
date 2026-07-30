@@ -19,8 +19,7 @@ let privateKey: CryptoKey;
 let publicJwk: OidcJsonWebKey;
 
 function encodeBase64Url(value: string | ArrayBuffer): string {
-  const bytes =
-    typeof value === 'string' ? new TextEncoder().encode(value) : new Uint8Array(value);
+  const bytes = typeof value === 'string' ? new TextEncoder().encode(value) : new Uint8Array(value);
   let binary = '';
   for (const byte of bytes) binary += String.fromCharCode(byte);
   return btoa(binary).replace(/\+/gu, '-').replace(/\//gu, '_').replace(/=+$/gu, '');
@@ -62,7 +61,7 @@ async function signToken(
 }
 
 beforeAll(async () => {
-  const pair = (await crypto.subtle.generateKey(
+  const pair = await crypto.subtle.generateKey(
     {
       name: 'RSASSA-PKCS1-v1_5',
       modulusLength: 2048,
@@ -71,7 +70,7 @@ beforeAll(async () => {
     },
     true,
     ['sign', 'verify'],
-  )) as CryptoKeyPair;
+  );
   privateKey = pair.privateKey;
   publicJwk = {
     ...(await crypto.subtle.exportKey('jwk', pair.publicKey)),
@@ -232,7 +231,10 @@ describe('OIDC trust boundary', () => {
 
   it('fails closed for insecure or non-canonical provider configuration', () => {
     expect(
-      validateOidcProviderConfiguration({ ...configuration, issuer: 'http://identity.school.test' }),
+      validateOidcProviderConfiguration({
+        ...configuration,
+        issuer: 'http://identity.school.test',
+      }),
     ).toMatchObject({ ok: false, code: 'oidc_configuration_invalid' });
     expect(
       validateOidcProviderConfiguration({ ...configuration, issuer: `${configuration.issuer}/` }),

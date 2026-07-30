@@ -17,10 +17,7 @@ export interface AuthBindings {
 }
 
 export type AuthReadinessRequirement =
-  | 'provider-metadata'
-  | 'transaction-signing-key'
-  | 'session-signing-key'
-  | 'membership-source';
+  'provider-metadata' | 'transaction-signing-key' | 'session-signing-key' | 'membership-source';
 
 export interface AuthReadiness {
   readonly schemaVersion: 1;
