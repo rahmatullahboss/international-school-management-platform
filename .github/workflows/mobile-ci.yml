@@ -13,7 +13,7 @@ on:
       - '.github/workflows/mobile-ci.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   verify-mobile:
@@ -21,6 +21,8 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref || github.ref_name }}
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -28,9 +30,28 @@ jobs:
           cache: true
       - name: Show Flutter toolchain
         run: flutter --version
+      - name: Author secure document checkpoint
+        run: |
+          python3 mobile/tool/add_step_up_auth.py
+          python3 mobile/tool/add_secure_documents_core.py
+          python3 mobile/tool/add_secure_document_tests.py
+          python3 mobile/tool/wire_secure_documents.py
+          python3 mobile/tool/add_secure_document_app_test.py
       - name: Resolve workspace dependencies
         working-directory: mobile
         run: flutter pub get
+      - name: Format authored sources
+        working-directory: mobile
+        run: dart format packages/authentication packages/secure_documents apps/family_app
+      - name: Commit canonical authored sources
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add mobile/pubspec.yaml mobile/pubspec.lock mobile/packages/authentication mobile/packages/secure_documents mobile/apps/family_app
+          if ! git diff --cached --quiet; then
+            git commit -m "feat(mobile): add step-up secure document exchange"
+            git push origin HEAD:${{ github.event.pull_request.head.ref || github.ref_name }}
+          fi
       - name: Verify formatting
         working-directory: mobile
         run: dart format --output=none --set-exit-if-changed .
@@ -71,6 +92,9 @@ jobs:
       - name: Analyze native notifications
         working-directory: mobile/packages/native_notifications
         run: flutter analyze
+      - name: Analyze secure documents
+        working-directory: mobile/packages/secure_documents
+        run: flutter analyze
       - name: Analyze mobile core
         working-directory: mobile/packages/mobile_core
         run: dart analyze
@@ -110,6 +134,9 @@ jobs:
       - name: Test native notifications
         working-directory: mobile/packages/native_notifications
         run: flutter test
+      - name: Test secure documents
+        working-directory: mobile/packages/secure_documents
+        run: flutter test
       - name: Test mobile core
         working-directory: mobile/packages/mobile_core
         run: dart test
@@ -125,7 +152,7 @@ jobs:
       - name: Upload Android debug APKs
         uses: actions/upload-artifact@v4
         with:
-          name: mob-01-native-notifications-android-debug-apks
+          name: mob-01-secure-documents-android-debug-apks
           path: |
             mobile/apps/family_app/build/app/outputs/flutter-apk/app-debug.apk
             mobile/apps/staff_app/build/app/outputs/flutter-apk/app-debug.apk
