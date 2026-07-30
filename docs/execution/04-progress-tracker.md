@@ -2,9 +2,9 @@
 
 **Program:** `international-school-platform-v1`  
 **Updated:** 2026-07-30  
-**Current repository state:** All domain module streams are complete and integrated. `GATE-PILOT-READY`, `GATE-CLOUDFLARE-STAGING`, `GATE-PILOT-RUNTIME-COMPOSED`, `GATE-UX-CONTINUITY-V1`, `GATE-PILOT-READ-API-V1` and `GATE-PILOT-SIGNED-SESSION-V1` have passed. The non-production Cloudflare pilot now requires a short-lived signed synthetic session before role-scoped Worker snapshots are read, while production identity and mutations remain disabled.
+**Current repository state:** All domain module streams are complete and integrated. `GATE-PILOT-READY`, `GATE-CLOUDFLARE-STAGING`, `GATE-PILOT-RUNTIME-COMPOSED`, `GATE-UX-CONTINUITY-V1`, `GATE-PILOT-READ-API-V1`, `GATE-PILOT-SIGNED-SESSION-V1` and `GATE-OIDC-TRUST-BOUNDARY-V1` have passed. The non-production Cloudflare pilot now includes strict provider-neutral OIDC verification, server-owned membership selection and secure browser-session contracts, while real login, production identity and mutations remain disabled.
 
-Historical checkpoint-by-checkpoint evidence through Wave 3 is preserved in [the archived tracker](archive/04-progress-tracker-through-wave3.md). PILOT-01 scope is recorded in [09-pilot-runtime-composition.md](09-pilot-runtime-composition.md), UX continuity in [10-ux-continuity-v1.md](10-ux-continuity-v1.md) and [11-ux-continuity-release-evidence.md](11-ux-continuity-release-evidence.md), scoped reads in [12-pilot-read-api-v1.md](12-pilot-read-api-v1.md) and [13-pilot-read-api-release-evidence.md](13-pilot-read-api-release-evidence.md), and signed staging sessions in [14-pilot-signed-session-v1.md](14-pilot-signed-session-v1.md) and [15-pilot-signed-session-release-evidence.md](15-pilot-signed-session-release-evidence.md).
+Historical checkpoint-by-checkpoint evidence through Wave 3 is preserved in [the archived tracker](archive/04-progress-tracker-through-wave3.md). PILOT-01 scope is recorded in [09-pilot-runtime-composition.md](09-pilot-runtime-composition.md), UX continuity in [10-ux-continuity-v1.md](10-ux-continuity-v1.md) and [11-ux-continuity-release-evidence.md](11-ux-continuity-release-evidence.md), scoped reads in [12-pilot-read-api-v1.md](12-pilot-read-api-v1.md) and [13-pilot-read-api-release-evidence.md](13-pilot-read-api-release-evidence.md), and signed staging sessions in [14-pilot-signed-session-v1.md](14-pilot-signed-session-v1.md) [15-pilot-signed-session-release-evidence.md](15-pilot-signed-session-release-evidence.md), and the OIDC trust boundary in [16-oidc-trust-boundary-v1.md](16-oidc-trust-boundary-v1.md) and [17-oidc-trust-boundary-release-evidence.md](17-oidc-trust-boundary-release-evidence.md).
 
 ## Gate status
 
@@ -24,6 +24,7 @@ Historical checkpoint-by-checkpoint evidence through Wave 3 is preserved in [the
 | `GATE-UX-CONTINUITY-V1` | passed | Candidate `e74a30143eb7882e81ebd7d5b5c373d3132b309e`; root CI `30490122291`; Cloudflare deploy/smoke `30490122337`; continuous navigation and task discovery verified |
 | `GATE-PILOT-READ-API-V1` | passed | Implementation proof `73be1c1eb0418c8c2f744729354bd9f1a63467b0`; root CI `30495509757`; deploy/smoke `30495509773`; scope denial and revalidation verified |
 | `GATE-PILOT-SIGNED-SESSION-V1` | passed | Implementation proof `0a36ef62ec1622bdea6de7d0135bf30026845528`; root CI `30501350771`; deploy/smoke `30501350785`; signature, expiry, wrong-secret, cross-role and live bearer flow verified |
+| `GATE-OIDC-TRUST-BOUNDARY-V1` | passed | Implementation proof `5d58706e119e34e72fee17d2a67be74428ad5ab3`; root CI `30515626535`; deploy/smoke `30515626541`; RS256, issuer/audience/nonce, membership isolation and secure-cookie boundaries verified |
 
 ## Stream tracker
 
@@ -42,6 +43,7 @@ Historical checkpoint-by-checkpoint evidence through Wave 3 is preserved in [the
 | `UX-01` | post-integration | continuity gate passed and staged | candidate `e74a30143eb7882e81ebd7d5b5c373d3132b309e`; CI `30490122291`; deploy `30490122337` |
 | `PILOT-02` | post-integration | scoped read API gate passed and staged | proof `73be1c1eb0418c8c2f744729354bd9f1a63467b0`; CI `30495509757`; deploy `30495509773` |
 | `PILOT-03` | post-integration | signed staging session gate passed and staged | proof `0a36ef62ec1622bdea6de7d0135bf30026845528`; CI `30501350771`; deploy `30501350785` |
+| `AUTH-01` | post-integration | OIDC trust boundary passed; login disabled | proof `5d58706e119e34e72fee17d2a67be74428ad5ab3`; CI `30515626535`; deploy `30515626541` |
 
 ## PILOT-01 gate closure
 
@@ -112,6 +114,30 @@ Verification evidence:
 - total route CSS: 73,158 bytes against an 85,000-byte limit;
 - no build-budget violation.
 
+## AUTH-01 OIDC trust boundary closure
+
+Completed and verified on implementation proof `5d58706e119e34e72fee17d2a67be74428ad5ab3`:
+
+- RS256-only ID-token verification with exact issuer, audience/`azp`, nonce, signing-key, signature and time validation;
+- denied unsigned, malformed, tampered, expired, future and excessive-lifetime tokens;
+- AAL1/AAL2 derived from trusted `acr`/`amr` claims only;
+- exact `issuer + subject` membership lookup with active-status, tenant, campus and role isolation;
+- explicit selection for multi-tenant and multi-campus identities;
+- suspended, revoked, cross-tenant and cross-campus denial;
+- signed `__Host-school_session` cookie with `HttpOnly`, `Secure`, `SameSite=Lax`, bounded lifetime and no profile/provider tokens;
+- cookie-only session introspection and non-sensitive readiness reporting;
+- Cloudflare readiness smoke proving login disabled and session verification fail-closed without approved configuration.
+
+Verification evidence:
+
+- repository tests: 534 passed, with one environment-dependent direct-Neon test skipped in the ordinary suite and passed separately against live Neon;
+- browser journeys: 22 passed;
+- initial JavaScript: 208,406 bytes against a 250,000-byte limit;
+- initial CSS: 15,022 bytes against a 50,000-byte limit;
+- total route JavaScript: 299,838 bytes against a 350,000-byte limit;
+- total route CSS: 73,158 bytes against an 85,000-byte limit;
+- no build-budget violation.
+
 ## Live staging routes
 
 - Role chooser: `https://international-school-platform-web-staging.rahmatullahzisan.workers.dev/`
@@ -120,6 +146,8 @@ Verification evidence:
 - Guardian: `https://international-school-platform-web-staging.rahmatullahzisan.workers.dev/family`
 - Student: `https://international-school-platform-web-staging.rahmatullahzisan.workers.dev/student`
 - API health: `https://international-school-platform-api-staging.rahmatullahzisan.workers.dev/health`
+- OIDC readiness: `https://international-school-platform-api-staging.rahmatullahzisan.workers.dev/auth/v1/readiness`
+- Browser session introspection: `https://international-school-platform-api-staging.rahmatullahzisan.workers.dev/auth/v1/session`
 - Synthetic session pattern: `https://international-school-platform-api-staging.rahmatullahzisan.workers.dev/pilot/v1/sessions/:role`
 - Signed snapshot pattern: `https://international-school-platform-api-staging.rahmatullahzisan.workers.dev/pilot/v1/snapshots/:role` — bearer required; not a public page
 
@@ -135,12 +163,13 @@ Verification evidence:
 - UX-01 candidate: `e74a30143eb7882e81ebd7d5b5c373d3132b309e`
 - PILOT-02 proof: `73be1c1eb0418c8c2f744729354bd9f1a63467b0`
 - PILOT-03 proof: `0a36ef62ec1622bdea6de7d0135bf30026845528`
+- AUTH-01 proof: `5d58706e119e34e72fee17d2a67be74428ad5ab3`
 
 ## Final integrated system verification
 
 ### Application and browser evidence
 
-- Repository tests: 514 passed; PILOT-03 adds signed-session, expiry and role-binding coverage without changing domain invariants.
+- Repository tests: 534 passed; AUTH-01 adds OIDC cryptographic, membership-isolation and secure-cookie coverage without changing domain invariants.
 - Browser journeys: 22 passed.
 - Format, lint, architecture boundaries, typecheck, Worker/Vite builds, audit, licence, provenance and artifact validation passed.
 - Assets remain within approved initial and total budgets.
@@ -154,9 +183,10 @@ Verification evidence:
 
 ## Remaining production milestones
 
-- implement reviewed OAuth/OIDC Authorization Code with PKCE and issuer/JWKS validation;
-- resolve real user memberships, tenant/campus context and database-backed permissions;
-- adopt a reviewed same-origin BFF/HttpOnly production session design or approved equivalent;
+- implement Authorization Code + PKCE transaction issuance, callback and token exchange;
+- add approved discovery/JWKS retrieval, caching and key rotation;
+- configure a reviewed provider and database-backed membership adapter;
+- connect the verified membership context to database-backed permissions;
 - add logout, revocation, step-up assurance and negative authorization tests;
 - replace synthetic snapshots with database-backed read models and tenant-safe server caching;
 - provide approved staging seed/reset tooling and safe mutations;
@@ -169,4 +199,4 @@ No Git branch, worktree or Neon branch was deleted. Cleanup remains owner-review
 
 ## Production boundary
 
-No production deployment, real account, real tenant/student data, production database mutation, production cache purge or destructive cleanup was introduced. PILOT-03 remains a synthetic staging identity bridge. Production promotion requires all remaining identity, policy, data, monitoring, recovery and owner-authorization gates.
+No production deployment, real account, real tenant/student data, production database mutation, production cache purge or destructive cleanup was introduced. PILOT-03 remains a synthetic staging identity bridge, while AUTH-01 provides provider-neutral contracts with login explicitly disabled. Production promotion requires all remaining identity, policy, data, monitoring, recovery and owner-authorization gates.

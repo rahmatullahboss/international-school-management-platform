@@ -5,7 +5,7 @@
   "execution_mode": "whole-module-agent-ownership",
   "microtask_agents_allowed": false,
   "agent_delegation_allowed": false,
-  "program_status": "pilot_runtime_signed_session_context",
+  "program_status": "oidc_trust_boundary_verified",
   "parallel_execution": {
     "allowed": true,
     "assignment_unit": "complete_module_stream",
@@ -542,5 +542,47 @@
     "synthetic_identity_only": true,
     "production_mutations_enabled": false,
     "remaining_release_gate": "reviewed OAuth/OIDC Authorization Code with PKCE, issuer/JWKS validation, real memberships and tenant/campus resolution, database-backed policy, reviewed production browser session, logout/revocation, step-up, negative authorization tests, monitoring, backup, rollback, owner-led UAT and explicit production authorization"
+  },
+  "auth_oidc_trust": {
+    "id": "AUTH-01",
+    "status": "gate_passed_login_disabled",
+    "gate": "GATE-OIDC-TRUST-BOUNDARY-V1",
+    "branch": "pilot/oidc-trust-boundary-v1",
+    "reviewed_base_sha": "26e6f5b034dd62f0486f20d7f24194551b642191",
+    "implementation_proof_sha": "5d58706e119e34e72fee17d2a67be74428ad5ab3",
+    "root_ci_run": "30515626535",
+    "cloudflare_deploy_run": "30515626541",
+    "repository_tests_passed": 534,
+    "browser_journeys_passed": 22,
+    "oidc_algorithm_allowlist": [
+      "RS256"
+    ],
+    "issuer_audience_azp_nonce_verified": true,
+    "jwks_key_and_signature_verified": true,
+    "token_time_bounds_verified": true,
+    "assurance_from_trusted_claims_only": true,
+    "membership_key": [
+      "issuer",
+      "subject"
+    ],
+    "inactive_membership_denied": true,
+    "tenant_campus_selection_required_when_ambiguous": true,
+    "cross_tenant_and_cross_campus_denied": true,
+    "browser_cookie_name": "__Host-school_session",
+    "browser_cookie_controls": [
+      "HttpOnly",
+      "Secure",
+      "SameSite=Lax",
+      "Path=/"
+    ],
+    "profile_or_provider_tokens_in_session": false,
+    "readiness_route": "/auth/v1/readiness",
+    "session_route": "/auth/v1/session",
+    "login_enabled": false,
+    "real_provider_configured": false,
+    "real_membership_source_configured": false,
+    "production_identity_enabled": false,
+    "production_mutations_enabled": false,
+    "remaining_release_gate": "Authorization Code with PKCE transaction and callback, token exchange, approved discovery/JWKS retrieval and rotation, reviewed provider credentials, database-backed memberships and policy, revocation and logout propagation, step-up initiation, monitoring, rollback, owner-led UAT and explicit production authorization"
   }
 }
