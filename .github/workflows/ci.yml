@@ -58,7 +58,9 @@ jobs:
           grep -q 'keeps provider back-channel logout fail-closed and free of browser CORS' auth-07-endpoint-red.log
       - name: Apply AUTH-07 endpoint implementation
         run: python3 scripts/implement_auth_07_endpoint.py implementation
-      - run: rm scripts/implement_auth_07_endpoint.py scripts/fix_auth_07_endpoint_authoring.py scripts/fix_auth_07_endpoint_red.py
+      - name: Preserve processor result discriminants
+        run: python3 scripts/fix_auth_07_endpoint_types.py
+      - run: rm scripts/implement_auth_07_endpoint.py scripts/fix_auth_07_endpoint_authoring.py scripts/fix_auth_07_endpoint_red.py scripts/fix_auth_07_endpoint_types.py
       - run: npm run format
       - run: npm run lint -- --fix
       - run: npm run format
