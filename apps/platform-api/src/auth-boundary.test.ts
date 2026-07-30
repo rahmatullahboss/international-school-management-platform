@@ -17,6 +17,7 @@ const completeBindings = {
   AUTH_SESSION_SECRET: 'session-signing-secret-with-at-least-32-characters',
   AUTH_SESSION_REGISTRY_SOURCE: 'database',
   AUTH_MEMBERSHIP_SOURCE: 'database',
+  AUTH_ALLOWED_WEB_ORIGINS: 'https://school.test,https://admin.school.test',
 };
 
 describe('OIDC BFF readiness', () => {
@@ -47,6 +48,9 @@ describe('OIDC BFF readiness', () => {
         httpOnlyHostCookie: true,
         browserSessionRegistry: true,
         sessionRevocation: true,
+        originCheckedLogout: true,
+        accountWideLogout: true,
+        secureCookieDeletion: true,
         providerTokensWithheldFromBrowser: true,
         stepUpAssurance: true,
       },
@@ -58,6 +62,7 @@ describe('OIDC BFF readiness', () => {
         'session-signing-key',
         'session-registry-source',
         'membership-source',
+        'allowed-web-origins',
       ],
     });
     expect(JSON.stringify(readiness)).not.toMatch(/OIDC_|AUTH_|secret|credential-value/u);
@@ -78,16 +83,21 @@ describe('OIDC BFF readiness', () => {
     });
   });
 
-  it('treats weak transaction and session keys as missing', () => {
+  it('treats weak keys and invalid browser origins as missing', () => {
     expect(
       resolveAuthReadiness({
         ...completeBindings,
         AUTH_TRANSACTION_SECRET: 'weak',
         AUTH_SESSION_SECRET: 'weak',
+        AUTH_ALLOWED_WEB_ORIGINS: 'http://school.test',
       }),
     ).toMatchObject({
       state: 'incomplete',
-      missingConfiguration: ['transaction-signing-key', 'session-signing-key'],
+      missingConfiguration: [
+        'transaction-signing-key',
+        'session-signing-key',
+        'allowed-web-origins',
+      ],
     });
   });
 });
