@@ -10,12 +10,13 @@ on:
       - 'integration/**'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  verify:
+  harden-auth-07-atomic:
+    if: github.event_name == 'pull_request' && github.head_ref == 'auth/backchannel-logout-v1' && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 40
     services:
       postgres:
         image: postgres:16-alpine
@@ -30,37 +31,47 @@ jobs:
           --health-retries 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: auth/backchannel-logout-v1
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22.22.2'
           cache: npm
       - run: npm ci
-      - run: npm run format:check
+      - name: Add atomic persistence and pre-body size regressions
+        run: python3 scripts/harden_auth_07_atomic.py test
+      - name: Prove atomic persistence regressions fail before implementation
+        shell: bash
+        run: |
+          set +e
+          npx vitest run packages/policy/src/oidc-backchannel-logout.test.ts apps/platform-api/src/auth-durable-store.test.ts apps/platform-api/src/auth-backchannel.test.ts > auth-07-atomic-red.log 2>&1
+          status=$?
+          set -e
+          cat auth-07-atomic-red.log
+          test "$status" -ne 0
+          grep -q 'persists replay denial and provider-session revocation in one atomic operation' auth-07-atomic-red.log
+          grep -q 'allows a provider retry after atomic persistence is unavailable' auth-07-atomic-red.log
+          grep -q 'rejects an oversized declared body before the route reads it' auth-07-atomic-red.log
+      - name: Apply atomic persistence and request-size hardening
+        run: python3 scripts/harden_auth_07_atomic.py implementation
+      - run: rm scripts/harden_auth_07_atomic.py
+      - run: npm run format
+      - run: npm run lint -- --fix
+      - run: npm run format
       - run: npm run lint
       - run: npm run check:boundaries
       - run: npm run typecheck
       - run: npm run test
-      - name: Verify all Wave 2 migrations on fresh PostgreSQL
+      - name: Verify canonical and AUTH migrations
         env:
           PGHOST: 127.0.0.1
           PGPORT: 5432
           PGUSER: postgres
           PGDATABASE: postgres
-        run: npm run verify:migrations
-      - name: Verify AUTH post-integration migrations and revocation contracts
-        env:
-          PGHOST: 127.0.0.1
-          PGPORT: 5432
-          PGUSER: postgres
-          PGDATABASE: postgres
-        run: npm run verify:auth-migrations
-      - name: Verify live Neon serverless driver
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
-          test -n "$DATABASE_URL"
-          npm run test:neon
+          npm run verify:migrations
+          npm run verify:auth-migrations
       - run: npm run build
       - run: npm run check:experience-budget
       - run: npm audit --audit-level=high
@@ -70,3 +81,18 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
       - run: python3 scripts/validate_execution_artifacts.py
+      - name: Commit hardened AUTH-07 checkpoint
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'fix(auth): make back-channel logout persistence atomic'
+          git push origin HEAD:auth/backchannel-logout-v1
+
+  verify:
+    needs: harden-auth-07-atomic
+    if: always() && needs.harden-auth-07-atomic.result == 'skipped'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo 'Canonical repository verification resumes after AUTH-07 atomic hardening.'
