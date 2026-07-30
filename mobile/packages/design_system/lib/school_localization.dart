@@ -337,7 +337,10 @@ abstract final class SchoolLocalizationConfiguration {
         supportedLocales,
       );
     }
-    return SchoolLocalePolicy.resolvePreferredLocales(locales, supportedLocales);
+    return SchoolLocalePolicy.resolvePreferredLocales(
+      locales,
+      supportedLocales,
+    );
   }
 }
 
