@@ -336,8 +336,8 @@ final class SecureDocumentExchangeCoordinator
     required SchoolSession session,
   }) async {
     _validateScope(document: document, grant: grant, session: session);
-    if (!_activeGrants.add(grant.grantId) ||
-        _completedGrants.contains(grant.grantId)) {
+    if (_completedGrants.contains(grant.grantId) ||
+        !_activeGrants.add(grant.grantId)) {
       throw const SecureDocumentException(
         'SECURE_DOCUMENT_GRANT_ALREADY_CLAIMED',
       );
