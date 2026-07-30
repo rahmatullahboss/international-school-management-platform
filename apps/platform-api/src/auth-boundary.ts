@@ -14,6 +14,8 @@ export interface AuthBindings {
   readonly OIDC_TOKEN_ENDPOINT?: string;
   readonly OIDC_JWKS_URI?: string;
   readonly OIDC_REDIRECT_URI?: string;
+  readonly OIDC_ENDPOINT_ORIGINS?: string;
+  readonly OIDC_PROVIDER_CACHE_SOURCE?: string;
   readonly AUTH_TRANSACTION_SECRET?: string;
   readonly AUTH_TRANSACTION_REPLAY_SOURCE?: string;
   readonly AUTH_SESSION_SECRET?: string;
@@ -24,6 +26,8 @@ export interface AuthBindings {
 
 export type AuthReadinessRequirement =
   | 'provider-metadata'
+  | 'provider-endpoint-origins'
+  | 'provider-cache-source'
   | 'provider-client-credential'
   | 'transaction-signing-key'
   | 'transaction-replay-source'
@@ -48,6 +52,14 @@ export interface AuthReadiness {
     readonly confidentialClientAuthentication: true;
     readonly serverSideTokenExchange: true;
     readonly providerDiscoveryValidation: true;
+    readonly conditionalDiscoveryRevalidation: true;
+    readonly boundedJwksCache: true;
+    readonly boundedStaleIfError: true;
+    readonly unknownKidSingleRefresh: true;
+    readonly retiredKeyOverlap: true;
+    readonly kidReuseDenied: true;
+    readonly providerEndpointOriginPins: true;
+    readonly providerEndpointChangeReview: true;
     readonly issuerValidation: true;
     readonly audienceValidation: true;
     readonly jwksSignatureValidation: true;
@@ -74,6 +86,8 @@ type AuthBindingName =
   | 'OIDC_TOKEN_ENDPOINT'
   | 'OIDC_JWKS_URI'
   | 'OIDC_REDIRECT_URI'
+  | 'OIDC_ENDPOINT_ORIGINS'
+  | 'OIDC_PROVIDER_CACHE_SOURCE'
   | 'AUTH_TRANSACTION_SECRET'
   | 'AUTH_TRANSACTION_REPLAY_SOURCE'
   | 'AUTH_SESSION_SECRET'
@@ -110,6 +124,52 @@ function hasStrongKey(value: string | undefined): boolean {
   return value !== undefined && value.length >= 32;
 }
 
+function exactHttpsOrigins(value: string | undefined): readonly string[] | undefined {
+  if (value === undefined) return undefined;
+  const entries = value
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter((entry) => entry !== '');
+  if (entries.length === 0 || entries.length > 10) return undefined;
+  const origins = new Set<string>();
+  for (const entry of entries) {
+    let url: URL;
+    try {
+      url = new URL(entry);
+    } catch {
+      return undefined;
+    }
+    if (
+      url.protocol !== 'https:' ||
+      url.username !== '' ||
+      url.password !== '' ||
+      url.pathname !== '/' ||
+      url.search !== '' ||
+      url.hash !== '' ||
+      entry !== url.origin
+    ) {
+      return undefined;
+    }
+    origins.add(url.origin);
+  }
+  return [...origins];
+}
+
+function hasValidProviderEndpointOrigins(
+  value: string | undefined,
+  configuration: OidcProviderConfiguration | undefined,
+): boolean {
+  const origins = exactHttpsOrigins(value);
+  if (origins === undefined) return false;
+  if (configuration === undefined) return true;
+  return [
+    configuration.issuer,
+    configuration.authorizationEndpoint,
+    configuration.tokenEndpoint,
+    configuration.jwksUri,
+  ].every((endpoint) => origins.includes(new URL(endpoint).origin));
+}
+
 export function resolveAuthReadiness(bindings: AuthBindings): AuthReadiness {
   const missingConfiguration: AuthReadinessRequirement[] = [];
   const configuration = providerConfiguration(bindings);
@@ -118,6 +178,17 @@ export function resolveAuthReadiness(bindings: AuthBindings): AuthReadiness {
     validateOidcProviderConfiguration(configuration) !== undefined
   ) {
     missingConfiguration.push('provider-metadata');
+  }
+  if (
+    !hasValidProviderEndpointOrigins(
+      configuredValue(bindings, 'OIDC_ENDPOINT_ORIGINS'),
+      configuration,
+    )
+  ) {
+    missingConfiguration.push('provider-endpoint-origins');
+  }
+  if (configuredValue(bindings, 'OIDC_PROVIDER_CACHE_SOURCE') === undefined) {
+    missingConfiguration.push('provider-cache-source');
   }
   if (configuredValue(bindings, 'OIDC_CLIENT_SECRET') === undefined) {
     missingConfiguration.push('provider-client-credential');
@@ -145,7 +216,7 @@ export function resolveAuthReadiness(bindings: AuthBindings): AuthReadiness {
     schemaVersion: 1,
     mode: 'oidc-bff',
     state:
-      missingConfiguration.length === 8
+      missingConfiguration.length === 10
         ? 'disabled'
         : missingConfiguration.length > 0
           ? 'incomplete'
@@ -162,6 +233,14 @@ export function resolveAuthReadiness(bindings: AuthBindings): AuthReadiness {
       confidentialClientAuthentication: true,
       serverSideTokenExchange: true,
       providerDiscoveryValidation: true,
+      conditionalDiscoveryRevalidation: true,
+      boundedJwksCache: true,
+      boundedStaleIfError: true,
+      unknownKidSingleRefresh: true,
+      retiredKeyOverlap: true,
+      kidReuseDenied: true,
+      providerEndpointOriginPins: true,
+      providerEndpointChangeReview: true,
       issuerValidation: true,
       audienceValidation: true,
       jwksSignatureValidation: true,
