@@ -56,6 +56,8 @@ jobs:
         run: python3 scripts/implement_auth_06_step_up.py implementation
       - name: Apply lint-safe ACR validation
         run: python3 scripts/fix_auth_06_lint.py
+      - name: Keep staging workflow outside the bot-authored commit
+        run: git checkout -- .github/workflows/deploy-cloudflare-staging.yml
       - run: rm scripts/implement_auth_06_step_up.py scripts/fix_auth_06_lint.py
       - run: npm run format
       - run: npm run lint -- --fix
