@@ -54,10 +54,11 @@ final class MobilePrivacyLifecyclePolicy {
   }) {
     switch (signal) {
       case MobilePlatformLifecycleSignal.resumed:
+        final authorizationWasRequired = _freshAuthorizationRequired;
         final authorizationIsFresh =
-            authorizationExpiresAt != null && authorizationExpiresAt.isAfter(now);
-        final requireFreshAuthorization =
-            _freshAuthorizationRequired || !authorizationIsFresh;
+            authorizationExpiresAt != null &&
+            authorizationExpiresAt.isAfter(now);
+        final requireFreshAuthorization = !authorizationIsFresh;
         _state = MobilePrivacyLifecycleState.active;
         if (authorizationIsFresh) {
           _freshAuthorizationRequired = false;
@@ -67,9 +68,15 @@ final class MobilePrivacyLifecyclePolicy {
           obscureRestrictedContent: requireFreshAuthorization,
           purgeTransientBytes:
               transientBytesLeased && requireFreshAuthorization,
-          reasonCode: requireFreshAuthorization
-              ? 'MOBILE_LIFECYCLE_FRESH_AUTHORIZATION_REQUIRED'
-              : 'MOBILE_LIFECYCLE_RESUMED',
+          reasonCode: switch ((
+            requireFreshAuthorization,
+            authorizationWasRequired,
+          )) {
+            (true, true) =>
+              'MOBILE_LIFECYCLE_FRESH_AUTHORIZATION_REQUIRED_AFTER_DETACH',
+            (true, false) => 'MOBILE_LIFECYCLE_FRESH_AUTHORIZATION_REQUIRED',
+            (false, _) => 'MOBILE_LIFECYCLE_RESUMED',
+          },
           requireFreshAuthorization: requireFreshAuthorization,
           state: _state,
         );
