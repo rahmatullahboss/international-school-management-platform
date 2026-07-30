@@ -31,6 +31,7 @@ interface JsonRow extends Record<string, unknown> {
 
 const MAX_PROVIDER_IDENTIFIER_LENGTH = 512;
 const MAX_CACHE_KEY_LENGTH = 512;
+const PERMISSION_KEY_PATTERN = /^[a-z0-9][a-z0-9._:-]{0,127}$/u;
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 
@@ -99,6 +100,42 @@ function requireBackchannelLogoutResult(rows: readonly JsonRow[]): {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+export type DatabasePermissionDecision =
+  | { readonly allowed: true; readonly reason: 'role-grant' }
+  | {
+      readonly allowed: false;
+      readonly reason: 'permission-not-granted' | 'session-inactive';
+    }
+  | {
+      readonly allowed: false;
+      readonly reason: 'step-up-required';
+      readonly requiredAssurance: 'aal2';
+    };
+
+function requirePermissionDecision(rows: readonly JsonRow[]): DatabasePermissionDecision {
+  const row = rows[0];
+  if (rows.length !== 1 || row === undefined || !isRecord(row.value)) {
+    throw new Error('Permission evaluation returned an invalid database response.');
+  }
+  if (row.value.allowed === true && row.value.reason === 'role-grant') {
+    return { allowed: true, reason: 'role-grant' };
+  }
+  if (
+    row.value.allowed === false &&
+    (row.value.reason === 'permission-not-granted' || row.value.reason === 'session-inactive')
+  ) {
+    return { allowed: false, reason: row.value.reason };
+  }
+  if (
+    row.value.allowed === false &&
+    row.value.reason === 'step-up-required' &&
+    row.value.requiredAssurance === 'aal2'
+  ) {
+    return { allowed: false, reason: 'step-up-required', requiredAssurance: 'aal2' };
+  }
+  throw new Error('Permission evaluation returned an invalid database response.');
 }
 
 function validateMembershipRow(row: MembershipRow): MembershipRow {
@@ -241,6 +278,21 @@ export class DurableAuthStore {
       ],
     );
     return requireBackchannelLogoutResult(rows);
+  }
+
+  async evaluatePermission(
+    sessionId: string,
+    permission: string,
+  ): Promise<DatabasePermissionDecision> {
+    requireUuid(sessionId, 'sessionId');
+    if (!PERMISSION_KEY_PATTERN.test(permission)) {
+      throw new Error('permission is invalid.');
+    }
+    const rows = await this.#database.query<JsonRow>(
+      'SELECT iam.evaluate_browser_permission($1::uuid, $2::text) AS value',
+      [sessionId, permission],
+    );
+    return requirePermissionDecision(rows);
   }
 
   async isSessionActive(sessionId: string): Promise<boolean> {
