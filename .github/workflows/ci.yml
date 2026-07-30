@@ -53,7 +53,9 @@ jobs:
           grep -q 'providerSessionId' auth-07-durable-red.log
       - name: Apply durable AUTH-07 implementation
         run: python3 scripts/implement_auth_07_durable.py implementation
-      - run: rm scripts/implement_auth_07_durable.py
+      - name: Apply exact optional fixture types
+        run: python3 scripts/fix_auth_07_durable_types.py
+      - run: rm scripts/implement_auth_07_durable.py scripts/fix_auth_07_durable_types.py
       - run: npm run format
       - run: npm run lint -- --fix
       - run: npm run format
