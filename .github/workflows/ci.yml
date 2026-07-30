@@ -54,7 +54,9 @@ jobs:
           grep -q 'rejects malformed permission keys before database access' auth-08-red.log
       - name: Apply AUTH-08 database permission implementation
         run: python3 scripts/implement_auth_08_permissions.py implementation
-      - run: rm scripts/implement_auth_08_permissions.py
+      - name: Align account-wide revocation fixture with the added AAL1 session
+        run: python3 scripts/fix_auth_08_migration_fixture.py
+      - run: rm scripts/implement_auth_08_permissions.py scripts/fix_auth_08_migration_fixture.py
       - run: npm run format
       - run: npm run lint -- --fix
       - run: npm run format
