@@ -9,8 +9,8 @@ This workspace contains the native Flutter clients for the International School 
 
 ## Shared packages
 
-- `packages/mobile_core`: tenant, campus, persona, capability and sync contracts.
-- `packages/design_system`: Flutter implementation of the approved `DESIGN.md` operational design language, shared localization policy and accessibility source gates.
+- `packages/mobile_core`: tenant, campus, persona, capability, sync and fail-closed platform-lifecycle contracts.
+- `packages/design_system`: Flutter implementation of the approved `DESIGN.md` operational design language, shared localization runtime, exact locale-aware presentation helpers and accessibility source gates.
 - `packages/api_client`: authenticated, tenant-scoped HTTP client for versioned Cloudflare Worker APIs.
 - `packages/authentication`: OIDC/PKCE, secure session lifecycle and transient step-up proof.
 - `packages/sync_engine`, `packages/sync_storage` and `packages/teacher_sync`: scoped durable offline operations, encrypted persistence and Teacher reconciliation.
@@ -35,15 +35,22 @@ Security and release evidence:
 
 ## Localization and accessibility source gate
 
-The shared source policy currently verifies:
+The shared source runtime currently verifies:
 
-- English, Bangla and Arabic shell labels with deterministic English fallback;
-- explicit Arabic RTL and English/Bangla LTR direction;
+- English, Bangla and Arabic shell labels with deterministic English fallback and ordered device-locale resolution;
+- explicit Arabic RTL and English/Bangla LTR direction through bounded Widgets localization;
+- source-tranche Material/Cupertino fallbacks that keep framework control labels English instead of failing on Bangla or Arabic;
+- bidirectional-control sanitization and first-strong isolation for identifiers and user-controlled text;
+- exact integer minor-unit money presentation with English, Bangla and Arabic digits/separators and no floating-point financial conversion;
+- explicit-offset timestamp presentation from authoritative UTC instants and server-provided timezone identifiers without device-timezone inference;
 - adaptive navigation and written status at 200% text scaling;
 - written semantics that do not depend on color alone;
-- minimum 48 logical-pixel interactive controls.
+- minimum 48 logical-pixel interactive controls;
+- presentation-only bold-text, high-contrast and reduced-motion preferences.
 
-This is not full production localization or device certification. Production adoption of localization delegates and domain copy, TalkBack/VoiceOver passes, Android/iOS integration tests and signed store-release evidence remain required.
+The mobile-core lifecycle policy separately verifies fail-closed decisions for backgrounding, process detachment, stale/fresh authorization, memory pressure, restricted-content obscuring, presentation cancellation and transient-byte purge. Android/iOS hosts still need approved wiring and device integration evidence.
+
+This is not full production localization or device certification. Production composition adoption, reviewed global Material/Cupertino translations, complete domain copy and plurals, TalkBack/VoiceOver passes, Android/iOS integration tests and signed store-release evidence remain required.
 
 ## Toolchain
 
@@ -81,5 +88,5 @@ The permanent GitHub Actions gate also analyzes and tests authentication, bootst
 4. Teacher timetable and offline attendance.
 5. Gradebook drafts, communication, documents and push notifications.
 6. Durable sync, conflict reconciliation and secure-document exchange.
-7. Restricted-data threat modelling, accessibility/localization source gates and native security guards.
-8. Remaining platform-owner activation, device integration, screen-reader certification and signed store release.
+7. Restricted-data threat modelling, accessibility/localization source gates, platform-lifecycle policy and native security guards.
+8. Remaining production localization composition, platform-owner activation, device integration, screen-reader certification and signed store release.
