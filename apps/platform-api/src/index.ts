@@ -9,6 +9,13 @@ import {
   type AuthBindings,
 } from './auth-boundary.js';
 import { DurableAuthStore } from './auth-durable-store.js';
+import {
+  hasValidAuthMutationOrigins,
+  isAllowedAuthMutationOrigin,
+  terminateBrowserSession,
+  type LogoutRegistry,
+  type LogoutScope,
+} from './auth-logout.js';
 import { isAllowedPilotWebOrigin, resolvePilotReadSnapshot } from './pilot-read-models.js';
 import { issuePilotSession, pilotSessionHeaders, verifyPilotSession } from './pilot-sessions.js';
 
@@ -81,6 +88,159 @@ app.get('/health', (context) => {
 app.get('/auth/v1/readiness', (context) => {
   context.header('cache-control', 'no-store');
   return context.json(resolveAuthReadiness(context.env));
+});
+
+function applyAuthMutationCors(
+  headers: (name: string, value: string) => void,
+  allowedOrigins: string | undefined,
+  origin: string | undefined,
+): boolean {
+  if (!isAllowedAuthMutationOrigin(allowedOrigins, origin) || origin === undefined) return false;
+  headers('access-control-allow-origin', origin);
+  headers('access-control-allow-credentials', 'true');
+  headers('access-control-allow-methods', 'POST, OPTIONS');
+  headers('access-control-allow-headers', 'content-type');
+  headers('access-control-max-age', '600');
+  return true;
+}
+
+app.options('/auth/v1/logout', (context) => {
+  context.header('cache-control', 'no-store');
+  context.header('vary', 'Origin');
+  if (!hasValidAuthMutationOrigins(context.env.AUTH_ALLOWED_WEB_ORIGINS)) {
+    return context.json(
+      {
+        error: {
+          code: 'logout_configuration_invalid',
+          message: 'Browser logout is not configured.',
+        },
+      },
+      503,
+    );
+  }
+  if (
+    !applyAuthMutationCors(
+      (name, value) => context.header(name, value),
+      context.env.AUTH_ALLOWED_WEB_ORIGINS,
+      context.req.header('origin'),
+    )
+  ) {
+    return context.json(
+      {
+        error: {
+          code: 'logout_origin_denied',
+          message: 'The requesting origin is not permitted.',
+        },
+      },
+      403,
+    );
+  }
+  return context.body(null, 204);
+});
+
+function isLogoutScope(value: unknown): value is LogoutScope {
+  return value === 'current' || value === 'all';
+}
+
+function parseLogoutRequest(value: unknown): LogoutScope | undefined {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return undefined;
+  const record = value as Record<string, unknown>;
+  const keys = Object.keys(record);
+  if (keys.length !== 1 || keys[0] !== 'scope' || !isLogoutScope(record.scope)) return undefined;
+  return record.scope;
+}
+
+function durableLogoutRegistry(environment: Bindings): LogoutRegistry | undefined {
+  if (
+    environment.AUTH_SESSION_REGISTRY_SOURCE !== 'database' ||
+    environment.DATABASE_URL === undefined ||
+    environment.DATABASE_URL.trim() === ''
+  ) {
+    return undefined;
+  }
+  return new DurableAuthStore(createHttpDatabase(environment.DATABASE_URL));
+}
+
+app.post('/auth/v1/logout', async (context) => {
+  context.header('cache-control', 'no-store');
+  context.header('vary', 'Origin, Cookie');
+  const origin = context.req.header('origin');
+  applyAuthMutationCors(
+    (name, value) => context.header(name, value),
+    context.env.AUTH_ALLOWED_WEB_ORIGINS,
+    origin,
+  );
+
+  const contentLength = context.req.header('content-length');
+  if (contentLength !== undefined) {
+    const parsedLength = Number.parseInt(contentLength, 10);
+    if (!Number.isSafeInteger(parsedLength) || parsedLength < 0 || parsedLength > 1024) {
+      return context.json(
+        {
+          error: {
+            code: 'logout_request_invalid',
+            message: 'The logout request is invalid.',
+          },
+        },
+        400,
+      );
+    }
+  }
+
+  let requestBody: unknown;
+  try {
+    const rawBody = await context.req.text();
+    if (rawBody.length > 1024) throw new Error('Logout request is too large.');
+    requestBody = JSON.parse(rawBody) as unknown;
+  } catch {
+    return context.json(
+      {
+        error: {
+          code: 'logout_request_invalid',
+          message: 'The logout request is invalid.',
+        },
+      },
+      400,
+    );
+  }
+  const scope = parseLogoutRequest(requestBody);
+  if (scope === undefined) {
+    return context.json(
+      {
+        error: {
+          code: 'logout_request_invalid',
+          message: 'The logout request is invalid.',
+        },
+      },
+      400,
+    );
+  }
+
+  const result = await terminateBrowserSession({
+    sessionSecret: context.env.AUTH_SESSION_SECRET,
+    registrySource: context.env.AUTH_SESSION_REGISTRY_SOURCE,
+    allowedOrigins: context.env.AUTH_ALLOWED_WEB_ORIGINS,
+    origin,
+    contentType: context.req.header('content-type'),
+    cookieHeader: context.req.header('cookie'),
+    scope,
+    ...(durableLogoutRegistry(context.env) === undefined
+      ? {}
+      : { registry: durableLogoutRegistry(context.env) }),
+  });
+  if (result.setCookie !== undefined) context.header('set-cookie', result.setCookie);
+  if (!result.ok) {
+    return context.json(
+      {
+        error: {
+          code: result.code,
+          message: result.message,
+        },
+      },
+      result.status,
+    );
+  }
+  return context.body(null, result.status);
 });
 
 app.get('/auth/v1/session', async (context) => {
@@ -193,6 +353,7 @@ export default app;
 
 export * from './auth-boundary.js';
 export * from './auth-durable-store.js';
+export * from './auth-logout.js';
 export * from './operations-application.js';
 export * from './operations-routes.js';
 export * from './pilot-read-models.js';
