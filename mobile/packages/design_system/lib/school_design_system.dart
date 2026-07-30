@@ -1,10 +1,10 @@
 library;
 
+import 'package:flutter/material.dart';
+
 export 'school_formatting.dart';
 export 'school_localization.dart';
 export 'school_pluralization.dart';
-
-import 'package:flutter/material.dart';
 
 abstract final class SchoolColors {
   static const institutionalInk = Color(0xFF12263A);
