@@ -18,7 +18,7 @@ void main() {
     await tester.tap(find.text('Absent').first);
     await tester.pumpAndSettle();
     expect(
-      find.text('1 attendance change(s) are waiting to sync.'),
+      find.text('1 attendance change is waiting to sync.'),
       findsOneWidget,
     );
 
