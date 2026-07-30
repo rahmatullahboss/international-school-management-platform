@@ -7,17 +7,24 @@ import {
 export interface AuthBindings {
   readonly OIDC_ISSUER?: string;
   readonly OIDC_CLIENT_ID?: string;
+  readonly OIDC_CLIENT_SECRET?: string;
   readonly OIDC_AUTHORIZATION_ENDPOINT?: string;
   readonly OIDC_TOKEN_ENDPOINT?: string;
   readonly OIDC_JWKS_URI?: string;
   readonly OIDC_REDIRECT_URI?: string;
   readonly AUTH_TRANSACTION_SECRET?: string;
+  readonly AUTH_TRANSACTION_REPLAY_SOURCE?: string;
   readonly AUTH_SESSION_SECRET?: string;
   readonly AUTH_MEMBERSHIP_SOURCE?: string;
 }
 
 export type AuthReadinessRequirement =
-  'provider-metadata' | 'transaction-signing-key' | 'session-signing-key' | 'membership-source';
+  | 'provider-metadata'
+  | 'provider-client-credential'
+  | 'transaction-signing-key'
+  | 'transaction-replay-source'
+  | 'session-signing-key'
+  | 'membership-source';
 
 export interface AuthReadiness {
   readonly schemaVersion: 1;
@@ -27,12 +34,20 @@ export interface AuthReadiness {
   readonly controls: {
     readonly authorizationCode: true;
     readonly pkceS256: true;
+    readonly highEntropyStateNonceVerifier: true;
+    readonly browserBoundTransactionCookie: true;
+    readonly transactionReplayProtection: true;
+    readonly authorizationResponseIssuerValidation: true;
+    readonly confidentialClientAuthentication: true;
+    readonly serverSideTokenExchange: true;
+    readonly providerDiscoveryValidation: true;
     readonly issuerValidation: true;
     readonly audienceValidation: true;
     readonly jwksSignatureValidation: true;
     readonly nonceValidation: true;
     readonly membershipResolution: true;
     readonly httpOnlyHostCookie: true;
+    readonly providerTokensWithheldFromBrowser: true;
     readonly stepUpAssurance: true;
   };
   readonly missingConfiguration: readonly AuthReadinessRequirement[];
@@ -41,11 +56,13 @@ export interface AuthReadiness {
 type AuthBindingName =
   | 'OIDC_ISSUER'
   | 'OIDC_CLIENT_ID'
+  | 'OIDC_CLIENT_SECRET'
   | 'OIDC_AUTHORIZATION_ENDPOINT'
   | 'OIDC_TOKEN_ENDPOINT'
   | 'OIDC_JWKS_URI'
   | 'OIDC_REDIRECT_URI'
   | 'AUTH_TRANSACTION_SECRET'
+  | 'AUTH_TRANSACTION_REPLAY_SOURCE'
   | 'AUTH_SESSION_SECRET'
   | 'AUTH_MEMBERSHIP_SOURCE';
 
@@ -87,8 +104,14 @@ export function resolveAuthReadiness(bindings: AuthBindings): AuthReadiness {
   ) {
     missingConfiguration.push('provider-metadata');
   }
+  if (configuredValue(bindings, 'OIDC_CLIENT_SECRET') === undefined) {
+    missingConfiguration.push('provider-client-credential');
+  }
   if (!hasStrongKey(configuredValue(bindings, 'AUTH_TRANSACTION_SECRET'))) {
     missingConfiguration.push('transaction-signing-key');
+  }
+  if (configuredValue(bindings, 'AUTH_TRANSACTION_REPLAY_SOURCE') === undefined) {
+    missingConfiguration.push('transaction-replay-source');
   }
   if (!hasStrongKey(configuredValue(bindings, 'AUTH_SESSION_SECRET'))) {
     missingConfiguration.push('session-signing-key');
@@ -101,7 +124,7 @@ export function resolveAuthReadiness(bindings: AuthBindings): AuthReadiness {
     schemaVersion: 1,
     mode: 'oidc-bff',
     state:
-      missingConfiguration.length === 4
+      missingConfiguration.length === 6
         ? 'disabled'
         : missingConfiguration.length > 0
           ? 'incomplete'
@@ -110,12 +133,20 @@ export function resolveAuthReadiness(bindings: AuthBindings): AuthReadiness {
     controls: {
       authorizationCode: true,
       pkceS256: true,
+      highEntropyStateNonceVerifier: true,
+      browserBoundTransactionCookie: true,
+      transactionReplayProtection: true,
+      authorizationResponseIssuerValidation: true,
+      confidentialClientAuthentication: true,
+      serverSideTokenExchange: true,
+      providerDiscoveryValidation: true,
       issuerValidation: true,
       audienceValidation: true,
       jwksSignatureValidation: true,
       nonceValidation: true,
       membershipResolution: true,
       httpOnlyHostCookie: true,
+      providerTokensWithheldFromBrowser: true,
       stepUpAssurance: true,
     },
     missingConfiguration,
