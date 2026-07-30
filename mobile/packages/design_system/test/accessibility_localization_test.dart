@@ -171,10 +171,16 @@ void main() {
     );
     expect(find.text(strings.home), findsOneWidget);
     expect(find.text(strings.attendance), findsOneWidget);
-    expect(
-      find.bySemanticsLabel('تم التحقق. المعلومات المدرسية المنشورة متاحة.'),
-      findsOneWidget,
+
+    final statusSemantics = tester.widget<Semantics>(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is Semantics &&
+            widget.properties.label ==
+                'تم التحقق. المعلومات المدرسية المنشورة متاحة.',
+      ),
     );
+    expect(statusSemantics.properties.container, isTrue);
   });
 
   testWidgets('interactive controls preserve the 48 logical pixel target', (
