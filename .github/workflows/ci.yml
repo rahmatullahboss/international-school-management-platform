@@ -32,7 +32,7 @@ jobs:
       - run: npm run format
       - run: npm run lint
       - run: npm run typecheck
-      - run: npm run test -- --runInBand=false
+      - run: npm run test
       - name: Commit canonical AUTH-01 source
         shell: bash
         run: |
