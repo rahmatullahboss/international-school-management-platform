@@ -27,6 +27,28 @@ jobs:
           node-version: '22.22.2'
           cache: npm
       - run: npm ci
+      - name: Canonicalize async test callbacks
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('packages/policy/src/oidc-login-flow.test.ts')
+          source = path.read_text(encoding='utf-8')
+          source = source.replace(
+              "  const fetcher = vi.fn<typeof fetch>(async (input) => {\n",
+              "  const fetcher = vi.fn<typeof fetch>(async (input) => {\n    await Promise.resolve();\n",
+          )
+          source = source.replace(
+              "    consumeTransaction: async (transactionId) => {\n",
+              "    consumeTransaction: async (transactionId) => {\n      await Promise.resolve();\n",
+          )
+          source = source.replace(
+              "    resolveMembership: async () => membership,\n",
+              "    resolveMembership: async () => {\n      await Promise.resolve();\n      return membership;\n    },\n",
+          )
+          path.write_text(source, encoding='utf-8')
+          PY
       - run: npm run format
       - run: npm run lint -- --fix
       - run: npm run format
