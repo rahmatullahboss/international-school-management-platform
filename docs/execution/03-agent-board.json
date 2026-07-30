@@ -5,7 +5,7 @@
   "execution_mode": "whole-module-agent-ownership",
   "microtask_agents_allowed": false,
   "agent_delegation_allowed": false,
-  "program_status": "pilot_runtime_scoped_read_api",
+  "program_status": "pilot_runtime_signed_session_context",
   "parallel_execution": {
     "allowed": true,
     "assignment_unit": "complete_module_stream",
@@ -501,5 +501,46 @@
     "synthetic_data_only": true,
     "production_mutations_enabled": false,
     "remaining_release_gate": "reviewed OAuth/OIDC and tenant/campus context, database-backed policy evaluation, tenant-safe server cache isolation, approved staging seed/reset tooling, safe mutations, live negative tests, monitoring, backup, rollback, owner-led UAT and explicit production authorization"
+  },
+  "pilot_signed_session": {
+    "id": "PILOT-03",
+    "status": "gate_passed",
+    "gate": "GATE-PILOT-SIGNED-SESSION-V1",
+    "branch": "pilot/signed-session-context-v1",
+    "reviewed_base_sha": "f01cb446f8a6590e5800fba1f366e17a8eeedc2a",
+    "implementation_proof_sha": "0a36ef62ec1622bdea6de7d0135bf30026845528",
+    "root_ci_run": "30501350771",
+    "cloudflare_deploy_run": "30501350785",
+    "session_route": "/pilot/v1/sessions/:role",
+    "snapshot_route": "/pilot/v1/snapshots/:role",
+    "algorithm": "HMAC-SHA256",
+    "ttl_seconds": 900,
+    "scope_dimensions": [
+      "tenant",
+      "campus",
+      "role",
+      "subject"
+    ],
+    "issuer_and_audience_verified": true,
+    "server_resolved_capabilities": true,
+    "browser_scope_headers_removed": true,
+    "bearer_required": true,
+    "session_storage": [
+      "memory",
+      "sessionStorage"
+    ],
+    "durable_token_storage": false,
+    "renew_once_after_401": true,
+    "expired_session_denied": true,
+    "wrong_secret_denied": true,
+    "cross_role_denied": true,
+    "ephemeral_secret_per_deploy": true,
+    "current_view_preserved_on_failure": true,
+    "production_endpoint_enabled": false,
+    "repository_tests_passed": 514,
+    "browser_journeys_passed": 22,
+    "synthetic_identity_only": true,
+    "production_mutations_enabled": false,
+    "remaining_release_gate": "reviewed OAuth/OIDC Authorization Code with PKCE, issuer/JWKS validation, real memberships and tenant/campus resolution, database-backed policy, reviewed production browser session, logout/revocation, step-up, negative authorization tests, monitoring, backup, rollback, owner-led UAT and explicit production authorization"
   }
 }
