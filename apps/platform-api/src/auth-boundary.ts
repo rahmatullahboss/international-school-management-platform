@@ -16,6 +16,12 @@ export interface AuthBindings {
   readonly AUTH_MEMBERSHIP_SOURCE?: string;
 }
 
+export type AuthReadinessRequirement =
+  | 'provider-metadata'
+  | 'transaction-signing-key'
+  | 'session-signing-key'
+  | 'membership-source';
+
 export interface AuthReadiness {
   readonly schemaVersion: 1;
   readonly mode: 'oidc-bff';
@@ -32,24 +38,24 @@ export interface AuthReadiness {
     readonly httpOnlyHostCookie: true;
     readonly stepUpAssurance: true;
   };
-  readonly missingConfiguration: readonly string[];
+  readonly missingConfiguration: readonly AuthReadinessRequirement[];
 }
 
-const requiredBindings = [
+const providerBindingNames = [
   'OIDC_ISSUER',
   'OIDC_CLIENT_ID',
   'OIDC_AUTHORIZATION_ENDPOINT',
   'OIDC_TOKEN_ENDPOINT',
   'OIDC_JWKS_URI',
   'OIDC_REDIRECT_URI',
-  'AUTH_TRANSACTION_SECRET',
-  'AUTH_SESSION_SECRET',
-  'AUTH_MEMBERSHIP_SOURCE',
 ] as const;
 
-type RequiredBindingName = (typeof requiredBindings)[number];
+type ProviderBindingName = (typeof providerBindingNames)[number];
 
-function configuredValue(bindings: AuthBindings, name: RequiredBindingName): string | undefined {
+function configuredValue(
+  bindings: AuthBindings,
+  name: ProviderBindingName | 'AUTH_TRANSACTION_SECRET' | 'AUTH_SESSION_SECRET' | 'AUTH_MEMBERSHIP_SOURCE',
+): string | undefined {
   const value = bindings[name]?.trim();
   return value === undefined || value === '' ? undefined : value;
 }
@@ -74,29 +80,34 @@ function providerConfiguration(bindings: AuthBindings): OidcProviderConfiguratio
   return { issuer, clientId, authorizationEndpoint, tokenEndpoint, jwksUri, redirectUri };
 }
 
+function hasStrongKey(value: string | undefined): boolean {
+  return value !== undefined && value.length >= 32;
+}
+
 export function resolveAuthReadiness(bindings: AuthBindings): AuthReadiness {
-  const missing = requiredBindings.filter((name) => {
-    const value = configuredValue(bindings, name);
-    if (value === undefined) return true;
-    if (
-      (name === 'AUTH_TRANSACTION_SECRET' || name === 'AUTH_SESSION_SECRET') &&
-      value.length < 32
-    ) {
-      return true;
-    }
-    return false;
-  });
+  const missingConfiguration: AuthReadinessRequirement[] = [];
   const configuration = providerConfiguration(bindings);
-  const configurationFailure =
-    configuration === undefined ? undefined : validateOidcProviderConfiguration(configuration);
-  const missingConfiguration =
-    configurationFailure === undefined ? missing : [...missing, 'OIDC_PROVIDER_CONFIGURATION'];
+  if (
+    configuration === undefined ||
+    validateOidcProviderConfiguration(configuration) !== undefined
+  ) {
+    missingConfiguration.push('provider-metadata');
+  }
+  if (!hasStrongKey(configuredValue(bindings, 'AUTH_TRANSACTION_SECRET'))) {
+    missingConfiguration.push('transaction-signing-key');
+  }
+  if (!hasStrongKey(configuredValue(bindings, 'AUTH_SESSION_SECRET'))) {
+    missingConfiguration.push('session-signing-key');
+  }
+  if (configuredValue(bindings, 'AUTH_MEMBERSHIP_SOURCE') === undefined) {
+    missingConfiguration.push('membership-source');
+  }
 
   return {
     schemaVersion: 1,
     mode: 'oidc-bff',
     state:
-      missingConfiguration.length === requiredBindings.length
+      missingConfiguration.length === 4
         ? 'disabled'
         : missingConfiguration.length > 0
           ? 'incomplete'
