@@ -97,18 +97,6 @@ final class SchoolShellStrings {
     required this.today,
   });
 
-  static const LocalizationsDelegate<SchoolShellStrings> delegate =
-      _SchoolShellStringsDelegate();
-
-  static SchoolShellStrings of(BuildContext context) {
-    final strings = Localizations.of<SchoolShellStrings>(
-      context,
-      SchoolShellStrings,
-    );
-    assert(strings != null, 'SchoolShellStrings delegate is not configured.');
-    return strings ?? forLocale(SchoolLocalePolicy.fallbackLocale);
-  }
-
   factory SchoolShellStrings.forLocale(Locale locale) =>
       switch (SchoolLocalePolicy.resolve(locale)) {
         SchoolLanguage.bangla => SchoolShellStrings._(
@@ -172,6 +160,19 @@ final class SchoolShellStrings {
           today: 'Today',
         ),
       };
+
+  static const LocalizationsDelegate<SchoolShellStrings> delegate =
+      _SchoolShellStringsDelegate();
+
+  static SchoolShellStrings of(BuildContext context) {
+    final strings = Localizations.of<SchoolShellStrings>(
+      context,
+      SchoolShellStrings,
+    );
+    assert(strings != null, 'SchoolShellStrings delegate is not configured.');
+    return strings ??
+        SchoolShellStrings.forLocale(SchoolLocalePolicy.fallbackLocale);
+  }
 
   final String attendance;
   final String conversations;
