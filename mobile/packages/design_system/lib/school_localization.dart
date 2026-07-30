@@ -243,13 +243,48 @@ final class _SchoolWidgetsLocalizationsDelegate
   bool shouldReload(_SchoolWidgetsLocalizationsDelegate old) => false;
 }
 
+/// English framework labels exposed for every approved source-tranche locale.
+///
+/// This avoids an unsupported-locale runtime hole while keeping the limitation
+/// explicit: translated Material/Cupertino labels require the separately
+/// approved production localization package and translated review.
+final class _SchoolMaterialLocalizationsDelegate
+    extends LocalizationsDelegate<MaterialLocalizations> {
+  const _SchoolMaterialLocalizationsDelegate();
+
+  @override
+  bool isSupported(Locale locale) => SchoolLocalePolicy.isSupported(locale);
+
+  @override
+  Future<MaterialLocalizations> load(Locale locale) =>
+      SynchronousFuture(const DefaultMaterialLocalizations());
+
+  @override
+  bool shouldReload(_SchoolMaterialLocalizationsDelegate old) => false;
+}
+
+final class _SchoolCupertinoLocalizationsDelegate
+    extends LocalizationsDelegate<CupertinoLocalizations> {
+  const _SchoolCupertinoLocalizationsDelegate();
+
+  @override
+  bool isSupported(Locale locale) => SchoolLocalePolicy.isSupported(locale);
+
+  @override
+  Future<CupertinoLocalizations> load(Locale locale) =>
+      SynchronousFuture(const DefaultCupertinoLocalizations());
+
+  @override
+  bool shouldReload(_SchoolCupertinoLocalizationsDelegate old) => false;
+}
+
 /// Shared MaterialApp/WidgetsApp localization configuration.
 abstract final class SchoolLocalizationConfiguration {
   static const localizationsDelegates = <LocalizationsDelegate<dynamic>>[
     SchoolShellStrings.delegate,
     SchoolWidgetsLocalizations.delegate,
-    DefaultMaterialLocalizations.delegate,
-    DefaultCupertinoLocalizations.delegate,
+    _SchoolMaterialLocalizationsDelegate(),
+    _SchoolCupertinoLocalizationsDelegate(),
   ];
 
   static const supportedLocales = SchoolLocalePolicy.supportedLocales;
