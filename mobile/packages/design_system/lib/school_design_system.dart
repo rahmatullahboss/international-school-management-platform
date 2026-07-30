@@ -1,5 +1,9 @@
 library;
 
+export 'school_formatting.dart';
+export 'school_localization.dart';
+export 'school_pluralization.dart';
+
 import 'package:flutter/material.dart';
 
 abstract final class SchoolColors {
