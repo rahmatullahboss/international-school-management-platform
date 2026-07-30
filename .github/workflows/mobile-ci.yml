@@ -33,7 +33,9 @@ jobs:
         run: flutter pub get
       - name: Verify formatting
         working-directory: mobile
-        run: dart format --output=none --set-exit-if-changed .
+        run: |
+          dart format .
+          git diff --exit-code
       - name: Verify generated files remain ignored
         run: git diff --exit-code -- mobile
       - name: Verify native application configuration
