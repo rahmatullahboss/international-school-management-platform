@@ -39,6 +39,8 @@ jobs:
           node-version: '22.22.2'
           cache: npm
       - run: npm ci
+      - name: Align endpoint authoring with current test structure
+        run: python3 scripts/fix_auth_07_endpoint_authoring.py
       - name: Add AUTH-07 endpoint regression tests
         run: python3 scripts/implement_auth_07_endpoint.py test
       - name: Prove endpoint and readiness regressions fail before implementation
@@ -54,7 +56,7 @@ jobs:
           grep -q 'keeps provider back-channel logout fail-closed and free of browser CORS' auth-07-endpoint-red.log
       - name: Apply AUTH-07 endpoint implementation
         run: python3 scripts/implement_auth_07_endpoint.py implementation
-      - run: rm scripts/implement_auth_07_endpoint.py
+      - run: rm scripts/implement_auth_07_endpoint.py scripts/fix_auth_07_endpoint_authoring.py
       - run: npm run format
       - run: npm run lint -- --fix
       - run: npm run format
