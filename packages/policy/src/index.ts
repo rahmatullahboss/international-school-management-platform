@@ -51,8 +51,25 @@ export type {
   OidcCallbackParameters,
   OidcLoginFlowConfiguration,
   OidcLoginFlowDependencies,
+  OidcSigningKeyResolution,
 } from './oidc-login-flow.js';
 export { beginOidcLogin, completeOidcLogin } from './oidc-login-flow.js';
+export type {
+  OidcCachedDiscoveryResult,
+  OidcCachedJwksResult,
+  OidcProviderCacheFailureCode,
+  OidcProviderCacheOptions,
+  OidcProviderCacheSource,
+  OidcProviderCacheStore,
+  ResolveCachedDiscoveryInput,
+  ResolveCachedJwksInput,
+  VerifyOidcIdTokenWithRotationInput,
+} from './oidc-provider-cache.js';
+export {
+  MemoryOidcProviderCacheStore,
+  OidcProviderCache,
+  verifyOidcIdTokenWithRotation,
+} from './oidc-provider-cache.js';
 export type {
   ExchangeOidcAuthorizationCodeInput,
   OidcDiscoveredProvider,
