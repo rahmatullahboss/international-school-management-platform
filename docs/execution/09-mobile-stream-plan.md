@@ -2,7 +2,7 @@
 
 ## Status
 
-Milestones 1 through 5 have passed on the client/native side. Family read journeys and secure interaction contracts are verified, while Family document/form/consent/conversation production UI remains. Teacher Today, assigned roster and encrypted attendance-draft production journeys are verified. Durable sync now includes platform-backed AES-GCM persistence, secure key lifecycle, account/school purge, operation-journal reconciliation and production Staff queue/transport UI. All proposed mobile endpoints remain server-owned and are not live.
+Milestones 1 through 5 have passed on the client/native side. Family read journeys and capability-scoped document, form, guardian-consent and conversation production journeys are verified. Teacher Today, assigned roster and encrypted attendance-draft production journeys are verified. Durable sync includes platform-backed AES-GCM persistence, secure key lifecycle, account/school purge, operation-journal reconciliation and production Staff queue/transport UI. Milestone 6 Family interaction UI is complete; push delivery, deep links and native secure-document exchange remain. All proposed mobile endpoints remain server-owned and are not live.
 
 ## Execution identity
 
@@ -40,10 +40,10 @@ Any backend API, notification, identity or shared platform contract change requi
 2. **Authentication and bootstrap — client/native passed; server activation remains**
    - OIDC authorization-code flow with PKCE, secure token storage, device sessions, tenant/campus/persona selection and capability bootstrap.
    - Android/iOS projects, reviewed redirect schemes, Android API 23 secure-storage baseline, iOS Keychain Sharing entitlements and native build verification.
-3. **Family journeys — read production journeys and interaction contracts passed; server activation and interaction UI remain**
+3. **Family journeys — read and interaction production journeys passed; server activation remains**
    - Multi-child guardian context, student context, timetable, attendance, published results, fees, receipts and message summaries.
-   - Secure document metadata/download grants, forms, idempotent submission, guardian consent and paginated conversations.
-   - Production failures hide unverifiable academic and financial values instead of substituting fixtures.
+   - Capability-scoped document metadata and short-lived download grants, server-versioned dynamic forms, idempotent submission, guardian consent and paginated conversations/messages.
+   - Production failures hide unverifiable academic, financial and interaction data instead of substituting fixtures.
 4. **Teacher journeys — production Today, roster and encrypted attendance-draft UI passed; server activation remains**
    - Assigned Today view, roster, timetable, substitutions, attendance batches and exact integer grade drafts.
    - Attendance drafts are saved to encrypted device storage, explicitly synchronized and surfaced through pending/conflict/rejected/reconciliation states.
@@ -51,8 +51,9 @@ Any backend API, notification, identity or shared platform contract change requi
 5. **Durable offline sync — client/native passed; live server delta activation remains**
    - Encrypted payload envelopes, idempotent operation queue, scoped retry, delta cursor, duplicate handling, conflict, rejection and reconciliation states.
    - Platform-backed AES-GCM file persistence, platform secure-storage key versions, key rotation, tamper quarantine, operation journal and account/school purge.
-6. **Notifications and documents — Family document contracts passed; interaction UI and push/deep-link delivery remain**
-   - Device registration contracts, safe notification payloads, push routing, secure document download and notification preferences.
+6. **Notifications and documents — Family interaction UI passed; push/deep-link delivery and native exchange remain**
+   - Device registration contracts, safe notification payloads, capability-scoped documents, forms, guardian consent and conversations.
+   - Native secure-document transfer, step-up completion, push routing and notification preferences remain.
 7. **Security, accessibility and release verification — pending**
    - Mobile threat model, restricted-data cache rules, step-up authentication, localization/RTL, text scaling, screen readers, performance, Android/iOS integration tests and store-release evidence.
 
@@ -97,7 +98,7 @@ Any backend API, notification, identity or shared platform contract change requi
 - Conversation contracts use scoped pagination and reject malformed or cross-profile responses.
 - Mobile CI `30489830914` passed the read-only Family-domain gate, all configured tests, both APK builds and artifact upload.
 - Mobile CI `30490789540` passed repository-driven Family UI analysis, stale-response tests, all regression suites and both APK builds.
-- Mobile CI `30492794318` passed the final read-only Family interaction gate, all configured tests, both APK builds and artifact upload.
+- Mobile CI `30492794318` passed the final read-only Family interaction contract gate, all configured tests, both APK builds and artifact upload.
 - Root CI `30490789563` passed format, lint, boundaries, typecheck, repository tests, migrations, Neon, builds, audit/licences/provenance, browser journeys and execution-artifact validation.
 
 ## Checkpoint 4 evidence — Teacher journeys
@@ -130,6 +131,20 @@ Any backend API, notification, identity or shared platform contract change requi
 - Real student data used: no.
 - Production deployment or database mutation performed: no.
 
+## Checkpoint 6 evidence — Family interaction production journeys
+
+- `FamilyInteractionController` keeps document, form, consent, conversation and message state scoped to the active account, tenant, campus, persona and student profile; slower responses from a previous child selection are discarded.
+- Production navigation exposes a capability-scoped Services hub plus Conversations destination without substituting fixture data when the interaction service is unavailable.
+- Document screens display authorized metadata and request opaque, short-lived download grants; raw URLs, access tokens and storage credentials are never exposed. Restricted documents remain no-store.
+- Form definitions now include the server-issued base version as well as schema version. Dynamic text, boolean, single-choice and date fields submit exact validated answers with idempotency and never invent a newer revision.
+- Guardian consent screens require the guardian persona and `forms.consent` capability before transport, preserve the policy version and expose explicit grant or decline decisions.
+- Conversation screens use scoped cursor pagination, verify conversation membership in the active directory, require `messages.send` before sending and append only server-returned messages.
+- Tests cover stale child-response rejection, server-issued form-version use, student consent rejection before transport and capability-authorized conversation sending.
+- Final permanent read-only Mobile CI `30518088954` passed strict formatting, clean-tree/native guards, every configured analyzer and test, both Android debug APK builds and artifact upload.
+- Final root CI `30518088899` passed format, lint, boundaries, typecheck, repository tests, fresh migration replay, live Neon driver, builds, audit/licences/provenance, browser journeys and execution-artifact validation.
+- Real student data used: no.
+- Production deployment or database mutation performed: no.
+
 ## Server-owned contract boundary
 
 The following proposed endpoints remain unimplemented and inactive in MOB-01:
@@ -144,4 +159,4 @@ MOB-01 may define and test clients, domain contracts and fail-closed UI states. 
 
 ## Exact next action
 
-Add capability-scoped Family document, short-lived download-grant, form submission, guardian consent and paginated conversation production UI on top of the verified contracts. Then complete push/deep-link routing, secure document exchange, restricted-data threat-model evidence, accessibility/localization/RTL and store-release verification. Bootstrap, Family, Teacher, device-session and sync endpoint proposals must still pass the existing server-module ownership process before live account data is used.
+Complete push notification delivery, capability-safe deep-link routing and native secure-document exchange with step-up authentication without exposing raw credentials. Then add restricted-data threat-model evidence, accessibility, localization/RTL, text-scaling and screen-reader verification, Android/iOS integration tests and store-release evidence. Bootstrap, Family, Teacher, device-session and sync endpoint proposals must still pass the existing server-module ownership process before live account data is used.
