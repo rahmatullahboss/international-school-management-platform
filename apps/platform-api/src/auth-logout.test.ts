@@ -64,7 +64,15 @@ describe('AUTH-04 browser logout', () => {
   });
 
   it('revokes the current active session and clears the host cookie', async () => {
-    const durableRegistry = registry();
+    const revokeSession = vi.fn(async () => {
+      await Promise.resolve();
+      return true;
+    });
+    const revokeAccountSessions = vi.fn(async () => {
+      await Promise.resolve();
+      return 3;
+    });
+    const durableRegistry = registry({ revokeSession, revokeAccountSessions });
     const result = await terminateBrowserSession({
       sessionSecret,
       registrySource: 'database',
@@ -85,12 +93,16 @@ describe('AUTH-04 browser logout', () => {
     if (!result.ok) throw new Error(result.message);
     expect(result.setCookie).toContain(`${BROWSER_SESSION_COOKIE_NAME}=`);
     expect(result.setCookie).toContain('Max-Age=0');
-    expect(durableRegistry.revokeSession).toHaveBeenCalledOnce();
-    expect(durableRegistry.revokeAccountSessions).not.toHaveBeenCalled();
+    expect(revokeSession).toHaveBeenCalledOnce();
+    expect(revokeAccountSessions).not.toHaveBeenCalled();
   });
 
   it('revokes every active account session without accepting a browser account id', async () => {
-    const durableRegistry = registry();
+    const revokeAccountSessions = vi.fn(async () => {
+      await Promise.resolve();
+      return 3;
+    });
+    const durableRegistry = registry({ revokeAccountSessions });
     const result = await terminateBrowserSession({
       sessionSecret,
       registrySource: 'database',
@@ -103,14 +115,18 @@ describe('AUTH-04 browser logout', () => {
     });
 
     expect(result).toMatchObject({ ok: true, revokedScope: 'all', revokedCount: 3 });
-    expect(durableRegistry.revokeAccountSessions).toHaveBeenCalledWith(
+    expect(revokeAccountSessions).toHaveBeenCalledWith(
       '40000000-0000-4000-8000-000000000002',
       'user logout all sessions',
     );
   });
 
   it('denies untrusted origins and non-JSON requests before reading the session', async () => {
-    const durableRegistry = registry();
+    const isSessionActive = vi.fn(async () => {
+      await Promise.resolve();
+      return true;
+    });
+    const durableRegistry = registry({ isSessionActive });
     await expect(
       terminateBrowserSession({
         sessionSecret,
@@ -135,7 +151,7 @@ describe('AUTH-04 browser logout', () => {
         registry: durableRegistry,
       }),
     ).resolves.toMatchObject({ ok: false, status: 400, code: 'logout_content_type_invalid' });
-    expect(durableRegistry.isSessionActive).not.toHaveBeenCalled();
+    expect(isSessionActive).not.toHaveBeenCalled();
   });
 
   it('fails closed for invalid configuration, missing cookies, revoked sessions and registry errors', async () => {
