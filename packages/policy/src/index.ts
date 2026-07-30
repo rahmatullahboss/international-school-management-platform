@@ -44,6 +44,16 @@ export {
   verifyOAuthCallbackTransaction,
 } from './oauth-transaction.js';
 export type {
+  BeginOidcLoginInput,
+  BeginOidcLoginResult,
+  CompleteOidcLoginInput,
+  CompleteOidcLoginResult,
+  OidcCallbackParameters,
+  OidcLoginFlowConfiguration,
+  OidcLoginFlowDependencies,
+} from './oidc-login-flow.js';
+export { beginOidcLogin, completeOidcLogin } from './oidc-login-flow.js';
+export type {
   ExchangeOidcAuthorizationCodeInput,
   OidcDiscoveredProvider,
   OidcDiscoveryResult,
