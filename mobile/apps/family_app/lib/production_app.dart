@@ -8,6 +8,7 @@ class FamilyProductionApp extends StatefulWidget {
     this.notificationSource,
     this.onNotificationDecision,
     this.repository,
+    this.secureDocumentExchange,
     super.key,
   });
 
@@ -17,6 +18,7 @@ class FamilyProductionApp extends StatefulWidget {
   final MobileNotificationSource? notificationSource;
   final ValueChanged<MobileNotificationRouteDecision>? onNotificationDecision;
   final FamilyReadRepository? repository;
+  final FamilySecureDocumentExchange? secureDocumentExchange;
 
   @override
   State<FamilyProductionApp> createState() => _FamilyProductionAppState();
@@ -101,6 +103,7 @@ class _FamilyProductionAppState extends State<FamilyProductionApp> {
             notificationSource: widget.notificationSource,
             onNotificationDecision: widget.onNotificationDecision,
             repository: repository,
+            secureDocumentExchange: widget.secureDocumentExchange,
             session: session,
           );
         }
@@ -137,6 +140,7 @@ class _AuthorizedFamilyApp extends StatefulWidget {
     this.notificationSource,
     this.onNotificationDecision,
     required this.session,
+    this.secureDocumentExchange,
   });
 
   final MobileAppCoordinator coordinator;
@@ -145,6 +149,7 @@ class _AuthorizedFamilyApp extends StatefulWidget {
   final ValueChanged<MobileNotificationRouteDecision>? onNotificationDecision;
   final FamilyReadRepository repository;
   final SchoolSession session;
+  final FamilySecureDocumentExchange? secureDocumentExchange;
 
   @override
   State<_AuthorizedFamilyApp> createState() => _AuthorizedFamilyAppState();
@@ -169,6 +174,7 @@ class _AuthorizedFamilyAppState extends State<_AuthorizedFamilyApp> {
     if (interactionRepository != null) {
       _interactions = FamilyInteractionController(
         repository: interactionRepository,
+        secureDocumentExchange: widget.secureDocumentExchange,
         session: widget.session,
       );
     }
@@ -185,6 +191,8 @@ class _AuthorizedFamilyAppState extends State<_AuthorizedFamilyApp> {
         oldWidget.interactionRepository != widget.interactionRepository;
     final notificationSourceChanged =
         oldWidget.notificationSource != widget.notificationSource;
+    final secureDocumentExchangeChanged =
+        oldWidget.secureDocumentExchange != widget.secureDocumentExchange;
     if (oldWidget.repository != widget.repository) {
       _journey.dispose();
       _journey = FamilyJourneyController(
@@ -195,13 +203,14 @@ class _AuthorizedFamilyAppState extends State<_AuthorizedFamilyApp> {
     } else if (scopeChanged) {
       unawaited(_journey.updateSession(widget.session));
     }
-    if (interactionChanged) {
+    if (interactionChanged || secureDocumentExchangeChanged) {
       _interactions?.dispose();
       final interactionRepository = widget.interactionRepository;
       _interactions = interactionRepository == null
           ? null
           : FamilyInteractionController(
               repository: interactionRepository,
+              secureDocumentExchange: widget.secureDocumentExchange,
               session: widget.session,
             );
     } else if (scopeChanged && widget.interactionRepository != null) {
@@ -210,7 +219,7 @@ class _AuthorizedFamilyAppState extends State<_AuthorizedFamilyApp> {
         session: widget.session,
       );
     }
-    if (scopeChanged || interactionChanged) {
+    if (scopeChanged || interactionChanged || secureDocumentExchangeChanged) {
       _router.dispose();
       _router = _createRouter();
     }

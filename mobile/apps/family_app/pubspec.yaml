@@ -19,6 +19,7 @@ dependencies:
   school_design_system: ^0.1.0
   school_family_domain: ^0.1.0
   school_mobile_core: ^0.1.0
+  school_secure_documents: ^0.1.0
   school_native_notifications: ^0.1.0
 
 dev_dependencies:

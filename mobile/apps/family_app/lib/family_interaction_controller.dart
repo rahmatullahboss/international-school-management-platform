@@ -207,13 +207,16 @@ final class FamilyInteractionController extends ChangeNotifier {
     required FamilyInteractionRepository repository,
     required SchoolSession session,
     DateTime Function()? clock,
+    FamilySecureDocumentExchange? secureDocumentExchange,
   }) : _clock = clock ?? DateTime.now,
        _repository = repository,
+       _secureDocumentExchange = secureDocumentExchange,
        _session = session;
 
   FamilyInteractionRepository _repository;
   SchoolSession _session;
   final DateTime Function() _clock;
+  final FamilySecureDocumentExchange? _secureDocumentExchange;
   int _scopeRevision = 0;
   int _operationCounter = 0;
   bool _disposed = false;
@@ -226,6 +229,8 @@ final class FamilyInteractionController extends ChangeNotifier {
   String? documentsReasonCode;
   String? pendingDocumentId;
   FamilyDocumentDownloadGrant? downloadGrant;
+  bool documentOpening = false;
+  SecureDocumentExchangeReceipt? documentReceipt;
 
   FamilyInteractionPhase formsPhase = FamilyInteractionPhase.idle;
   List<FamilyFormSummary> forms = const <FamilyFormSummary>[];
@@ -256,6 +261,8 @@ final class FamilyInteractionController extends ChangeNotifier {
   bool messageSending = false;
 
   SchoolSession get session => _session;
+
+  bool get secureDocumentExchangeAvailable => _secureDocumentExchange != null;
 
   void bindStudent(String value) {
     final normalized = value.trim();
@@ -329,6 +336,7 @@ final class FamilyInteractionController extends ChangeNotifier {
     final revision = _scopeRevision;
     pendingDocumentId = document.documentId;
     downloadGrant = null;
+    documentReceipt = null;
     documentsReasonCode = null;
     _safeNotify();
     try {
@@ -346,6 +354,48 @@ final class FamilyInteractionController extends ChangeNotifier {
     }
     if (revision == _scopeRevision) {
       pendingDocumentId = null;
+      _safeNotify();
+    }
+  }
+
+  Future<void> openPreparedDocument() async {
+    final exchange = _secureDocumentExchange;
+    final grant = downloadGrant;
+    final document = grant == null
+        ? null
+        : documents
+              .where((item) => item.documentId == grant.documentId)
+              .firstOrNull;
+    if (exchange == null) {
+      documentsReasonCode = 'FAMILY_SECURE_DOCUMENT_RUNTIME_REQUIRED';
+      _safeNotify();
+      return;
+    }
+    if (grant == null || document == null) {
+      documentsReasonCode = 'FAMILY_DOCUMENT_GRANT_REQUIRED';
+      _safeNotify();
+      return;
+    }
+    final revision = _scopeRevision;
+    documentOpening = true;
+    documentReceipt = null;
+    documentsReasonCode = null;
+    _safeNotify();
+    try {
+      final receipt = await exchange.exchangeAndPresent(
+        document: document,
+        grant: grant,
+        session: _session,
+      );
+      if (revision != _scopeRevision) return;
+      documentReceipt = receipt;
+      downloadGrant = null;
+    } on Object catch (error) {
+      if (revision != _scopeRevision) return;
+      documentsReasonCode = _familyInteractionReason(error);
+    }
+    if (revision == _scopeRevision) {
+      documentOpening = false;
       _safeNotify();
     }
   }
@@ -663,6 +713,8 @@ final class FamilyInteractionController extends ChangeNotifier {
     documentsReasonCode = null;
     pendingDocumentId = null;
     downloadGrant = null;
+    documentOpening = false;
+    documentReceipt = null;
     formsPhase = FamilyInteractionPhase.idle;
     forms = const <FamilyFormSummary>[];
     formsReasonCode = null;
@@ -717,6 +769,7 @@ bool _sameInteractionSession(SchoolSession first, SchoolSession second) =>
 String _familyInteractionReason(Object error) => switch (error) {
   SchoolApiException(:final code) => code,
   FamilyInteractionException(:final code) => code,
+  SecureDocumentException(:final code) => code,
   _ => 'FAMILY_INTERACTION_UNAVAILABLE',
 };
 

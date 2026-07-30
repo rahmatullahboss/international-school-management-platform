@@ -137,6 +137,43 @@ class _FamilyDocumentsScreen extends StatelessWidget {
                               'The short-lived ${interactions.downloadGrant!.singleUse ? 'single-use ' : ''}grant expires ${_familyDateTimeLabel(context, interactions.downloadGrant!.expiresAt)}. No URL or credential is shown.',
                           tone: SchoolStatusTone.success,
                         ),
+                        const SizedBox(height: SchoolSpacing.sm),
+                        FilledButton.icon(
+                          icon: interactions.documentOpening
+                              ? const SizedBox.square(
+                                  dimension: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.verified_user_outlined),
+                          label: Text(
+                            interactions.downloadGrant!.requiresStepUp
+                                ? 'Verify and open securely'
+                                : 'Open securely',
+                          ),
+                          onPressed:
+                              interactions.documentOpening ||
+                                  !interactions.secureDocumentExchangeAvailable
+                              ? null
+                              : interactions.openPreparedDocument,
+                        ),
+                        if (!interactions.secureDocumentExchangeAvailable)
+                          const Padding(
+                            padding: EdgeInsets.only(top: SchoolSpacing.xs),
+                            child: Text(
+                              'Secure document presentation is not configured on this build.',
+                            ),
+                          ),
+                        const SizedBox(height: SchoolSpacing.md),
+                      ],
+                      if (interactions.documentReceipt != null) ...[
+                        SchoolStatusBanner(
+                          label: 'Document closed securely',
+                          message:
+                              'The verified document was presented from a no-store lease and the temporary bytes were deleted.',
+                          tone: SchoolStatusTone.success,
+                        ),
                         const SizedBox(height: SchoolSpacing.md),
                       ],
                       if (interactions.documents.isEmpty)
