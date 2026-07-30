@@ -12,6 +12,7 @@ const now = Date.parse('2026-07-30T05:00:00Z');
 const identity = {
   issuer: 'https://identity.school.test',
   subject: 'provider-user-123',
+  providerSessionId: 'provider-session-abc',
   assurance: 'aal2' as const,
   authenticationTime: Math.floor(now / 1000) - 30,
   issuedAt: Math.floor(now / 1000),
@@ -46,6 +47,7 @@ describe('browser session contract', () => {
     expect(result.setCookie).not.toContain('principal@school.test');
     expect(result.claims).toMatchObject({
       principalId: 'principal-1',
+      providerSessionId: 'provider-session-abc',
       membershipId: 'membership-main-admin',
       tenantId: 'tenant-pilot-001',
       campusId: 'campus-main',

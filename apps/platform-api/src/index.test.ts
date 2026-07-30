@@ -295,6 +295,30 @@ describe('platform API', () => {
     expect(databaseQuery).not.toHaveBeenCalled();
   });
 
+  it('keeps provider back-channel logout fail-closed and free of browser CORS', async () => {
+    const response = await app.request(
+      '/auth/v1/backchannel-logout',
+      {
+        method: 'POST',
+        headers: {
+          Origin: 'https://school.test',
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'logout_token=header.claims.signature',
+      },
+      environment,
+    );
+    expect(response.status).toBe(503);
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(response.headers.get('access-control-allow-origin')).toBeNull();
+    await expect(response.json()).resolves.toEqual({
+      error: {
+        code: 'backchannel_logout_configuration_invalid',
+        message: 'Back-channel logout is not configured.',
+      },
+    });
+  });
+
   it('fails logout closed when its origin or registry configuration is unavailable', async () => {
     const cookie = await issueBrowserCookie();
     const noOriginConfiguration = await app.request(

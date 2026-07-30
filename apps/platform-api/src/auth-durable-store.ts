@@ -4,7 +4,9 @@ import {
   type BrowserSessionClaims,
   type MembershipResolution,
   type MembershipSelection,
+  type OidcBackchannelLogoutClaims,
   type OidcIdentity,
+  type OidcProviderCacheStore,
 } from '@school/policy';
 
 interface BooleanRow extends Record<string, unknown> {
@@ -23,11 +25,27 @@ interface MembershipRow extends Record<string, unknown> {
   readonly roleIds: string[];
 }
 
+interface JsonRow extends Record<string, unknown> {
+  readonly value: unknown;
+}
+
+const MAX_PROVIDER_IDENTIFIER_LENGTH = 512;
+const MAX_CACHE_KEY_LENGTH = 512;
+
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 
 function requireUuid(value: string, label: string): string {
   if (!UUID_PATTERN.test(value)) throw new Error(`${label} must be a UUID.`);
   return value;
+}
+
+function requireProviderIdentifier(value: string | undefined, label: string): string | null {
+  if (value === undefined) return null;
+  const normalized = value.trim();
+  if (normalized === '' || normalized.length > MAX_PROVIDER_IDENTIFIER_LENGTH) {
+    throw new Error(`${label} is invalid.`);
+  }
+  return normalized;
 }
 
 function requireUuidArray(values: readonly string[], label: string): string[] {
@@ -55,6 +73,32 @@ function requireCountRow(rows: readonly CountRow[], operation: string): number {
     throw new Error(`${operation} returned an invalid database response.`);
   }
   return row.value;
+}
+
+function requireBackchannelLogoutResult(rows: readonly JsonRow[]): {
+  readonly replayed: boolean;
+  readonly revokedSessions: number;
+} {
+  const row = rows[0];
+  if (rows.length !== 1 || row === undefined || !isRecord(row.value)) {
+    throw new Error('Back-channel logout returned an invalid database response.');
+  }
+  const replayed = row.value.replayed;
+  const revokedSessions = row.value.revokedSessions;
+  if (
+    typeof replayed !== 'boolean' ||
+    typeof revokedSessions !== 'number' ||
+    !Number.isInteger(revokedSessions) ||
+    revokedSessions < 0 ||
+    (replayed && revokedSessions !== 0)
+  ) {
+    throw new Error('Back-channel logout returned an invalid database response.');
+  }
+  return { replayed, revokedSessions };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function validateMembershipRow(row: MembershipRow): MembershipRow {
@@ -138,10 +182,11 @@ export class DurableAuthStore {
          $3::uuid,
          $4::uuid,
          $5::uuid,
-         $6::uuid[],
-         $7::text,
-         to_timestamp($8::double precision),
-         to_timestamp($9::double precision)
+         $6::text,
+         $7::uuid[],
+         $8::text,
+         to_timestamp($9::double precision),
+         to_timestamp($10::double precision)
        ) AS value`,
       [
         claims.sessionId,
@@ -149,6 +194,7 @@ export class DurableAuthStore {
         claims.tenantId,
         claims.membershipId,
         claims.campusId ?? null,
+        requireProviderIdentifier(claims.providerSessionId, 'providerSessionId'),
         roleIds,
         claims.assurance,
         claims.issuedAt,
@@ -156,6 +202,45 @@ export class DurableAuthStore {
       ],
     );
     return requireBooleanRow(rows, 'Browser session registration');
+  }
+
+  async processBackchannelLogout(
+    claims: OidcBackchannelLogoutClaims,
+    reason: string,
+  ): Promise<{ readonly replayed: boolean; readonly revokedSessions: number }> {
+    if (claims.issuer.trim() === '' || claims.tokenId.trim() === '') {
+      throw new Error('Logout Token identity is required.');
+    }
+    if (reason.trim() === '') throw new Error('A revocation reason is required.');
+    const subject = requireProviderIdentifier(claims.subject, 'providerSubject');
+    const providerSessionId = requireProviderIdentifier(
+      claims.providerSessionId,
+      'providerSessionId',
+    );
+    if (subject === null && providerSessionId === null) {
+      throw new Error('A provider subject or session id is required.');
+    }
+    const rows = await this.#database.query<JsonRow>(
+      `SELECT iam.process_oidc_backchannel_logout(
+         $1::text,
+         $2::text,
+         $3::text,
+         $4::text,
+         to_timestamp($5::double precision),
+         to_timestamp($6::double precision),
+         $7::text
+       ) AS value`,
+      [
+        claims.tokenId,
+        claims.issuer,
+        subject,
+        providerSessionId,
+        claims.issuedAt,
+        claims.expiresAt,
+        reason,
+      ],
+    );
+    return requireBackchannelLogoutResult(rows);
   }
 
   async isSessionActive(sessionId: string): Promise<boolean> {
@@ -185,5 +270,40 @@ export class DurableAuthStore {
       [accountId, reason],
     );
     return requireCountRow(rows, 'Account session revocation');
+  }
+}
+
+export class DurableOidcProviderCacheStore implements OidcProviderCacheStore {
+  readonly #database: HttpDatabase;
+
+  constructor(database: HttpDatabase) {
+    this.#database = database;
+  }
+
+  async read(key: string): Promise<unknown> {
+    if (key.length === 0 || key.length > MAX_CACHE_KEY_LENGTH) {
+      throw new Error('Provider cache key is invalid.');
+    }
+    const rows = await this.#database.query<JsonRow>(
+      'SELECT iam.read_oidc_provider_cache($1::text) AS value',
+      [key],
+    );
+    if (rows.length !== 1 || rows[0] === undefined) {
+      throw new Error('Provider cache read returned an invalid database response.');
+    }
+    return rows[0].value ?? undefined;
+  }
+
+  async write(key: string, value: unknown): Promise<void> {
+    if (key.length === 0 || key.length > MAX_CACHE_KEY_LENGTH) {
+      throw new Error('Provider cache key is invalid.');
+    }
+    const rows = await this.#database.query<BooleanRow>(
+      'SELECT iam.write_oidc_provider_cache($1::text, $2::jsonb) AS value',
+      [key, JSON.stringify(value)],
+    );
+    if (!requireBooleanRow(rows, 'Provider cache write')) {
+      throw new Error('Provider cache write was rejected.');
+    }
   }
 }

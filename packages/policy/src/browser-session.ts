@@ -18,6 +18,7 @@ export interface BrowserSessionClaims {
   readonly membershipId: string;
   readonly identityIssuer: string;
   readonly identitySubject: string;
+  readonly providerSessionId?: string;
   readonly tenantId: string;
   readonly campusId?: string;
   readonly roleIds: readonly string[];
@@ -98,6 +99,10 @@ function parseClaims(value: unknown): BrowserSessionClaims | undefined {
     value.identityIssuer.trim() === '' ||
     typeof value.identitySubject !== 'string' ||
     value.identitySubject.trim() === '' ||
+    (value.providerSessionId !== undefined &&
+      (typeof value.providerSessionId !== 'string' ||
+        value.providerSessionId.trim() === '' ||
+        value.providerSessionId.length > 512)) ||
     typeof value.tenantId !== 'string' ||
     value.tenantId.trim() === '' ||
     (value.campusId !== undefined && typeof value.campusId !== 'string') ||
@@ -183,6 +188,9 @@ export async function issueBrowserSession(
     membershipId: input.membership.membershipId,
     identityIssuer: input.identity.issuer,
     identitySubject: input.identity.subject,
+    ...(input.identity.providerSessionId === undefined
+      ? {}
+      : { providerSessionId: input.identity.providerSessionId }),
     tenantId: input.membership.tenantId,
     ...(input.membership.campusId === undefined ? {} : { campusId: input.membership.campusId }),
     roleIds: [...input.membership.roleIds],

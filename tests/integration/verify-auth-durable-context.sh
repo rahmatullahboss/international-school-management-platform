@@ -12,19 +12,19 @@ import { existsSync, readFileSync } from 'node:fs';
 
 const manifestPath = process.argv[2];
 const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
-if (manifest.gate !== 'GATE-AUTH-DURABLE-CONTEXT-V1') {
+if (manifest.gate !== 'GATE-AUTH-BACKCHANNEL-LOGOUT-V1') {
   throw new Error(`unexpected post-integration gate: ${manifest.gate}`);
 }
 if (manifest.baseManifest !== 'infra/database/migration-manifest.json') {
   throw new Error('post-integration manifest must name the canonical base manifest');
 }
 const migrations = manifest.migrations ?? [];
-if (migrations.length !== 1) {
-  throw new Error(`expected one AUTH-03 migration, got ${migrations.length}`);
+if (migrations.length !== 2) {
+  throw new Error(`expected two AUTH migrations, got ${migrations.length}`);
 }
 for (const [index, migration] of migrations.entries()) {
   if (migration.order !== index + 1) throw new Error('AUTH migration orders are not contiguous');
-  if (migration.stream !== 'AUTH-03') throw new Error(`unexpected stream: ${migration.stream}`);
+  if (!['AUTH-03', 'AUTH-07'].includes(migration.stream)) throw new Error(`unexpected stream: ${migration.stream}`);
   if (!existsSync(migration.path)) throw new Error(`missing migration: ${migration.path}`);
   console.log(migration.path);
 }
@@ -38,16 +38,18 @@ done
 "${PSQL[@]}" <<'SQL'
 DO $verification$
 BEGIN
-  IF (SELECT count(*) FROM platform.schema_migration) <> 41 THEN
-    RAISE EXCEPTION 'expected 41 total migration ledger rows';
+  IF (SELECT count(*) FROM platform.schema_migration) <> 42 THEN
+    RAISE EXCEPTION 'expected 42 total migration ledger rows';
   END IF;
   IF (SELECT count(*) FROM platform.schema_migration WHERE stream_id = 'AUTH-03') <> 1 THEN
-    RAISE EXCEPTION 'expected one AUTH-03 migration ledger row';
+    RAISE EXCEPTION 'expected two AUTH migrations ledger row';
   END IF;
   IF to_regclass('iam.oauth_transaction_consumption') IS NULL
      OR to_regclass('iam.oidc_membership_binding') IS NULL
      OR to_regclass('iam.oidc_membership_role_binding') IS NULL
-     OR to_regclass('iam.browser_session_registry') IS NULL THEN
+     OR to_regclass('iam.browser_session_registry') IS NULL
+     OR to_regclass('iam.oidc_logout_token_consumption') IS NULL
+     OR to_regclass('iam.oidc_provider_cache') IS NULL THEN
     RAISE EXCEPTION 'AUTH-03 durable tables are incomplete';
   END IF;
 END
@@ -163,7 +165,9 @@ BEGIN
   IF has_table_privilege(current_user, 'iam.oauth_transaction_consumption', 'SELECT')
      OR has_table_privilege(current_user, 'iam.oidc_membership_binding', 'SELECT')
      OR has_table_privilege(current_user, 'iam.oidc_membership_role_binding', 'SELECT')
-     OR has_table_privilege(current_user, 'iam.browser_session_registry', 'SELECT') THEN
+     OR has_table_privilege(current_user, 'iam.browser_session_registry', 'SELECT')
+     OR has_table_privilege(current_user, 'iam.oidc_logout_token_consumption', 'SELECT')
+     OR has_table_privilege(current_user, 'iam.oidc_provider_cache', 'SELECT') THEN
     RAISE EXCEPTION 'app_runtime must not have direct durable auth table access';
   END IF;
 
@@ -203,12 +207,20 @@ BEGIN
     RAISE EXCEPTION 'expired OAuth transaction must be denied';
   END IF;
 
+  IF NOT iam.write_oidc_provider_cache('oidc-cache:test', '{"schemaVersion":1}'::jsonb) THEN
+    RAISE EXCEPTION 'provider cache write must succeed';
+  END IF;
+  IF iam.read_oidc_provider_cache('oidc-cache:test') <> '{"schemaVersion":1}'::jsonb THEN
+    RAISE EXCEPTION 'provider cache read must return exact value';
+  END IF;
+
   IF NOT iam.register_browser_session(
     '30000000-0000-4000-8000-000000000009',
     '30000000-0000-4000-8000-000000000004',
     '30000000-0000-4000-8000-000000000001',
     '30000000-0000-4000-8000-000000000006',
     '30000000-0000-4000-8000-000000000003',
+    'provider-session-abc',
     ARRAY['30000000-0000-4000-8000-000000000005'::uuid],
     'aal2',
     clock_timestamp(),
@@ -222,6 +234,7 @@ BEGIN
     '30000000-0000-4000-8000-000000000001',
     '30000000-0000-4000-8000-000000000006',
     '30000000-0000-4000-8000-000000000003',
+    'provider-session-abc',
     ARRAY['30000000-0000-4000-8000-000000000005'::uuid],
     'aal2',
     clock_timestamp(),
@@ -232,14 +245,30 @@ BEGIN
   IF NOT iam.is_browser_session_active('30000000-0000-4000-8000-000000000009') THEN
     RAISE EXCEPTION 'registered session must be active';
   END IF;
-  IF NOT iam.revoke_browser_session(
-    '30000000-0000-4000-8000-000000000009',
-    'verification logout'
-  ) THEN
-    RAISE EXCEPTION 'session revocation must succeed';
+  IF iam.process_oidc_backchannel_logout(
+    'logout-token-verification',
+    'https://identity.school.test',
+    'provider-user-123',
+    'provider-session-abc',
+    clock_timestamp() - interval '10 seconds',
+    clock_timestamp() + interval '5 minutes',
+    'provider back-channel logout'
+  ) <> '{"replayed": false, "revokedSessions": 1}'::jsonb THEN
+    RAISE EXCEPTION 'atomic Logout Token processing must revoke the exact session';
   END IF;
   IF iam.is_browser_session_active('30000000-0000-4000-8000-000000000009') THEN
-    RAISE EXCEPTION 'revoked session must be inactive';
+    RAISE EXCEPTION 'provider-revoked session must be inactive';
+  END IF;
+  IF iam.process_oidc_backchannel_logout(
+    'logout-token-verification',
+    'https://identity.school.test',
+    'provider-user-123',
+    'provider-session-abc',
+    clock_timestamp() - interval '10 seconds',
+    clock_timestamp() + interval '5 minutes',
+    'provider back-channel logout'
+  ) <> '{"replayed": true, "revokedSessions": 0}'::jsonb THEN
+    RAISE EXCEPTION 'Logout Token replay must be idempotent';
   END IF;
 END
 $runtime_verification$;
