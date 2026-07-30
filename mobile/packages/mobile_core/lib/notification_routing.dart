@@ -498,6 +498,11 @@ DateTime _dateTime(Map<String, Object?> data, String key) {
       'MOBILE_NOTIFICATION_DATETIME_OFFSET_REQUIRED:$key',
     );
   }
+  if (!RegExp(r'(?:Z|[+-]\d{2}:\d{2})$').hasMatch(value)) {
+    throw MobileNotificationContractException(
+      'MOBILE_NOTIFICATION_DATETIME_OFFSET_REQUIRED:$key',
+    );
+  }
   final parsed = DateTime.tryParse(value);
   if (parsed == null) {
     throw MobileNotificationContractException(
