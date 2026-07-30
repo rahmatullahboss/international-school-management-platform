@@ -1,6 +1,6 @@
 # Whole-Module Multi-Agent Execution System
 
-**Status:** Authorization Code + PKCE contracts verified; durable identity adapters and real login gated  
+**Status:** Durable identity context and revocable session contracts verified; real login and production promotion gated  
 **Date:** 2026-07-30  
 **Operating rule:** one agent owns one complete large module; internal milestones are not separate agent assignments.
 
@@ -32,7 +32,9 @@ Owner operating decision: separate agents are used only for complete module stre
 18. [AUTH-01 release evidence](17-oidc-trust-boundary-release-evidence.md)
 19. [AUTH-02 Authorization Code + PKCE](18-oidc-pkce-flow-v1.md)
 20. [AUTH-02 release evidence](19-oidc-pkce-flow-release-evidence.md)
-21. Validation script: `scripts/validate_execution_artifacts.py`
+21. [AUTH-03 durable identity context](20-auth-durable-context-v1.md)
+22. [AUTH-03 release evidence](21-auth-durable-context-release-evidence.md)
+23. Validation script: `scripts/validate_execution_artifacts.py`
 
 ## 3. Repository baseline
 
@@ -94,6 +96,7 @@ After the APIs/read models from the previous waves are stable:
 - `PILOT-03` — Replaces browser-declared scope headers with short-lived HMAC-signed synthetic staging sessions that bind tenant, campus, role and subject before a snapshot is read.
 - `AUTH-01` — Establishes strict provider-neutral OIDC token verification, server-owned tenant/campus membership resolution and secure host-cookie browser-session contracts while real login remains disabled.
 - `AUTH-02` — Verifies browser-bound Authorization Code + PKCE transactions, provider discovery, bounded JWKS retrieval, confidential code exchange, replay protection and secure login orchestration while real provider routes remain disabled.
+- `AUTH-03` — Adds a durable OAuth replay ledger, database-owned identity membership projection, mandatory browser-session registration and session revocation while real provider routes remain disabled.
 
 ## 5. Whole-module completion boundary
 

@@ -137,3 +137,21 @@ AUTH-02 completes the provider-neutral Authorization Code + PKCE contract withou
 - Staging continues to report `loginEnabled: false` with no provider or durable identity adapter configured.
 
 `GATE-OIDC-PKCE-FLOW-V1` passes. Durable replay, JWKS cache/rotation, database-backed membership and policy adapters, reviewed provider configuration, session revocation, refresh-token governance, step-up, monitoring, rollback, UAT and production authorization remain blocked.
+
+
+## Post-gate Durable Identity Context Evidence
+
+AUTH-03 adds durable server-owned identity context without enabling a real provider or public login route.
+
+- Reviewed base: `84b637f6b5080476b2a015cf938fe8d2c60d1e3f`.
+- Implementation proof: `9886f41d198772c684d3b245258964d4bcb0e83c`.
+- Root CI `30530441477` passed the canonical gates with 565 repository tests, 40 canonical migrations, one AUTH-03 post-integration migration, live Neon, builds, budgets, 22 browser journeys and artifact validation.
+- Cloudflare `30530441742` passed durable-control readiness, fail-closed browser-session verification, pilot bearer, persona, PWA and health smoke tests.
+- OAuth replay consumption is atomic and durable.
+- Exact provider issuer+subject resolves a database-owned account, membership, tenant, campus and role projection.
+- `app_runtime` has no direct durable-auth table access and uses only reviewed security-definer functions.
+- Browser sessions are registered before cookies are released and are checked against the registry during introspection.
+- Explicit revocation, account-wide logout, membership suspension and role removal invalidate signed sessions.
+- The staged readiness endpoint reports `loginEnabled: false`; no provider credential, production database binding or session key is deployed.
+
+`GATE-AUTH-DURABLE-CONTEXT-V1` passes. Reviewed provider configuration, public login/callback routing, production secrets, JWKS rotation, permission evaluation, provider logout/revocation, refresh-token governance, step-up, monitoring, recovery rehearsal, UAT and production authorization remain blocked.
