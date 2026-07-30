@@ -1,9 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:school_family_app/main.dart';
 import 'package:school_family_domain/family_interactions.dart';
 import 'package:school_mobile_core/mobile_core.dart';
 import 'package:school_secure_documents/school_secure_documents.dart';
-
-import '../lib/main.dart';
 
 void main() {
   test(
