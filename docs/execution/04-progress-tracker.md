@@ -2,9 +2,9 @@
 
 **Program:** `international-school-platform-v1`  
 **Updated:** 2026-07-30  
-**Current repository state:** All domain module streams are complete and integrated. `GATE-PILOT-READY`, `GATE-CLOUDFLARE-STAGING`, `GATE-PILOT-RUNTIME-COMPOSED`, `GATE-UX-CONTINUITY-V1` and `GATE-PILOT-READ-API-V1` have passed. The non-production Cloudflare pilot now uses private, scope-checked synthetic Worker snapshots and keeps current role data visible during background revalidation without enabling production identity or mutations.
+**Current repository state:** All domain module streams are complete and integrated. `GATE-PILOT-READY`, `GATE-CLOUDFLARE-STAGING`, `GATE-PILOT-RUNTIME-COMPOSED`, `GATE-UX-CONTINUITY-V1`, `GATE-PILOT-READ-API-V1` and `GATE-PILOT-SIGNED-SESSION-V1` have passed. The non-production Cloudflare pilot now requires a short-lived signed synthetic session before role-scoped Worker snapshots are read, while production identity and mutations remain disabled.
 
-Historical checkpoint-by-checkpoint evidence through Wave 3 is preserved in [the archived tracker](archive/04-progress-tracker-through-wave3.md). PILOT-01 scope is recorded in [09-pilot-runtime-composition.md](09-pilot-runtime-composition.md), UX continuity in [10-ux-continuity-v1.md](10-ux-continuity-v1.md) and [11-ux-continuity-release-evidence.md](11-ux-continuity-release-evidence.md), and the scoped read API in [12-pilot-read-api-v1.md](12-pilot-read-api-v1.md) and [13-pilot-read-api-release-evidence.md](13-pilot-read-api-release-evidence.md).
+Historical checkpoint-by-checkpoint evidence through Wave 3 is preserved in [the archived tracker](archive/04-progress-tracker-through-wave3.md). PILOT-01 scope is recorded in [09-pilot-runtime-composition.md](09-pilot-runtime-composition.md), UX continuity in [10-ux-continuity-v1.md](10-ux-continuity-v1.md) and [11-ux-continuity-release-evidence.md](11-ux-continuity-release-evidence.md), scoped reads in [12-pilot-read-api-v1.md](12-pilot-read-api-v1.md) and [13-pilot-read-api-release-evidence.md](13-pilot-read-api-release-evidence.md), and signed staging sessions in [14-pilot-signed-session-v1.md](14-pilot-signed-session-v1.md) and [15-pilot-signed-session-release-evidence.md](15-pilot-signed-session-release-evidence.md).
 
 ## Gate status
 
@@ -22,7 +22,8 @@ Historical checkpoint-by-checkpoint evidence through Wave 3 is preserved in [the
 | `GATE-CLOUDFLARE-STAGING` | passed | Main merge `41639fab433491df0395d02217a70c6eb2ddb775`; root CI `30479347127`; deploy/smoke `30479347117` |
 | `GATE-PILOT-RUNTIME-COMPOSED` | passed | Candidate `a50ad782489137f5afd806e30c7a3e249b5074ec`; root CI `30484622352`; Cloudflare deploy/smoke `30484622364`; all role routes live |
 | `GATE-UX-CONTINUITY-V1` | passed | Candidate `e74a30143eb7882e81ebd7d5b5c373d3132b309e`; root CI `30490122291`; Cloudflare deploy/smoke `30490122337`; continuous navigation and task discovery verified |
-| `GATE-PILOT-READ-API-V1` | passed | Implementation proof candidate `73be1c1eb0418c8c2f744729354bd9f1a63467b0`; root CI `30495509757`; Cloudflare deploy/smoke `30495509773`; scope denial, ETag revalidation and current-view preservation verified |
+| `GATE-PILOT-READ-API-V1` | passed | Implementation proof `73be1c1eb0418c8c2f744729354bd9f1a63467b0`; root CI `30495509757`; deploy/smoke `30495509773`; scope denial and revalidation verified |
+| `GATE-PILOT-SIGNED-SESSION-V1` | passed | Implementation proof `0a36ef62ec1622bdea6de7d0135bf30026845528`; root CI `30501350771`; deploy/smoke `30501350785`; signature, expiry, wrong-secret, cross-role and live bearer flow verified |
 
 ## Stream tracker
 
@@ -37,80 +38,77 @@ Historical checkpoint-by-checkpoint evidence through Wave 3 is preserved in [the
 | `CARE-01` | 2 | complete and integrated | `9304bd6c425eca4ec69db90c1f1cab3f7a409b8d` |
 | `EXP-01` | 3 | complete and integrated | implementation `5c952703c24ee9927fcf2cd480d3ce8d0d139847`; main merge `6093109c8c573c3b4495141ad71661d5d5ca22c1` |
 | `INTEG-01` | gated serial | pilot ready | final system and recovery evidence in `docs/execution/08-final-system-release-evidence.md` |
-| `PILOT-01` | post-integration | runtime composed and staged | base `41639fab433491df0395d02217a70c6eb2ddb775`; candidate `a50ad782489137f5afd806e30c7a3e249b5074ec`; CI `30484622352`; deploy `30484622364` |
+| `PILOT-01` | post-integration | runtime composed and staged | candidate `a50ad782489137f5afd806e30c7a3e249b5074ec`; CI `30484622352`; deploy `30484622364` |
 | `UX-01` | post-integration | continuity gate passed and staged | candidate `e74a30143eb7882e81ebd7d5b5c373d3132b309e`; CI `30490122291`; deploy `30490122337` |
-| `PILOT-02` | post-integration | scoped read API gate passed and staged | implementation proof `73be1c1eb0418c8c2f744729354bd9f1a63467b0`; CI `30495509757`; deploy `30495509773` |
+| `PILOT-02` | post-integration | scoped read API gate passed and staged | proof `73be1c1eb0418c8c2f744729354bd9f1a63467b0`; CI `30495509757`; deploy `30495509773` |
+| `PILOT-03` | post-integration | signed staging session gate passed and staged | proof `0a36ef62ec1622bdea6de7d0135bf30026845528`; CI `30501350771`; deploy `30501350785` |
 
 ## PILOT-01 gate closure
 
 Completed and verified:
 
-- role chooser at `/` with accessible skip navigation and responsive role cards;
-- admin, teacher, guardian and student runtime shells;
-- existing EXP-01 overview components mounted into role-specific composition roots;
-- deep-link route surfaces covering all integrated module families;
-- synthetic, non-sensitive read models and explicit production-mutation boundary;
-- capability-scoped navigation and role-level lazy loading;
-- browser journeys for role selection, representative module routes and role scoping;
-- Cloudflare live smoke tests for role chooser, admin, teacher, guardian, student, manifest, offline page and API health;
-- deployment, execution, progress and release evidence documentation.
+- role chooser and four persona runtime shells;
+- reviewed persona components mounted into role roots;
+- deep-link route surfaces for all integrated module families;
+- synthetic read models and explicit mutation boundary;
+- capability-scoped navigation and lazy loading;
+- role selection, representative module and role-isolation browser journeys;
+- Cloudflare role routes, PWA, offline and health smoke tests.
 
-Verified PILOT-01 performance evidence:
-
-- initial JavaScript: 203,338 bytes against a 250,000-byte limit;
-- initial CSS: 8,475 bytes against a 50,000-byte limit;
-- total route JavaScript: 283,316 bytes against a 350,000-byte limit;
-- total route CSS: 60,355 bytes against an 85,000-byte limit;
-- no budget violation.
+Verified performance: 203,338-byte initial JavaScript, 8,475-byte initial CSS, 283,316-byte total JavaScript and 60,355-byte total CSS; no budget violation.
 
 ## UX-01 continuity gate closure
 
-Completed and verified on candidate `e74a30143eb7882e81ebd7d5b5c373d3132b309e`:
+Completed and verified:
 
-- same-origin application links navigate through browser history without reloading the document;
-- browser back and forward retain the application instance and current role shell;
-- role bundles preload on pointer intent, keyboard focus and suitable idle time;
-- the current screen remains available while a destination bundle prepares;
-- in-app transitions use a non-blocking progress status rather than a separate loading screen;
-- initial direct deep links use a skeleton in the final shell layout;
-- role navigation is grouped by familiar school tasks and long menus include task search;
-- active location, identity, capability filtering, connectivity and native link behaviour remain explicit;
-- reduced-motion, responsive, RTL, keyboard and role-isolation journeys pass;
-- staging deployment concurrency is isolated by branch so unrelated pull requests cannot cancel the verified run.
+- same-origin history navigation without document reload;
+- back/forward retaining the application instance and role shell;
+- intent and idle preloading;
+- current-screen preservation while destination code prepares;
+- non-blocking progress and final-layout skeletons;
+- task-led grouped navigation and search;
+- reduced-motion, responsive, RTL, keyboard and role-isolation coverage.
 
-Verification evidence:
-
-- repository tests: 504 passed, with one environment-dependent direct-Neon test skipped in the ordinary suite and passed separately against live Neon;
-- browser journeys: 20 passed across platform/UX, SIS, finance, integrations, student support and EXP suites;
-- initial JavaScript: 207,287 bytes against a 250,000-byte limit;
-- initial CSS: 13,514 bytes against a 50,000-byte limit;
-- total route JavaScript: 292,668 bytes against a 350,000-byte limit;
-- total route CSS: 71,650 bytes against an 85,000-byte limit;
-- no build-budget violation.
+Evidence: 504 repository tests, 20 browser journeys, 207,287-byte initial JavaScript, 13,514-byte initial CSS, 292,668-byte total JavaScript and 71,650-byte total CSS.
 
 ## PILOT-02 scoped read API gate closure
 
-Completed and verified on implementation proof candidate `73be1c1eb0418c8c2f744729354bd9f1a63467b0`:
+Completed and verified:
 
-- the staging Worker serves role snapshots only when tenant, campus, role and subject scope match;
-- capabilities are resolved by the Worker instead of trusted from browser input;
-- incomplete, cross-role, cross-subject, unknown-role and unrelated-origin requests are denied;
-- all synthetic `/pilot/*` endpoints return generic `404` responses in production runtime;
-- responses are private and support scope-specific `ETag`/`If-None-Match` revalidation;
-- browser cache identity includes API origin, tenant, campus, role and subject;
-- returned scope is validated before data is accepted;
-- current role content remains visible during delayed refresh and after refresh failure;
-- memory and local-storage fallback never crosses role or subject scope;
-- Cloudflare deploy builds the web bundle with the API Worker URL from the same run;
-- live smoke validates API health, a scope-checked snapshot, role routes, PWA manifest and offline page.
+- Worker-scoped synthetic role snapshots;
+- server-resolved capabilities;
+- tenant/campus/role/subject and origin denial;
+- generic production-runtime `404` responses;
+- private scope-specific ETag revalidation;
+- browser cache isolation and returned-scope validation;
+- current-view and last-safe-data preservation;
+- same-run API-aware web build and live snapshot smoke.
+
+Evidence: 509 repository tests, 22 browser journeys, 208,406-byte initial JavaScript, 15,022-byte initial CSS, 297,916-byte total JavaScript and 73,158-byte total CSS.
+
+## PILOT-03 signed session gate closure
+
+Completed and verified on implementation proof `0a36ef62ec1622bdea6de7d0135bf30026845528`:
+
+- the browser obtains a short-lived signed synthetic session before reading a snapshot;
+- HMAC-SHA256 verification binds issuer, audience, tenant, campus, role and subject;
+- browser-declared `x-school-*` scope headers are removed from the snapshot path;
+- capabilities remain Worker-resolved after identity verification;
+- missing, malformed, tampered, expired, wrong-secret and cross-role sessions fail closed;
+- session responses are not cached and tokens use only memory/session storage;
+- a `401` triggers one role-scoped renewal attempt;
+- failed issuance or renewal retains the last safe snapshot and current screen;
+- each staging deploy generates and injects a new ephemeral secret through Wrangler without committing it;
+- live smoke proves signed issuance and bearer-authorized scope retrieval;
+- production runtime continues to hide all `/pilot/*` routes.
 
 Verification evidence:
 
-- repository tests: 509 passed, with one environment-dependent direct-Neon test skipped in the ordinary suite and passed separately against live Neon;
-- browser journeys: 22 passed across platform/PILOT-02, SIS, finance, integrations, student support and EXP suites;
+- repository tests: 514 passed, with one environment-dependent direct-Neon test skipped in the ordinary suite and passed separately against live Neon;
+- browser journeys: 22 passed across platform/PILOT-03, SIS, finance, integrations, student support and EXP suites;
 - initial JavaScript: 208,406 bytes against a 250,000-byte limit;
 - initial CSS: 15,022 bytes against a 50,000-byte limit;
-- total route JavaScript: 297,916 bytes against a 350,000-byte limit;
+- total route JavaScript: 299,838 bytes against a 350,000-byte limit;
 - total route CSS: 73,158 bytes against an 85,000-byte limit;
 - no build-budget violation.
 
@@ -122,7 +120,8 @@ Verification evidence:
 - Guardian: `https://international-school-platform-web-staging.rahmatullahzisan.workers.dev/family`
 - Student: `https://international-school-platform-web-staging.rahmatullahzisan.workers.dev/student`
 - API health: `https://international-school-platform-api-staging.rahmatullahzisan.workers.dev/health`
-- Scoped snapshot pattern: `https://international-school-platform-api-staging.rahmatullahzisan.workers.dev/pilot/v1/snapshots/:role` — required scope headers; not a public page
+- Synthetic session pattern: `https://international-school-platform-api-staging.rahmatullahzisan.workers.dev/pilot/v1/sessions/:role`
+- Signed snapshot pattern: `https://international-school-platform-api-staging.rahmatullahzisan.workers.dev/pilot/v1/snapshots/:role` — bearer required; not a public page
 
 ## Reviewed integration lineage
 
@@ -132,45 +131,42 @@ Verification evidence:
 - EXP implementation: `5c952703c24ee9927fcf2cd480d3ce8d0d139847`
 - Wave 3 main merge: `6093109c8c573c3b4495141ad71661d5d5ca22c1`
 - Cloudflare staging merge: `41639fab433491df0395d02217a70c6eb2ddb775`
-- PILOT-01 verified candidate: `a50ad782489137f5afd806e30c7a3e249b5074ec`
-- UX-01 verified candidate: `e74a30143eb7882e81ebd7d5b5c373d3132b309e`
-- PILOT-02 implementation proof: `73be1c1eb0418c8c2f744729354bd9f1a63467b0`
+- PILOT-01 candidate: `a50ad782489137f5afd806e30c7a3e249b5074ec`
+- UX-01 candidate: `e74a30143eb7882e81ebd7d5b5c373d3132b309e`
+- PILOT-02 proof: `73be1c1eb0418c8c2f744729354bd9f1a63467b0`
+- PILOT-03 proof: `0a36ef62ec1622bdea6de7d0135bf30026845528`
 
 ## Final integrated system verification
 
 ### Application and browser evidence
 
-- Repository tests: 509 passed; PILOT-02 adds scope, revalidation and production-boundary coverage without changing domain invariants.
-- Browser journeys: 22 passed across platform/PILOT-02, SIS, finance, integrations, student support and EXP suites.
-- Format, lint, architecture boundaries, typecheck, Worker build, Vite build, dependency audit, licence policy, provenance drift and execution-artifact validation passed.
-- Role bundles remain lazy-loaded and intent-prefetched; the scoped resource layer remains within the approved initial and total asset budgets.
+- Repository tests: 514 passed; PILOT-03 adds signed-session, expiry and role-binding coverage without changing domain invariants.
+- Browser journeys: 22 passed.
+- Format, lint, architecture boundaries, typecheck, Worker/Vite builds, audit, licence, provenance and artifact validation passed.
+- Assets remain within approved initial and total budgets.
 
 ### Database and recovery evidence
 
 - Canonical migration manifest: 40 migrations.
 - Exact Neon project: `lingering-brook-52999532`.
 - Exact integration Neon branch: `br-shiny-silence-axznuy37`.
-- Idempotent canonical apply passed.
-- Forced RLS and `app_runtime` policy checks passed.
-- Posted-journal and posted-line immutability checks passed.
-- No unbalanced posted journal was found.
-- Cross-tenant read and write probes passed.
-- Disposable database apply, verification and cleanup replay passed.
+- Idempotent apply, forced RLS, `app_runtime` policy, finance immutability/balance, cross-tenant probes and disposable recovery replay passed.
 
 ## Remaining production milestones
 
-- replace synthetic Worker snapshots with database-backed permission-aware read models and server-side policy evaluation;
-- implement reviewed OAuth/OIDC login, renewal, logout, role, tenant and campus context;
-- add tenant-safe server cache isolation and invalidation tests under real identity context;
-- provide approved staging tenant seed and reset tooling;
-- connect safe pilot mutations and live permission-negative tests;
-- add monitoring, alerting, backup evidence and rollback rehearsal;
-- complete owner-led user acceptance before production-domain consideration.
+- implement reviewed OAuth/OIDC Authorization Code with PKCE and issuer/JWKS validation;
+- resolve real user memberships, tenant/campus context and database-backed permissions;
+- adopt a reviewed same-origin BFF/HttpOnly production session design or approved equivalent;
+- add logout, revocation, step-up assurance and negative authorization tests;
+- replace synthetic snapshots with database-backed read models and tenant-safe server caching;
+- provide approved staging seed/reset tooling and safe mutations;
+- add monitoring, backup and rollback rehearsal;
+- complete owner-led UAT and explicit production authorization.
 
 ## Safe cleanup report
 
-No Git branch, worktree or Neon branch was deleted. Cleanup remains owner-reviewed only. A resource is eligible only when it is clean, inactive, reachable from reviewed integration history and no longer required for rollback or audit.
+No Git branch, worktree or Neon branch was deleted. Cleanup remains owner-reviewed only.
 
 ## Production boundary
 
-No production deployment, production database mutation, production cache purge or destructive cleanup was performed. Cloudflare staging and PILOT-02 use synthetic identities and role snapshots on non-production Workers. Production promotion still requires reviewed authentication, database-backed permission enforcement, tenant-safe server caching, approved staging data, monitoring, rollback, backup rehearsal and explicit owner authorization.
+No production deployment, real account, real tenant/student data, production database mutation, production cache purge or destructive cleanup was introduced. PILOT-03 remains a synthetic staging identity bridge. Production promotion requires all remaining identity, policy, data, monitoring, recovery and owner-authorization gates.

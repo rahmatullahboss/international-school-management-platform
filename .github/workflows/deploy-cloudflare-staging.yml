@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   verify-deploy-smoke:
-    if: github.event_name == 'workflow_dispatch' || github.head_ref == 'deploy/cloudflare-staging-pilot' || github.head_ref == 'pilot/runtime-portal-composition' || github.head_ref == 'ux/smooth-operational-experience-v1' || github.head_ref == 'pilot/permission-aware-read-api-v1'
+    if: github.event_name == 'workflow_dispatch' || github.head_ref == 'deploy/cloudflare-staging-pilot' || github.head_ref == 'pilot/runtime-portal-composition' || github.head_ref == 'ux/smooth-operational-experience-v1' || github.head_ref == 'pilot/permission-aware-read-api-v1' || github.head_ref == 'pilot/signed-session-context-v1'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     environment: cloudflare-staging
@@ -51,8 +51,12 @@ jobs:
       - name: Deploy staging API Worker
         shell: bash
         run: |
-          set -o pipefail
-          npx wrangler deploy --config apps/platform-api/wrangler.jsonc --env staging 2>&1 | tee api-deploy.log
+          set -euo pipefail
+          secret_file=$(mktemp)
+          trap 'rm -f "$secret_file"' EXIT
+          umask 077
+          printf 'PILOT_SESSION_SECRET=%s\n' "$(openssl rand -hex 32)" > "$secret_file"
+          npx wrangler deploy --config apps/platform-api/wrangler.jsonc --env staging --secrets-file "$secret_file" 2>&1 | tee api-deploy.log
           api_url=$(grep -Eo 'https://[A-Za-z0-9.-]+\.workers\.dev' api-deploy.log | tail -1)
           if [[ -z "$api_url" ]]; then
             echo "Unable to resolve the deployed API URL from Wrangler output." >&2
@@ -95,13 +99,23 @@ jobs:
             done
           }
 
+          staging_origin='https://international-school-platform-web-staging.rahmatullahzisan.workers.dev'
           fetch_with_retry "$API_URL/health" api-health.json "API health endpoint"
-          fetch_with_retry "$API_URL/pilot/v1/snapshots/admin" admin-snapshot.json "Scoped admin snapshot" \
-            -H 'Origin: https://international-school-platform-web-staging.rahmatullahzisan.workers.dev' \
-            -H 'x-school-tenant-id: tenant-pilot-001' \
-            -H 'x-school-campus-id: campus-main' \
-            -H 'x-school-role: admin' \
-            -H 'x-school-subject-id: principal-1'
+          fetch_with_retry "$API_URL/pilot/v1/sessions/admin" admin-session.json "Signed admin session" \
+            --request POST \
+            -H "Origin: $staging_origin"
+          admin_token=$(python3 - <<'PY'
+          import json
+          from pathlib import Path
+          payload = json.loads(Path('admin-session.json').read_text(encoding='utf-8'))
+          token = payload.get('accessToken')
+          assert isinstance(token, str) and len(token) > 32, payload
+          print(token)
+          PY
+          )
+          fetch_with_retry "$API_URL/pilot/v1/snapshots/admin" admin-snapshot.json "Signed scoped admin snapshot" \
+            -H "Origin: $staging_origin" \
+            -H "Authorization: Bearer $admin_token"
           fetch_with_retry "$WEB_URL/" web-index.html "Pilot role chooser"
           fetch_with_retry "$WEB_URL/admin" web-admin.html "Admin portal"
           fetch_with_retry "$WEB_URL/teacher" web-teacher.html "Teacher portal"
@@ -117,6 +131,14 @@ jobs:
           payload = json.loads(Path('api-health.json').read_text(encoding='utf-8'))
           assert payload.get('status') == 'ok', payload
           assert payload.get('environment') == 'staging', payload
+
+          session = json.loads(Path('admin-session.json').read_text(encoding='utf-8'))
+          assert session.get('schemaVersion') == 1, session
+          assert session.get('tokenType') == 'Bearer', session
+          assert session.get('scope', {}).get('tenantId') == 'tenant-pilot-001', session
+          assert session.get('scope', {}).get('campusId') == 'campus-main', session
+          assert session.get('scope', {}).get('role') == 'admin', session
+          assert session.get('scope', {}).get('subjectId') == 'principal-1', session
 
           snapshot = json.loads(Path('admin-snapshot.json').read_text(encoding='utf-8'))
           assert snapshot.get('schemaVersion') == 1, snapshot
@@ -149,6 +171,7 @@ jobs:
             echo "- Guardian: $WEB_URL/family"
             echo "- Student: $WEB_URL/student"
             echo "- API health: $API_URL/health"
-            echo "- Scoped admin snapshot: $API_URL/pilot/v1/snapshots/admin"
-            echo '- Scope: private ETag-revalidated synthetic read snapshots with tenant/campus/role/subject isolation; production identity and mutations remain disabled.'
+            echo "- Signed pilot session: $API_URL/pilot/v1/sessions/admin"
+            echo "- Signed scoped admin snapshot: $API_URL/pilot/v1/snapshots/admin"
+            echo '- Scope: ephemeral HMAC-signed synthetic sessions bind tenant, campus, role and subject before private ETag-revalidated snapshots; production identity and mutations remain disabled.'
           } >> "$GITHUB_STEP_SUMMARY"

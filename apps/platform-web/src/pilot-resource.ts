@@ -5,7 +5,9 @@ import type { PilotConnectivity, PilotRole } from './portal-shared';
 const PILOT_TENANT_ID = 'tenant-pilot-001';
 const PILOT_CAMPUS_ID = 'campus-main';
 const CACHE_VERSION = 1;
+const SESSION_VERSION = 1;
 const REFRESH_AFTER_MS = 60_000;
+const SESSION_EXPIRY_SKEW_MS = 30_000;
 
 const subjectByRole: Readonly<Record<PilotRole, string>> = {
   admin: 'principal-1',
@@ -37,6 +39,26 @@ interface StoredSnapshot<T> {
   readonly envelope: PilotSnapshotEnvelope<T>;
 }
 
+interface PilotSessionEnvelope {
+  readonly schemaVersion: 1;
+  readonly tokenType: 'Bearer';
+  readonly accessToken: string;
+  readonly expiresAt: string;
+  readonly scope: Readonly<{
+    tenantId: string;
+    campusId: string;
+    role: PilotRole;
+    subjectId: string;
+  }>;
+}
+
+interface StoredSession {
+  readonly sessionVersion: 1;
+  readonly accessToken: string;
+  readonly expiresAt: number;
+  readonly scope: PilotSessionEnvelope['scope'];
+}
+
 export type PilotResourceState = 'seed' | 'cached' | 'refreshing' | 'current' | 'stale';
 
 export interface PilotResource<T> {
@@ -57,6 +79,8 @@ declare global {
 
 const memoryCache = new Map<string, StoredSnapshot<unknown>>();
 const inFlight = new Map<string, Promise<StoredSnapshot<unknown>>>();
+const sessionMemory = new Map<string, StoredSession>();
+const sessionInFlight = new Map<string, Promise<StoredSession>>();
 
 function resolveApiBase(): string | undefined {
   const runtimeOverride = window.__PLATFORM_API_URL__?.trim();
@@ -83,6 +107,14 @@ function storageKey(key: string): string {
   return `school-platform:pilot-read:${encodeURIComponent(key)}`;
 }
 
+function sessionKey(apiBase: string, role: PilotRole): string {
+  return `${apiBase}|${role}|${subjectByRole[role]}`;
+}
+
+function sessionStorageKey(key: string): string {
+  return `school-platform:pilot-session:${encodeURIComponent(key)}`;
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
@@ -101,6 +133,26 @@ function isMatchingEnvelope<T>(value: unknown, role: PilotRole): value is PilotS
     value.scope.subjectId === subjectByRole[role] &&
     Array.isArray(value.scope.capabilities) &&
     value.scope.capabilities.every((capability) => typeof capability === 'string')
+  );
+}
+
+function isMatchingSession(value: unknown, role: PilotRole): value is PilotSessionEnvelope {
+  if (
+    !isRecord(value) ||
+    value.schemaVersion !== SESSION_VERSION ||
+    value.tokenType !== 'Bearer' ||
+    typeof value.accessToken !== 'string' ||
+    value.accessToken.length < 32 ||
+    typeof value.expiresAt !== 'string' ||
+    !isRecord(value.scope)
+  ) {
+    return false;
+  }
+  return (
+    value.scope.tenantId === PILOT_TENANT_ID &&
+    value.scope.campusId === PILOT_CAMPUS_ID &&
+    value.scope.role === role &&
+    value.scope.subjectId === subjectByRole[role]
   );
 }
 
@@ -139,6 +191,110 @@ function storeSnapshot<T>(key: string, snapshot: StoredSnapshot<T>): void {
   }
 }
 
+function readStoredSession(key: string, role: PilotRole): StoredSession | undefined {
+  const memory = sessionMemory.get(key);
+  if (
+    memory !== undefined &&
+    memory.scope.role === role &&
+    memory.scope.subjectId === subjectByRole[role] &&
+    memory.expiresAt > Date.now() + SESSION_EXPIRY_SKEW_MS
+  ) {
+    return memory;
+  }
+
+  try {
+    const raw = window.sessionStorage.getItem(sessionStorageKey(key));
+    if (raw === null) return undefined;
+    const parsed = JSON.parse(raw) as unknown;
+    if (
+      !isRecord(parsed) ||
+      parsed.sessionVersion !== SESSION_VERSION ||
+      typeof parsed.accessToken !== 'string' ||
+      typeof parsed.expiresAt !== 'number' ||
+      parsed.expiresAt <= Date.now() + SESSION_EXPIRY_SKEW_MS ||
+      !isRecord(parsed.scope) ||
+      parsed.scope.tenantId !== PILOT_TENANT_ID ||
+      parsed.scope.campusId !== PILOT_CAMPUS_ID ||
+      parsed.scope.role !== role ||
+      parsed.scope.subjectId !== subjectByRole[role]
+    ) {
+      return undefined;
+    }
+    const stored = parsed as unknown as StoredSession;
+    sessionMemory.set(key, stored);
+    return stored;
+  } catch {
+    return undefined;
+  }
+}
+
+function storeSession(key: string, session: StoredSession): void {
+  sessionMemory.set(key, session);
+  try {
+    window.sessionStorage.setItem(sessionStorageKey(key), JSON.stringify(session));
+  } catch {
+    // The in-memory session remains available when session storage is unavailable.
+  }
+}
+
+function clearSession(key: string): void {
+  sessionMemory.delete(key);
+  try {
+    window.sessionStorage.removeItem(sessionStorageKey(key));
+  } catch {
+    // No persistent session cleanup is needed when storage is unavailable.
+  }
+}
+
+async function requestSession(
+  apiBase: string,
+  role: PilotRole,
+  force = false,
+): Promise<StoredSession> {
+  const key = sessionKey(apiBase, role);
+  if (!force) {
+    const current = readStoredSession(key, role);
+    if (current !== undefined) return current;
+  }
+
+  const existing = sessionInFlight.get(key);
+  if (existing !== undefined) return existing;
+
+  const promise = (async (): Promise<StoredSession> => {
+    const response = await fetch(`${apiBase}/pilot/v1/sessions/${role}`, {
+      method: 'POST',
+      credentials: 'omit',
+      cache: 'no-store',
+    });
+    if (!response.ok) throw new Error(`Pilot session API returned ${response.status}.`);
+
+    const payload: unknown = await response.json();
+    if (!isMatchingSession(payload, role)) {
+      throw new Error('Pilot session API returned an invalid identity scope.');
+    }
+    const expiresAt = Date.parse(payload.expiresAt);
+    if (!Number.isFinite(expiresAt) || expiresAt <= Date.now() + SESSION_EXPIRY_SKEW_MS) {
+      throw new Error('Pilot session API returned an expired identity session.');
+    }
+
+    const stored: StoredSession = {
+      sessionVersion: SESSION_VERSION,
+      accessToken: payload.accessToken,
+      expiresAt,
+      scope: payload.scope,
+    };
+    storeSession(key, stored);
+    return stored;
+  })();
+
+  sessionInFlight.set(key, promise);
+  try {
+    return await promise;
+  } finally {
+    sessionInFlight.delete(key);
+  }
+}
+
 async function requestSnapshot<T>(
   apiBase: string,
   role: PilotRole,
@@ -149,43 +305,47 @@ async function requestSnapshot<T>(
   if (existing !== undefined) return existing as Promise<StoredSnapshot<T>>;
 
   const promise = (async (): Promise<StoredSnapshot<T>> => {
-    const headers = new Headers({
-      'x-school-tenant-id': PILOT_TENANT_ID,
-      'x-school-campus-id': PILOT_CAMPUS_ID,
-      'x-school-role': role,
-      'x-school-subject-id': subjectByRole[role],
-    });
-    if (current?.etag !== undefined) headers.set('if-none-match', current.etag);
+    let session = await requestSession(apiBase, role);
 
-    const response = await fetch(`${apiBase}/pilot/v1/snapshots/${role}`, {
-      method: 'GET',
-      headers,
-      credentials: 'omit',
-      cache: 'no-store',
-    });
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const headers = new Headers({ authorization: `Bearer ${session.accessToken}` });
+      if (current?.etag !== undefined) headers.set('if-none-match', current.etag);
 
-    if (response.status === 304 && current !== undefined) {
-      const refreshed = { ...current, receivedAt: Date.now() };
-      storeSnapshot(key, refreshed);
-      return refreshed;
+      const response = await fetch(`${apiBase}/pilot/v1/snapshots/${role}`, {
+        method: 'GET',
+        headers,
+        credentials: 'omit',
+        cache: 'no-store',
+      });
+
+      if (response.status === 401 && attempt === 0) {
+        clearSession(sessionKey(apiBase, role));
+        session = await requestSession(apiBase, role, true);
+        continue;
+      }
+      if (response.status === 304 && current !== undefined) {
+        const refreshed = { ...current, receivedAt: Date.now() };
+        storeSnapshot(key, refreshed);
+        return refreshed;
+      }
+      if (!response.ok) throw new Error(`Pilot read API returned ${response.status}.`);
+
+      const payload: unknown = await response.json();
+      if (!isMatchingEnvelope<T>(payload, role)) {
+        throw new Error('Pilot read API returned a snapshot outside the requested scope.');
+      }
+
+      const stored: StoredSnapshot<T> = {
+        cacheVersion: CACHE_VERSION,
+        etag: response.headers.get('etag') ?? undefined,
+        receivedAt: Date.now(),
+        envelope: payload,
+      };
+      storeSnapshot(key, stored);
+      return stored;
     }
-    if (!response.ok) {
-      throw new Error(`Pilot read API returned ${response.status}.`);
-    }
 
-    const payload = await response.json();
-    if (!isMatchingEnvelope<T>(payload, role)) {
-      throw new Error('Pilot read API returned a snapshot outside the requested scope.');
-    }
-
-    const stored: StoredSnapshot<T> = {
-      cacheVersion: CACHE_VERSION,
-      etag: response.headers.get('etag') ?? undefined,
-      receivedAt: Date.now(),
-      envelope: payload,
-    };
-    storeSnapshot(key, stored);
-    return stored;
+    throw new Error('Pilot identity session could not be renewed.');
   })();
 
   inFlight.set(key, promise);

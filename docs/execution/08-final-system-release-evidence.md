@@ -76,3 +76,31 @@ After `GATE-PILOT-READY`, PILOT-01 converted the integrated persona packages int
 - Live API health: `https://international-school-platform-api-staging.rahmatullahzisan.workers.dev/health`.
 
 `GATE-PILOT-RUNTIME-COMPOSED` passes for the synthetic-data staging pilot. This does not change the production boundary: real identity, permission-aware APIs, approved staging data, safe mutation acceptance, monitoring, backup, rollback and explicit owner authorization remain required before production promotion.
+
+## Post-gate Scoped Read and Signed Session Evidence
+
+PILOT-02 and PILOT-03 progressively hardened the synthetic staging boundary without representing it as production authentication.
+
+### PILOT-02
+
+- Implementation proof: `73be1c1eb0418c8c2f744729354bd9f1a63467b0`.
+- Root CI: `30495509757`.
+- Cloudflare deploy/smoke: `30495509773`.
+- Outcome: private, scope-checked, ETag-revalidated role snapshots with API-origin/tenant/campus/role/subject browser cache isolation and current-view preservation.
+
+### PILOT-03
+
+- Implementation proof: `0a36ef62ec1622bdea6de7d0135bf30026845528`.
+- Root CI: `30501350771`.
+- Cloudflare deploy/smoke: `30501350785`.
+- Repository tests: 514 passed; one direct-Neon test skipped in the ordinary suite and passed separately against live Neon.
+- Browser journeys: 22 passed.
+- Signed-session tests cover exact 15-minute expiry, signature verification, wrong-secret denial and cross-role denial.
+- Browser snapshot calls use only `Authorization: Bearer`; browser-declared tenant/campus/role/subject headers were removed.
+- Capabilities remain server-resolved after the session is verified.
+- Deployment generates an ephemeral 256-bit signing secret and injects it through a protected temporary Wrangler secrets file.
+- Live smoke validates signed session issuance and bearer-authorized scoped snapshot retrieval.
+- Initial assets remain 208,406-byte JavaScript and 15,022-byte CSS.
+- Total route assets remain within budget at 299,838-byte JavaScript and 73,158-byte CSS.
+
+`GATE-PILOT-SIGNED-SESSION-V1` passes for the synthetic staging identity bridge. Production remains blocked until reviewed OAuth/OIDC, real membership and tenant/campus resolution, database-backed authorization, safe production browser sessions, logout/revocation, step-up assurance, monitoring, backup, rollback, UAT and explicit owner authorization are complete.
