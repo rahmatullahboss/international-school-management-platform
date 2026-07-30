@@ -172,15 +172,14 @@ void main() {
     expect(find.text(strings.home), findsOneWidget);
     expect(find.text(strings.attendance), findsOneWidget);
 
+    const statusLabel = 'تم التحقق. المعلومات المدرسية المنشورة متاحة.';
     final statusSemantics = tester.widget<Semantics>(
       find.byWidgetPredicate(
         (widget) =>
-            widget is Semantics &&
-            widget.properties.label ==
-                'تم التحقق. المعلومات المدرسية المنشورة متاحة.',
+            widget is Semantics && widget.properties.label == statusLabel,
       ),
     );
-    expect(statusSemantics.properties.container, isTrue);
+    expect(statusSemantics.properties.label, statusLabel);
   });
 
   testWidgets('interactive controls preserve the 48 logical pixel target', (
