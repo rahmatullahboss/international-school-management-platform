@@ -1,11 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
+import { BROWSER_SESSION_COOKIE_NAME, issueBrowserSession } from '@school/policy';
+
 import app from './index.js';
 
+const authSessionSecret = 'browser-session-test-secret-with-at-least-32-characters';
 const environment = {
   APP_ENV: 'test',
   APP_REGION: 'local',
   PILOT_SESSION_SECRET: 'pilot-test-session-secret-with-at-least-32-characters',
+  AUTH_SESSION_SECRET: authSessionSecret,
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -36,6 +40,86 @@ describe('platform API', () => {
       status: 'ok',
       environment: 'test',
       region: 'local',
+    });
+  });
+
+  it('reports provider-neutral OIDC controls without exposing secrets or enabling login', async () => {
+    const response = await app.request(
+      '/auth/v1/readiness',
+      {},
+      { APP_ENV: 'test', APP_REGION: 'local' },
+    );
+    expect(response.status).toBe(200);
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    const payload: unknown = await response.json();
+    expect(payload).toMatchObject({
+      schemaVersion: 1,
+      mode: 'oidc-bff',
+      state: 'disabled',
+      loginEnabled: false,
+      controls: {
+        authorizationCode: true,
+        pkceS256: true,
+        issuerValidation: true,
+        audienceValidation: true,
+        jwksSignatureValidation: true,
+        nonceValidation: true,
+        membershipResolution: true,
+        httpOnlyHostCookie: true,
+        stepUpAssurance: true,
+      },
+    });
+    expect(JSON.stringify(payload)).not.toContain('secret');
+  });
+
+  it('introspects only a valid HttpOnly-cookie session and denies missing configuration or cookie', async () => {
+    const unconfigured = await app.request(
+      '/auth/v1/session',
+      {},
+      { APP_ENV: 'test', APP_REGION: 'local' },
+    );
+    expect(unconfigured.status).toBe(503);
+
+    const missing = await app.request('/auth/v1/session', {}, environment);
+    expect(missing.status).toBe(401);
+
+    const issued = await issueBrowserSession({
+      secret: authSessionSecret,
+      now: Date.now(),
+      identity: {
+        issuer: 'https://identity.school.test',
+        subject: 'provider-user-123',
+        assurance: 'aal2',
+        issuedAt: Math.floor(Date.now() / 1000),
+        expiresAt: Math.floor(Date.now() / 1000) + 600,
+      },
+      membership: {
+        membershipId: 'membership-main-admin',
+        principalId: 'principal-1',
+        tenantId: 'tenant-pilot-001',
+        campusId: 'campus-main',
+        roleIds: ['school-admin'],
+      },
+    });
+    if (!issued.ok) throw new Error(issued.message);
+    const response = await app.request(
+      '/auth/v1/session',
+      { headers: { cookie: `${BROWSER_SESSION_COOKIE_NAME}=${issued.token}` } },
+      environment,
+    );
+    expect(response.status).toBe(200);
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(response.headers.get('vary')).toBe('Cookie');
+    await expect(response.json()).resolves.toMatchObject({
+      schemaVersion: 1,
+      session: {
+        principalId: 'principal-1',
+        membershipId: 'membership-main-admin',
+        tenantId: 'tenant-pilot-001',
+        campusId: 'campus-main',
+        roleIds: ['school-admin'],
+        assurance: 'aal2',
+      },
     });
   });
 

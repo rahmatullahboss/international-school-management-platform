@@ -1,6 +1,6 @@
 # Whole-Module Multi-Agent Execution System
 
-**Status:** Pilot runtime signed session context connected; production promotion gated  
+**Status:** Provider-neutral OIDC trust boundary verified; real login and production promotion gated  
 **Date:** 2026-07-30  
 **Operating rule:** one agent owns one complete large module; internal milestones are not separate agent assignments.
 
@@ -28,7 +28,9 @@ Owner operating decision: separate agents are used only for complete module stre
 14. [PILOT-02 release evidence](13-pilot-read-api-release-evidence.md)
 15. [PILOT-03 signed staging session](14-pilot-signed-session-v1.md)
 16. [PILOT-03 release evidence](15-pilot-signed-session-release-evidence.md)
-17. Validation script: `scripts/validate_execution_artifacts.py`
+17. [AUTH-01 OIDC trust boundary](16-oidc-trust-boundary-v1.md)
+18. [AUTH-01 release evidence](17-oidc-trust-boundary-release-evidence.md)
+19. Validation script: `scripts/validate_execution_artifacts.py`
 
 ## 3. Repository baseline
 
@@ -88,6 +90,7 @@ After the APIs/read models from the previous waves are stable:
 - `UX-01` — Refines the staged runtime with continuous client navigation, background preparation, task-led information architecture and accessible loading-state rules.
 - `PILOT-02` — Connects role portals to private, scope-checked synthetic Worker snapshots with tenant/campus/role/subject cache isolation and non-blocking revalidation.
 - `PILOT-03` — Replaces browser-declared scope headers with short-lived HMAC-signed synthetic staging sessions that bind tenant, campus, role and subject before a snapshot is read.
+- `AUTH-01` — Establishes strict provider-neutral OIDC token verification, server-owned tenant/campus membership resolution and secure host-cookie browser-session contracts while real login remains disabled.
 
 ## 5. Whole-module completion boundary
 

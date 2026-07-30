@@ -104,3 +104,19 @@ PILOT-02 and PILOT-03 progressively hardened the synthetic staging boundary with
 - Total route assets remain within budget at 299,838-byte JavaScript and 73,158-byte CSS.
 
 `GATE-PILOT-SIGNED-SESSION-V1` passes for the synthetic staging identity bridge. Production remains blocked until reviewed OAuth/OIDC, real membership and tenant/campus resolution, database-backed authorization, safe production browser sessions, logout/revocation, step-up assurance, monitoring, backup, rollback, UAT and explicit owner authorization are complete.
+
+
+## Post-gate OIDC Trust Boundary Evidence
+
+AUTH-01 establishes a provider-neutral authentication trust boundary without enabling real login.
+
+- Reviewed base: `26e6f5b034dd62f0486f20d7f24194551b642191`.
+- Implementation proof: `5d58706e119e34e72fee17d2a67be74428ad5ab3`.
+- Root CI: `30515626535` passed all 21 gates with 534 repository tests, 40 migrations, live Neon, builds, budgets, 22 browser journeys and artifact validation.
+- Cloudflare deploy/smoke: `30515626541` passed readiness, fail-closed session, pilot bearer, persona, PWA and health checks.
+- The ID-token verifier permits RS256 only and validates issuer, audience/`azp`, nonce, signing key, signature and timestamps.
+- Membership resolution uses exact provider issuer+subject and denies inactive, cross-tenant and cross-campus context.
+- The browser-session contract uses a signed `__Host-school_session` cookie with `HttpOnly`, `Secure` and `SameSite=Lax` attributes.
+- The staged readiness endpoint reports `loginEnabled: false`; no provider credential, membership source or production session key is deployed.
+
+`GATE-OIDC-TRUST-BOUNDARY-V1` passes. Authorization Code + PKCE transactions, callback and token exchange, approved discovery/JWKS retrieval and rotation, a real provider, database-backed memberships and permissions, revocation, step-up, monitoring, recovery rehearsal, owner-led UAT and explicit production authorization remain blocked.

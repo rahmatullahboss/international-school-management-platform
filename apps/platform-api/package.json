@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@school/platform": "*",
+    "@school/policy": "*",
     "hono": "^4.0.0"
   }
 }

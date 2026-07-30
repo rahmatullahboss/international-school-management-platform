@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   verify-deploy-smoke:
-    if: github.event_name == 'workflow_dispatch' || github.head_ref == 'deploy/cloudflare-staging-pilot' || github.head_ref == 'pilot/runtime-portal-composition' || github.head_ref == 'ux/smooth-operational-experience-v1' || github.head_ref == 'pilot/permission-aware-read-api-v1' || github.head_ref == 'pilot/signed-session-context-v1'
+    if: github.event_name == 'workflow_dispatch' || github.head_ref == 'deploy/cloudflare-staging-pilot' || github.head_ref == 'pilot/runtime-portal-composition' || github.head_ref == 'ux/smooth-operational-experience-v1' || github.head_ref == 'pilot/permission-aware-read-api-v1' || github.head_ref == 'pilot/signed-session-context-v1' || github.head_ref == 'pilot/oidc-trust-boundary-v1'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     environment: cloudflare-staging
@@ -99,23 +99,46 @@ jobs:
             done
           }
 
-          staging_origin='https://international-school-platform-web-staging.rahmatullahzisan.workers.dev'
-          fetch_with_retry "$API_URL/health" api-health.json "API health endpoint"
-          fetch_with_retry "$API_URL/pilot/v1/sessions/admin" admin-session.json "Signed admin session" \
-            --request POST \
-            -H "Origin: $staging_origin"
-          admin_token=$(python3 - <<'PY'
+          fetch_signed_admin_snapshot() {
+            for attempt in {1..12}; do
+              if curl --location --fail --silent --show-error \
+                --request POST \
+                -H "Origin: $staging_origin" \
+                "$API_URL/pilot/v1/sessions/admin" \
+                --output admin-session.json; then
+                if admin_token=$(python3 - <<'PY'
           import json
           from pathlib import Path
           payload = json.loads(Path('admin-session.json').read_text(encoding='utf-8'))
           token = payload.get('accessToken')
-          assert isinstance(token, str) and len(token) > 32, payload
+          if not isinstance(token, str) or len(token) <= 32:
+              raise SystemExit(1)
           print(token)
           PY
-          )
-          fetch_with_retry "$API_URL/pilot/v1/snapshots/admin" admin-snapshot.json "Signed scoped admin snapshot" \
-            -H "Origin: $staging_origin" \
-            -H "Authorization: Bearer $admin_token"
+                ); then
+                  if curl --location --fail --silent --show-error \
+                    -H "Origin: $staging_origin" \
+                    -H "Authorization: Bearer $admin_token" \
+                    "$API_URL/pilot/v1/snapshots/admin" \
+                    --output admin-snapshot.json; then
+                    return 0
+                  fi
+                fi
+              fi
+              if [[ "$attempt" == "12" ]]; then
+                echo "A fresh signed session and scoped snapshot pair did not become ready." >&2
+                return 1
+              fi
+              sleep 5
+            done
+          }
+
+          staging_origin='https://international-school-platform-web-staging.rahmatullahzisan.workers.dev'
+          fetch_with_retry "$API_URL/health" api-health.json "API health endpoint"
+          fetch_with_retry "$API_URL/auth/v1/readiness" auth-readiness.json "OIDC readiness endpoint"
+          unauthenticated_status=$(curl --silent --show-error --output auth-session-error.json --write-out '%{http_code}' "$API_URL/auth/v1/session")
+          test "$unauthenticated_status" = '503'
+          fetch_signed_admin_snapshot
           fetch_with_retry "$WEB_URL/" web-index.html "Pilot role chooser"
           fetch_with_retry "$WEB_URL/admin" web-admin.html "Admin portal"
           fetch_with_retry "$WEB_URL/teacher" web-teacher.html "Teacher portal"
@@ -131,6 +154,23 @@ jobs:
           payload = json.loads(Path('api-health.json').read_text(encoding='utf-8'))
           assert payload.get('status') == 'ok', payload
           assert payload.get('environment') == 'staging', payload
+
+          readiness = json.loads(Path('auth-readiness.json').read_text(encoding='utf-8'))
+          assert readiness.get('schemaVersion') == 1, readiness
+          assert readiness.get('mode') == 'oidc-bff', readiness
+          assert readiness.get('state') == 'disabled', readiness
+          assert readiness.get('loginEnabled') is False, readiness
+          controls = readiness.get('controls', {})
+          for control in [
+              'authorizationCode', 'pkceS256', 'issuerValidation', 'audienceValidation',
+              'jwksSignatureValidation', 'nonceValidation', 'membershipResolution',
+              'httpOnlyHostCookie', 'stepUpAssurance'
+          ]:
+              assert controls.get(control) is True, (control, readiness)
+          assert 'secret' not in json.dumps(readiness).lower(), readiness
+
+          auth_error = json.loads(Path('auth-session-error.json').read_text(encoding='utf-8'))
+          assert auth_error.get('error', {}).get('code') == 'browser_session_configuration_invalid', auth_error
 
           session = json.loads(Path('admin-session.json').read_text(encoding='utf-8'))
           assert session.get('schemaVersion') == 1, session
@@ -171,7 +211,9 @@ jobs:
             echo "- Guardian: $WEB_URL/family"
             echo "- Student: $WEB_URL/student"
             echo "- API health: $API_URL/health"
+            echo "- OIDC readiness: $API_URL/auth/v1/readiness"
+            echo "- Browser session introspection: $API_URL/auth/v1/session"
             echo "- Signed pilot session: $API_URL/pilot/v1/sessions/admin"
             echo "- Signed scoped admin snapshot: $API_URL/pilot/v1/snapshots/admin"
-            echo '- Scope: ephemeral HMAC-signed synthetic sessions bind tenant, campus, role and subject before private ETag-revalidated snapshots; production identity and mutations remain disabled.'
+            echo '- Scope: provider-neutral OIDC verification and secure-cookie contracts are deployed but real login stays disabled until approved provider, membership source and secrets are configured.'
           } >> "$GITHUB_STEP_SUMMARY"
