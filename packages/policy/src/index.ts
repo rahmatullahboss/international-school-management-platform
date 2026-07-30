@@ -56,6 +56,20 @@ export type {
 } from './oidc-login-flow.js';
 export { beginOidcLogin, completeOidcLogin } from './oidc-login-flow.js';
 export type {
+  OidcBackchannelLogoutClaims,
+  OidcBackchannelLogoutFailureCode,
+  OidcBackchannelLogoutProcessResult,
+  OidcBackchannelLogoutVerificationResult,
+  ProcessOidcBackchannelLogoutInput,
+  VerifyOidcBackchannelLogoutTokenInput,
+  VerifyOidcBackchannelLogoutWithRotationInput,
+} from './oidc-backchannel-logout.js';
+export {
+  processOidcBackchannelLogout,
+  verifyOidcBackchannelLogoutToken,
+  verifyOidcBackchannelLogoutTokenWithRotation,
+} from './oidc-backchannel-logout.js';
+export type {
   OidcCachedDiscoveryResult,
   OidcCachedJwksResult,
   OidcProviderCacheFailureCode,
