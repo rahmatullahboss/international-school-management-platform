@@ -23,22 +23,25 @@ void main() {
       );
     });
 
-    test('uses the first supported device preference without scope inference', () {
-      expect(
-        SchoolLocalePolicy.resolvePreferredLocales(
-          const [Locale('fr', 'FR'), Locale('bn', 'BD'), Locale('ar', 'SA')],
-          SchoolLocalePolicy.supportedLocales,
-        ),
-        const Locale('bn'),
-      );
-      expect(
-        SchoolLocalePolicy.resolvePreferredLocales(
-          const [Locale('fr', 'FR')],
-          SchoolLocalePolicy.supportedLocales,
-        ),
-        SchoolLocalePolicy.fallbackLocale,
-      );
-    });
+    test(
+      'uses the first supported device preference without scope inference',
+      () {
+        expect(
+          SchoolLocalePolicy.resolvePreferredLocales(const [
+            Locale('fr', 'FR'),
+            Locale('bn', 'BD'),
+            Locale('ar', 'SA'),
+          ], SchoolLocalePolicy.supportedLocales),
+          const Locale('bn'),
+        );
+        expect(
+          SchoolLocalePolicy.resolvePreferredLocales(const [
+            Locale('fr', 'FR'),
+          ], SchoolLocalePolicy.supportedLocales),
+          SchoolLocalePolicy.fallbackLocale,
+        );
+      },
+    );
 
     test('uses RTL only for the approved Arabic locale', () {
       expect(
@@ -93,10 +96,7 @@ void main() {
 
     final home = find.text('الرئيسية');
     expect(home, findsOneWidget);
-    expect(
-      Directionality.of(tester.element(home)),
-      TextDirection.rtl,
-    );
+    expect(Directionality.of(tester.element(home)), TextDirection.rtl);
     expect(
       WidgetsLocalizations.of(tester.element(home)).textDirection,
       TextDirection.rtl,
