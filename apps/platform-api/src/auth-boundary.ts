@@ -41,21 +41,18 @@ export interface AuthReadiness {
   readonly missingConfiguration: readonly AuthReadinessRequirement[];
 }
 
-const providerBindingNames = [
-  'OIDC_ISSUER',
-  'OIDC_CLIENT_ID',
-  'OIDC_AUTHORIZATION_ENDPOINT',
-  'OIDC_TOKEN_ENDPOINT',
-  'OIDC_JWKS_URI',
-  'OIDC_REDIRECT_URI',
-] as const;
+type AuthBindingName =
+  | 'OIDC_ISSUER'
+  | 'OIDC_CLIENT_ID'
+  | 'OIDC_AUTHORIZATION_ENDPOINT'
+  | 'OIDC_TOKEN_ENDPOINT'
+  | 'OIDC_JWKS_URI'
+  | 'OIDC_REDIRECT_URI'
+  | 'AUTH_TRANSACTION_SECRET'
+  | 'AUTH_SESSION_SECRET'
+  | 'AUTH_MEMBERSHIP_SOURCE';
 
-type ProviderBindingName = (typeof providerBindingNames)[number];
-
-function configuredValue(
-  bindings: AuthBindings,
-  name: ProviderBindingName | 'AUTH_TRANSACTION_SECRET' | 'AUTH_SESSION_SECRET' | 'AUTH_MEMBERSHIP_SOURCE',
-): string | undefined {
+function configuredValue(bindings: AuthBindings, name: AuthBindingName): string | undefined {
   const value = bindings[name]?.trim();
   return value === undefined || value === '' ? undefined : value;
 }
