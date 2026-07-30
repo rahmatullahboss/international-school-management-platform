@@ -2,10 +2,15 @@ import { Hono } from 'hono';
 
 import { parseRuntimeEnvironment } from '@school/platform';
 
+import {
+  resolveAuthenticatedBrowserSession,
+  resolveAuthReadiness,
+  type AuthBindings,
+} from './auth-boundary.js';
 import { isAllowedPilotWebOrigin, resolvePilotReadSnapshot } from './pilot-read-models.js';
 import { issuePilotSession, pilotSessionHeaders, verifyPilotSession } from './pilot-sessions.js';
 
-interface Bindings {
+interface Bindings extends AuthBindings {
   APP_ENV: string;
   APP_REGION: string;
   PILOT_SESSION_SECRET?: string;
@@ -68,6 +73,32 @@ app.get('/health', (context) => {
     environment: runtime.environment,
     region: runtime.region,
   });
+});
+
+app.get('/auth/v1/readiness', (context) => {
+  context.header('cache-control', 'no-store');
+  return context.json(resolveAuthReadiness(context.env));
+});
+
+app.get('/auth/v1/session', async (context) => {
+  context.header('cache-control', 'no-store');
+  context.header('vary', 'Cookie');
+  const resolution = await resolveAuthenticatedBrowserSession(
+    context.env,
+    context.req.header('cookie'),
+  );
+  if (!resolution.ok) {
+    return context.json(
+      {
+        error: {
+          code: resolution.code,
+          message: resolution.message,
+        },
+      },
+      resolution.status,
+    );
+  }
+  return context.json({ schemaVersion: 1, session: resolution.session });
 });
 
 app.post('/pilot/v1/sessions/:role', async (context) => {
@@ -145,6 +176,7 @@ app.get('/pilot/v1/snapshots/:role', async (context) => {
 
 export default app;
 
+export * from './auth-boundary.js';
 export * from './operations-application.js';
 export * from './operations-routes.js';
 export * from './pilot-read-models.js';
