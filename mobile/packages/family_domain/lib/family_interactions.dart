@@ -95,7 +95,6 @@ final class FamilyFormSummary {
   final String formId;
   final String title;
   final FamilyFormStatus status;
-  final int baseVersion;
   final DateTime? dueAt;
 }
 
@@ -135,7 +134,7 @@ final class FamilyFormDefinition {
     required Iterable<FamilyFormFieldDefinition> fields,
     required String formId,
     required int schemaVersion,
-    required FamilyFormStatus status,
+    required this.status,
     required String title,
     DateTime? dueAt,
   }) : baseVersion = _nonNegativeInteraction(baseVersion, 'baseVersion'),
@@ -143,7 +142,6 @@ final class FamilyFormDefinition {
        fields = List<FamilyFormFieldDefinition>.unmodifiable(fields),
        formId = _requiredInteraction(formId, 'formId'),
        schemaVersion = _positiveInteraction(schemaVersion, 'schemaVersion'),
-       status = status,
        title = _requiredInteraction(title, 'title') {
     _requireUniqueInteraction(
       this.fields.map((field) => field.fieldId),
