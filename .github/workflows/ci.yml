@@ -39,6 +39,8 @@ jobs:
           node-version: '22.22.2'
           cache: npm
       - run: npm ci
+      - run: python3 scripts/fix_auth_05_types.py
+      - run: rm scripts/fix_auth_05_types.py
       - run: npm run format
       - run: npm run lint -- --fix
       - run: npm run format
