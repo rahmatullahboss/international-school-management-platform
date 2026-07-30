@@ -89,7 +89,8 @@ final class SchoolOffsetTimestamp {
     final offsetAbsoluteMinutes = offsetMinutes.abs();
     final offsetHours = offsetAbsoluteMinutes ~/ 60;
     final offsetRemainder = offsetAbsoluteMinutes % 60;
-    final ascii = '${_four(local.year)}-${_two(local.month)}-'
+    final ascii =
+        '${_four(local.year)}-${_two(local.month)}-'
         '${_two(local.day)} ${_two(local.hour)}:${_two(local.minute)} '
         'UTC$offsetSign${_two(offsetHours)}:${_two(offsetRemainder)} '
         '${SchoolBidirectionalText.isolate(timeZoneId)}';
