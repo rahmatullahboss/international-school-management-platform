@@ -138,6 +138,7 @@ void main() {
         SchoolLocalePreferenceHost(
           controller: controller,
           appBuilder: (context, localeController) => MaterialApp(
+            locale: localeController.locale,
             localeListResolutionCallback:
                 SchoolLocalizationConfiguration.localeListResolutionCallback,
             localizationsDelegates:
