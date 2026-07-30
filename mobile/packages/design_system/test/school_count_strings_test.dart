@@ -33,27 +33,30 @@ void main() {
     expect(strings.finalizedSessions(0), 'কোনো চূড়ান্ত সেশন নেই');
   });
 
-  test('Arabic copy applies reviewed cardinal categories and Arabic digits', () {
-    final strings = SchoolCountStrings.forLocale(const Locale('ar', 'SA'));
+  test(
+    'Arabic copy applies reviewed cardinal categories and Arabic digits',
+    () {
+      final strings = SchoolCountStrings.forLocale(const Locale('ar', 'SA'));
 
-    expect(
-      strings.attendanceChangesWaiting(0),
-      'لا توجد تغييرات حضور بانتظار المزامنة.',
-    );
-    expect(
-      strings.attendanceChangesWaiting(1),
-      'تغيير حضور واحد بانتظار المزامنة.',
-    );
-    expect(
-      strings.attendanceChangesWaiting(2),
-      'تغييران للحضور بانتظار المزامنة.',
-    );
-    expect(
-      strings.attendanceChangesWaiting(7),
-      '٧ تغييرات حضور بانتظار المزامنة.',
-    );
-    expect(strings.publishedResults(12), '١٢ نتيجة منشورة');
-  });
+      expect(
+        strings.attendanceChangesWaiting(0),
+        'لا توجد تغييرات حضور بانتظار المزامنة.',
+      );
+      expect(
+        strings.attendanceChangesWaiting(1),
+        'تغيير حضور واحد بانتظار المزامنة.',
+      );
+      expect(
+        strings.attendanceChangesWaiting(2),
+        'تغييران للحضور بانتظار المزامنة.',
+      );
+      expect(
+        strings.attendanceChangesWaiting(7),
+        '٧ تغييرات حضور بانتظار المزامنة.',
+      );
+      expect(strings.publishedResults(12), '١٢ نتيجة منشورة');
+    },
+  );
 
   test('count strings reject negative authority values', () {
     final strings = SchoolCountStrings.forLocale(const Locale('en'));
