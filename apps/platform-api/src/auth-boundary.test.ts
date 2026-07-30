@@ -12,6 +12,8 @@ const completeBindings = {
   OIDC_TOKEN_ENDPOINT: 'https://identity.school.test/oauth2/token',
   OIDC_JWKS_URI: 'https://identity.school.test/.well-known/jwks.json',
   OIDC_REDIRECT_URI: 'https://school.test/auth/v1/callback',
+  OIDC_ENDPOINT_ORIGINS: 'https://identity.school.test',
+  OIDC_PROVIDER_CACHE_SOURCE: 'durable-cache',
   AUTH_TRANSACTION_SECRET: 'transaction-signing-secret-with-at-least-32-characters',
   AUTH_TRANSACTION_REPLAY_SOURCE: 'database',
   AUTH_SESSION_SECRET: 'session-signing-secret-with-at-least-32-characters',
@@ -39,6 +41,14 @@ describe('OIDC BFF readiness', () => {
         confidentialClientAuthentication: true,
         serverSideTokenExchange: true,
         providerDiscoveryValidation: true,
+        conditionalDiscoveryRevalidation: true,
+        boundedJwksCache: true,
+        boundedStaleIfError: true,
+        unknownKidSingleRefresh: true,
+        retiredKeyOverlap: true,
+        kidReuseDenied: true,
+        providerEndpointOriginPins: true,
+        providerEndpointChangeReview: true,
         issuerValidation: true,
         audienceValidation: true,
         jwksSignatureValidation: true,
@@ -56,6 +66,8 @@ describe('OIDC BFF readiness', () => {
       },
       missingConfiguration: [
         'provider-metadata',
+        'provider-endpoint-origins',
+        'provider-cache-source',
         'provider-client-credential',
         'transaction-signing-key',
         'transaction-replay-source',
@@ -83,17 +95,19 @@ describe('OIDC BFF readiness', () => {
     });
   });
 
-  it('treats weak keys and invalid browser origins as missing', () => {
+  it('treats weak keys and invalid browser or provider origins as missing', () => {
     expect(
       resolveAuthReadiness({
         ...completeBindings,
         AUTH_TRANSACTION_SECRET: 'weak',
         AUTH_SESSION_SECRET: 'weak',
         AUTH_ALLOWED_WEB_ORIGINS: 'http://school.test',
+        OIDC_ENDPOINT_ORIGINS: 'https://keys.school.test',
       }),
     ).toMatchObject({
       state: 'incomplete',
       missingConfiguration: [
+        'provider-endpoint-origins',
         'transaction-signing-key',
         'session-signing-key',
         'allowed-web-origins',
