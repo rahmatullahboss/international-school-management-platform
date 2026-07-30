@@ -526,7 +526,9 @@ class _AuthorizedFamilyShell extends StatelessWidget {
       destinations.add(
         SchoolDestination(
           icon: Icons.forum_outlined,
-          label: interactionsAvailable ? strings.conversations : strings.messages,
+          label: interactionsAvailable
+              ? strings.conversations
+              : strings.messages,
           selectedIcon: Icons.forum,
         ),
       );
