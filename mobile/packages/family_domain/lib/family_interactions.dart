@@ -154,6 +154,7 @@ final class FamilyFormDefinition {
   final String formId;
   final String title;
   final FamilyFormStatus status;
+  final int baseVersion;
   final DateTime? dueAt;
   final int schemaVersion;
   final List<FamilyFormFieldDefinition> fields;
