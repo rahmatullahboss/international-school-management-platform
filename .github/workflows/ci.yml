@@ -13,7 +13,7 @@ permissions:
   contents: write
 
 jobs:
-  author-pilot-04-store:
+  author-pilot-04-http:
     if: github.event_name == 'pull_request' && github.head_ref == 'pilot/database-read-models-v1' && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 40
@@ -39,9 +39,9 @@ jobs:
           node-version: '22.22.2'
           cache: npm
       - run: npm ci
-      - name: Apply PILOT-04 migration verification
-        run: python3 scripts/implement_pilot_04_migration_verification.py
-      - run: rm scripts/implement_pilot_04_migration_verification.py
+      - name: Apply PILOT-04 HTTP integration
+        run: python3 scripts/implement_pilot_04_http.py
+      - run: rm scripts/implement_pilot_04_http.py
       - run: npm run format
       - run: npm run lint -- --fix
       - run: npm run format
@@ -67,18 +67,18 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
       - run: python3 scripts/validate_execution_artifacts.py
-      - name: Commit verified PILOT-04 store checkpoint
+      - name: Commit verified PILOT-04 HTTP checkpoint
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
-          git commit -m 'feat(pilot): add tenant-safe database read-model store'
+          git commit -m 'feat(pilot): expose database-backed runtime snapshots'
           git push origin HEAD:pilot/database-read-models-v1
 
   verify:
-    needs: author-pilot-04-store
-    if: always() && needs.author-pilot-04-store.result == 'skipped'
+    needs: author-pilot-04-http
+    if: always() && needs.author-pilot-04-http.result == 'skipped'
     runs-on: ubuntu-latest
     steps:
-      - run: echo 'Canonical repository verification resumes after PILOT-04 store synchronization.'
+      - run: echo 'Canonical repository verification resumes after PILOT-04 HTTP synchronization.'
