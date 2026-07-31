@@ -75,7 +75,7 @@ precheck = request_hash_end + """  SELECT existing.request_hash, existing.respon
 """ + projection_block
 replace_once(sql, request_hash_end, precheck)
 
-# Enforce receipt correlation/revision binding in the TypeScript store.
+# Enforce receipt revision and first-request correlation binding in the TypeScript store.
 store = Path('apps/platform-api/src/database-mutation-store.ts')
 replace_once(
     store,
@@ -89,7 +89,7 @@ replace_once(
     if (
       decision.accepted &&
       (decision.receipt.expectedRevision !== expectedRevision ||
-        decision.receipt.correlationId !== correlationId)
+        (!decision.replayed && decision.receipt.correlationId !== correlationId))
     ) {
       throw invalidResponse();
     }
