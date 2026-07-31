@@ -1,0 +1,82 @@
+name: Publish PILOT-06 Staging Workflow
+
+on:
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  publish-staging-contract:
+    if: github.head_ref == 'pilot/runtime-projection-worker-v1' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: pilot/runtime-projection-worker-v1
+          fetch-depth: 0
+
+      - name: Apply verified staging contract
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('.github/workflows/deploy-cloudflare-staging.yml')
+          source = path.read_text(encoding='utf-8')
+
+          def replace_once(old: str, new: str) -> None:
+              global source
+              count = source.count(old)
+              if count != 1:
+                  raise SystemExit(f'expected one staging marker, got {count}: {old[:80]!r}')
+              source = source.replace(old, new)
+
+          replace_once(
+              "      github.head_ref == 'pilot/safe-mutation-envelope-v1'",
+              "      github.head_ref == 'pilot/safe-mutation-envelope-v1' ||\n      github.head_ref == 'pilot/runtime-projection-worker-v1'",
+          )
+          replace_once(
+              "          fetch_with_retry \"$API_URL/auth/v1/readiness\" auth-readiness.json 'OIDC readiness endpoint'\n\n          session_status=",
+              "          fetch_with_retry \"$API_URL/auth/v1/readiness\" auth-readiness.json 'OIDC readiness endpoint'\n\n          projection_worker_status=$(curl --silent --show-error \\\n            --dump-header projection-worker-headers.txt \\\n            --output projection-worker-readiness.json \\\n            --write-out '%{http_code}' \\\n            \"$API_URL/auth/v1/runtime-projection-worker/readiness\")\n          test \"$projection_worker_status\" = '200'\n\n          session_status=",
+          )
+          replace_once(
+              "              'aal2MutationAuthorization',\n          ]",
+              "              'aal2MutationAuthorization',\n              'databaseNativeProjectionProcessing', 'exactProjectionEventAllowlist',\n              'concurrentProjectionClaims', 'appliedProjectionCommandDeduplication',\n              'boundedProjectionRetryBackoff', 'projectionDeadLetterIsolation',\n              'projectionSourceIntegrity',\n          ]",
+          )
+          replace_once(
+              "              'runtime-mutation-source', 'allowed-web-origins',",
+              "              'runtime-mutation-source', 'runtime-projection-worker-source',\n              'allowed-web-origins',",
+          )
+          replace_once(
+              "          serialized = json.dumps(readiness).lower()",
+              "          worker_readiness = load('projection-worker-readiness.json')\n          assert worker_readiness == {\n              'schemaVersion': 1,\n              'state': 'disabled',\n              'controls': {\n                  'databaseNativeProcessing': True,\n                  'exactEventAllowlist': True,\n                  'concurrentSkipLockedClaims': True,\n                  'appliedCommandDeduplication': True,\n                  'boundedRetryBackoff': True,\n                  'deadLetterIsolation': True,\n                  'sourceProjectionIntegrity': True,\n              },\n              'missingConfiguration': [\n                  'database-url', 'runtime-projection-worker-source',\n              ],\n          }, worker_readiness\n          worker_headers = headers('projection-worker-headers.txt')\n          assert 'cache-control: no-store' in worker_headers, worker_headers\n          assert 'set-cookie:' not in worker_headers, worker_headers\n          assert 'access-control-allow-origin:' not in worker_headers, worker_headers\n\n          serialized = json.dumps(readiness).lower()",
+          )
+          replace_once(
+              "            echo \"- OIDC readiness: $API_URL/auth/v1/readiness\"",
+              "            echo \"- OIDC readiness: $API_URL/auth/v1/readiness\"\n            echo \"- Projection worker readiness: $API_URL/auth/v1/runtime-projection-worker/readiness\"",
+          )
+          replace_once(
+              "            echo '- Scope: tenant-safe database reads and a single allowlisted AAL2 runtime refresh command are verified with current-grant authorization, exact revision checks, idempotent receipts and atomic audit/outbox persistence. Real provider login, production projection population, mutation consumers and production data access remain disabled until approved bindings and explicit production authorization are configured.'",
+              "            echo '- Scope: tenant-safe reads, one allowlisted AAL2 refresh command and a database-native scheduled projection processor are verified with current-grant authorization, exact revisions, idempotent receipts, atomic audit/outbox persistence, SKIP LOCKED batches, retries and dead letters. The staging Cron Trigger remains fail closed because database/source bindings are intentionally absent; real provider login, production projection population and production promotion remain disabled until explicitly authorized.'",
+          )
+
+          path.write_text(source, encoding='utf-8')
+          PY
+          rm .github/workflows/publish-pilot-06-staging.yml
+          git diff --check
+
+      - name: Commit staging contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          branch_head="$(git rev-parse HEAD)"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --quiet && exit 0
+          git commit -m 'ci(staging): verify runtime projection worker fail-closed contract'
+          remote_head="$(git ls-remote origin refs/heads/pilot/runtime-projection-worker-v1 | cut -f1)"
+          test "$remote_head" = "$branch_head"
+          git push origin HEAD:pilot/runtime-projection-worker-v1
