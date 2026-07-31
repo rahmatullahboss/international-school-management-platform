@@ -81,10 +81,7 @@ function validatedCapabilities(value: unknown): readonly string[] | undefined {
   if (!Array.isArray(value) || value.length > MAX_CAPABILITIES) return undefined;
   if (
     !value.every(
-      (entry) =>
-        typeof entry === 'string' &&
-        entry.length <= 128 &&
-        CAPABILITY_PATTERN.test(entry),
+      (entry) => typeof entry === 'string' && entry.length <= 128 && CAPABILITY_PATTERN.test(entry),
     )
   ) {
     return undefined;
