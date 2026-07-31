@@ -162,9 +162,9 @@ describe('database mutation store', () => {
       new DatabaseMutationStore(databaseWith([])).submitRuntimeSnapshotRefresh(inputs),
     ).rejects.toThrow(/invalid database response/u);
     await expect(
-      new DatabaseMutationStore(databaseWith([{ value: {} }, { value: {} }])).submitRuntimeSnapshotRefresh(
-        inputs,
-      ),
+      new DatabaseMutationStore(
+        databaseWith([{ value: {} }, { value: {} }]),
+      ).submitRuntimeSnapshotRefresh(inputs),
     ).rejects.toThrow(/invalid database response/u);
     await expect(
       new DatabaseMutationStore(

@@ -43,7 +43,9 @@ describe('runtime mutation request controls', () => {
   it('bounds chunked request bodies by bytes and rejects invalid UTF-8', async () => {
     const valid = new ReadableStream<Uint8Array>({
       start(controller) {
-        controller.enqueue(new TextEncoder().encode('{"expectedRevision":7,"reason":"Approved refresh"}'));
+        controller.enqueue(
+          new TextEncoder().encode('{"expectedRevision":7,"reason":"Approved refresh"}'),
+        );
         controller.close();
       },
     });
@@ -135,7 +137,9 @@ describe('safe runtime snapshot refresh boundary', () => {
       submit,
     } as const;
 
-    await expect(submitRuntimeSnapshotRefresh({ ...base, configured: false })).resolves.toMatchObject({
+    await expect(
+      submitRuntimeSnapshotRefresh({ ...base, configured: false }),
+    ).resolves.toMatchObject({
       ok: false,
       status: 503,
       code: 'runtime_mutation_configuration_invalid',
@@ -184,7 +188,8 @@ describe('safe runtime snapshot refresh boundary', () => {
     await expect(
       submitRuntimeSnapshotRefresh({
         ...base,
-        submit: () => Promise.resolve({ accepted: false, reason: 'permission-not-granted' } as const),
+        submit: () =>
+          Promise.resolve({ accepted: false, reason: 'permission-not-granted' } as const),
       }),
     ).resolves.toMatchObject({ ok: false, status: 403, code: 'runtime_mutation_forbidden' });
     await expect(
@@ -207,7 +212,11 @@ describe('safe runtime snapshot refresh boundary', () => {
       submitRuntimeSnapshotRefresh({
         ...base,
         submit: () =>
-          Promise.resolve({ accepted: false, reason: 'revision-conflict', currentRevision: 8 } as const),
+          Promise.resolve({
+            accepted: false,
+            reason: 'revision-conflict',
+            currentRevision: 8,
+          } as const),
       }),
     ).resolves.toMatchObject({
       ok: false,
