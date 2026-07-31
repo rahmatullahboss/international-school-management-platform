@@ -52,6 +52,31 @@ describe('admin runtime projection composer', () => {
     expect(compose).toHaveBeenCalledWith(input());
   });
 
+  it('preserves an explicitly resolved tenant-level null-campus scope', async () => {
+    const tenantInput = { ...input(), campusId: null };
+    const result = {
+      composed: true as const,
+      composition: {
+        compositionId: '30000000-0000-4000-8000-000000000032',
+        tenantId,
+        membershipId,
+        campusId: null,
+        state: 'unchanged' as const,
+        sourceRevision: 3,
+        payloadDigest: 'b'.repeat(64),
+        payloadBytes: 1024,
+        correlationId,
+        composedAt: '2026-07-31T17:01:00.000Z',
+      },
+    };
+    const { compose, store } = storeWith(result);
+
+    await expect(
+      composeAdminRuntimeProjection({ configured: true, input: tenantInput, store }),
+    ).resolves.toEqual(result);
+    expect(compose).toHaveBeenCalledWith(tenantInput);
+  });
+
   it('stays disabled without an explicitly configured privileged composer', async () => {
     const { compose, store } = storeWith({ composed: true });
     await expect(
