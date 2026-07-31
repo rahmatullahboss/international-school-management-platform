@@ -77,12 +77,26 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
       - run: python3 scripts/validate_execution_artifacts.py
+      - name: Package verified PILOT-06 source
+        shell: bash
+        run: |
+          git restore --source="$GITHUB_SHA" -- .github/workflows
+          mkdir -p /tmp/pilot-06-verified-source/files
+          git diff --binary "$GITHUB_SHA" -- . > /tmp/pilot-06-verified-source/pilot-06.patch
+          git status --porcelain=v1 > /tmp/pilot-06-verified-source/status.txt
+          git diff --name-only --diff-filter=ACMRTUXB -z "$GITHUB_SHA" -- . \
+            | tar --null -T - -czf /tmp/pilot-06-verified-source/files.tar.gz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pilot-06-verified-source
+          path: /tmp/pilot-06-verified-source
+          if-no-files-found: error
+          retention-days: 1
       - name: Commit verified PILOT-06 runtime
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git restore --source="$GITHUB_SHA" -- .github/workflows
           git add -A
           git diff --cached --quiet && exit 0
           git commit -m 'feat(pilot): complete durable runtime projection worker'
