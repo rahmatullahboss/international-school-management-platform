@@ -10,13 +10,12 @@ on:
       - 'integration/**'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  harden-auth-08-request-body:
-    if: github.event_name == 'pull_request' && github.head_ref == 'auth/database-permission-evaluation-v1' && github.actor != 'github-actions[bot]'
+  verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 20
     services:
       postgres:
         image: postgres:16-alpine
@@ -31,45 +30,37 @@ jobs:
           --health-retries 10
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: auth/database-permission-evaluation-v1
-          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22.22.2'
           cache: npm
       - run: npm ci
-      - name: Add bounded request-body regression test
-        run: python3 scripts/harden_auth_08_request_body.py test
-      - name: Prove chunked-body regression fails before implementation
-        shell: bash
-        run: |
-          set +e
-          npx vitest run apps/platform-api/src/auth-permission.test.ts > auth-08-body-red.log 2>&1
-          status=$?
-          set -e
-          cat auth-08-body-red.log
-          test "$status" -ne 0
-          grep -q 'rejects invalid media types and bounds chunked bodies by bytes before parsing' auth-08-body-red.log
-      - name: Apply bounded request-body implementation
-        run: python3 scripts/harden_auth_08_request_body.py implementation
-      - run: rm scripts/harden_auth_08_request_body.py
-      - run: npm run format
-      - run: npm run lint -- --fix
-      - run: npm run format
+      - run: npm run format:check
       - run: npm run lint
       - run: npm run check:boundaries
       - run: npm run typecheck
       - run: npm run test
-      - name: Verify canonical and AUTH migrations
+      - name: Verify all Wave 2 migrations on fresh PostgreSQL
         env:
           PGHOST: 127.0.0.1
           PGPORT: 5432
           PGUSER: postgres
           PGDATABASE: postgres
+        run: npm run verify:migrations
+      - name: Verify AUTH post-integration migrations and revocation contracts
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: 5432
+          PGUSER: postgres
+          PGDATABASE: postgres
+        run: npm run verify:auth-migrations
+      - name: Verify live Neon serverless driver
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
-          npm run verify:migrations
-          npm run verify:auth-migrations
+          test -n "$DATABASE_URL"
+          npm run test:neon
       - run: npm run build
       - run: npm run check:experience-budget
       - run: npm audit --audit-level=high
@@ -79,18 +70,3 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
       - run: python3 scripts/validate_execution_artifacts.py
-      - name: Commit verified AUTH-08 body hardening
-        shell: bash
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A
-          git commit -m 'fix(auth): bound permission request body streaming'
-          git push origin HEAD:auth/database-permission-evaluation-v1
-
-  verify:
-    needs: harden-auth-08-request-body
-    if: always() && needs.harden-auth-08-request-body.result == 'skipped'
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo 'Canonical repository verification resumes after AUTH-08 request hardening.'
