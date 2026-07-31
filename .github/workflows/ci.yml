@@ -32,7 +32,6 @@ jobs:
           rm scripts/update_pilot_09_governance_tracker.py
           git add docs/execution/04-progress-tracker.md \
             scripts/update_pilot_09_governance_tracker.py
-          git diff --cached --check
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "docs(pilot): update tracker for teacher composer gate"
