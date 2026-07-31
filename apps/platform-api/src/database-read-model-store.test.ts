@@ -10,6 +10,8 @@ const ids = {
   membership: '50000000-0000-4000-8000-000000000003',
   campus: '50000000-0000-4000-8000-000000000004',
 };
+const payloadDigest = 'a'.repeat(64);
+const capabilityDigest = 'b'.repeat(64);
 
 function databaseReturning(rows: Record<string, unknown>[]): {
   database: HttpDatabase;
@@ -29,8 +31,8 @@ const headRow = {
   revision: 7,
   generatedAt: '2026-07-31T03:40:00.000Z',
   sourceUpdatedAt: '2026-07-31T03:39:30.000Z',
-  payloadDigest: 'a'.repeat(64),
-  capabilityDigest: 'b'.repeat(64),
+  payloadDigest,
+  capabilityDigest,
   payloadBytes: 2048,
 };
 
@@ -52,15 +54,19 @@ describe('DatabaseReadModelStore', () => {
   });
 
   it('reads payload only for the exact session, revision and digest tuple', async () => {
-    const { database, query } = databaseReturning([{ payload: { metrics: [{ id: 'students' }] } }]);
+    const { database, query } = databaseReturning([
+      { payload: { metrics: [{ id: 'students' }] } },
+    ]);
     const store = new DatabaseReadModelStore(database);
 
-    await expect(store.readPayload(ids.session, 7, 'a'.repeat(64))).resolves.toEqual({
+    await expect(
+      store.readPayload(ids.session, 7, payloadDigest, capabilityDigest),
+    ).resolves.toEqual({
       metrics: [{ id: 'students' }],
     });
     expect(query).toHaveBeenCalledWith(
       expect.stringContaining('platform.read_runtime_read_model_payload'),
-      [ids.session, 7, 'a'.repeat(64)],
+      [ids.session, 7, payloadDigest, capabilityDigest],
     );
   });
 
@@ -76,7 +82,9 @@ describe('DatabaseReadModelStore', () => {
       { ...headRow, sourceUpdatedAt: 'not-a-date' },
     ]) {
       const store = new DatabaseReadModelStore(databaseReturning([row]).database);
-      await expect(store.resolveHead(ids.session)).rejects.toThrow('invalid database response');
+      await expect(store.resolveHead(ids.session)).rejects.toThrow(
+        'invalid database response',
+      );
     }
   });
 
@@ -84,19 +92,22 @@ describe('DatabaseReadModelStore', () => {
     const malformed = new DatabaseReadModelStore(
       databaseReturning([{ payload: ['not', 'object'] }]).database,
     );
-    await expect(malformed.readPayload(ids.session, 7, 'a'.repeat(64))).rejects.toThrow(
-      'invalid database response',
-    );
+    await expect(
+      malformed.readPayload(ids.session, 7, payloadDigest, capabilityDigest),
+    ).rejects.toThrow('invalid database response');
 
     const store = new DatabaseReadModelStore(databaseReturning([]).database);
     await expect(store.resolveHead('browser-supplied-session')).rejects.toThrow(
       'sessionId must be a UUID',
     );
-    await expect(store.readPayload(ids.session, 0, 'a'.repeat(64))).rejects.toThrow(
-      'revision must be a positive integer',
-    );
-    await expect(store.readPayload(ids.session, 7, 'bad')).rejects.toThrow(
-      'payloadDigest must be a SHA-256 digest',
-    );
+    await expect(
+      store.readPayload(ids.session, 0, payloadDigest, capabilityDigest),
+    ).rejects.toThrow('revision must be a positive integer');
+    await expect(
+      store.readPayload(ids.session, 7, 'bad', capabilityDigest),
+    ).rejects.toThrow('payloadDigest must be a SHA-256 digest');
+    await expect(
+      store.readPayload(ids.session, 7, payloadDigest, 'bad'),
+    ).rejects.toThrow('capabilityDigest must be a SHA-256 digest');
   });
 });
