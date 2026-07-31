@@ -13,8 +13,7 @@ interface RuntimeProjectionSourcePublicationRow extends Record<string, unknown> 
   readonly value: unknown;
 }
 
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
 const DIGEST_PATTERN = /^[0-9a-f]{64}$/u;
 const PERSONAS = new Set<RuntimeProjectionPersona>(['admin', 'teacher', 'guardian', 'student']);
 const REJECTION_REASONS = new Set<RuntimeProjectionSourcePublicationRejectionReason>([
@@ -49,9 +48,7 @@ function validTimestamp(value: unknown): value is string {
 
 function validRevision(value: unknown, allowZero = false): value is number {
   return (
-    typeof value === 'number' &&
-    Number.isSafeInteger(value) &&
-    (allowZero ? value >= 0 : value > 0)
+    typeof value === 'number' && Number.isSafeInteger(value) && (allowZero ? value >= 0 : value > 0)
   );
 }
 
@@ -136,9 +133,7 @@ function validateResult(value: unknown): RuntimeProjectionSourcePublicationResul
   };
 }
 
-export class DatabaseProjectionSourcePublisherStore
-  implements RuntimeProjectionSourcePublisherStore
-{
+export class DatabaseProjectionSourcePublisherStore implements RuntimeProjectionSourcePublisherStore {
   readonly #database: HttpDatabase;
 
   constructor(database: HttpDatabase) {

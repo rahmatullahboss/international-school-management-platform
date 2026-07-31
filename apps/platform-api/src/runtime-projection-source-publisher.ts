@@ -57,8 +57,7 @@ export type RuntimeProjectionSourcePublisherResolution =
       readonly reason: 'publisher-disabled' | 'publisher-unavailable';
     };
 
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
 const PUBLISHER_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{7,63}$/u;
 const MAX_PAYLOAD_BYTES = 262_144;
 const FORBIDDEN_PAYLOAD_KEYS = new Set([

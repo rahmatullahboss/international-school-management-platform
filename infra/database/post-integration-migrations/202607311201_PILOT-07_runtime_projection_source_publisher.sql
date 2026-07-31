@@ -106,6 +106,7 @@ DECLARE
 BEGIN
   IF p_tenant_id IS NULL
      OR p_role_id IS NULL
+     OR p_persona IS NULL
      OR p_persona NOT IN ('admin', 'teacher', 'guardian', 'student')
      OR p_configured_by IS NULL
      OR p_configured_by !~ '^[A-Za-z0-9][A-Za-z0-9._:@/-]{7,127}$' THEN
@@ -240,7 +241,13 @@ BEGIN
 
   PERFORM 1
   FROM iam.membership_role AS membership_role
-  LEFT JOIN platform.runtime_projection_persona_role AS mapping
+  WHERE membership_role.tenant_id = p_tenant_id
+    AND membership_role.membership_id = p_membership_id
+  FOR SHARE OF membership_role;
+
+  PERFORM 1
+  FROM iam.membership_role AS membership_role
+  JOIN platform.runtime_projection_persona_role AS mapping
     ON mapping.tenant_id = membership_role.tenant_id
    AND mapping.role_id = membership_role.role_id
   WHERE membership_role.tenant_id = p_tenant_id
