@@ -2143,6 +2143,117 @@ INSERT INTO gradebook.assessment_result (
   '30000000-0000-4000-8000-000000000050'
 );
 
+INSERT INTO tenancy.campus (
+  tenant_id, campus_id, legal_entity_id, code, name, time_zone
+) VALUES (
+  '30000000-0000-4000-8000-000000000001',
+  '30000000-0000-4000-8000-000000000078',
+  '30000000-0000-4000-8000-000000000002',
+  'PILOT-X',
+  'Pilot Secondary Campus',
+  'Asia/Dhaka'
+);
+
+INSERT INTO scheduling.timetable_version (
+  tenant_id, timetable_version_id, academic_year_id, term_id, campus_id,
+  timetable_name, effective_from, publication_state, idempotency_key
+) VALUES (
+  '30000000-0000-4000-8000-000000000001',
+  '30000000-0000-4000-8000-000000000079',
+  '30000000-0000-4000-8000-000000000061',
+  '30000000-0000-4000-8000-000000000062',
+  '30000000-0000-4000-8000-000000000078',
+  'Cross-campus Teacher Timetable',
+  (clock_timestamp() AT TIME ZONE 'Asia/Dhaka')::date - 30,
+  'published',
+  'pilot-09-cross-campus-timetable-01'
+);
+
+INSERT INTO scheduling.class_meeting_pattern (
+  tenant_id, meeting_pattern_id, timetable_version_id, section_id,
+  weekday, starts_at, ends_at, timezone, teacher_ids, student_ids, valid_from
+) VALUES (
+  '30000000-0000-4000-8000-000000000001',
+  '30000000-0000-4000-8000-00000000007a',
+  '30000000-0000-4000-8000-000000000079',
+  '30000000-0000-4000-8000-00000000007b',
+  extract(dow FROM (clock_timestamp() AT TIME ZONE 'Asia/Dhaka')::date)::smallint,
+  TIME '11:00',
+  TIME '11:45',
+  'Asia/Dhaka',
+  '["30000000-0000-4000-8000-000000000055"]'::jsonb,
+  '["30000000-0000-4000-8000-000000000031"]'::jsonb,
+  (clock_timestamp() AT TIME ZONE 'Asia/Dhaka')::date - 30
+);
+
+INSERT INTO scheduling.scheduled_class_meeting (
+  tenant_id, scheduled_meeting_id, timetable_version_id, meeting_pattern_id,
+  section_id, local_date, starts_at, ends_at, timezone, teacher_ids,
+  student_ids, meeting_status
+) VALUES (
+  '30000000-0000-4000-8000-000000000001',
+  '30000000-0000-4000-8000-00000000007c',
+  '30000000-0000-4000-8000-000000000079',
+  '30000000-0000-4000-8000-00000000007a',
+  '30000000-0000-4000-8000-00000000007b',
+  (clock_timestamp() AT TIME ZONE 'Asia/Dhaka')::date,
+  TIME '11:00',
+  TIME '11:45',
+  'Asia/Dhaka',
+  '["30000000-0000-4000-8000-000000000055"]'::jsonb,
+  '["30000000-0000-4000-8000-000000000031"]'::jsonb,
+  'scheduled'
+);
+
+-- The schema permits imported attendance data to carry an inconsistent campus.
+-- The composer must trust the canonical timetable campus and exclude this row.
+INSERT INTO attendance.attendance_session (
+  tenant_id, session_id, scheduled_meeting_id, section_id, campus_id,
+  local_date, starts_at, ends_at, timezone, roster_student_ids, session_state
+) VALUES (
+  '30000000-0000-4000-8000-000000000001',
+  '30000000-0000-4000-8000-00000000007f',
+  '30000000-0000-4000-8000-00000000007c',
+  '30000000-0000-4000-8000-00000000007b',
+  '30000000-0000-4000-8000-000000000003',
+  (clock_timestamp() AT TIME ZONE 'Asia/Dhaka')::date,
+  TIME '11:00',
+  TIME '11:45',
+  'Asia/Dhaka',
+  '["30000000-0000-4000-8000-000000000031"]'::jsonb,
+  'open'
+);
+
+INSERT INTO gradebook.assessment (
+  tenant_id, assessment_id, section_id, reporting_period_id,
+  policy_version_id, category_id, assessment_title, maximum_points,
+  due_at, assessment_state
+) VALUES (
+  '30000000-0000-4000-8000-000000000001',
+  '30000000-0000-4000-8000-00000000007d',
+  '30000000-0000-4000-8000-00000000007b',
+  '30000000-0000-4000-8000-00000000006c',
+  '30000000-0000-4000-8000-000000000068',
+  '30000000-0000-4000-8000-000000000069',
+  'Cross-campus Teacher Quiz',
+  10,
+  clock_timestamp() + interval '2 days',
+  'published'
+);
+
+INSERT INTO gradebook.assessment_result (
+  tenant_id, assessment_result_id, assessment_id, student_profile_id,
+  result_state, raw_score, entered_by
+) VALUES (
+  '30000000-0000-4000-8000-000000000001',
+  '30000000-0000-4000-8000-00000000007e',
+  '30000000-0000-4000-8000-00000000007d',
+  '30000000-0000-4000-8000-000000000031',
+  'missing',
+  NULL,
+  '30000000-0000-4000-8000-000000000050'
+);
+
 INSERT INTO platform.runtime_read_model_projection (
   tenant_id, membership_id, campus_id, projection_key, persona,
   subject_ref, revision, payload, source_updated_at, generated_at

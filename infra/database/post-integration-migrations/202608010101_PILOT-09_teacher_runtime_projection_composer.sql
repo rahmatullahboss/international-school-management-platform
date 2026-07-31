@@ -180,6 +180,11 @@ BEGIN
   SELECT count(*)
   INTO today_class_count
   FROM scheduling.scheduled_class_meeting AS meeting
+  JOIN scheduling.timetable_version AS timetable
+    ON timetable.tenant_id = meeting.tenant_id
+   AND timetable.timetable_version_id = meeting.timetable_version_id
+   AND timetable.campus_id = p_campus_id
+   AND timetable.publication_state = 'published'
   WHERE meeting.tenant_id = p_tenant_id
     AND meeting.local_date = selected_local_date
     AND meeting.meeting_status = 'scheduled'
@@ -195,6 +200,11 @@ BEGIN
   JOIN scheduling.scheduled_class_meeting AS meeting
     ON meeting.tenant_id = attendance_session.tenant_id
    AND meeting.scheduled_meeting_id = attendance_session.scheduled_meeting_id
+  JOIN scheduling.timetable_version AS timetable
+    ON timetable.tenant_id = meeting.tenant_id
+   AND timetable.timetable_version_id = meeting.timetable_version_id
+   AND timetable.campus_id = p_campus_id
+   AND timetable.publication_state = 'published'
   WHERE attendance_session.tenant_id = p_tenant_id
     AND attendance_session.campus_id = p_campus_id
     AND attendance_session.local_date = selected_local_date
@@ -216,6 +226,11 @@ BEGIN
     AND EXISTS (
       SELECT 1
       FROM scheduling.class_meeting_pattern AS pattern
+      JOIN scheduling.timetable_version AS timetable
+        ON timetable.tenant_id = pattern.tenant_id
+       AND timetable.timetable_version_id = pattern.timetable_version_id
+       AND timetable.campus_id = p_campus_id
+       AND timetable.publication_state = 'published'
       WHERE pattern.tenant_id = assessment.tenant_id
         AND pattern.section_id = assessment.section_id
         AND pattern.valid_from <= selected_local_date
@@ -239,6 +254,11 @@ BEGIN
     AND EXISTS (
       SELECT 1
       FROM scheduling.class_meeting_pattern AS pattern
+      JOIN scheduling.timetable_version AS timetable
+        ON timetable.tenant_id = pattern.tenant_id
+       AND timetable.timetable_version_id = pattern.timetable_version_id
+       AND timetable.campus_id = p_campus_id
+       AND timetable.publication_state = 'published'
       WHERE pattern.tenant_id = assessment.tenant_id
         AND pattern.section_id = assessment.section_id
         AND pattern.valid_from <= selected_local_date
@@ -265,6 +285,11 @@ BEGIN
         'status', meeting.meeting_status
       ) AS item
     FROM scheduling.scheduled_class_meeting AS meeting
+    JOIN scheduling.timetable_version AS timetable
+      ON timetable.tenant_id = meeting.tenant_id
+     AND timetable.timetable_version_id = meeting.timetable_version_id
+     AND timetable.campus_id = p_campus_id
+     AND timetable.publication_state = 'published'
     WHERE meeting.tenant_id = p_tenant_id
       AND meeting.local_date = selected_local_date
       AND meeting.meeting_status = 'scheduled'
