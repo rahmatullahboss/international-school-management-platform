@@ -57,7 +57,9 @@ jobs:
           grep -q 'keeps database permission evaluation fail-closed without approved bindings' auth-08-http-red.log
       - name: Apply AUTH-08 HTTP permission implementation
         run: python3 scripts/implement_auth_08_http.py implementation
-      - run: rm scripts/implement_auth_08_http.py scripts/fix_auth_08_http_authoring.py
+      - name: Apply lint-safe AUTH-08 corrections
+        run: python3 scripts/fix_auth_08_http_lint.py
+      - run: rm scripts/implement_auth_08_http.py scripts/fix_auth_08_http_authoring.py scripts/fix_auth_08_http_lint.py
       - run: npm run format
       - run: npm run lint -- --fix
       - run: npm run format
