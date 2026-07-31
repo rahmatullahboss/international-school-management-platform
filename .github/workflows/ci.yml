@@ -80,11 +80,12 @@ jobs:
       - name: Package verified PILOT-06 source
         shell: bash
         run: |
+          branch_head="$(git rev-parse HEAD)"
           mkdir -p /tmp/pilot-06-verified-source
-          git restore --source="$GITHUB_SHA" -- .github/workflows || true
-          git diff --binary "$GITHUB_SHA" -- . > /tmp/pilot-06-verified-source/pilot-06.patch || true
+          git restore --source="$branch_head" -- .github/workflows
+          git diff --binary "$branch_head" -- . > /tmp/pilot-06-verified-source/pilot-06.patch
           git status --porcelain=v1 > /tmp/pilot-06-verified-source/status.txt
-          printf '%s\n' "$GITHUB_SHA" > /tmp/pilot-06-verified-source/source-sha.txt
+          printf '%s\n' "$branch_head" > /tmp/pilot-06-verified-source/source-sha.txt
       - uses: actions/upload-artifact@v4
         with:
           name: pilot-06-verified-source
@@ -93,15 +94,15 @@ jobs:
           retention-days: 1
       - name: Commit verified PILOT-06 runtime
         shell: bash
-        continue-on-error: true
         run: |
+          expected_head="$(git rev-parse HEAD)"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
           git diff --cached --quiet && exit 0
           git commit -m 'feat(pilot): complete durable runtime projection worker'
           remote_head="$(git ls-remote origin refs/heads/pilot/runtime-projection-worker-v1 | cut -f1)"
-          test "$remote_head" = "$GITHUB_SHA"
+          test "$remote_head" = "$expected_head"
           git push origin HEAD:pilot/runtime-projection-worker-v1
 
   verify:
