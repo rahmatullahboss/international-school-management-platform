@@ -2420,8 +2420,12 @@ BEGIN
      OR (projection_payload->'metrics'->2->>'value')::bigint <> 1
      OR (projection_payload->'metrics'->3->>'value')::bigint <> 0
      OR jsonb_array_length(projection_payload->'today'->'classes') <> 1
-     OR jsonb_array_length(projection_payload->'exceptions') <> 0 THEN
-    RAISE EXCEPTION 'projection revision five must contain exact teacher metrics: %', projection_payload;
+     OR jsonb_array_length(projection_payload->'exceptions') <> 0
+     OR projection_payload->'metrics'->0->>'capability' <> 'classes.assigned.read'
+     OR projection_payload->'metrics'->1->>'capability' <> 'attendance.assigned.write'
+     OR projection_payload->'metrics'->2->>'capability' <> 'gradebook.assigned.write'
+     OR projection_payload->'metrics'->3->>'capability' <> 'gradebook.assigned.write' THEN
+    RAISE EXCEPTION 'projection revision five must contain exact teacher metrics and capabilities: %', projection_payload;
   END IF;
   IF (
     SELECT count(*)

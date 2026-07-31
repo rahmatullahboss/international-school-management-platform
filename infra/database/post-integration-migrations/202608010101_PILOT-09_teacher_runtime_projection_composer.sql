@@ -298,7 +298,7 @@ BEGIN
         'definition', 'Assigned attendance sessions for today that are not finalized.',
         'tone', CASE WHEN open_attendance_count = 0 THEN 'stable' ELSE 'warning' END,
         'href', '/teacher/attendance',
-        'capability', 'attendance.manage'
+        'capability', 'attendance.assigned.write'
       ),
       jsonb_build_object(
         'id', 'upcoming-assessments',
@@ -307,7 +307,7 @@ BEGIN
         'definition', 'Published assessments in currently assigned sections due within seven local days.',
         'tone', 'information',
         'href', '/teacher/gradebook',
-        'capability', 'gradebook.manage'
+        'capability', 'gradebook.assigned.write'
       ),
       jsonb_build_object(
         'id', 'missing-results',
@@ -316,7 +316,7 @@ BEGIN
         'definition', 'Explicit missing results in assessments for currently assigned sections.',
         'tone', CASE WHEN missing_result_count = 0 THEN 'stable' ELSE 'error' END,
         'href', '/teacher/gradebook',
-        'capability', 'gradebook.manage'
+        'capability', 'gradebook.assigned.write'
       )
     ),
     'today', jsonb_build_object('classes', today_classes),
@@ -330,7 +330,7 @@ BEGIN
           'severity', 'warning',
           'status', 'Open',
           'href', '/teacher/attendance',
-          'capability', 'attendance.manage'
+          'capability', 'attendance.assigned.write'
         ))
       ELSE '[]'::jsonb END
       || CASE WHEN missing_result_count > 0 THEN
@@ -342,7 +342,7 @@ BEGIN
           'severity', 'error',
           'status', 'Review',
           'href', '/teacher/gradebook',
-          'capability', 'gradebook.manage'
+          'capability', 'gradebook.assigned.write'
         ))
       ELSE '[]'::jsonb END,
     'source', 'database-teacher-composer-v1'
