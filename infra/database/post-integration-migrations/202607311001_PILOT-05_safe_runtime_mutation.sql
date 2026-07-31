@@ -100,24 +100,6 @@ BEGIN
     RETURN jsonb_build_object('accepted', false, 'reason', 'permission-not-granted');
   END IF;
 
-  permission_decision := iam.evaluate_browser_permission(
-    p_session_id,
-    'runtime.snapshot.refresh'
-  );
-  IF permission_decision->>'reason' = 'session-inactive' THEN
-    RETURN jsonb_build_object('accepted', false, 'reason', 'session-inactive');
-  END IF;
-  IF permission_decision->>'reason' = 'step-up-required' THEN
-    RETURN jsonb_build_object(
-      'accepted', false,
-      'reason', 'step-up-required',
-      'requiredAssurance', 'aal2'
-    );
-  END IF;
-  IF COALESCE((permission_decision->>'allowed')::boolean, false) IS NOT TRUE THEN
-    RETURN jsonb_build_object('accepted', false, 'reason', 'permission-not-granted');
-  END IF;
-
   SELECT
     session_row.tenant_id,
     session_row.membership_id,
@@ -144,16 +126,29 @@ BEGIN
   WHERE session_row.session_id = p_session_id
     AND session_row.revoked_at IS NULL
     AND session_row.expires_at > clock_timestamp()
-    AND session_row.role_ids = ARRAY(
-      SELECT role_binding.role_id
-      FROM iam.oidc_membership_role_binding AS role_binding
-      WHERE role_binding.binding_id = session_row.binding_id
-        AND role_binding.tenant_id = session_row.tenant_id
-      ORDER BY role_binding.role_id
-    )
-  FOR KEY SHARE OF session_row, binding_row, account_row;
+  FOR UPDATE OF session_row, binding_row, account_row;
 
   IF selected_tenant_id IS NULL THEN
+    RETURN jsonb_build_object('accepted', false, 'reason', 'session-inactive');
+  END IF;
+
+  PERFORM 1
+  FROM iam.oidc_membership_role_binding AS role_binding
+  WHERE role_binding.binding_id = selected_binding_id
+    AND role_binding.tenant_id = selected_tenant_id
+  FOR SHARE OF role_binding;
+
+  IF (
+    SELECT session_row.role_ids
+    FROM iam.browser_session_registry AS session_row
+    WHERE session_row.session_id = p_session_id
+  ) <> ARRAY(
+    SELECT role_binding.role_id
+    FROM iam.oidc_membership_role_binding AS role_binding
+    WHERE role_binding.binding_id = selected_binding_id
+      AND role_binding.tenant_id = selected_tenant_id
+    ORDER BY role_binding.role_id
+  ) THEN
     RETURN jsonb_build_object('accepted', false, 'reason', 'session-inactive');
   END IF;
 
@@ -168,6 +163,24 @@ BEGIN
   FOR SHARE OF role_binding, role_permission;
 
   IF NOT FOUND THEN
+    RETURN jsonb_build_object('accepted', false, 'reason', 'permission-not-granted');
+  END IF;
+
+  permission_decision := iam.evaluate_browser_permission(
+    p_session_id,
+    'runtime.snapshot.refresh'
+  );
+  IF permission_decision->>'reason' = 'session-inactive' THEN
+    RETURN jsonb_build_object('accepted', false, 'reason', 'session-inactive');
+  END IF;
+  IF permission_decision->>'reason' = 'step-up-required' THEN
+    RETURN jsonb_build_object(
+      'accepted', false,
+      'reason', 'step-up-required',
+      'requiredAssurance', 'aal2'
+    );
+  END IF;
+  IF COALESCE((permission_decision->>'allowed')::boolean, false) IS NOT TRUE THEN
     RETURN jsonb_build_object('accepted', false, 'reason', 'permission-not-granted');
   END IF;
 
