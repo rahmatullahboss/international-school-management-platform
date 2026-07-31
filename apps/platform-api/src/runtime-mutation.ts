@@ -8,7 +8,13 @@ import type {
 const MAX_RUNTIME_MUTATION_BODY_BYTES = 4096;
 const IDEMPOTENCY_KEY_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$/u;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
-const CONTROL_CHARACTER_PATTERN = /[\u0000-\u001f\u007f]/u;
+function hasControlCharacters(value: string): boolean {
+  for (const character of value) {
+    const codePoint = character.codePointAt(0);
+    if (codePoint !== undefined && (codePoint <= 31 || codePoint === 127)) return true;
+  }
+  return false;
+}
 
 export type RuntimeMutationAuthenticationResult =
   | { readonly ok: true; readonly sessionId: string }
@@ -48,10 +54,10 @@ export interface SubmitRuntimeSnapshotRefreshRequest {
   readonly submit: (input: RuntimeSnapshotRefreshCommandInput) => Promise<RuntimeMutationDecision>;
 }
 
+type RuntimeMutationErrorStatus = 400 | 401 | 403 | 404 | 409 | 503;
+
 function errorResult(
-  status: RuntimeMutationHttpResult extends { readonly ok: false; readonly status: infer S }
-    ? S
-    : never,
+  status: RuntimeMutationErrorStatus,
   code: string,
   message: string,
 ): RuntimeMutationHttpResult {
@@ -107,9 +113,9 @@ export async function readBoundedRuntimeMutationBody(
   }
 }
 
-function parsedCommandBody(rawBody: string):
-  | { readonly expectedRevision: number; readonly reason: string }
-  | undefined {
+function parsedCommandBody(
+  rawBody: string,
+): { readonly expectedRevision: number; readonly reason: string } | undefined {
   let value: unknown;
   try {
     value = JSON.parse(rawBody) as unknown;
@@ -135,7 +141,7 @@ function parsedCommandBody(rawBody: string):
     reason.length < 1 ||
     reason.length > 500 ||
     reason !== record.reason ||
-    CONTROL_CHARACTER_PATTERN.test(reason)
+    hasControlCharacters(reason)
   ) {
     return undefined;
   }
@@ -167,7 +173,11 @@ function mapDecision(decision: RuntimeMutationDecision): RuntimeMutationHttpResu
     };
   }
   if (decision.reason === 'projection-not-found') {
-    return errorResult(404, 'runtime_projection_not_found', 'The runtime projection was not found.');
+    return errorResult(
+      404,
+      'runtime_projection_not_found',
+      'The runtime projection was not found.',
+    );
   }
   if (decision.reason === 'revision-conflict') {
     return {
@@ -196,7 +206,11 @@ export async function submitRuntimeSnapshotRefresh(
     );
   }
   if (!isAllowedAuthMutationOrigin(request.allowedOrigins, request.origin)) {
-    return errorResult(403, 'runtime_mutation_origin_denied', 'The requesting origin is not permitted.');
+    return errorResult(
+      403,
+      'runtime_mutation_origin_denied',
+      'The requesting origin is not permitted.',
+    );
   }
   if (
     !isRuntimeMutationContentTypeAllowed(request.contentType) ||
@@ -205,18 +219,30 @@ export async function submitRuntimeSnapshotRefresh(
     !IDEMPOTENCY_KEY_PATTERN.test(request.idempotencyKey) ||
     !UUID_PATTERN.test(request.correlationId)
   ) {
-    return errorResult(400, 'runtime_mutation_request_invalid', 'The runtime mutation request is invalid.');
+    return errorResult(
+      400,
+      'runtime_mutation_request_invalid',
+      'The runtime mutation request is invalid.',
+    );
   }
   const command = parsedCommandBody(request.rawBody);
   if (command === undefined) {
-    return errorResult(400, 'runtime_mutation_request_invalid', 'The runtime mutation request is invalid.');
+    return errorResult(
+      400,
+      'runtime_mutation_request_invalid',
+      'The runtime mutation request is invalid.',
+    );
   }
 
   let authentication: RuntimeMutationAuthenticationResult;
   try {
     authentication = await request.authenticate();
   } catch {
-    return errorResult(503, 'runtime_mutation_unavailable', 'The runtime mutation service is unavailable.');
+    return errorResult(
+      503,
+      'runtime_mutation_unavailable',
+      'The runtime mutation service is unavailable.',
+    );
   }
   if (!authentication.ok) return authentication;
 
@@ -230,7 +256,11 @@ export async function submitRuntimeSnapshotRefresh(
       correlationId: request.correlationId,
     });
   } catch {
-    return errorResult(503, 'runtime_mutation_unavailable', 'The runtime mutation service is unavailable.');
+    return errorResult(
+      503,
+      'runtime_mutation_unavailable',
+      'The runtime mutation service is unavailable.',
+    );
   }
   return mapDecision(decision);
 }

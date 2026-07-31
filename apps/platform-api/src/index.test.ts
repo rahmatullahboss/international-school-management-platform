@@ -18,6 +18,7 @@ const environment = {
   AUTH_SESSION_REGISTRY_SOURCE: 'database',
   AUTH_PERMISSION_SOURCE: 'database',
   RUNTIME_READ_MODEL_SOURCE: 'database',
+  RUNTIME_MUTATION_SOURCE: 'database',
   AUTH_ALLOWED_WEB_ORIGINS: 'https://school.test',
   DATABASE_URL: 'postgresql://test.invalid/school',
 };
@@ -115,6 +116,11 @@ describe('platform API', () => {
         revisionBoundEtags: true,
         boundedServerSnapshotCache: true,
         currentGrantSnapshotRevalidation: true,
+        safeDatabaseMutations: true,
+        idempotentMutationReceipts: true,
+        optimisticMutationConcurrency: true,
+        atomicMutationAuditOutbox: true,
+        aal2MutationAuthorization: true,
       },
     });
     expect(JSON.stringify(payload)).not.toContain('secret');
@@ -389,6 +395,139 @@ describe('platform API', () => {
     );
     expect(denied.status).toBe(403);
     expect(denied.headers.get('access-control-allow-origin')).toBeNull();
+    expect(databaseQuery).not.toHaveBeenCalled();
+  });
+
+  it('accepts an exact-origin idempotent runtime refresh command with a durable receipt', async () => {
+    databaseQuery
+      .mockResolvedValueOnce([{ value: true }])
+      .mockImplementationOnce((_sql: unknown, parameters: unknown) => {
+        if (!Array.isArray(parameters) || typeof parameters[4] !== 'string') {
+          throw new Error('Expected typed runtime mutation parameters.');
+        }
+        return Promise.resolve([
+          {
+            value: {
+              accepted: true,
+              replayed: false,
+              receipt: {
+                commandId: '60000000-0000-4000-8000-000000000002',
+                commandType: 'runtime.snapshot.refresh',
+                state: 'accepted',
+                expectedRevision: 7,
+                correlationId: parameters[4],
+                acceptedAt: '2026-07-31T05:10:00.000Z',
+              },
+            },
+          },
+        ]);
+      });
+    const response = await app.request(
+      '/auth/v1/commands/runtime.snapshot.refresh',
+      {
+        method: 'POST',
+        headers: {
+          origin: 'https://school.test',
+          'content-type': 'application/json',
+          'idempotency-key': 'refresh-admin-home-0001',
+          cookie: await issueBrowserCookie(),
+        },
+        body: JSON.stringify({
+          expectedRevision: 7,
+          reason: 'Refresh after the approved timetable publication.',
+        }),
+      },
+      environment,
+    );
+    expect(response.status).toBe(202);
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(response.headers.get('access-control-allow-origin')).toBe('https://school.test');
+    expect(response.headers.get('access-control-allow-credentials')).toBe('true');
+    expect(response.headers.get('set-cookie')).toBeNull();
+    const correlationId = response.headers.get('x-correlation-id');
+    expect(correlationId).toMatch(/^[0-9a-f-]{36}$/u);
+    await expect(response.json()).resolves.toMatchObject({
+      schemaVersion: 1,
+      replayed: false,
+      receipt: {
+        commandType: 'runtime.snapshot.refresh',
+        expectedRevision: 7,
+        correlationId,
+      },
+    });
+    expect(databaseQuery).toHaveBeenCalledTimes(2);
+    expect(databaseQuery.mock.calls[0]?.[0]).toContain('iam.is_browser_session_active');
+    expect(databaseQuery.mock.calls[1]?.[0]).toContain('platform.submit_runtime_snapshot_refresh');
+    expect(databaseQuery.mock.calls[1]?.[1]).toEqual([
+      expect.any(String),
+      'refresh-admin-home-0001',
+      7,
+      'Refresh after the approved timetable publication.',
+      correlationId,
+    ]);
+  });
+
+  it('allows only the exact mutation preflight and required request headers', async () => {
+    const accepted = await app.request(
+      '/auth/v1/commands/runtime.snapshot.refresh',
+      { method: 'OPTIONS', headers: { origin: 'https://school.test' } },
+      environment,
+    );
+    expect(accepted.status).toBe(204);
+    expect(accepted.headers.get('access-control-allow-origin')).toBe('https://school.test');
+    expect(accepted.headers.get('access-control-allow-credentials')).toBe('true');
+    expect(accepted.headers.get('access-control-allow-headers')).toBe(
+      'content-type, idempotency-key',
+    );
+
+    const denied = await app.request(
+      '/auth/v1/commands/runtime.snapshot.refresh',
+      { method: 'OPTIONS', headers: { origin: 'https://evil.test' } },
+      environment,
+    );
+    expect(denied.status).toBe(403);
+    expect(denied.headers.get('access-control-allow-origin')).toBeNull();
+  });
+
+  it('keeps runtime mutations fail-closed and rejects browser-controlled scope before database access', async () => {
+    const unconfigured = await app.request(
+      '/auth/v1/commands/runtime.snapshot.refresh',
+      {
+        method: 'POST',
+        headers: {
+          origin: 'https://school.test',
+          'content-type': 'application/json',
+          'idempotency-key': 'refresh-admin-home-0001',
+        },
+        body: JSON.stringify({ expectedRevision: 7, reason: 'Approved refresh.' }),
+      },
+      { APP_ENV: 'test', APP_REGION: 'local' },
+    );
+    expect(unconfigured.status).toBe(503);
+    expect(unconfigured.headers.get('cache-control')).toBe('no-store');
+    expect(unconfigured.headers.get('access-control-allow-origin')).toBeNull();
+    expect(unconfigured.headers.get('set-cookie')).toBeNull();
+    expect(databaseQuery).not.toHaveBeenCalled();
+
+    const injected = await app.request(
+      '/auth/v1/commands/runtime.snapshot.refresh',
+      {
+        method: 'POST',
+        headers: {
+          origin: 'https://school.test',
+          'content-type': 'application/json',
+          'idempotency-key': 'refresh-admin-home-0001',
+          cookie: await issueBrowserCookie(),
+        },
+        body: JSON.stringify({
+          expectedRevision: 7,
+          reason: 'Approved refresh.',
+          tenantId: 'attacker-tenant',
+        }),
+      },
+      environment,
+    );
+    expect(injected.status).toBe(400);
     expect(databaseQuery).not.toHaveBeenCalled();
   });
 

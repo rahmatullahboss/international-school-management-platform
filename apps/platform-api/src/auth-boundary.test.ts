@@ -26,6 +26,7 @@ const completeBindings = {
   AUTH_MEMBERSHIP_SOURCE: 'database',
   AUTH_PERMISSION_SOURCE: 'database',
   RUNTIME_READ_MODEL_SOURCE: 'database',
+  RUNTIME_MUTATION_SOURCE: 'database',
   AUTH_ALLOWED_WEB_ORIGINS: 'https://school.test,https://admin.school.test',
 };
 
@@ -87,6 +88,11 @@ describe('OIDC BFF readiness', () => {
         revisionBoundEtags: true,
         boundedServerSnapshotCache: true,
         currentGrantSnapshotRevalidation: true,
+        safeDatabaseMutations: true,
+        idempotentMutationReceipts: true,
+        optimisticMutationConcurrency: true,
+        atomicMutationAuditOutbox: true,
+        aal2MutationAuthorization: true,
       },
       missingConfiguration: [
         'provider-metadata',
@@ -101,6 +107,7 @@ describe('OIDC BFF readiness', () => {
         'membership-source',
         'permission-source',
         'runtime-read-model-source',
+        'runtime-mutation-source',
         'allowed-web-origins',
       ],
     });

@@ -171,6 +171,42 @@ BEGIN
     RETURN jsonb_build_object('accepted', false, 'reason', 'permission-not-granted');
   END IF;
 
+  request_hash := encode(
+    public.digest(
+      convert_to(
+        jsonb_build_object(
+          'commandType', 'runtime.snapshot.refresh',
+          'expectedRevision', p_expected_revision,
+          'reason', p_reason
+        )::text,
+        'UTF8'
+      ),
+      'sha256'
+    ),
+    'hex'
+  );
+
+  SELECT existing.request_hash, existing.response_body
+  INTO existing_hash, existing_receipt
+  FROM platform.runtime_command_receipt AS existing
+  WHERE existing.tenant_id = selected_tenant_id
+    AND existing.membership_id = selected_membership_id
+    AND existing.campus_id IS NOT DISTINCT FROM selected_campus_id
+    AND existing.command_type = 'runtime.snapshot.refresh'
+    AND existing.idempotency_key = p_idempotency_key
+  FOR SHARE;
+
+  IF existing_hash IS NOT NULL THEN
+    IF existing_hash <> request_hash THEN
+      RETURN jsonb_build_object('accepted', false, 'reason', 'idempotency-conflict');
+    END IF;
+    RETURN jsonb_build_object(
+      'accepted', true,
+      'replayed', true,
+      'receipt', existing_receipt
+    );
+  END IF;
+
   SELECT projection.revision
   INTO current_revision
   FROM platform.runtime_read_model_projection AS projection
@@ -190,21 +226,6 @@ BEGIN
       'currentRevision', current_revision
     );
   END IF;
-
-  request_hash := encode(
-    public.digest(
-      convert_to(
-        jsonb_build_object(
-          'commandType', 'runtime.snapshot.refresh',
-          'expectedRevision', p_expected_revision,
-          'reason', p_reason
-        )::text,
-        'UTF8'
-      ),
-      'sha256'
-    ),
-    'hex'
-  );
 
   receipt := jsonb_build_object(
     'commandId', selected_command_id,
@@ -255,7 +276,7 @@ BEGIN
     campus_id,
     command_type,
     idempotency_key
-  ) NULLS NOT DISTINCT DO NOTHING;
+  ) DO NOTHING;
   GET DIAGNOSTICS inserted_count = ROW_COUNT;
 
   IF inserted_count = 0 THEN

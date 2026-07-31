@@ -44,7 +44,13 @@ interface RuntimeMutationRow extends Record<string, unknown> {
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 const IDEMPOTENCY_KEY_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$/u;
-const CONTROL_CHARACTER_PATTERN = /[\u0000-\u001f\u007f]/u;
+function hasControlCharacters(value: string): boolean {
+  for (const character of value) {
+    const codePoint = character.codePointAt(0);
+    if (codePoint !== undefined && (codePoint <= 31 || codePoint === 127)) return true;
+  }
+  return false;
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -79,7 +85,7 @@ function requireReason(value: string): string {
     reason.length < 1 ||
     reason.length > 500 ||
     reason !== value ||
-    CONTROL_CHARACTER_PATTERN.test(reason)
+    hasControlCharacters(reason)
   ) {
     throw new Error('reason is invalid.');
   }
@@ -191,6 +197,14 @@ export class DatabaseMutationStore {
     );
     const row = rows[0];
     if (rows.length !== 1 || row === undefined) throw invalidResponse();
-    return validateDecision(row.value);
+    const decision = validateDecision(row.value);
+    if (
+      decision.accepted &&
+      (decision.receipt.expectedRevision !== expectedRevision ||
+        (!decision.replayed && decision.receipt.correlationId !== correlationId))
+    ) {
+      throw invalidResponse();
+    }
+    return decision;
   }
 }
