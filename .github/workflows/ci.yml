@@ -2,17 +2,20 @@ name: CI
 
 on:
   pull_request:
-    types:
-      - synchronize
+  push:
+    branches:
+      - main
+      - 'program/**'
+      - 'module/**'
+      - 'integration/**'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  author-pilot-09:
-    if: github.event.pull_request.head.ref == 'pilot/teacher-runtime-projection-composer-v1'
+  verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 20
     services:
       postgres:
         image: postgres:16-alpine
@@ -27,19 +30,11 @@ jobs:
           --health-retries 10
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: pilot/teacher-runtime-projection-composer-v1
-          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22.22.2'
           cache: npm
       - run: npm ci
-      - name: Apply guarded PILOT-09 authoring patch
-        run: |
-          python3 scripts/author_pilot_09.py
-          rm scripts/author_pilot_09.py
-          npm run format
       - run: npm run format:check
       - run: npm run lint
       - run: npm run check:boundaries
@@ -52,7 +47,7 @@ jobs:
           PGUSER: postgres
           PGDATABASE: postgres
         run: npm run verify:migrations
-      - name: Verify AUTH post-integration migrations and projection contracts
+      - name: Verify AUTH post-integration migrations and revocation contracts
         env:
           PGHOST: 127.0.0.1
           PGPORT: 5432
@@ -60,6 +55,7 @@ jobs:
           PGDATABASE: postgres
         run: npm run verify:auth-migrations
       - name: Verify live Neon serverless driver
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
@@ -74,13 +70,3 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
       - run: python3 scripts/validate_execution_artifacts.py
-      - name: Publish verified PILOT-09 implementation
-        shell: bash
-        run: |
-          git show origin/main:.github/workflows/ci.yml > .github/workflows/ci.yml
-          git diff --check
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add -A
-          git commit -m 'feat(pilot): implement database-owned teacher runtime composer'
-          git push origin HEAD:refs/heads/pilot/teacher-runtime-projection-composer-v1
