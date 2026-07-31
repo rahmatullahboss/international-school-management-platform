@@ -39,6 +39,8 @@ jobs:
           rm scripts/fix_pilot_06_authoring.py
           python3 scripts/implement_pilot_06.py
           rm scripts/implement_pilot_06.py
+          python3 scripts/harden_pilot_06_runtime.py
+          rm scripts/harden_pilot_06_runtime.py
       - run: npm run format
       - run: npx eslint . --fix
       - run: npm run format
@@ -82,6 +84,8 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
           git commit -m 'feat(pilot): complete durable runtime projection worker'
+          git fetch origin pilot/runtime-projection-worker-v1
+          git rebase origin/pilot/runtime-projection-worker-v1
           git push origin HEAD:pilot/runtime-projection-worker-v1
 
   verify:
