@@ -173,30 +173,41 @@ jobs:
             "$API_URL/auth/v1/backchannel-logout")
           test "$backchannel_status" = '503'
 
-          fetch_with_retry \
-            "$API_URL/pilot/v1/sessions/admin" \
-            admin-session.json \
-            'Signed pilot session' \
-            --request POST \
-            -H "Origin: $staging_origin"
-
-          admin_token=$(python3 - <<'PY'
+          pilot_pair_ready=false
+          for attempt in {1..12}; do
+            if curl --fail --silent --show-error \
+              --request POST \
+              -H "Origin: $staging_origin" \
+              "$API_URL/pilot/v1/sessions/admin" \
+              --output admin-session.json; then
+              admin_token=$(python3 - <<'PY' || true
           import json
           from pathlib import Path
-          payload = json.loads(Path('admin-session.json').read_text(encoding='utf-8'))
-          token = payload.get('accessToken')
-          if not isinstance(token, str) or len(token) <= 32:
-              raise SystemExit(1)
-          print(token)
+          try:
+              payload = json.loads(Path('admin-session.json').read_text(encoding='utf-8'))
+              token = payload.get('accessToken')
+              if isinstance(token, str) and len(token) > 32:
+                  print(token)
+          except (OSError, ValueError):
+              pass
           PY
-          )
-
-          fetch_with_retry \
-            "$API_URL/pilot/v1/snapshots/admin" \
-            admin-snapshot.json \
-            'Signed scoped admin snapshot' \
-            -H "Origin: $staging_origin" \
-            -H "Authorization: Bearer $admin_token"
+              )
+              if [[ -n "$admin_token" ]] && curl --fail --silent --show-error \
+                -H "Origin: $staging_origin" \
+                -H "Authorization: Bearer $admin_token" \
+                "$API_URL/pilot/v1/snapshots/admin" \
+                --output admin-snapshot.json; then
+                pilot_pair_ready=true
+                break
+              fi
+            fi
+            if [[ "$attempt" == '12' ]]; then
+              echo 'Signed pilot session/snapshot pair did not stabilize after deployment.' >&2
+              exit 1
+            fi
+            sleep 5
+          done
+          test "$pilot_pair_ready" = 'true'
 
           fetch_with_retry "$WEB_URL/" web-index.html 'Pilot role chooser'
           fetch_with_retry "$WEB_URL/admin" web-admin.html 'Admin portal'
