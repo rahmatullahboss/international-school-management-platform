@@ -40,8 +40,10 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Apply PILOT-05 HTTP and database verification
-        run: python3 scripts/implement_pilot_05_http_and_verification.py
-      - run: rm scripts/implement_pilot_05_http_and_verification.py
+        run: |
+          python3 scripts/implement_pilot_05_http_and_verification.py
+          python3 scripts/fix_pilot_05_control_validation.py
+      - run: rm scripts/implement_pilot_05_http_and_verification.py scripts/fix_pilot_05_control_validation.py
       - run: npm run format
       - run: npm run lint -- --fix
       - run: npm run format
