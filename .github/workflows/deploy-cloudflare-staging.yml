@@ -34,7 +34,8 @@ jobs:
       github.head_ref == 'auth/provider-backchannel-stepup-v1' ||
       github.head_ref == 'auth/backchannel-logout-v1' ||
       github.head_ref == 'auth/database-permission-evaluation-v1' ||
-      github.head_ref == 'pilot/database-read-models-v1'
+      github.head_ref == 'pilot/database-read-models-v1' ||
+      github.head_ref == 'pilot/safe-mutation-envelope-v1'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     environment: cloudflare-staging
@@ -139,6 +140,18 @@ jobs:
             "$API_URL/auth/v1/snapshot")
           test "$snapshot_status" = '503'
 
+          mutation_status=$(curl --silent --show-error \
+            --dump-header mutation-headers.txt \
+            --output auth-mutation-error.json \
+            --write-out '%{http_code}' \
+            --request POST \
+            -H "Origin: $staging_origin" \
+            -H 'Content-Type: application/json' \
+            -H 'Idempotency-Key: refresh-admin-home-0001' \
+            --data '{"expectedRevision":7,"reason":"Approved staging fail-closed probe."}' \
+            "$API_URL/auth/v1/commands/runtime.snapshot.refresh")
+          test "$mutation_status" = '503'
+
           logout_status=$(curl --silent --show-error \
             --dump-header logout-headers.txt \
             --output auth-logout-error.json \
@@ -160,30 +173,41 @@ jobs:
             "$API_URL/auth/v1/backchannel-logout")
           test "$backchannel_status" = '503'
 
-          fetch_with_retry \
-            "$API_URL/pilot/v1/sessions/admin" \
-            admin-session.json \
-            'Signed pilot session' \
-            --request POST \
-            -H "Origin: $staging_origin"
-
-          admin_token=$(python3 - <<'PY'
+          pilot_pair_ready=false
+          for attempt in {1..12}; do
+            if curl --fail --silent --show-error \
+              --request POST \
+              -H "Origin: $staging_origin" \
+              "$API_URL/pilot/v1/sessions/admin" \
+              --output admin-session.json; then
+              admin_token=$(python3 - <<'PY' || true
           import json
           from pathlib import Path
-          payload = json.loads(Path('admin-session.json').read_text(encoding='utf-8'))
-          token = payload.get('accessToken')
-          if not isinstance(token, str) or len(token) <= 32:
-              raise SystemExit(1)
-          print(token)
+          try:
+              payload = json.loads(Path('admin-session.json').read_text(encoding='utf-8'))
+              token = payload.get('accessToken')
+              if isinstance(token, str) and len(token) > 32:
+                  print(token)
+          except (OSError, ValueError):
+              pass
           PY
-          )
-
-          fetch_with_retry \
-            "$API_URL/pilot/v1/snapshots/admin" \
-            admin-snapshot.json \
-            'Signed scoped admin snapshot' \
-            -H "Origin: $staging_origin" \
-            -H "Authorization: Bearer $admin_token"
+              )
+              if [[ -n "$admin_token" ]] && curl --fail --silent --show-error \
+                -H "Origin: $staging_origin" \
+                -H "Authorization: Bearer $admin_token" \
+                "$API_URL/pilot/v1/snapshots/admin" \
+                --output admin-snapshot.json; then
+                pilot_pair_ready=true
+                break
+              fi
+            fi
+            if [[ "$attempt" == '12' ]]; then
+              echo 'Signed pilot session/snapshot pair did not stabilize after deployment.' >&2
+              exit 1
+            fi
+            sleep 5
+          done
+          test "$pilot_pair_ready" = 'true'
 
           fetch_with_retry "$WEB_URL/" web-index.html 'Pilot role chooser'
           fetch_with_retry "$WEB_URL/admin" web-admin.html 'Admin portal'
@@ -234,6 +258,9 @@ jobs:
               'assuranceAwarePermissionDecision', 'serverOwnedAuthorizationScope',
               'databaseReadModels', 'tenantSafeReadModelScope', 'revisionBoundEtags',
               'boundedServerSnapshotCache', 'currentGrantSnapshotRevalidation',
+              'safeDatabaseMutations', 'idempotentMutationReceipts',
+              'optimisticMutationConcurrency', 'atomicMutationAuditOutbox',
+              'aal2MutationAuthorization',
           ]
           controls = readiness.get('controls', {})
           for control in required_controls:
@@ -245,7 +272,7 @@ jobs:
               'transaction-signing-key', 'transaction-replay-source',
               'session-signing-key', 'session-registry-source',
               'membership-source', 'permission-source', 'runtime-read-model-source',
-              'allowed-web-origins',
+              'runtime-mutation-source', 'allowed-web-origins',
           ], readiness
 
           serialized = json.dumps(readiness).lower()
@@ -256,6 +283,7 @@ jobs:
               'auth-session-error.json': 'browser_session_configuration_invalid',
               'auth-authorize-error.json': 'permission_configuration_invalid',
               'auth-snapshot-error.json': 'runtime_read_model_configuration_invalid',
+              'auth-mutation-error.json': 'runtime_mutation_configuration_invalid',
               'auth-logout-error.json': 'logout_configuration_invalid',
               'auth-backchannel-error.json': 'backchannel_logout_configuration_invalid',
           }
@@ -265,7 +293,7 @@ jobs:
 
           for file_name in [
               'session-headers.txt', 'authorize-headers.txt', 'snapshot-headers.txt',
-              'logout-headers.txt', 'backchannel-headers.txt',
+              'mutation-headers.txt', 'logout-headers.txt', 'backchannel-headers.txt',
           ]:
               text = headers(file_name)
               assert 'cache-control: no-store' in text, (file_name, text)
@@ -273,6 +301,7 @@ jobs:
 
           assert 'access-control-allow-origin:' not in headers('authorize-headers.txt')
           assert 'access-control-allow-origin:' not in headers('snapshot-headers.txt')
+          assert 'access-control-allow-origin:' not in headers('mutation-headers.txt')
           assert 'access-control-allow-origin:' not in headers('backchannel-headers.txt')
 
           session = load('admin-session.json')
@@ -315,9 +344,10 @@ jobs:
             echo "- Browser session introspection: $API_URL/auth/v1/session"
             echo "- Database permission decision: $API_URL/auth/v1/authorize"
             echo "- Database runtime snapshot: $API_URL/auth/v1/snapshot"
+            echo "- Safe runtime mutation: $API_URL/auth/v1/commands/runtime.snapshot.refresh"
             echo "- Browser logout: $API_URL/auth/v1/logout"
             echo "- Provider back-channel logout: $API_URL/auth/v1/backchannel-logout"
             echo "- Signed pilot session: $API_URL/pilot/v1/sessions/admin"
             echo "- Signed scoped admin snapshot: $API_URL/pilot/v1/snapshots/admin"
-            echo '- Scope: database-backed permission evaluation and tenant-safe runtime projections, current-role/current-grant revalidation, revision-and-capability-bound private ETags, bounded isolate caching, assurance-aware step-up decisions, typed Logout Tokens and provider session revocation are verified. Real provider login, production projections and production data access remain disabled until approved bindings are configured.'
+            echo '- Scope: tenant-safe database reads and a single allowlisted AAL2 runtime refresh command are verified with current-grant authorization, exact revision checks, idempotent receipts and atomic audit/outbox persistence. Real provider login, production projection population, mutation consumers and production data access remain disabled until approved bindings and explicit production authorization are configured.'
           } >> "$GITHUB_STEP_SUMMARY"

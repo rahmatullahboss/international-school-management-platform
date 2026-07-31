@@ -31,9 +31,16 @@ import {
   type LogoutScope,
 } from './auth-logout.js';
 import { resolveDatabaseReadModel, RuntimeReadModelCache } from './database-read-model.js';
+import { DatabaseMutationStore } from './database-mutation-store.js';
 import { DatabaseReadModelStore } from './database-read-model-store.js';
 import { isAllowedPilotWebOrigin, resolvePilotReadSnapshot } from './pilot-read-models.js';
 import { issuePilotSession, pilotSessionHeaders, verifyPilotSession } from './pilot-sessions.js';
+import {
+  isRuntimeMutationContentTypeAllowed,
+  isRuntimeMutationDeclaredLengthAllowed,
+  readBoundedRuntimeMutationBody,
+  submitRuntimeSnapshotRefresh,
+} from './runtime-mutation.js';
 
 interface Bindings extends AuthBindings {
   APP_ENV: string;
@@ -111,12 +118,13 @@ function applyAuthMutationCors(
   headers: (name: string, value: string) => void,
   allowedOrigins: string | undefined,
   origin: string | undefined,
+  allowedHeaders = 'content-type',
 ): boolean {
   if (!isAllowedAuthMutationOrigin(allowedOrigins, origin) || origin === undefined) return false;
   headers('access-control-allow-origin', origin);
   headers('access-control-allow-credentials', 'true');
   headers('access-control-allow-methods', 'POST, OPTIONS');
-  headers('access-control-allow-headers', 'content-type');
+  headers('access-control-allow-headers', allowedHeaders);
   headers('access-control-max-age', '600');
   return true;
 }
@@ -296,6 +304,140 @@ app.post('/auth/v1/authorize', async (context) => {
     return context.json({ error: { code: result.code, message: result.message } }, result.status);
   }
   return context.json({ schemaVersion: 1, ...result.decision }, result.status);
+});
+
+function durableMutationStores(
+  environment: Bindings,
+): { readonly auth: DurableAuthStore; readonly mutation: DatabaseMutationStore } | undefined {
+  if (
+    environment.AUTH_SESSION_REGISTRY_SOURCE !== 'database' ||
+    environment.AUTH_PERMISSION_SOURCE !== 'database' ||
+    environment.RUNTIME_MUTATION_SOURCE !== 'database' ||
+    environment.DATABASE_URL === undefined ||
+    environment.DATABASE_URL.trim() === ''
+  ) {
+    return undefined;
+  }
+  const database = createHttpDatabase(environment.DATABASE_URL);
+  return { auth: new DurableAuthStore(database), mutation: new DatabaseMutationStore(database) };
+}
+
+const runtimeSnapshotRefreshPath = '/auth/v1/commands/runtime.snapshot.refresh';
+
+app.options(runtimeSnapshotRefreshPath, (context) => {
+  context.header('cache-control', 'no-store');
+  context.header('vary', 'Origin');
+  const stores = durableMutationStores(context.env);
+  const configured =
+    stores !== undefined &&
+    context.env.AUTH_SESSION_SECRET !== undefined &&
+    context.env.AUTH_SESSION_SECRET.length >= 32 &&
+    hasValidAuthMutationOrigins(context.env.AUTH_ALLOWED_WEB_ORIGINS);
+  if (!configured) {
+    return context.json(
+      {
+        error: {
+          code: 'runtime_mutation_configuration_invalid',
+          message: 'Runtime mutations are not configured.',
+        },
+      },
+      503,
+    );
+  }
+  if (
+    !applyAuthMutationCors(
+      (name, value) => context.header(name, value),
+      context.env.AUTH_ALLOWED_WEB_ORIGINS,
+      context.req.header('origin'),
+      'content-type, idempotency-key',
+    )
+  ) {
+    return context.json(
+      {
+        error: {
+          code: 'runtime_mutation_origin_denied',
+          message: 'The requesting origin is not permitted.',
+        },
+      },
+      403,
+    );
+  }
+  return context.body(null, 204);
+});
+
+app.post(runtimeSnapshotRefreshPath, async (context) => {
+  const correlationId = crypto.randomUUID();
+  context.header('x-correlation-id', correlationId);
+  context.header('cache-control', 'no-store');
+  context.header('vary', 'Origin, Cookie, Idempotency-Key');
+  const origin = context.req.header('origin');
+  applyAuthMutationCors(
+    (name, value) => context.header(name, value),
+    context.env.AUTH_ALLOWED_WEB_ORIGINS,
+    origin,
+    'content-type, idempotency-key',
+  );
+
+  const stores = durableMutationStores(context.env);
+  const contentLength = context.req.header('content-length');
+  const contentType = context.req.header('content-type');
+  const configured =
+    stores !== undefined &&
+    context.env.AUTH_SESSION_SECRET !== undefined &&
+    context.env.AUTH_SESSION_SECRET.length >= 32 &&
+    hasValidAuthMutationOrigins(context.env.AUTH_ALLOWED_WEB_ORIGINS);
+  let rawBody = '';
+  if (
+    configured &&
+    isAllowedAuthMutationOrigin(context.env.AUTH_ALLOWED_WEB_ORIGINS, origin) &&
+    isRuntimeMutationContentTypeAllowed(contentType) &&
+    isRuntimeMutationDeclaredLengthAllowed(contentLength)
+  ) {
+    rawBody = (await readBoundedRuntimeMutationBody(context.req.raw.body)) ?? '';
+  }
+
+  const result = await submitRuntimeSnapshotRefresh({
+    configured,
+    allowedOrigins: context.env.AUTH_ALLOWED_WEB_ORIGINS,
+    origin,
+    contentType,
+    ...(contentLength === undefined ? {} : { contentLength }),
+    rawBody,
+    idempotencyKey: context.req.header('idempotency-key'),
+    correlationId,
+    authenticate: async () => {
+      if (stores === undefined) throw new Error('Runtime mutation stores are unavailable.');
+      const resolution = await resolveAuthenticatedBrowserSessionContext(
+        context.env,
+        context.req.header('cookie'),
+        (sessionId) => stores.auth.isSessionActive(sessionId),
+      );
+      if (!resolution.ok) return resolution;
+      return { ok: true, sessionId: resolution.context.sessionId };
+    },
+    submit: (command) => {
+      if (stores === undefined) throw new Error('Runtime mutation stores are unavailable.');
+      return stores.mutation.submitRuntimeSnapshotRefresh(command);
+    },
+  });
+  if (!result.ok) {
+    return context.json(
+      {
+        error: { code: result.code, message: result.message },
+        ...(result.requiredAssurance === undefined
+          ? {}
+          : { requiredAssurance: result.requiredAssurance }),
+        ...(result.currentRevision === undefined
+          ? {}
+          : { currentRevision: result.currentRevision }),
+      },
+      result.status,
+    );
+  }
+  return context.json(
+    { schemaVersion: 1, replayed: result.replayed, receipt: result.receipt },
+    result.status,
+  );
 });
 
 function durableReadModelStores(
@@ -668,9 +810,11 @@ export * from './auth-boundary.js';
 export * from './auth-durable-store.js';
 export * from './auth-logout.js';
 export * from './auth-permission.js';
+export * from './database-mutation-store.js';
 export * from './database-read-model.js';
 export * from './database-read-model-store.js';
 export * from './operations-application.js';
 export * from './operations-routes.js';
 export * from './pilot-read-models.js';
 export * from './pilot-sessions.js';
+export * from './runtime-mutation.js';

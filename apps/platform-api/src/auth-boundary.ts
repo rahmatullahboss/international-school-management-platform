@@ -24,6 +24,7 @@ export interface AuthBindings {
   readonly AUTH_MEMBERSHIP_SOURCE?: string;
   readonly AUTH_PERMISSION_SOURCE?: string;
   readonly RUNTIME_READ_MODEL_SOURCE?: string;
+  readonly RUNTIME_MUTATION_SOURCE?: string;
   readonly AUTH_ALLOWED_WEB_ORIGINS?: string;
 }
 
@@ -40,6 +41,7 @@ export type AuthReadinessRequirement =
   | 'membership-source'
   | 'permission-source'
   | 'runtime-read-model-source'
+  | 'runtime-mutation-source'
   | 'allowed-web-origins';
 
 export interface AuthReadiness {
@@ -97,6 +99,11 @@ export interface AuthReadiness {
     readonly revisionBoundEtags: true;
     readonly boundedServerSnapshotCache: true;
     readonly currentGrantSnapshotRevalidation: true;
+    readonly safeDatabaseMutations: true;
+    readonly idempotentMutationReceipts: true;
+    readonly optimisticMutationConcurrency: true;
+    readonly atomicMutationAuditOutbox: true;
+    readonly aal2MutationAuthorization: true;
   };
   readonly missingConfiguration: readonly AuthReadinessRequirement[];
 }
@@ -119,6 +126,7 @@ type AuthBindingName =
   | 'AUTH_MEMBERSHIP_SOURCE'
   | 'AUTH_PERMISSION_SOURCE'
   | 'RUNTIME_READ_MODEL_SOURCE'
+  | 'RUNTIME_MUTATION_SOURCE'
   | 'AUTH_ALLOWED_WEB_ORIGINS';
 
 function configuredValue(bindings: AuthBindings, name: AuthBindingName): string | undefined {
@@ -251,6 +259,9 @@ export function resolveAuthReadiness(bindings: AuthBindings): AuthReadiness {
   if (configuredValue(bindings, 'RUNTIME_READ_MODEL_SOURCE') !== 'database') {
     missingConfiguration.push('runtime-read-model-source');
   }
+  if (configuredValue(bindings, 'RUNTIME_MUTATION_SOURCE') !== 'database') {
+    missingConfiguration.push('runtime-mutation-source');
+  }
   if (!hasValidAuthMutationOrigins(configuredValue(bindings, 'AUTH_ALLOWED_WEB_ORIGINS'))) {
     missingConfiguration.push('allowed-web-origins');
   }
@@ -259,7 +270,7 @@ export function resolveAuthReadiness(bindings: AuthBindings): AuthReadiness {
     schemaVersion: 1,
     mode: 'oidc-bff',
     state:
-      missingConfiguration.length === 13
+      missingConfiguration.length === 14
         ? 'disabled'
         : missingConfiguration.length > 0
           ? 'incomplete'
@@ -315,6 +326,11 @@ export function resolveAuthReadiness(bindings: AuthBindings): AuthReadiness {
       revisionBoundEtags: true,
       boundedServerSnapshotCache: true,
       currentGrantSnapshotRevalidation: true,
+      safeDatabaseMutations: true,
+      idempotentMutationReceipts: true,
+      optimisticMutationConcurrency: true,
+      atomicMutationAuditOutbox: true,
+      aal2MutationAuthorization: true,
     },
     missingConfiguration,
   };

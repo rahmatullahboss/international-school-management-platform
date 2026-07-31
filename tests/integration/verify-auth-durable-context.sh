@@ -12,19 +12,19 @@ import { existsSync, readFileSync } from 'node:fs';
 
 const manifestPath = process.argv[2];
 const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
-if (manifest.gate !== 'GATE-PILOT-DATABASE-READ-MODEL-V1') {
+if (manifest.gate !== 'GATE-PILOT-SAFE-MUTATION-V1') {
   throw new Error(`unexpected post-integration gate: ${manifest.gate}`);
 }
 if (manifest.baseManifest !== 'infra/database/migration-manifest.json') {
   throw new Error('post-integration manifest must name the canonical base manifest');
 }
 const migrations = manifest.migrations ?? [];
-if (migrations.length !== 4) {
-  throw new Error(`expected four post-integration migrations, got ${migrations.length}`);
+if (migrations.length !== 5) {
+  throw new Error(`expected five post-integration migrations, got ${migrations.length}`);
 }
 for (const [index, migration] of migrations.entries()) {
   if (migration.order !== index + 1) throw new Error('AUTH migration orders are not contiguous');
-  if (!['AUTH-03', 'AUTH-07', 'AUTH-08', 'PILOT-04'].includes(migration.stream)) throw new Error(`unexpected stream: ${migration.stream}`);
+  if (!['AUTH-03', 'AUTH-07', 'AUTH-08', 'PILOT-04', 'PILOT-05'].includes(migration.stream)) throw new Error(`unexpected stream: ${migration.stream}`);
   if (!existsSync(migration.path)) throw new Error(`missing migration: ${migration.path}`);
   console.log(migration.path);
 }
@@ -38,8 +38,8 @@ done
 "${PSQL[@]}" <<'SQL'
 DO $verification$
 BEGIN
-  IF (SELECT count(*) FROM platform.schema_migration) <> 44 THEN
-    RAISE EXCEPTION 'expected 44 total migration ledger rows';
+  IF (SELECT count(*) FROM platform.schema_migration) <> 45 THEN
+    RAISE EXCEPTION 'expected 45 total migration ledger rows';
   END IF;
   IF (SELECT count(*) FROM platform.schema_migration WHERE stream_id = 'AUTH-03') <> 1 THEN
     RAISE EXCEPTION 'expected three AUTH migrations ledger row';
@@ -50,7 +50,8 @@ BEGIN
      OR to_regclass('iam.browser_session_registry') IS NULL
      OR to_regclass('iam.oidc_logout_token_consumption') IS NULL
      OR to_regclass('iam.oidc_provider_cache') IS NULL
-     OR to_regclass('platform.runtime_read_model_projection') IS NULL THEN
+     OR to_regclass('platform.runtime_read_model_projection') IS NULL
+     OR to_regclass('platform.runtime_command_receipt') IS NULL THEN
     RAISE EXCEPTION 'AUTH-03 durable tables are incomplete';
   END IF;
 END
@@ -472,6 +473,163 @@ VALUES (
 )
 ON CONFLICT DO NOTHING;
 
+
+INSERT INTO iam.role_permission (tenant_id, role_id, permission_key)
+VALUES (
+  '30000000-0000-4000-8000-000000000001',
+  '30000000-0000-4000-8000-000000000005',
+  'runtime.snapshot.refresh'
+)
+ON CONFLICT DO NOTHING;
+
+INSERT INTO iam.browser_session_registry (
+  session_id, binding_id, account_id, tenant_id, membership_id, campus_id,
+  role_ids, assurance_level, issued_at, expires_at
+) VALUES (
+  '30000000-0000-4000-8000-00000000000c',
+  '30000000-0000-4000-8000-000000000007',
+  '30000000-0000-4000-8000-000000000004',
+  '30000000-0000-4000-8000-000000000001',
+  '30000000-0000-4000-8000-000000000006',
+  '30000000-0000-4000-8000-000000000003',
+  ARRAY['30000000-0000-4000-8000-000000000005'::uuid],
+  'aal2',
+  clock_timestamp(),
+  clock_timestamp() + interval '30 minutes'
+)
+ON CONFLICT (session_id) DO NOTHING;
+
+SET ROLE app_runtime;
+DO $mutation_verification$
+DECLARE
+  decision jsonb;
+  first_receipt jsonb;
+BEGIN
+  IF has_table_privilege(current_user, 'platform.runtime_command_receipt', 'SELECT') THEN
+    RAISE EXCEPTION 'app_runtime must not have direct runtime command receipt access';
+  END IF;
+
+  decision := platform.submit_runtime_snapshot_refresh(
+    '30000000-0000-4000-8000-00000000000c',
+    'refresh-admin-home-0001',
+    7,
+    'Refresh after the approved timetable publication.',
+    '30000000-0000-4000-8000-00000000000d'
+  );
+  IF decision->>'accepted' <> 'true' OR decision->>'replayed' <> 'false' THEN
+    RAISE EXCEPTION 'first runtime snapshot refresh must be accepted: %', decision;
+  END IF;
+  first_receipt := decision->'receipt';
+
+  decision := platform.submit_runtime_snapshot_refresh(
+    '30000000-0000-4000-8000-00000000000c',
+    'refresh-admin-home-0001',
+    7,
+    'Refresh after the approved timetable publication.',
+    '30000000-0000-4000-8000-00000000000e'
+  );
+  IF decision->>'accepted' <> 'true'
+     OR decision->>'replayed' <> 'true'
+     OR decision->'receipt' <> first_receipt THEN
+    RAISE EXCEPTION 'same idempotency request must replay the original receipt: %', decision;
+  END IF;
+
+  decision := platform.submit_runtime_snapshot_refresh(
+    '30000000-0000-4000-8000-00000000000c',
+    'refresh-admin-home-0001',
+    7,
+    'A different request with the same key.',
+    '30000000-0000-4000-8000-000000000010'
+  );
+  IF decision <> '{"accepted": false, "reason": "idempotency-conflict"}'::jsonb THEN
+    RAISE EXCEPTION 'same key with a different request must conflict: %', decision;
+  END IF;
+
+  decision := platform.submit_runtime_snapshot_refresh(
+    '30000000-0000-4000-8000-00000000000c',
+    'refresh-admin-home-0002',
+    6,
+    'Refresh after the approved timetable publication.',
+    '30000000-0000-4000-8000-000000000011'
+  );
+  IF decision <> '{"accepted": false, "reason": "revision-conflict", "currentRevision": 7}'::jsonb THEN
+    RAISE EXCEPTION 'stale revision must conflict without accepting a command: %', decision;
+  END IF;
+
+  decision := platform.submit_runtime_snapshot_refresh(
+    '30000000-0000-4000-8000-00000000000b',
+    'refresh-admin-home-0003',
+    7,
+    'Refresh after the approved timetable publication.',
+    '30000000-0000-4000-8000-000000000012'
+  );
+  IF decision <> '{"accepted": false, "reason": "step-up-required", "requiredAssurance": "aal2"}'::jsonb THEN
+    RAISE EXCEPTION 'AAL1 mutation must require AAL2: %', decision;
+  END IF;
+END
+$mutation_verification$;
+RESET ROLE;
+
+DO $mutation_persistence_verification$
+BEGIN
+  IF (
+    SELECT count(*)
+    FROM platform.runtime_command_receipt
+    WHERE idempotency_key = 'refresh-admin-home-0001'
+  ) <> 1 THEN
+    RAISE EXCEPTION 'idempotent mutation must persist exactly one receipt';
+  END IF;
+  IF (
+    SELECT count(*)
+    FROM audit.audit_event
+    WHERE action = 'runtime.snapshot.refresh.accepted'
+      AND correlation_id = '30000000-0000-4000-8000-00000000000d'
+  ) <> 1 THEN
+    RAISE EXCEPTION 'accepted mutation must persist exactly one audit record';
+  END IF;
+  IF (
+    SELECT count(*)
+    FROM integration_core.outbox_event
+    WHERE event_type = 'platform.runtime_snapshot_refresh_requested'
+      AND correlation_id = '30000000-0000-4000-8000-00000000000d'
+  ) <> 1 THEN
+    RAISE EXCEPTION 'accepted mutation must persist exactly one outbox event';
+  END IF;
+END
+$mutation_persistence_verification$;
+
+DELETE FROM iam.role_permission
+WHERE tenant_id = '30000000-0000-4000-8000-000000000001'
+  AND role_id = '30000000-0000-4000-8000-000000000005'
+  AND permission_key = 'runtime.snapshot.refresh';
+
+SET ROLE app_runtime;
+DO $mutation_permission_change_verification$
+DECLARE
+  decision jsonb;
+BEGIN
+  decision := platform.submit_runtime_snapshot_refresh(
+    '30000000-0000-4000-8000-00000000000c',
+    'refresh-admin-home-0004',
+    7,
+    'Refresh after the approved timetable publication.',
+    '30000000-0000-4000-8000-000000000013'
+  );
+  IF decision <> '{"accepted": false, "reason": "permission-not-granted"}'::jsonb THEN
+    RAISE EXCEPTION 'current permission removal must deny the mutation: %', decision;
+  END IF;
+END
+$mutation_permission_change_verification$;
+RESET ROLE;
+
+INSERT INTO iam.role_permission (tenant_id, role_id, permission_key)
+VALUES (
+  '30000000-0000-4000-8000-000000000001',
+  '30000000-0000-4000-8000-000000000005',
+  'runtime.snapshot.refresh'
+)
+ON CONFLICT DO NOTHING;
+
 SET ROLE app_runtime;
 DO $account_revoke_verification$
 DECLARE
@@ -481,11 +639,12 @@ BEGIN
     '30000000-0000-4000-8000-000000000004',
     'verification logout all'
   );
-  IF revoked_count <> 2 THEN
-    RAISE EXCEPTION 'expected two active account sessions to be revoked, got %', revoked_count;
+  IF revoked_count <> 3 THEN
+    RAISE EXCEPTION 'expected three active account sessions to be revoked, got %', revoked_count;
   END IF;
   IF iam.is_browser_session_active('30000000-0000-4000-8000-00000000000a')
-     OR iam.is_browser_session_active('30000000-0000-4000-8000-00000000000b') THEN
+     OR iam.is_browser_session_active('30000000-0000-4000-8000-00000000000b')
+     OR iam.is_browser_session_active('30000000-0000-4000-8000-00000000000c') THEN
     RAISE EXCEPTION 'account-wide revocation must invalidate every active session';
   END IF;
 END
@@ -493,8 +652,8 @@ $account_revoke_verification$;
 RESET ROLE;
 
 SELECT json_build_object(
-  'canonical_migrations', (SELECT count(*) FROM platform.schema_migration WHERE stream_id NOT IN ('AUTH-03', 'AUTH-07', 'AUTH-08', 'PILOT-04')),
-  'post_integration_migrations', (SELECT count(*) FROM platform.schema_migration WHERE stream_id IN ('AUTH-03', 'AUTH-07', 'AUTH-08', 'PILOT-04')),
+  'canonical_migrations', (SELECT count(*) FROM platform.schema_migration WHERE stream_id NOT IN ('AUTH-03', 'AUTH-07', 'AUTH-08', 'PILOT-04', 'PILOT-05')),
+  'post_integration_migrations', (SELECT count(*) FROM platform.schema_migration WHERE stream_id IN ('AUTH-03', 'AUTH-07', 'AUTH-08', 'PILOT-04', 'PILOT-05')),
   'oauth_transactions', (SELECT count(*) FROM iam.oauth_transaction_consumption),
   'membership_bindings', (SELECT count(*) FROM iam.oidc_membership_binding),
   'session_rows', (SELECT count(*) FROM iam.browser_session_registry),
@@ -507,7 +666,8 @@ SELECT json_build_object(
       'iam.browser_session_registry',
       'iam.oidc_logout_token_consumption',
       'iam.oidc_provider_cache',
-      'platform.runtime_read_model_projection'
+      'platform.runtime_read_model_projection',
+      'platform.runtime_command_receipt'
     ]) AS protected(table_name)
   )
 );
