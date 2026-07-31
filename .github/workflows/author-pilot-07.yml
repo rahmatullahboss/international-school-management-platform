@@ -41,6 +41,33 @@ jobs:
         run: |
           python3 scripts/author_pilot_07.py
           rm scripts/author_pilot_07.py
+      - name: Preserve append-only persona audit references in verification cleanup
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('tests/integration/verify-auth-durable-context.sh')
+          source = path.read_text(encoding='utf-8')
+          old = """DELETE FROM iam.membership_role
+          WHERE tenant_id = '30000000-0000-4000-8000-000000000001'
+            AND membership_id = '30000000-0000-4000-8000-000000000006'
+            AND role_id = '30000000-0000-4000-8000-000000000025';
+          DELETE FROM iam.role
+          WHERE tenant_id = '30000000-0000-4000-8000-000000000001'
+            AND role_id = '30000000-0000-4000-8000-000000000025';
+          """
+          new = """DELETE FROM iam.membership_role
+          WHERE tenant_id = '30000000-0000-4000-8000-000000000001'
+            AND membership_id = '30000000-0000-4000-8000-000000000006'
+            AND role_id = '30000000-0000-4000-8000-000000000025';
+
+          -- Keep the reviewed mapping and its append-only event as durable governance evidence.
+          -- The role fixture therefore remains present for the lifetime of this isolated test database.
+          """
+          if source.count(old) != 1:
+              raise SystemExit('expected exactly one PILOT-07 temporary-role cleanup block')
+          path.write_text(source.replace(old, new), encoding='utf-8')
+          PY
       - run: npm run format
       - run: npx eslint . --fix
       - run: npm run format
