@@ -171,3 +171,5 @@ Production activation still requires:
 - backup, restore and rollback rehearsal;
 - owner UAT and security sign-off;
 - explicit production authorization.
+
+PILOT-08 does not schedule the composer. Any orchestration cadence and credential delivery remain separate reviewed production changes.
