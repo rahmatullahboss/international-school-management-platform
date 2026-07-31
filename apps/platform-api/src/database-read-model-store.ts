@@ -198,18 +198,21 @@ export class DatabaseReadModelStore {
     sessionId: string,
     revision: number,
     payloadDigest: string,
+    capabilityDigest: string,
   ): Promise<Record<string, unknown> | undefined> {
     requireUuid(sessionId, 'sessionId');
     requirePositiveRevision(revision);
     requireDigest(payloadDigest, 'payloadDigest');
+    requireDigest(capabilityDigest, 'capabilityDigest');
     const rows = await this.#database.query<RuntimeReadModelPayloadRow>(
       `SELECT payload
        FROM platform.read_runtime_read_model_payload(
          $1::uuid,
          $2::bigint,
-         $3::text
+         $3::text,
+         $4::text
        )`,
-      [sessionId, revision, payloadDigest],
+      [sessionId, revision, payloadDigest, capabilityDigest],
     );
     if (rows.length === 0) return undefined;
     const row = rows[0];
