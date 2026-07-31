@@ -52,7 +52,9 @@ describe('DatabaseReadModelStore', () => {
   });
 
   it('reads payload only for the exact session, revision and digest tuple', async () => {
-    const { database, query } = databaseReturning([{ payload: { metrics: [{ id: 'students' }] } }]);
+    const { database, query } = databaseReturning([
+      { payload: { metrics: [{ id: 'students' }] } },
+    ]);
     const store = new DatabaseReadModelStore(database);
 
     await expect(store.readPayload(ids.session, 7, 'a'.repeat(64))).resolves.toEqual({
@@ -76,12 +78,16 @@ describe('DatabaseReadModelStore', () => {
       { ...headRow, sourceUpdatedAt: 'not-a-date' },
     ]) {
       const store = new DatabaseReadModelStore(databaseReturning([row]).database);
-      await expect(store.resolveHead(ids.session)).rejects.toThrow('invalid database response');
+      await expect(store.resolveHead(ids.session)).rejects.toThrow(
+        'invalid database response',
+      );
     }
   });
 
   it('rejects malformed payload rows, unsafe inputs and non-object payloads', async () => {
-    const malformed = new DatabaseReadModelStore(databaseReturning([{ payload: ['not', 'object'] }]).database);
+    const malformed = new DatabaseReadModelStore(
+      databaseReturning([{ payload: ['not', 'object'] }]).database,
+    );
     await expect(malformed.readPayload(ids.session, 7, 'a'.repeat(64))).rejects.toThrow(
       'invalid database response',
     );
