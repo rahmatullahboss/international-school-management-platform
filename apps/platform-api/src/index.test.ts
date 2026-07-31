@@ -17,6 +17,7 @@ const environment = {
   AUTH_SESSION_SECRET: authSessionSecret,
   AUTH_SESSION_REGISTRY_SOURCE: 'database',
   AUTH_PERMISSION_SOURCE: 'database',
+  RUNTIME_READ_MODEL_SOURCE: 'database',
   AUTH_ALLOWED_WEB_ORIGINS: 'https://school.test',
   DATABASE_URL: 'postgresql://test.invalid/school',
 };
@@ -109,6 +110,11 @@ describe('platform API', () => {
         accountWideLogout: true,
         secureCookieDeletion: true,
         stepUpAssurance: true,
+        databaseReadModels: true,
+        tenantSafeReadModelScope: true,
+        revisionBoundEtags: true,
+        boundedServerSnapshotCache: true,
+        currentGrantSnapshotRevalidation: true,
       },
     });
     expect(JSON.stringify(payload)).not.toContain('secret');
@@ -272,6 +278,118 @@ describe('platform API', () => {
         message: 'Permission evaluation is not configured.',
       },
     });
+  });
+
+  it('serves an exact database snapshot with private revision-bound revalidation', async () => {
+    const head = {
+      tenantId: '40000000-0000-4000-8000-000000000003',
+      membershipId: '40000000-0000-4000-8000-000000000001',
+      campusId: '40000000-0000-4000-8000-000000000004',
+      persona: 'admin',
+      subjectRef: 'principal-dashboard',
+      capabilities: ['finance.read'],
+      revision: 7,
+      generatedAt: '2026-07-31T03:40:00.000Z',
+      sourceUpdatedAt: '2026-07-31T03:39:30.000Z',
+      payloadDigest: 'a'.repeat(64),
+      capabilityDigest: 'b'.repeat(64),
+      payloadBytes: 128,
+    };
+    databaseQuery
+      .mockResolvedValueOnce([{ value: true }])
+      .mockResolvedValueOnce([head])
+      .mockResolvedValueOnce([{ payload: { metrics: [{ id: 'students', value: 42 }] } }]);
+    const response = await app.request(
+      '/auth/v1/snapshot',
+      {
+        headers: {
+          origin: 'https://school.test',
+          cookie: await issueBrowserCookie(),
+        },
+      },
+      environment,
+    );
+    expect(response.status).toBe(200);
+    expect(response.headers.get('cache-control')).toBe('private, max-age=0, must-revalidate');
+    expect(response.headers.get('vary')).toBe('Origin, Cookie, If-None-Match');
+    expect(response.headers.get('access-control-allow-origin')).toBe('https://school.test');
+    expect(response.headers.get('access-control-allow-credentials')).toBe('true');
+    expect(response.headers.get('etag')).toMatch(/^"rm1-[A-Za-z0-9_-]+"$/u);
+    await expect(response.json()).resolves.toMatchObject({
+      schemaVersion: 1,
+      scope: {
+        tenantId: head.tenantId,
+        membershipId: head.membershipId,
+        campusId: head.campusId,
+        capabilities: ['finance.read'],
+      },
+      revision: 7,
+      data: { metrics: [{ id: 'students', value: 42 }] },
+    });
+  });
+
+  it('returns 304 only after current session and database head revalidation', async () => {
+    const head = {
+      tenantId: '40000000-0000-4000-8000-000000000003',
+      membershipId: '40000000-0000-4000-8000-000000000001',
+      campusId: '40000000-0000-4000-8000-000000000004',
+      persona: 'admin',
+      subjectRef: 'principal-dashboard',
+      capabilities: ['finance.read'],
+      revision: 8,
+      generatedAt: '2026-07-31T03:41:00.000Z',
+      sourceUpdatedAt: '2026-07-31T03:40:30.000Z',
+      payloadDigest: 'c'.repeat(64),
+      capabilityDigest: 'd'.repeat(64),
+      payloadBytes: 128,
+    };
+    databaseQuery
+      .mockResolvedValueOnce([{ value: true }])
+      .mockResolvedValueOnce([head])
+      .mockResolvedValueOnce([{ payload: { metrics: [] } }]);
+    const first = await app.request(
+      '/auth/v1/snapshot',
+      { headers: { origin: 'https://school.test', cookie: await issueBrowserCookie() } },
+      environment,
+    );
+    const etag = first.headers.get('etag');
+    expect(first.status).toBe(200);
+    expect(etag).not.toBeNull();
+
+    databaseQuery.mockReset();
+    databaseQuery.mockResolvedValueOnce([{ value: true }]).mockResolvedValueOnce([head]);
+    const revalidated = await app.request(
+      '/auth/v1/snapshot',
+      {
+        headers: {
+          origin: 'https://school.test',
+          cookie: await issueBrowserCookie(),
+          'if-none-match': etag ?? '',
+        },
+      },
+      environment,
+    );
+    expect(revalidated.status).toBe(304);
+    expect(databaseQuery).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps database snapshots fail-closed for missing bindings and wrong origins', async () => {
+    const unconfigured = await app.request(
+      '/auth/v1/snapshot',
+      { headers: { origin: 'https://school.test' } },
+      { APP_ENV: 'test', APP_REGION: 'local' },
+    );
+    expect(unconfigured.status).toBe(503);
+    expect(unconfigured.headers.get('access-control-allow-origin')).toBeNull();
+
+    const denied = await app.request(
+      '/auth/v1/snapshot',
+      { headers: { origin: 'https://evil.test', cookie: await issueBrowserCookie() } },
+      environment,
+    );
+    expect(denied.status).toBe(403);
+    expect(denied.headers.get('access-control-allow-origin')).toBeNull();
+    expect(databaseQuery).not.toHaveBeenCalled();
   });
 
   it('permits only the exact configured logout origin during preflight', async () => {

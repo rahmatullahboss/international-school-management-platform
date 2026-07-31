@@ -1,7 +1,4 @@
-import type {
-  DatabaseReadModelStore,
-  RuntimeReadModelHead,
-} from './database-read-model-store.js';
+import type { DatabaseReadModelStore, RuntimeReadModelHead } from './database-read-model-store.js';
 
 export interface DatabaseReadModelSnapshot {
   readonly schemaVersion: 1;
@@ -50,10 +47,7 @@ export class RuntimeReadModelCache {
   readonly #maxEntries: number;
   readonly #ttlMilliseconds: number;
 
-  constructor(
-    maxEntries = DEFAULT_MAX_ENTRIES,
-    ttlMilliseconds = DEFAULT_TTL_MILLISECONDS,
-  ) {
+  constructor(maxEntries = DEFAULT_MAX_ENTRIES, ttlMilliseconds = DEFAULT_TTL_MILLISECONDS) {
     if (
       !Number.isInteger(maxEntries) ||
       maxEntries < 1 ||
@@ -82,9 +76,12 @@ export class RuntimeReadModelCache {
 
   set(key: string, payload: Readonly<Record<string, unknown>>, now: number): void {
     this.#entries.delete(key);
-    this.#entries.set(key, { payload: structuredClone(payload), expiresAt: now + this.#ttlMilliseconds });
+    this.#entries.set(key, {
+      payload: structuredClone(payload),
+      expiresAt: now + this.#ttlMilliseconds,
+    });
     while (this.#entries.size > this.#maxEntries) {
-      const oldest = this.#entries.keys().next().value as string | undefined;
+      const oldest = this.#entries.keys().next().value;
       if (oldest === undefined) break;
       this.#entries.delete(oldest);
     }

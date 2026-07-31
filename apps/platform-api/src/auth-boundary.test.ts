@@ -25,6 +25,7 @@ const completeBindings = {
   AUTH_SESSION_REGISTRY_SOURCE: 'database',
   AUTH_MEMBERSHIP_SOURCE: 'database',
   AUTH_PERMISSION_SOURCE: 'database',
+  RUNTIME_READ_MODEL_SOURCE: 'database',
   AUTH_ALLOWED_WEB_ORIGINS: 'https://school.test,https://admin.school.test',
 };
 
@@ -81,6 +82,11 @@ describe('OIDC BFF readiness', () => {
         currentRoleRevalidation: true,
         assuranceAwarePermissionDecision: true,
         serverOwnedAuthorizationScope: true,
+        databaseReadModels: true,
+        tenantSafeReadModelScope: true,
+        revisionBoundEtags: true,
+        boundedServerSnapshotCache: true,
+        currentGrantSnapshotRevalidation: true,
       },
       missingConfiguration: [
         'provider-metadata',
@@ -94,6 +100,7 @@ describe('OIDC BFF readiness', () => {
         'session-registry-source',
         'membership-source',
         'permission-source',
+        'runtime-read-model-source',
         'allowed-web-origins',
       ],
     });

@@ -30,6 +30,8 @@ import {
   type LogoutRegistry,
   type LogoutScope,
 } from './auth-logout.js';
+import { resolveDatabaseReadModel, RuntimeReadModelCache } from './database-read-model.js';
+import { DatabaseReadModelStore } from './database-read-model-store.js';
 import { isAllowedPilotWebOrigin, resolvePilotReadSnapshot } from './pilot-read-models.js';
 import { issuePilotSession, pilotSessionHeaders, verifyPilotSession } from './pilot-sessions.js';
 
@@ -41,6 +43,7 @@ interface Bindings extends AuthBindings {
 }
 
 const app = new Hono<{ Bindings: Bindings }>();
+const runtimeReadModelCache = new RuntimeReadModelCache();
 
 app.use('*', async (context, next) => {
   const correlationId = crypto.randomUUID();
@@ -114,6 +117,21 @@ function applyAuthMutationCors(
   headers('access-control-allow-credentials', 'true');
   headers('access-control-allow-methods', 'POST, OPTIONS');
   headers('access-control-allow-headers', 'content-type');
+  headers('access-control-max-age', '600');
+  return true;
+}
+
+function applyAuthReadCors(
+  headers: (name: string, value: string) => void,
+  allowedOrigins: string | undefined,
+  origin: string | undefined,
+): boolean {
+  if (!isAllowedAuthMutationOrigin(allowedOrigins, origin) || origin === undefined) return false;
+  headers('access-control-allow-origin', origin);
+  headers('access-control-allow-credentials', 'true');
+  headers('access-control-allow-methods', 'GET, OPTIONS');
+  headers('access-control-allow-headers', 'if-none-match');
+  headers('access-control-expose-headers', 'etag, x-correlation-id');
   headers('access-control-max-age', '600');
   return true;
 }
@@ -278,6 +296,125 @@ app.post('/auth/v1/authorize', async (context) => {
     return context.json({ error: { code: result.code, message: result.message } }, result.status);
   }
   return context.json({ schemaVersion: 1, ...result.decision }, result.status);
+});
+
+function durableReadModelStores(
+  environment: Bindings,
+): { readonly auth: DurableAuthStore; readonly readModel: DatabaseReadModelStore } | undefined {
+  if (
+    environment.AUTH_SESSION_REGISTRY_SOURCE !== 'database' ||
+    environment.RUNTIME_READ_MODEL_SOURCE !== 'database' ||
+    environment.DATABASE_URL === undefined ||
+    environment.DATABASE_URL.trim() === ''
+  ) {
+    return undefined;
+  }
+  const database = createHttpDatabase(environment.DATABASE_URL);
+  return { auth: new DurableAuthStore(database), readModel: new DatabaseReadModelStore(database) };
+}
+
+app.options('/auth/v1/snapshot', (context) => {
+  context.header('cache-control', 'no-store');
+  context.header('vary', 'Origin');
+  const stores = durableReadModelStores(context.env);
+  if (stores === undefined || !hasValidAuthMutationOrigins(context.env.AUTH_ALLOWED_WEB_ORIGINS)) {
+    return context.json(
+      {
+        error: {
+          code: 'runtime_read_model_configuration_invalid',
+          message: 'Database read models are not configured.',
+        },
+      },
+      503,
+    );
+  }
+  if (
+    !applyAuthReadCors(
+      (name, value) => context.header(name, value),
+      context.env.AUTH_ALLOWED_WEB_ORIGINS,
+      context.req.header('origin'),
+    )
+  ) {
+    return context.json(
+      {
+        error: {
+          code: 'runtime_read_model_origin_denied',
+          message: 'The requesting origin is not permitted.',
+        },
+      },
+      403,
+    );
+  }
+  return context.body(null, 204);
+});
+
+app.get('/auth/v1/snapshot', async (context) => {
+  context.header('cache-control', 'no-store');
+  context.header('vary', 'Origin, Cookie, If-None-Match');
+  const origin = context.req.header('origin');
+  const stores = durableReadModelStores(context.env);
+  const configured =
+    stores !== undefined &&
+    context.env.AUTH_SESSION_SECRET !== undefined &&
+    context.env.AUTH_SESSION_SECRET.length >= 32 &&
+    hasValidAuthMutationOrigins(context.env.AUTH_ALLOWED_WEB_ORIGINS);
+  if (!configured || stores === undefined) {
+    return context.json(
+      {
+        error: {
+          code: 'runtime_read_model_configuration_invalid',
+          message: 'Database read models are not configured.',
+        },
+      },
+      503,
+    );
+  }
+  if (
+    !applyAuthReadCors(
+      (name, value) => context.header(name, value),
+      context.env.AUTH_ALLOWED_WEB_ORIGINS,
+      origin,
+    )
+  ) {
+    return context.json(
+      {
+        error: {
+          code: 'runtime_read_model_origin_denied',
+          message: 'The requesting origin is not permitted.',
+        },
+      },
+      403,
+    );
+  }
+
+  const session = await resolveAuthenticatedBrowserSessionContext(
+    context.env,
+    context.req.header('cookie'),
+    (sessionId) => stores.auth.isSessionActive(sessionId),
+  );
+  if (!session.ok) {
+    return context.json(
+      { error: { code: session.code, message: session.message } },
+      session.status,
+    );
+  }
+  const ifNoneMatch = context.req.header('if-none-match');
+  const resolution = await resolveDatabaseReadModel({
+    sessionId: session.context.sessionId,
+    store: stores.readModel,
+    cache: runtimeReadModelCache,
+    ...(ifNoneMatch === undefined ? {} : { ifNoneMatch }),
+  });
+  if (!resolution.ok) {
+    return context.json(
+      { error: { code: resolution.code, message: resolution.message } },
+      resolution.status,
+    );
+  }
+  context.header('etag', resolution.etag);
+  context.header('cache-control', 'private, max-age=0, must-revalidate');
+  if (resolution.status === 304) return context.body(null, 304);
+  return context.json(resolution.snapshot);
 });
 
 app.options('/auth/v1/logout', (context) => {
@@ -531,6 +668,8 @@ export * from './auth-boundary.js';
 export * from './auth-durable-store.js';
 export * from './auth-logout.js';
 export * from './auth-permission.js';
+export * from './database-read-model.js';
+export * from './database-read-model-store.js';
 export * from './operations-application.js';
 export * from './operations-routes.js';
 export * from './pilot-read-models.js';
