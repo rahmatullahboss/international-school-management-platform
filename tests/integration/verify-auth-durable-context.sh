@@ -2857,6 +2857,55 @@ INSERT INTO people.guardian_student_authority (
   (clock_timestamp() AT TIME ZONE 'Asia/Dhaka')::date - 30
 );
 
+INSERT INTO scheduling.timetable_version (
+  tenant_id, timetable_version_id, academic_year_id, term_id, campus_id,
+  timetable_name, effective_from, publication_state, idempotency_key
+) VALUES (
+  '30000000-0000-4000-8000-000000000001',
+  '30000000-0000-4000-8000-000000000099',
+  '30000000-0000-4000-8000-000000000061',
+  '30000000-0000-4000-8000-000000000062',
+  '30000000-0000-4000-8000-000000000003',
+  'Pilot Guardian Timetable',
+  (clock_timestamp() AT TIME ZONE 'Asia/Dhaka')::date - 30,
+  'published',
+  'pilot-10-guardian-timetable-01'
+);
+INSERT INTO scheduling.class_meeting_pattern (
+  tenant_id, meeting_pattern_id, timetable_version_id, section_id,
+  weekday, starts_at, ends_at, timezone, teacher_ids, student_ids, valid_from
+) VALUES (
+  '30000000-0000-4000-8000-000000000001',
+  '30000000-0000-4000-8000-00000000009a',
+  '30000000-0000-4000-8000-000000000099',
+  '30000000-0000-4000-8000-000000000065',
+  extract(dow FROM (clock_timestamp() AT TIME ZONE 'Asia/Dhaka')::date)::smallint,
+  TIME '12:00',
+  TIME '12:45',
+  'Asia/Dhaka',
+  '["30000000-0000-4000-8000-000000000055"]'::jsonb,
+  '["30000000-0000-4000-8000-000000000031"]'::jsonb,
+  (clock_timestamp() AT TIME ZONE 'Asia/Dhaka')::date - 30
+);
+INSERT INTO scheduling.scheduled_class_meeting (
+  tenant_id, scheduled_meeting_id, timetable_version_id, meeting_pattern_id,
+  section_id, local_date, starts_at, ends_at, timezone, teacher_ids,
+  student_ids, meeting_status
+) VALUES (
+  '30000000-0000-4000-8000-000000000001',
+  '30000000-0000-4000-8000-00000000009b',
+  '30000000-0000-4000-8000-000000000099',
+  '30000000-0000-4000-8000-00000000009a',
+  '30000000-0000-4000-8000-000000000065',
+  (clock_timestamp() AT TIME ZONE 'Asia/Dhaka')::date,
+  TIME '12:00',
+  TIME '12:45',
+  'Asia/Dhaka',
+  '["30000000-0000-4000-8000-000000000055"]'::jsonb,
+  '["30000000-0000-4000-8000-000000000031"]'::jsonb,
+  'scheduled'
+);
+
 INSERT INTO attendance.attendance_policy_version (
   tenant_id, policy_version_id, policy_key, version_label,
   minimum_present_minutes, late_after_minutes,
@@ -2899,7 +2948,7 @@ INSERT INTO attendance.attendance_session (
 ) VALUES (
   '30000000-0000-4000-8000-000000000001',
   '30000000-0000-4000-8000-00000000008a',
-  '30000000-0000-4000-8000-00000000008c',
+  '30000000-0000-4000-8000-00000000009b',
   '30000000-0000-4000-8000-000000000065',
   '30000000-0000-4000-8000-000000000003',
   (clock_timestamp() AT TIME ZONE 'Asia/Dhaka')::date,
@@ -2917,6 +2966,21 @@ INSERT INTO attendance.attendance_record (
   '30000000-0000-4000-8000-00000000008b',
   'pilot-10-guardian-attendance-01',
   '30000000-0000-4000-8000-00000000008a',
+  '30000000-0000-4000-8000-000000000031',
+  '30000000-0000-4000-8000-000000000088',
+  'guardian',
+  '30000000-0000-4000-8000-000000000080'
+);
+
+-- Same-child attendance with a forged selected-campus field but a cross-campus timetable must remain invisible.
+INSERT INTO attendance.attendance_record (
+  tenant_id, attendance_record_id, client_record_id, session_id,
+  student_profile_id, attendance_code_id, record_source, recorded_by
+) VALUES (
+  '30000000-0000-4000-8000-000000000001',
+  '30000000-0000-4000-8000-0000000000ba',
+  'pilot-10-cross-campus-attendance-01',
+  '30000000-0000-4000-8000-00000000007f',
   '30000000-0000-4000-8000-000000000031',
   '30000000-0000-4000-8000-000000000088',
   'guardian',
@@ -2958,6 +3022,33 @@ INSERT INTO gradebook.grade_publication (
   '30000000-0000-4000-8000-000000000001',
   '30000000-0000-4000-8000-00000000008f',
   '30000000-0000-4000-8000-00000000008e',
+  clock_timestamp() - interval '1 day',
+  '30000000-0000-4000-8000-000000000080'
+);
+
+-- A published grade for the same child in a cross-campus section must remain invisible.
+INSERT INTO gradebook.grade_calculation_snapshot (
+  tenant_id, snapshot_id, section_id, reporting_period_id,
+  student_profile_id, policy_version_id, category_percentages,
+  calculated_percent, displayed_grade, formula
+) VALUES (
+  '30000000-0000-4000-8000-000000000001',
+  '30000000-0000-4000-8000-0000000000b8',
+  '30000000-0000-4000-8000-00000000007b',
+  '30000000-0000-4000-8000-00000000006c',
+  '30000000-0000-4000-8000-000000000031',
+  '30000000-0000-4000-8000-00000000008d',
+  '{"coursework":90}'::jsonb,
+  90,
+  'A+',
+  'cross-campus guardian fixture'
+);
+INSERT INTO gradebook.grade_publication (
+  tenant_id, publication_id, snapshot_id, available_from, published_by
+) VALUES (
+  '30000000-0000-4000-8000-000000000001',
+  '30000000-0000-4000-8000-0000000000b9',
+  '30000000-0000-4000-8000-0000000000b8',
   clock_timestamp() - interval '1 day',
   '30000000-0000-4000-8000-000000000080'
 );

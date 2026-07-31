@@ -16,7 +16,7 @@ RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = pg_catalog, platform, iam, tenancy, people, student_lifecycle,
-                  attendance, gradebook, billing, audit
+                  scheduling, attendance, gradebook, billing, audit
 AS $function$
 DECLARE
   selected_account_id uuid;
@@ -326,6 +326,14 @@ BEGIN
    AND attendance_session.session_id = attendance_record.session_id
    AND attendance_session.campus_id = p_campus_id
    AND attendance_session.local_date = selected_local_date
+  JOIN scheduling.scheduled_class_meeting AS scheduled_meeting
+    ON scheduled_meeting.tenant_id = attendance_session.tenant_id
+   AND scheduled_meeting.scheduled_meeting_id = attendance_session.scheduled_meeting_id
+  JOIN scheduling.timetable_version AS timetable
+    ON timetable.tenant_id = scheduled_meeting.tenant_id
+   AND timetable.timetable_version_id = scheduled_meeting.timetable_version_id
+   AND timetable.campus_id = p_campus_id
+   AND timetable.publication_state = 'published'
   JOIN attendance.attendance_code AS attendance_code
     ON attendance_code.tenant_id = attendance_record.tenant_id
    AND attendance_code.attendance_code_id = attendance_record.attendance_code_id
@@ -341,6 +349,17 @@ BEGIN
    AND grade_snapshot.snapshot_id = grade_publication.snapshot_id
   WHERE grade_publication.tenant_id = p_tenant_id
     AND grade_snapshot.student_profile_id = ANY(education_student_profile_ids)
+    AND EXISTS (
+      SELECT 1
+      FROM scheduling.class_meeting_pattern AS class_pattern
+      JOIN scheduling.timetable_version AS timetable
+        ON timetable.tenant_id = class_pattern.tenant_id
+       AND timetable.timetable_version_id = class_pattern.timetable_version_id
+       AND timetable.campus_id = p_campus_id
+       AND timetable.publication_state = 'published'
+      WHERE class_pattern.tenant_id = grade_snapshot.tenant_id
+        AND class_pattern.section_id = grade_snapshot.section_id
+    )
     AND grade_publication.available_from <= selected_composed_at
     AND (
       grade_publication.available_to IS NULL
