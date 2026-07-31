@@ -63,7 +63,9 @@ describe('database projection source publisher store', () => {
 
   it('accepts only reviewed sanitized rejection reasons', async () => {
     const store = new DatabaseProjectionSourcePublisherStore(
-      databaseWith([{ value: { published: false, reason: 'revision-conflict', currentRevision: 4 } }]),
+      databaseWith([
+        { value: { published: false, reason: 'revision-conflict', currentRevision: 4 } },
+      ]),
     );
     await expect(store.publish(publicationInput())).resolves.toEqual({
       published: false,
