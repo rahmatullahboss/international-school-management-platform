@@ -178,8 +178,14 @@ export class DatabaseReadModelStore {
          subject_ref AS "subjectRef",
          capabilities,
          revision,
-         generated_at::text AS "generatedAt",
-         source_updated_at::text AS "sourceUpdatedAt",
+         to_char(
+           generated_at AT TIME ZONE 'UTC',
+           'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'
+         ) AS "generatedAt",
+         to_char(
+           source_updated_at AT TIME ZONE 'UTC',
+           'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'
+         ) AS "sourceUpdatedAt",
          payload_digest AS "payloadDigest",
          capability_digest AS "capabilityDigest",
          payload_bytes AS "payloadBytes"
