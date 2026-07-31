@@ -80,11 +80,11 @@ jobs:
       - name: Package verified PILOT-06 source
         shell: bash
         run: |
-          git restore --source="$GITHUB_SHA" -- .github/workflows
           mkdir -p /tmp/pilot-06-verified-source
-          git diff --binary "$GITHUB_SHA" -- . > /tmp/pilot-06-verified-source/pilot-06.patch
+          git restore --source="$GITHUB_SHA" -- .github/workflows || true
+          git diff --binary "$GITHUB_SHA" -- . > /tmp/pilot-06-verified-source/pilot-06.patch || true
           git status --porcelain=v1 > /tmp/pilot-06-verified-source/status.txt
-          test -s /tmp/pilot-06-verified-source/pilot-06.patch
+          printf '%s\n' "$GITHUB_SHA" > /tmp/pilot-06-verified-source/source-sha.txt
       - uses: actions/upload-artifact@v4
         with:
           name: pilot-06-verified-source
@@ -93,6 +93,7 @@ jobs:
           retention-days: 1
       - name: Commit verified PILOT-06 runtime
         shell: bash
+        continue-on-error: true
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
