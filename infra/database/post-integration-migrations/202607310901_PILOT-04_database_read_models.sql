@@ -11,13 +11,8 @@ CREATE TABLE IF NOT EXISTS platform.runtime_read_model_projection (
   payload jsonb NOT NULL CHECK (jsonb_typeof(payload) = 'object'),
   source_updated_at timestamptz NOT NULL,
   generated_at timestamptz NOT NULL DEFAULT clock_timestamp(),
-  payload_digest text GENERATED ALWAYS AS (
-    encode(public.digest(convert_to(payload::text, 'UTF8'), 'sha256'), 'hex')
-  ) STORED,
-  payload_bytes integer GENERATED ALWAYS AS (
-    octet_length(convert_to(payload::text, 'UTF8'))
-  ) STORED,
-  CHECK (octet_length(convert_to(payload::text, 'UTF8')) BETWEEN 2 AND 262144),
+  payload_digest text NOT NULL CHECK (payload_digest ~ '^[0-9a-f]{64}$'),
+  payload_bytes integer NOT NULL CHECK (payload_bytes BETWEEN 2 AND 262144),
   CHECK (source_updated_at <= generated_at + interval '1 minute'),
   UNIQUE NULLS NOT DISTINCT (tenant_id, membership_id, campus_id, projection_key),
   FOREIGN KEY (tenant_id, membership_id)
@@ -35,7 +30,34 @@ CREATE INDEX IF NOT EXISTS runtime_read_model_projection_scope_idx
     revision
   );
 
+CREATE OR REPLACE FUNCTION platform.maintain_runtime_read_model_projection_integrity()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog, platform
+AS $function$
+DECLARE
+  serialized_payload bytea;
+BEGIN
+  serialized_payload := convert_to(NEW.payload::text, 'UTF8');
+  NEW.payload_bytes := octet_length(serialized_payload);
+  IF NEW.payload_bytes < 2 OR NEW.payload_bytes > 262144 THEN
+    RAISE EXCEPTION 'runtime read-model payload size is outside policy';
+  END IF;
+  NEW.payload_digest := encode(public.digest(serialized_payload, 'sha256'), 'hex');
+  RETURN NEW;
+END
+$function$;
+
+DROP TRIGGER IF EXISTS runtime_read_model_projection_integrity
+  ON platform.runtime_read_model_projection;
+CREATE TRIGGER runtime_read_model_projection_integrity
+BEFORE INSERT OR UPDATE ON platform.runtime_read_model_projection
+FOR EACH ROW
+EXECUTE FUNCTION platform.maintain_runtime_read_model_projection_integrity();
+
 REVOKE ALL ON TABLE platform.runtime_read_model_projection FROM PUBLIC, app_runtime;
+REVOKE ALL ON FUNCTION platform.maintain_runtime_read_model_projection_integrity() FROM PUBLIC, app_runtime;
 
 CREATE OR REPLACE FUNCTION platform.resolve_runtime_read_model_head(p_session_id uuid)
 RETURNS TABLE (
