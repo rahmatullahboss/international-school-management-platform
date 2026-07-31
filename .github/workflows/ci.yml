@@ -81,11 +81,14 @@ jobs:
         shell: bash
         run: |
           git restore --source="$GITHUB_SHA" -- .github/workflows
-          mkdir -p /tmp/pilot-06-verified-source/files
+          mkdir -p /tmp/pilot-06-verified-source
           git diff --binary "$GITHUB_SHA" -- . > /tmp/pilot-06-verified-source/pilot-06.patch
           git status --porcelain=v1 > /tmp/pilot-06-verified-source/status.txt
-          git diff --name-only --diff-filter=ACMRTUXB -z "$GITHUB_SHA" -- . \
-            | tar --null -T - -czf /tmp/pilot-06-verified-source/files.tar.gz
+          git diff --name-only --diff-filter=ACMRTUXB "$GITHUB_SHA" -- . \
+            > /tmp/pilot-06-verified-source/files.list
+          test -s /tmp/pilot-06-verified-source/files.list
+          tar -czf /tmp/pilot-06-verified-source/files.tar.gz \
+            -T /tmp/pilot-06-verified-source/files.list
       - uses: actions/upload-artifact@v4
         with:
           name: pilot-06-verified-source
