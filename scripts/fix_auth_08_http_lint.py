@@ -14,6 +14,19 @@ if boundary_source.count(old_boundary) != 1:
     raise SystemExit(f'Expected one AUTH-08 public session omission block, found {boundary_source.count(old_boundary)}.')
 boundary.write_text(boundary_source.replace(old_boundary, new_boundary), encoding='utf-8')
 
+auth_permission_test = Path('apps/platform-api/src/auth-permission.test.ts')
+auth_permission_source = auth_permission_test.read_text(encoding='utf-8')
+old_authenticator = '    return { ok: true, sessionId };\n'
+new_authenticator = '    return { ok: true as const, sessionId };\n'
+if auth_permission_source.count(old_authenticator) != 1:
+    raise SystemExit(
+        f'Expected one widened AUTH-08 authenticator result, found {auth_permission_source.count(old_authenticator)}.'
+    )
+auth_permission_test.write_text(
+    auth_permission_source.replace(old_authenticator, new_authenticator),
+    encoding='utf-8',
+)
+
 index_test = Path('apps/platform-api/src/index.test.ts')
 index_source = index_test.read_text(encoding='utf-8')
 old_assertion = "    expect(databaseQuery.mock.calls[1]?.[1]?.[1]).toBe('finance.read');\n"
