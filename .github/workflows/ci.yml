@@ -39,8 +39,9 @@ jobs:
       - run: npm ci
       - name: Apply PILOT-08 integration patch
         run: |
+          python3 scripts/fix_pilot_08_author.py
           python3 scripts/author_pilot_08.py
-          rm scripts/author_pilot_08.py
+          rm scripts/fix_pilot_08_author.py scripts/author_pilot_08.py
           git show origin/main:.github/workflows/ci.yml > .github/workflows/ci.yml
       - run: npm run format
       - run: npx eslint . --fix || true
