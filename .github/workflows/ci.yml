@@ -35,6 +35,8 @@ jobs:
       - run: npm ci
       - name: Apply PILOT-06 integration patch
         run: |
+          python3 scripts/fix_pilot_06_authoring.py
+          rm scripts/fix_pilot_06_authoring.py
           python3 scripts/implement_pilot_06.py
           rm scripts/implement_pilot_06.py
       - run: npm run format
