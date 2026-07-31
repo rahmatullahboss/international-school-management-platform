@@ -13,7 +13,7 @@ permissions:
   contents: write
 
 jobs:
-  author-auth-08-http:
+  harden-auth-08-request-body:
     if: github.event_name == 'pull_request' && github.head_ref == 'auth/database-permission-evaluation-v1' && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 40
@@ -39,27 +39,21 @@ jobs:
           node-version: '22.22.2'
           cache: npm
       - run: npm ci
-      - name: Align AUTH-08 authoring with the current session test shape
-        run: python3 scripts/fix_auth_08_http_authoring.py
-      - name: Add AUTH-08 HTTP permission regression tests
-        run: python3 scripts/implement_auth_08_http.py test
-      - name: Prove HTTP permission regressions fail before implementation
+      - name: Add bounded request-body regression test
+        run: python3 scripts/harden_auth_08_request_body.py test
+      - name: Prove chunked-body regression fails before implementation
         shell: bash
         run: |
           set +e
-          npx vitest run apps/platform-api/src/auth-permission.test.ts apps/platform-api/src/auth-boundary.test.ts apps/platform-api/src/index.test.ts > auth-08-http-red.log 2>&1
+          npx vitest run apps/platform-api/src/auth-permission.test.ts > auth-08-body-red.log 2>&1
           status=$?
           set -e
-          cat auth-08-http-red.log
+          cat auth-08-body-red.log
           test "$status" -ne 0
-          grep -q 'authorizes one exact permission using only the signed active session id' auth-08-http-red.log
-          grep -q 'authorizes permissions from the active database session and current grants' auth-08-http-red.log
-          grep -q 'keeps database permission evaluation fail-closed without approved bindings' auth-08-http-red.log
-      - name: Apply AUTH-08 HTTP permission implementation
-        run: python3 scripts/implement_auth_08_http.py implementation
-      - name: Apply lint-safe AUTH-08 corrections
-        run: python3 scripts/fix_auth_08_http_lint.py
-      - run: rm scripts/implement_auth_08_http.py scripts/fix_auth_08_http_authoring.py scripts/fix_auth_08_http_lint.py
+          grep -q 'rejects invalid media types and bounds chunked bodies by bytes before parsing' auth-08-body-red.log
+      - name: Apply bounded request-body implementation
+        run: python3 scripts/harden_auth_08_request_body.py implementation
+      - run: rm scripts/harden_auth_08_request_body.py
       - run: npm run format
       - run: npm run lint -- --fix
       - run: npm run format
@@ -85,18 +79,18 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
       - run: python3 scripts/validate_execution_artifacts.py
-      - name: Commit verified AUTH-08 HTTP checkpoint
+      - name: Commit verified AUTH-08 body hardening
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
-          git commit -m 'feat(auth): expose database-backed permission decisions'
+          git commit -m 'fix(auth): bound permission request body streaming'
           git push origin HEAD:auth/database-permission-evaluation-v1
 
   verify:
-    needs: author-auth-08-http
-    if: always() && needs.author-auth-08-http.result == 'skipped'
+    needs: harden-auth-08-request-body
+    if: always() && needs.harden-auth-08-request-body.result == 'skipped'
     runs-on: ubuntu-latest
     steps:
-      - run: echo 'Canonical repository verification resumes after AUTH-08 HTTP synchronization.'
+      - run: echo 'Canonical repository verification resumes after AUTH-08 request hardening.'
