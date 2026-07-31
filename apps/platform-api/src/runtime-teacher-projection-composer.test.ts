@@ -67,6 +67,7 @@ describe('teacher runtime projection composer', () => {
       { ...input(), membershipId: 'membership-browser-selected' },
       { ...input(), campusId: null },
       { ...input(), expectedPreviousRevision: -1 },
+      { ...input(), expectedPreviousRevision: 4.5 },
       { ...input(), composerId: 'bad composer id' },
       { ...input(), correlationId: 'not-a-uuid' },
       { ...input(), payload: { sessions: [] } },
