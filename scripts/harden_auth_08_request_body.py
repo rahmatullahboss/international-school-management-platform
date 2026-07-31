@@ -152,13 +152,11 @@ elif mode == 'implementation':
         raise SystemExit(
             f'Expected AUTH-08 route markers once, found import={index.count(old_import)} body={index.count(old_body)}.'
         )
-    index_path.write_text(
-        index.replace(old_import, new_import).replace(old_body, new_body).replace(
-            "    contentType: context.req.header('content-type'),\n",
-            '    contentType,\n',
-            1,
-        ),
-        encoding='utf-8',
-    )
+    updated = index.replace(old_import, new_import).replace(old_body, new_body)
+    old_content_type = "    contentType: context.req.header('content-type'),\n"
+    prefix, separator, suffix = updated.rpartition(old_content_type)
+    if separator == '':
+        raise SystemExit('Expected AUTH-08 authorize content-type assignment.')
+    index_path.write_text(prefix + '    contentType,\n' + suffix, encoding='utf-8')
 else:
     raise SystemExit('Usage: harden_auth_08_request_body.py test|implementation')
