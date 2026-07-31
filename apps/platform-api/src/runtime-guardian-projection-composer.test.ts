@@ -70,6 +70,7 @@ describe('guardian runtime projection composer', () => {
       { ...input(), expectedPreviousRevision: 1.5 },
       { ...input(), expectedPreviousRevision: Number.MAX_SAFE_INTEGER + 1 },
       { ...input(), expectedPreviousRevision: Number.POSITIVE_INFINITY },
+      { ...input(), expectedPreviousRevision: Number.NaN },
       { ...input(), composerId: 'bad composer id' },
       { ...input(), correlationId: 'not-a-uuid' },
       { ...input(), payload: { children: [] } },
