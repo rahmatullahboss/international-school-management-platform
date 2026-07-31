@@ -148,15 +148,33 @@ elif mode == 'implementation':
 
   const result = await authorizeDatabasePermission({
 '''
-    if index.count(old_import) != 1 or index.count(old_body) != 1:
+    old_authorize_content_type = '''  const result = await authorizeDatabasePermission({
+    configured,
+    allowedOrigins: context.env.AUTH_ALLOWED_WEB_ORIGINS,
+    origin,
+    contentType: context.req.header('content-type'),
+'''
+    new_authorize_content_type = '''  const result = await authorizeDatabasePermission({
+    configured,
+    allowedOrigins: context.env.AUTH_ALLOWED_WEB_ORIGINS,
+    origin,
+    contentType,
+'''
+    if (
+        index.count(old_import) != 1
+        or index.count(old_body) != 1
+        or index.count(old_authorize_content_type) != 1
+    ):
         raise SystemExit(
-            f'Expected AUTH-08 route markers once, found import={index.count(old_import)} body={index.count(old_body)}.'
+            'Expected AUTH-08 route markers once, found '
+            f'import={index.count(old_import)} body={index.count(old_body)} '
+            f'authorize={index.count(old_authorize_content_type)}.'
         )
-    updated = index.replace(old_import, new_import).replace(old_body, new_body)
-    old_content_type = "    contentType: context.req.header('content-type'),\n"
-    prefix, separator, suffix = updated.rpartition(old_content_type)
-    if separator == '':
-        raise SystemExit('Expected AUTH-08 authorize content-type assignment.')
-    index_path.write_text(prefix + '    contentType,\n' + suffix, encoding='utf-8')
+    index_path.write_text(
+        index.replace(old_import, new_import)
+        .replace(old_body, new_body)
+        .replace(old_authorize_content_type, new_authorize_content_type),
+        encoding='utf-8',
+    )
 else:
     raise SystemExit('Usage: harden_auth_08_request_body.py test|implementation')
