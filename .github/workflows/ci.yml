@@ -36,6 +36,7 @@ jobs:
         run: |
           python3 scripts/implement_pilot_05_http_and_verification.py
           python3 scripts/fix_pilot_05_control_validation.py
+          python3 scripts/fix_pilot_05_fixture_order.py
       - name: Capture concise PILOT-05 migration diagnostic
         shell: bash
         env:
