@@ -1,6 +1,6 @@
 import { hasValidAuthMutationOrigins, isAllowedAuthMutationOrigin } from './auth-logout.js';
 
-const MAX_PERMISSION_REQUEST_LENGTH = 2048;
+export const MAX_PERMISSION_REQUEST_LENGTH = 2048;
 const PERMISSION_KEY_PATTERN = /^[a-z0-9][a-z0-9._:-]{0,127}$/u;
 
 export type PermissionAuthenticator = () => Promise<
@@ -54,7 +54,7 @@ export type DatabasePermissionHttpResult =
       readonly message: string;
     };
 
-function isJsonContentType(value: string | undefined): boolean {
+export function isPermissionContentTypeAllowed(value: string | undefined): boolean {
   if (value === undefined) return false;
   const [mediaType, ...parameters] = value
     .toLowerCase()
@@ -62,6 +62,39 @@ function isJsonContentType(value: string | undefined): boolean {
     .map((part) => part.trim());
   if (mediaType !== 'application/json') return false;
   return parameters.every((parameter) => parameter === '' || parameter === 'charset=utf-8');
+}
+
+export async function readBoundedPermissionRequestBody(
+  body: ReadableStream<Uint8Array> | null,
+): Promise<string | undefined> {
+  if (body === null) return '';
+  const reader = body.getReader();
+  const decoder = new TextDecoder('utf-8', { fatal: true });
+  let byteLength = 0;
+  let text = '';
+  try {
+    for (;;) {
+      const chunk = await reader.read();
+      if (chunk.done) break;
+      byteLength += chunk.value.byteLength;
+      if (byteLength > MAX_PERMISSION_REQUEST_LENGTH) {
+        await reader.cancel();
+        return undefined;
+      }
+      text += decoder.decode(chunk.value, { stream: true });
+    }
+    text += decoder.decode();
+    return text;
+  } catch {
+    try {
+      await reader.cancel();
+    } catch {
+      // The request body is already unusable; retain the sanitized failure path.
+    }
+    return undefined;
+  } finally {
+    reader.releaseLock();
+  }
 }
 
 export function isPermissionDeclaredLengthAllowed(value: string | undefined): boolean {
@@ -115,7 +148,7 @@ export async function authorizeDatabasePermission(
     return failure(403, 'permission_origin_denied', 'The requesting origin is not permitted.');
   }
   if (
-    !isJsonContentType(input.contentType) ||
+    !isPermissionContentTypeAllowed(input.contentType) ||
     !isPermissionDeclaredLengthAllowed(input.contentLength)
   ) {
     return failure(400, 'permission_request_invalid', 'The permission request is invalid.');

@@ -19,7 +19,9 @@ import {
 import { DurableAuthStore, DurableOidcProviderCacheStore } from './auth-durable-store.js';
 import {
   authorizeDatabasePermission,
+  isPermissionContentTypeAllowed,
   isPermissionDeclaredLengthAllowed,
+  readBoundedPermissionRequestBody,
 } from './auth-permission.js';
 import {
   hasValidAuthMutationOrigins,
@@ -231,7 +233,9 @@ app.post('/auth/v1/authorize', async (context) => {
 
   const store = durablePermissionStore(context.env);
   const contentLength = context.req.header('content-length');
+  const contentType = context.req.header('content-type');
   const declaredLengthAllowed = isPermissionDeclaredLengthAllowed(contentLength);
+  const contentTypeAllowed = isPermissionContentTypeAllowed(contentType);
   const configured =
     store !== undefined &&
     context.env.AUTH_SESSION_SECRET !== undefined &&
@@ -240,20 +244,17 @@ app.post('/auth/v1/authorize', async (context) => {
   if (
     configured &&
     isAllowedAuthMutationOrigin(context.env.AUTH_ALLOWED_WEB_ORIGINS, origin) &&
-    declaredLengthAllowed
+    declaredLengthAllowed &&
+    contentTypeAllowed
   ) {
-    try {
-      rawBody = await context.req.text();
-    } catch {
-      rawBody = '';
-    }
+    rawBody = (await readBoundedPermissionRequestBody(context.req.raw.body)) ?? '';
   }
 
   const result = await authorizeDatabasePermission({
     configured,
     allowedOrigins: context.env.AUTH_ALLOWED_WEB_ORIGINS,
     origin,
-    contentType: context.req.header('content-type'),
+    contentType,
     ...(contentLength === undefined ? {} : { contentLength }),
     rawBody,
     authenticate: async () => {

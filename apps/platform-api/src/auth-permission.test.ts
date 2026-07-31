@@ -2,7 +2,9 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
   authorizeDatabasePermission,
+  isPermissionContentTypeAllowed,
   isPermissionDeclaredLengthAllowed,
+  readBoundedPermissionRequestBody,
   type PermissionAuthenticator,
   type PermissionEvaluator,
 } from './auth-permission.js';
@@ -202,5 +204,21 @@ describe('database-backed permission HTTP boundary', () => {
     expect(isPermissionDeclaredLengthAllowed('00042')).toBe(true);
     expect(isPermissionDeclaredLengthAllowed('42garbage')).toBe(false);
     expect(isPermissionDeclaredLengthAllowed('2049')).toBe(false);
+  });
+
+  it('rejects invalid media types and bounds chunked bodies by bytes before parsing', async () => {
+    expect(isPermissionContentTypeAllowed('application/json')).toBe(true);
+    expect(isPermissionContentTypeAllowed('application/json; charset=utf-8')).toBe(true);
+    expect(isPermissionContentTypeAllowed('text/plain')).toBe(false);
+
+    const encoder = new TextEncoder();
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(encoder.encode('x'.repeat(2048)));
+        controller.enqueue(encoder.encode('x'));
+        controller.close();
+      },
+    });
+    await expect(readBoundedPermissionRequestBody(body)).resolves.toBeUndefined();
   });
 });
