@@ -82,8 +82,12 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git restore --source="$GITHUB_SHA" -- .github/workflows
           git add -A
+          git diff --cached --quiet && exit 0
           git commit -m 'feat(pilot): complete durable runtime projection worker'
+          remote_head="$(git ls-remote origin refs/heads/pilot/runtime-projection-worker-v1 | cut -f1)"
+          test "$remote_head" = "$GITHUB_SHA"
           git push origin HEAD:pilot/runtime-projection-worker-v1
 
   verify:
