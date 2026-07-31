@@ -85,7 +85,7 @@ describe('database runtime read-model resolution', () => {
     expect(store.readPayload).toHaveBeenCalledTimes(2);
   });
 
-  it('bounds cache entries and expires them', async () => {
+  it('bounds cache entries and expires them', () => {
     const cache = new RuntimeReadModelCache(2, 10);
     cache.set('one', { value: 1 }, 0);
     cache.set('two', { value: 2 }, 0);
@@ -100,7 +100,10 @@ describe('database runtime read-model resolution', () => {
       resolveDatabaseReadModel({
         sessionId,
         cache: new RuntimeReadModelCache(),
-        store: { resolveHead: async () => undefined, readPayload: async () => ({}) },
+        store: {
+          resolveHead: () => Promise.resolve(undefined),
+          readPayload: () => Promise.resolve({}),
+        },
       }),
     ).resolves.toMatchObject({ ok: false, status: 404, code: 'runtime_read_model_not_found' });
 
@@ -108,7 +111,10 @@ describe('database runtime read-model resolution', () => {
       resolveDatabaseReadModel({
         sessionId,
         cache: new RuntimeReadModelCache(),
-        store: { resolveHead: async () => head, readPayload: async () => undefined },
+        store: {
+          resolveHead: () => Promise.resolve(head),
+          readPayload: () => Promise.resolve(undefined),
+        },
       }),
     ).resolves.toMatchObject({ ok: false, status: 503, code: 'runtime_read_model_unavailable' });
   });
