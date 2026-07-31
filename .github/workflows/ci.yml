@@ -33,7 +33,7 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Apply guarded guardian campus lineage hardening
-        run: python3 scripts/fix_pilot_10_guardian_campus_lineage.py
+        run: python3 scripts/fix_pilot_10_guardian_campus_lineage_v2.py
       - run: npm run format
       - run: npm run format:check
       - run: npm run lint
@@ -75,10 +75,12 @@ jobs:
           set -euo pipefail
           initial_head="$(git rev-parse HEAD)"
           test "$initial_head" = "${{ github.event.pull_request.head.sha }}"
-          rm scripts/fix_pilot_10_guardian_campus_lineage.py
+          rm scripts/fix_pilot_10_guardian_campus_lineage.py \
+            scripts/fix_pilot_10_guardian_campus_lineage_v2.py
           git add infra/database/post-integration-migrations/202608010201_PILOT-10_guardian_runtime_projection_composer.sql \
             tests/integration/verify-auth-durable-context.sh \
-            scripts/fix_pilot_10_guardian_campus_lineage.py
+            scripts/fix_pilot_10_guardian_campus_lineage.py \
+            scripts/fix_pilot_10_guardian_campus_lineage_v2.py
           git diff --cached --check
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
