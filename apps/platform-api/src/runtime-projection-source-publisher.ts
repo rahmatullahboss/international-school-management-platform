@@ -45,9 +45,9 @@ export type RuntimeProjectionSourcePublicationResult =
     };
 
 export interface RuntimeProjectionSourcePublisherStore {
-  publish(
+  readonly publish: (
     input: RuntimeProjectionSourcePublicationInput,
-  ): Promise<RuntimeProjectionSourcePublicationResult>;
+  ) => Promise<RuntimeProjectionSourcePublicationResult>;
 }
 
 export type RuntimeProjectionSourcePublisherResolution =
