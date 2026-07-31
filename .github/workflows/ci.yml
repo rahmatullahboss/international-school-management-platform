@@ -10,13 +10,12 @@ on:
       - 'integration/**'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  author-pilot-05:
-    if: github.event_name == 'pull_request' && github.head_ref == 'pilot/safe-mutation-envelope-v1' && github.actor != 'github-actions[bot]'
+  verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 20
     services:
       postgres:
         image: postgres:16-alpine
@@ -31,36 +30,37 @@ jobs:
           --health-retries 10
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: pilot/safe-mutation-envelope-v1
-          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22.22.2'
           cache: npm
       - run: npm ci
-      - name: Apply PILOT-05 HTTP and database verification
-        run: |
-          python3 scripts/implement_pilot_05_http_and_verification.py
-          python3 scripts/fix_pilot_05_control_validation.py
-          python3 scripts/fix_pilot_05_fixture_order.py
-      - run: rm scripts/implement_pilot_05_http_and_verification.py scripts/fix_pilot_05_control_validation.py scripts/fix_pilot_05_fixture_order.py
-      - run: npm run format
-      - run: npm run lint -- --fix
-      - run: npm run format
+      - run: npm run format:check
       - run: npm run lint
       - run: npm run check:boundaries
       - run: npm run typecheck
       - run: npm run test
-      - name: Verify canonical and post-integration migrations
+      - name: Verify all Wave 2 migrations on fresh PostgreSQL
         env:
           PGHOST: 127.0.0.1
           PGPORT: 5432
           PGUSER: postgres
           PGDATABASE: postgres
+        run: npm run verify:migrations
+      - name: Verify AUTH post-integration migrations and revocation contracts
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: 5432
+          PGUSER: postgres
+          PGDATABASE: postgres
+        run: npm run verify:auth-migrations
+      - name: Verify live Neon serverless driver
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
-          npm run verify:migrations
-          npm run verify:auth-migrations
+          test -n "$DATABASE_URL"
+          npm run test:neon
       - run: npm run build
       - run: npm run check:experience-budget
       - run: npm audit --audit-level=high
@@ -70,18 +70,3 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
       - run: python3 scripts/validate_execution_artifacts.py
-      - name: Commit verified PILOT-05 checkpoint
-        shell: bash
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A
-          git commit -m 'feat(pilot): add safe database mutation envelope'
-          git push origin HEAD:pilot/safe-mutation-envelope-v1
-
-  verify:
-    needs: author-pilot-05
-    if: always() && needs.author-pilot-05.result == 'skipped'
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo 'Canonical verification resumes after PILOT-05 synchronization.'
