@@ -1,6 +1,6 @@
 {
   "program": "international-school-platform-v1",
-  "gate": "GATE-PILOT-SAFE-MUTATION-V1",
+  "gate": "GATE-PILOT-RUNTIME-PROJECTION-WORKER-V1",
   "baseManifest": "infra/database/migration-manifest.json",
   "orderingRule": "apply the reviewed 40-migration Wave 2 manifest first, then all reviewed post-integration migrations in contiguous order",
   "migrations": [
@@ -33,6 +33,12 @@
       "id": "202607311001_PILOT-05_safe_runtime_mutation",
       "stream": "PILOT-05",
       "path": "infra/database/post-integration-migrations/202607311001_PILOT-05_safe_runtime_mutation.sql"
+    },
+    {
+      "order": 6,
+      "id": "202607311101_PILOT-06_runtime_projection_worker",
+      "stream": "PILOT-06",
+      "path": "infra/database/post-integration-migrations/202607311101_PILOT-06_runtime_projection_worker.sql"
     }
   ]
 }

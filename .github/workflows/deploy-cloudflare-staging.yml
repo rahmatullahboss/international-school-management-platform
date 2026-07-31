@@ -35,7 +35,8 @@ jobs:
       github.head_ref == 'auth/backchannel-logout-v1' ||
       github.head_ref == 'auth/database-permission-evaluation-v1' ||
       github.head_ref == 'pilot/database-read-models-v1' ||
-      github.head_ref == 'pilot/safe-mutation-envelope-v1'
+      github.head_ref == 'pilot/safe-mutation-envelope-v1' ||
+      github.head_ref == 'pilot/runtime-projection-worker-v1'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     environment: cloudflare-staging
@@ -72,9 +73,23 @@ jobs:
           trap 'rm -f "$secret_file"' EXIT
           umask 077
           printf 'PILOT_SESSION_SECRET=%s\n' "$(openssl rand -hex 32)" > "$secret_file"
+          set +e
           npx wrangler deploy --config apps/platform-api/wrangler.jsonc --env staging --secrets-file "$secret_file" 2>&1 | tee api-deploy.log
+          deploy_status=${PIPESTATUS[0]}
+          set -e
           api_url=$(grep -Eo 'https://[A-Za-z0-9.-]+\.workers\.dev' api-deploy.log | tail -1)
           test -n "$api_url"
+          if [[ "$deploy_status" != '0' ]]; then
+            if grep -Fq 'Some triggers failed to deploy' api-deploy.log \
+              && grep -Fq '/schedules) failed' api-deploy.log; then
+              echo 'STAGING_CRON_TRIGGER_STATE=unavailable' >> "$GITHUB_ENV"
+              echo '::warning::Cloudflare Worker deployed, but the current API token cannot publish the staging Cron Trigger.'
+            else
+              exit "$deploy_status"
+            fi
+          else
+            echo 'STAGING_CRON_TRIGGER_STATE=deployed' >> "$GITHUB_ENV"
+          fi
           echo "API_URL=$api_url" >> "$GITHUB_ENV"
 
       - name: Build and deploy staging web Worker
@@ -113,6 +128,13 @@ jobs:
 
           fetch_with_retry "$API_URL/health" api-health.json 'API health endpoint'
           fetch_with_retry "$API_URL/auth/v1/readiness" auth-readiness.json 'OIDC readiness endpoint'
+
+          projection_worker_status=$(curl --silent --show-error \
+            --dump-header projection-worker-headers.txt \
+            --output projection-worker-readiness.json \
+            --write-out '%{http_code}' \
+            "$API_URL/auth/v1/runtime-projection-worker/readiness")
+          test "$projection_worker_status" = '200'
 
           session_status=$(curl --silent --show-error \
             --dump-header session-headers.txt \
@@ -261,6 +283,10 @@ jobs:
               'safeDatabaseMutations', 'idempotentMutationReceipts',
               'optimisticMutationConcurrency', 'atomicMutationAuditOutbox',
               'aal2MutationAuthorization',
+              'databaseNativeProjectionProcessing', 'exactProjectionEventAllowlist',
+              'concurrentProjectionClaims', 'appliedProjectionCommandDeduplication',
+              'boundedProjectionRetryBackoff', 'projectionDeadLetterIsolation',
+              'projectionSourceIntegrity',
           ]
           controls = readiness.get('controls', {})
           for control in required_controls:
@@ -272,8 +298,31 @@ jobs:
               'transaction-signing-key', 'transaction-replay-source',
               'session-signing-key', 'session-registry-source',
               'membership-source', 'permission-source', 'runtime-read-model-source',
-              'runtime-mutation-source', 'allowed-web-origins',
+              'runtime-mutation-source', 'runtime-projection-worker-source',
+              'allowed-web-origins',
           ], readiness
+
+          worker_readiness = load('projection-worker-readiness.json')
+          assert worker_readiness == {
+              'schemaVersion': 1,
+              'state': 'disabled',
+              'controls': {
+                  'databaseNativeProcessing': True,
+                  'exactEventAllowlist': True,
+                  'concurrentSkipLockedClaims': True,
+                  'appliedCommandDeduplication': True,
+                  'boundedRetryBackoff': True,
+                  'deadLetterIsolation': True,
+                  'sourceProjectionIntegrity': True,
+              },
+              'missingConfiguration': [
+                  'database-url', 'runtime-projection-worker-source',
+              ],
+          }, worker_readiness
+          worker_headers = headers('projection-worker-headers.txt')
+          assert 'cache-control: no-store' in worker_headers, worker_headers
+          assert 'set-cookie:' not in worker_headers, worker_headers
+          assert 'access-control-allow-origin:' not in worker_headers, worker_headers
 
           serialized = json.dumps(readiness).lower()
           for forbidden in ['oidc_', 'auth_', 'secret-value', 'client-secret-value']:
@@ -341,6 +390,8 @@ jobs:
             echo "- Student: $WEB_URL/student"
             echo "- API health: $API_URL/health"
             echo "- OIDC readiness: $API_URL/auth/v1/readiness"
+            echo "- Projection worker readiness: $API_URL/auth/v1/runtime-projection-worker/readiness"
+            echo "- Staging Cron Trigger publication: $STAGING_CRON_TRIGGER_STATE"
             echo "- Browser session introspection: $API_URL/auth/v1/session"
             echo "- Database permission decision: $API_URL/auth/v1/authorize"
             echo "- Database runtime snapshot: $API_URL/auth/v1/snapshot"
@@ -349,5 +400,5 @@ jobs:
             echo "- Provider back-channel logout: $API_URL/auth/v1/backchannel-logout"
             echo "- Signed pilot session: $API_URL/pilot/v1/sessions/admin"
             echo "- Signed scoped admin snapshot: $API_URL/pilot/v1/snapshots/admin"
-            echo '- Scope: tenant-safe database reads and a single allowlisted AAL2 runtime refresh command are verified with current-grant authorization, exact revision checks, idempotent receipts and atomic audit/outbox persistence. Real provider login, production projection population, mutation consumers and production data access remain disabled until approved bindings and explicit production authorization are configured.'
+            echo '- Scope: tenant-safe reads, one allowlisted AAL2 refresh command and a database-native scheduled projection processor are verified with current-grant authorization, exact revisions, idempotent receipts, atomic audit/outbox persistence, SKIP LOCKED batches, retries and dead letters. The staging Cron Trigger is configured and this run records whether the current account token published it; the handler remains fail closed because database/source bindings are intentionally absent. Real provider login, production projection population and production promotion remain disabled until explicitly authorized.'
           } >> "$GITHUB_STEP_SUMMARY"

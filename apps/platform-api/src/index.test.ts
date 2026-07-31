@@ -121,9 +121,40 @@ describe('platform API', () => {
         optimisticMutationConcurrency: true,
         atomicMutationAuditOutbox: true,
         aal2MutationAuthorization: true,
+        databaseNativeProjectionProcessing: true,
+        exactProjectionEventAllowlist: true,
+        concurrentProjectionClaims: true,
+        appliedProjectionCommandDeduplication: true,
+        boundedProjectionRetryBackoff: true,
+        projectionDeadLetterIsolation: true,
+        projectionSourceIntegrity: true,
       },
     });
     expect(JSON.stringify(payload)).not.toContain('secret');
+  });
+
+  it('reports the internal projection worker as fail closed without database bindings', async () => {
+    const response = await app.request(
+      '/auth/v1/runtime-projection-worker/readiness',
+      {},
+      { APP_ENV: 'test', APP_REGION: 'local' },
+    );
+    expect(response.status).toBe(200);
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    await expect(response.json()).resolves.toEqual({
+      schemaVersion: 1,
+      state: 'disabled',
+      controls: {
+        databaseNativeProcessing: true,
+        exactEventAllowlist: true,
+        concurrentSkipLockedClaims: true,
+        appliedCommandDeduplication: true,
+        boundedRetryBackoff: true,
+        deadLetterIsolation: true,
+        sourceProjectionIntegrity: true,
+      },
+      missingConfiguration: ['database-url', 'runtime-projection-worker-source'],
+    });
   });
 
   it('introspects only a valid HttpOnly-cookie session and denies missing configuration or cookie', async () => {

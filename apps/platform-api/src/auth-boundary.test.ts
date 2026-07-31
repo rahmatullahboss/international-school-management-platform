@@ -27,6 +27,7 @@ const completeBindings = {
   AUTH_PERMISSION_SOURCE: 'database',
   RUNTIME_READ_MODEL_SOURCE: 'database',
   RUNTIME_MUTATION_SOURCE: 'database',
+  RUNTIME_PROJECTION_WORKER_SOURCE: 'database',
   AUTH_ALLOWED_WEB_ORIGINS: 'https://school.test,https://admin.school.test',
 };
 
@@ -93,6 +94,13 @@ describe('OIDC BFF readiness', () => {
         optimisticMutationConcurrency: true,
         atomicMutationAuditOutbox: true,
         aal2MutationAuthorization: true,
+        databaseNativeProjectionProcessing: true,
+        exactProjectionEventAllowlist: true,
+        concurrentProjectionClaims: true,
+        appliedProjectionCommandDeduplication: true,
+        boundedProjectionRetryBackoff: true,
+        projectionDeadLetterIsolation: true,
+        projectionSourceIntegrity: true,
       },
       missingConfiguration: [
         'provider-metadata',
@@ -108,6 +116,7 @@ describe('OIDC BFF readiness', () => {
         'permission-source',
         'runtime-read-model-source',
         'runtime-mutation-source',
+        'runtime-projection-worker-source',
         'allowed-web-origins',
       ],
     });

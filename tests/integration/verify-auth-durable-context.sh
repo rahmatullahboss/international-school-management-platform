@@ -12,19 +12,19 @@ import { existsSync, readFileSync } from 'node:fs';
 
 const manifestPath = process.argv[2];
 const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
-if (manifest.gate !== 'GATE-PILOT-SAFE-MUTATION-V1') {
+if (manifest.gate !== 'GATE-PILOT-RUNTIME-PROJECTION-WORKER-V1') {
   throw new Error(`unexpected post-integration gate: ${manifest.gate}`);
 }
 if (manifest.baseManifest !== 'infra/database/migration-manifest.json') {
   throw new Error('post-integration manifest must name the canonical base manifest');
 }
 const migrations = manifest.migrations ?? [];
-if (migrations.length !== 5) {
-  throw new Error(`expected five post-integration migrations, got ${migrations.length}`);
+if (migrations.length !== 6) {
+  throw new Error(`expected six post-integration migrations, got ${migrations.length}`);
 }
 for (const [index, migration] of migrations.entries()) {
   if (migration.order !== index + 1) throw new Error('AUTH migration orders are not contiguous');
-  if (!['AUTH-03', 'AUTH-07', 'AUTH-08', 'PILOT-04', 'PILOT-05'].includes(migration.stream)) throw new Error(`unexpected stream: ${migration.stream}`);
+  if (!['AUTH-03', 'AUTH-07', 'AUTH-08', 'PILOT-04', 'PILOT-05', 'PILOT-06'].includes(migration.stream)) throw new Error(`unexpected stream: ${migration.stream}`);
   if (!existsSync(migration.path)) throw new Error(`missing migration: ${migration.path}`);
   console.log(migration.path);
 }
@@ -38,8 +38,8 @@ done
 "${PSQL[@]}" <<'SQL'
 DO $verification$
 BEGIN
-  IF (SELECT count(*) FROM platform.schema_migration) <> 45 THEN
-    RAISE EXCEPTION 'expected 45 total migration ledger rows';
+  IF (SELECT count(*) FROM platform.schema_migration) <> 46 THEN
+    RAISE EXCEPTION 'expected 46 total migration ledger rows';
   END IF;
   IF (SELECT count(*) FROM platform.schema_migration WHERE stream_id = 'AUTH-03') <> 1 THEN
     RAISE EXCEPTION 'expected three AUTH migrations ledger row';
@@ -51,7 +51,10 @@ BEGIN
      OR to_regclass('iam.oidc_logout_token_consumption') IS NULL
      OR to_regclass('iam.oidc_provider_cache') IS NULL
      OR to_regclass('platform.runtime_read_model_projection') IS NULL
-     OR to_regclass('platform.runtime_command_receipt') IS NULL THEN
+     OR to_regclass('platform.runtime_command_receipt') IS NULL
+     OR to_regclass('platform.runtime_projection_source') IS NULL
+     OR to_regclass('platform.runtime_projection_applied_command') IS NULL
+     OR to_regclass('platform.runtime_projection_dead_letter') IS NULL THEN
     RAISE EXCEPTION 'AUTH-03 durable tables are incomplete';
   END IF;
 END
@@ -630,6 +633,400 @@ VALUES (
 )
 ON CONFLICT DO NOTHING;
 
+
+INSERT INTO platform.runtime_projection_source (
+  tenant_id,
+  membership_id,
+  campus_id,
+  projection_key,
+  persona,
+  subject_ref,
+  source_revision,
+  payload,
+  source_updated_at
+) VALUES (
+  '30000000-0000-4000-8000-000000000001',
+  '30000000-0000-4000-8000-000000000006',
+  '30000000-0000-4000-8000-000000000003',
+  'home',
+  'admin',
+  'principal-dashboard',
+  8,
+  '{"metrics":[{"id":"students","value":43}],"source":"projection-worker"}'::jsonb,
+  clock_timestamp()
+)
+ON CONFLICT (tenant_id, membership_id, campus_id, projection_key) DO UPDATE
+SET persona = EXCLUDED.persona,
+    subject_ref = EXCLUDED.subject_ref,
+    source_revision = EXCLUDED.source_revision,
+    payload = EXCLUDED.payload,
+    source_updated_at = EXCLUDED.source_updated_at;
+
+INSERT INTO integration_core.outbox_event (
+  tenant_id,
+  event_id,
+  event_type,
+  schema_version,
+  aggregate_type,
+  aggregate_id,
+  aggregate_version,
+  correlation_id,
+  payload,
+  occurred_at,
+  available_at
+) VALUES (
+  '30000000-0000-4000-8000-000000000001',
+  '30000000-0000-4000-8000-000000000014',
+  'platform.unrelated_projection_event',
+  1,
+  'runtime_projection',
+  'unrelated',
+  1,
+  '30000000-0000-4000-8000-000000000014',
+  '{}'::jsonb,
+  clock_timestamp(),
+  clock_timestamp()
+)
+ON CONFLICT (tenant_id, event_id) DO NOTHING;
+
+SET ROLE app_runtime;
+DO $projection_worker_success$
+DECLARE
+  result jsonb;
+BEGIN
+  IF has_table_privilege(current_user, 'platform.runtime_projection_source', 'SELECT')
+     OR has_table_privilege(current_user, 'platform.runtime_projection_applied_command', 'SELECT')
+     OR has_table_privilege(current_user, 'platform.runtime_projection_dead_letter', 'SELECT') THEN
+    RAISE EXCEPTION 'app_runtime must not have direct runtime projection lifecycle table access';
+  END IF;
+  IF position(
+    'SKIP LOCKED' IN upper(
+      pg_get_functiondef(
+        'platform.process_runtime_projection_refresh_batch(text,integer,integer)'::regprocedure
+      )
+    )
+  ) = 0 THEN
+    RAISE EXCEPTION 'runtime projection batch processor must use SKIP LOCKED';
+  END IF;
+
+  result := platform.process_runtime_projection_refresh_batch(
+    'projection-worker-test-01',
+    20,
+    5
+  );
+  IF result <> '{"claimed": 1, "completed": 1, "retried": 0, "deadLettered": 0}'::jsonb THEN
+    RAISE EXCEPTION 'runtime projection success batch was unexpected: %', result;
+  END IF;
+END
+$projection_worker_success$;
+RESET ROLE;
+
+DO $projection_worker_success_persistence$
+DECLARE
+  refreshed_payload jsonb;
+BEGIN
+  SELECT payload INTO refreshed_payload
+  FROM platform.runtime_read_model_projection
+  WHERE tenant_id = '30000000-0000-4000-8000-000000000001'
+    AND membership_id = '30000000-0000-4000-8000-000000000006'
+    AND campus_id = '30000000-0000-4000-8000-000000000003'
+    AND projection_key = 'home'
+    AND revision = 8;
+  IF refreshed_payload <> '{"metrics":[{"id":"students","value":43}],"source":"projection-worker"}'::jsonb THEN
+    RAISE EXCEPTION 'runtime projection worker did not copy the exact bounded source';
+  END IF;
+  IF (
+    SELECT count(*)
+    FROM platform.runtime_projection_applied_command AS applied
+    JOIN platform.runtime_command_receipt AS receipt
+      ON receipt.command_id = applied.command_id
+    WHERE receipt.idempotency_key = 'refresh-admin-home-0001'
+  ) <> 1 THEN
+    RAISE EXCEPTION 'runtime projection command must be applied exactly once';
+  END IF;
+  IF (
+    SELECT count(*)
+    FROM audit.audit_event
+    WHERE action = 'runtime.snapshot.refresh.completed'
+      AND correlation_id = '30000000-0000-4000-8000-00000000000d'
+  ) <> 1 THEN
+    RAISE EXCEPTION 'completed runtime projection command must have one audit event';
+  END IF;
+  IF EXISTS (
+    SELECT 1
+    FROM integration_core.outbox_event
+    WHERE event_type = 'platform.runtime_snapshot_refresh_requested'
+      AND correlation_id = '30000000-0000-4000-8000-00000000000d'
+      AND (published_at IS NULL OR attempt_count <> 1 OR last_error IS NOT NULL)
+  ) THEN
+    RAISE EXCEPTION 'completed runtime projection event was not terminally published';
+  END IF;
+END
+$projection_worker_success_persistence$;
+
+INSERT INTO integration_core.outbox_event (
+  tenant_id,
+  event_id,
+  event_type,
+  schema_version,
+  aggregate_type,
+  aggregate_id,
+  aggregate_version,
+  correlation_id,
+  causation_id,
+  payload,
+  occurred_at,
+  available_at
+)
+SELECT
+  receipt.tenant_id,
+  '30000000-0000-4000-8000-000000000015'::uuid,
+  'platform.runtime_snapshot_refresh_requested',
+  1,
+  'runtime_projection',
+  receipt.membership_id::text,
+  receipt.expected_revision + 1,
+  receipt.correlation_id::text,
+  receipt.command_id::text,
+  jsonb_build_object(
+    'commandId', receipt.command_id,
+    'membershipId', receipt.membership_id,
+    'campusId', receipt.campus_id,
+    'expectedRevision', receipt.expected_revision,
+    'reason', 'Refresh after the approved timetable publication.'
+  ),
+  clock_timestamp(),
+  clock_timestamp()
+FROM platform.runtime_command_receipt AS receipt
+WHERE receipt.idempotency_key = 'refresh-admin-home-0001'
+ON CONFLICT (tenant_id, event_id) DO NOTHING;
+
+SET ROLE app_runtime;
+DO $projection_worker_duplicate$
+DECLARE
+  result jsonb;
+BEGIN
+  result := platform.process_runtime_projection_refresh_batch(
+    'projection-worker-test-02',
+    20,
+    5
+  );
+  IF result <> '{"claimed": 1, "completed": 1, "retried": 0, "deadLettered": 0}'::jsonb THEN
+    RAISE EXCEPTION 'duplicate delivery must complete idempotently: %', result;
+  END IF;
+END
+$projection_worker_duplicate$;
+RESET ROLE;
+
+DO $projection_worker_duplicate_persistence$
+BEGIN
+  IF (
+    SELECT count(*)
+    FROM platform.runtime_projection_applied_command AS applied
+    JOIN platform.runtime_command_receipt AS receipt
+      ON receipt.command_id = applied.command_id
+    WHERE receipt.idempotency_key = 'refresh-admin-home-0001'
+  ) <> 1 THEN
+    RAISE EXCEPTION 'duplicate event must not duplicate the applied-command record';
+  END IF;
+  IF (
+    SELECT revision
+    FROM platform.runtime_read_model_projection
+    WHERE tenant_id = '30000000-0000-4000-8000-000000000001'
+      AND membership_id = '30000000-0000-4000-8000-000000000006'
+      AND campus_id = '30000000-0000-4000-8000-000000000003'
+      AND projection_key = 'home'
+  ) <> 8 THEN
+    RAISE EXCEPTION 'duplicate event must not advance the projection revision';
+  END IF;
+END
+$projection_worker_duplicate_persistence$;
+
+
+INSERT INTO integration_core.outbox_event (
+  tenant_id,
+  event_id,
+  event_type,
+  schema_version,
+  aggregate_type,
+  aggregate_id,
+  aggregate_version,
+  correlation_id,
+  causation_id,
+  payload,
+  occurred_at,
+  available_at
+) VALUES (
+  '30000000-0000-4000-8000-000000000001',
+  '30000000-0000-4000-8000-000000000017',
+  'platform.runtime_snapshot_refresh_requested',
+  1,
+  'runtime_projection',
+  '30000000-0000-4000-8000-000000000006',
+  9,
+  '30000000-0000-4000-8000-000000000017',
+  '30000000-0000-4000-8000-000000000018',
+  jsonb_build_object(
+    'commandId', '30000000-0000-4000-8000-000000000018',
+    'membershipId', '30000000-0000-4000-8000-000000000006',
+    'campusId', '30000000-0000-4000-8000-000000000003',
+    'expectedRevision', 8,
+    'reason', 'Reject an event that has no durable command receipt.'
+  ),
+  clock_timestamp(),
+  clock_timestamp()
+)
+ON CONFLICT (tenant_id, event_id) DO NOTHING;
+
+SET ROLE app_runtime;
+DO $projection_worker_unknown_command$
+DECLARE
+  result jsonb;
+BEGIN
+  result := platform.process_runtime_projection_refresh_batch(
+    'projection-worker-test-05',
+    20,
+    5
+  );
+  IF result <> '{"claimed": 1, "completed": 0, "retried": 0, "deadLettered": 1}'::jsonb THEN
+    RAISE EXCEPTION 'unknown command event must be isolated as invalid: %', result;
+  END IF;
+END
+$projection_worker_unknown_command$;
+RESET ROLE;
+
+DO $projection_worker_unknown_command_persistence$
+BEGIN
+  IF (
+    SELECT count(*)
+    FROM platform.runtime_projection_dead_letter
+    WHERE tenant_id = '30000000-0000-4000-8000-000000000001'
+      AND event_id = '30000000-0000-4000-8000-000000000017'
+      AND command_id IS NULL
+      AND error_code = 'invalid-event'
+      AND attempt_count = 1
+  ) <> 1 THEN
+    RAISE EXCEPTION 'unknown command event must persist one nullable invalid-event dead letter';
+  END IF;
+  IF EXISTS (
+    SELECT 1
+    FROM integration_core.outbox_event
+    WHERE tenant_id = '30000000-0000-4000-8000-000000000001'
+      AND event_id = '30000000-0000-4000-8000-000000000017'
+      AND (published_at IS NULL OR attempt_count <> 1 OR last_error <> 'invalid-event')
+  ) THEN
+    RAISE EXCEPTION 'unknown command event must be terminally published';
+  END IF;
+END
+$projection_worker_unknown_command_persistence$;
+
+SET ROLE app_runtime;
+DO $projection_worker_retry_command$
+DECLARE
+  decision jsonb;
+BEGIN
+  decision := platform.submit_runtime_snapshot_refresh(
+    '30000000-0000-4000-8000-00000000000c',
+    'refresh-admin-home-0005',
+    8,
+    'Refresh while the projection source is temporarily unavailable.',
+    '30000000-0000-4000-8000-000000000016'
+  );
+  IF decision->>'accepted' <> 'true' OR decision->>'replayed' <> 'false' THEN
+    RAISE EXCEPTION 'retry-path runtime command must be accepted: %', decision;
+  END IF;
+END
+$projection_worker_retry_command$;
+RESET ROLE;
+
+DELETE FROM platform.runtime_projection_source
+WHERE tenant_id = '30000000-0000-4000-8000-000000000001'
+  AND membership_id = '30000000-0000-4000-8000-000000000006'
+  AND campus_id = '30000000-0000-4000-8000-000000000003'
+  AND projection_key = 'home';
+
+SET ROLE app_runtime;
+DO $projection_worker_retry$
+DECLARE
+  result jsonb;
+BEGIN
+  result := platform.process_runtime_projection_refresh_batch(
+    'projection-worker-test-03',
+    20,
+    2
+  );
+  IF result <> '{"claimed": 1, "completed": 0, "retried": 1, "deadLettered": 0}'::jsonb THEN
+    RAISE EXCEPTION 'missing projection source must schedule a bounded retry: %', result;
+  END IF;
+END
+$projection_worker_retry$;
+RESET ROLE;
+
+UPDATE integration_core.outbox_event
+SET available_at = clock_timestamp()
+WHERE event_type = 'platform.runtime_snapshot_refresh_requested'
+  AND correlation_id = '30000000-0000-4000-8000-000000000016';
+
+SET ROLE app_runtime;
+DO $projection_worker_dead_letter$
+DECLARE
+  result jsonb;
+BEGIN
+  result := platform.process_runtime_projection_refresh_batch(
+    'projection-worker-test-04',
+    20,
+    2
+  );
+  IF result <> '{"claimed": 1, "completed": 0, "retried": 0, "deadLettered": 1}'::jsonb THEN
+    RAISE EXCEPTION 'max-attempt projection event must be dead-lettered: %', result;
+  END IF;
+END
+$projection_worker_dead_letter$;
+RESET ROLE;
+
+DO $projection_worker_failure_persistence$
+BEGIN
+  IF (
+    SELECT count(*)
+    FROM platform.runtime_projection_dead_letter AS dead_letter
+    JOIN integration_core.outbox_event AS event
+      ON event.tenant_id = dead_letter.tenant_id
+     AND event.event_id = dead_letter.event_id
+    WHERE event.correlation_id = '30000000-0000-4000-8000-000000000016'
+      AND dead_letter.error_code = 'source-unavailable'
+      AND dead_letter.attempt_count = 2
+  ) <> 1 THEN
+    RAISE EXCEPTION 'exhausted projection event must persist one sanitized dead letter';
+  END IF;
+  IF EXISTS (
+    SELECT 1
+    FROM integration_core.outbox_event
+    WHERE correlation_id = '30000000-0000-4000-8000-000000000016'
+      AND (published_at IS NULL OR attempt_count <> 2 OR last_error <> 'source-unavailable')
+  ) THEN
+    RAISE EXCEPTION 'dead-lettered projection event must be terminally published';
+  END IF;
+  IF EXISTS (
+    SELECT 1
+    FROM integration_core.outbox_event
+    WHERE event_id = '30000000-0000-4000-8000-000000000014'
+      AND published_at IS NOT NULL
+  ) THEN
+    RAISE EXCEPTION 'unrelated outbox event must remain untouched by the exact allowlist';
+  END IF;
+  IF (
+    SELECT revision
+    FROM platform.runtime_read_model_projection
+    WHERE tenant_id = '30000000-0000-4000-8000-000000000001'
+      AND membership_id = '30000000-0000-4000-8000-000000000006'
+      AND campus_id = '30000000-0000-4000-8000-000000000003'
+      AND projection_key = 'home'
+  ) <> 8 THEN
+    RAISE EXCEPTION 'retry/dead-letter failure must not mutate the projection';
+  END IF;
+END
+$projection_worker_failure_persistence$;
+
 SET ROLE app_runtime;
 DO $account_revoke_verification$
 DECLARE
@@ -652,8 +1049,8 @@ $account_revoke_verification$;
 RESET ROLE;
 
 SELECT json_build_object(
-  'canonical_migrations', (SELECT count(*) FROM platform.schema_migration WHERE stream_id NOT IN ('AUTH-03', 'AUTH-07', 'AUTH-08', 'PILOT-04', 'PILOT-05')),
-  'post_integration_migrations', (SELECT count(*) FROM platform.schema_migration WHERE stream_id IN ('AUTH-03', 'AUTH-07', 'AUTH-08', 'PILOT-04', 'PILOT-05')),
+  'canonical_migrations', (SELECT count(*) FROM platform.schema_migration WHERE stream_id NOT IN ('AUTH-03', 'AUTH-07', 'AUTH-08', 'PILOT-04', 'PILOT-05', 'PILOT-06')),
+  'post_integration_migrations', (SELECT count(*) FROM platform.schema_migration WHERE stream_id IN ('AUTH-03', 'AUTH-07', 'AUTH-08', 'PILOT-04', 'PILOT-05', 'PILOT-06')),
   'oauth_transactions', (SELECT count(*) FROM iam.oauth_transaction_consumption),
   'membership_bindings', (SELECT count(*) FROM iam.oidc_membership_binding),
   'session_rows', (SELECT count(*) FROM iam.browser_session_registry),
@@ -667,7 +1064,10 @@ SELECT json_build_object(
       'iam.oidc_logout_token_consumption',
       'iam.oidc_provider_cache',
       'platform.runtime_read_model_projection',
-      'platform.runtime_command_receipt'
+      'platform.runtime_command_receipt',
+      'platform.runtime_projection_source',
+      'platform.runtime_projection_applied_command',
+      'platform.runtime_projection_dead_letter'
     ]) AS protected(table_name)
   )
 );

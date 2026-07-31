@@ -35,6 +35,11 @@ import { DatabaseMutationStore } from './database-mutation-store.js';
 import { DatabaseReadModelStore } from './database-read-model-store.js';
 import { isAllowedPilotWebOrigin, resolvePilotReadSnapshot } from './pilot-read-models.js';
 import { issuePilotSession, pilotSessionHeaders, verifyPilotSession } from './pilot-sessions.js';
+import { resolveRuntimeProjectionWorkerReadiness } from './runtime-projection-worker.js';
+import {
+  scheduleRuntimeProjectionWorker,
+  type RuntimeProjectionExecutionContext,
+} from './runtime-projection-scheduled.js';
 import {
   isRuntimeMutationContentTypeAllowed,
   isRuntimeMutationDeclaredLengthAllowed,
@@ -47,6 +52,9 @@ interface Bindings extends AuthBindings {
   APP_REGION: string;
   DATABASE_URL?: string;
   PILOT_SESSION_SECRET?: string;
+  RUNTIME_PROJECTION_WORKER_ID?: string;
+  RUNTIME_PROJECTION_WORKER_BATCH_SIZE?: string;
+  RUNTIME_PROJECTION_WORKER_MAX_ATTEMPTS?: string;
 }
 
 const app = new Hono<{ Bindings: Bindings }>();
@@ -112,6 +120,11 @@ app.get('/health', (context) => {
 app.get('/auth/v1/readiness', (context) => {
   context.header('cache-control', 'no-store');
   return context.json(resolveAuthReadiness(context.env));
+});
+
+app.get('/auth/v1/runtime-projection-worker/readiness', (context) => {
+  context.header('cache-control', 'no-store');
+  return context.json(resolveRuntimeProjectionWorkerReadiness(context.env));
 });
 
 function applyAuthMutationCors(
@@ -803,7 +816,17 @@ app.get('/pilot/v1/snapshots/:role', async (context) => {
   return context.json(resolution.snapshot);
 });
 
-export default app;
+const worker = Object.assign(app, {
+  scheduled: (
+    _controller: unknown,
+    environment: Bindings,
+    executionContext: RuntimeProjectionExecutionContext,
+  ): void => {
+    scheduleRuntimeProjectionWorker(environment, executionContext);
+  },
+});
+
+export default worker;
 
 export * from './auth-backchannel.js';
 export * from './auth-boundary.js';
@@ -818,3 +841,6 @@ export * from './operations-routes.js';
 export * from './pilot-read-models.js';
 export * from './pilot-sessions.js';
 export * from './runtime-mutation.js';
+export * from './runtime-projection-worker.js';
+export * from './runtime-projection-scheduled.js';
+export * from './database-projection-worker-store.js';
