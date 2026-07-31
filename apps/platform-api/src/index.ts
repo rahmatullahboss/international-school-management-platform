@@ -6,6 +6,7 @@ import { parseRuntimeEnvironment } from '@school/platform';
 
 import {
   resolveAuthenticatedBrowserSession,
+  resolveAuthenticatedBrowserSessionContext,
   resolveAuthProviderConfiguration,
   resolveAuthProviderEndpointOrigins,
   resolveAuthReadiness,
@@ -16,6 +17,10 @@ import {
   isOidcBackchannelDeclaredLengthAllowed,
 } from './auth-backchannel.js';
 import { DurableAuthStore, DurableOidcProviderCacheStore } from './auth-durable-store.js';
+import {
+  authorizeDatabasePermission,
+  isPermissionDeclaredLengthAllowed,
+} from './auth-permission.js';
 import {
   hasValidAuthMutationOrigins,
   isAllowedAuthMutationOrigin,
@@ -165,6 +170,113 @@ app.post('/auth/v1/backchannel-logout', async (context) => {
   });
   if (result.ok) return context.body(null, result.status);
   return context.json({ error: { code: result.code, message: result.message } }, result.status);
+});
+
+function durablePermissionStore(environment: Bindings): DurableAuthStore | undefined {
+  if (
+    environment.AUTH_SESSION_REGISTRY_SOURCE !== 'database' ||
+    environment.AUTH_PERMISSION_SOURCE !== 'database' ||
+    environment.DATABASE_URL === undefined ||
+    environment.DATABASE_URL.trim() === ''
+  ) {
+    return undefined;
+  }
+  return new DurableAuthStore(createHttpDatabase(environment.DATABASE_URL));
+}
+
+app.options('/auth/v1/authorize', (context) => {
+  context.header('cache-control', 'no-store');
+  context.header('vary', 'Origin');
+  const store = durablePermissionStore(context.env);
+  if (store === undefined || !hasValidAuthMutationOrigins(context.env.AUTH_ALLOWED_WEB_ORIGINS)) {
+    return context.json(
+      {
+        error: {
+          code: 'permission_configuration_invalid',
+          message: 'Permission evaluation is not configured.',
+        },
+      },
+      503,
+    );
+  }
+  if (
+    !applyAuthMutationCors(
+      (name, value) => context.header(name, value),
+      context.env.AUTH_ALLOWED_WEB_ORIGINS,
+      context.req.header('origin'),
+    )
+  ) {
+    return context.json(
+      {
+        error: {
+          code: 'permission_origin_denied',
+          message: 'The requesting origin is not permitted.',
+        },
+      },
+      403,
+    );
+  }
+  return context.body(null, 204);
+});
+
+app.post('/auth/v1/authorize', async (context) => {
+  context.header('cache-control', 'no-store');
+  context.header('vary', 'Origin, Cookie');
+  const origin = context.req.header('origin');
+  applyAuthMutationCors(
+    (name, value) => context.header(name, value),
+    context.env.AUTH_ALLOWED_WEB_ORIGINS,
+    origin,
+  );
+
+  const store = durablePermissionStore(context.env);
+  const contentLength = context.req.header('content-length');
+  const declaredLengthAllowed = isPermissionDeclaredLengthAllowed(contentLength);
+  const configured =
+    store !== undefined &&
+    context.env.AUTH_SESSION_SECRET !== undefined &&
+    context.env.AUTH_SESSION_SECRET.length >= 32;
+  let rawBody = '';
+  if (
+    configured &&
+    isAllowedAuthMutationOrigin(context.env.AUTH_ALLOWED_WEB_ORIGINS, origin) &&
+    declaredLengthAllowed
+  ) {
+    try {
+      rawBody = await context.req.text();
+    } catch {
+      rawBody = '';
+    }
+  }
+
+  const result = await authorizeDatabasePermission({
+    configured,
+    allowedOrigins: context.env.AUTH_ALLOWED_WEB_ORIGINS,
+    origin,
+    contentType: context.req.header('content-type'),
+    ...(contentLength === undefined ? {} : { contentLength }),
+    rawBody,
+    authenticate: async () => {
+      if (store === undefined) {
+        throw new Error('Permission store is unavailable.');
+      }
+      const resolution = await resolveAuthenticatedBrowserSessionContext(
+        context.env,
+        context.req.header('cookie'),
+        (sessionId) => store.isSessionActive(sessionId),
+      );
+      if (!resolution.ok) return resolution;
+      return { ok: true, sessionId: resolution.context.sessionId };
+    },
+    evaluate: (sessionId, permission) => {
+      if (store === undefined) throw new Error('Permission store is unavailable.');
+      return store.evaluatePermission(sessionId, permission);
+    },
+  });
+  if (!result.ok) {
+    return context.json({ error: { code: result.code, message: result.message } }, result.status);
+  }
+  return context.json({ schemaVersion: 1, ...result.decision }, result.status);
 });
 
 app.options('/auth/v1/logout', (context) => {
@@ -417,6 +529,7 @@ export * from './auth-backchannel.js';
 export * from './auth-boundary.js';
 export * from './auth-durable-store.js';
 export * from './auth-logout.js';
+export * from './auth-permission.js';
 export * from './operations-application.js';
 export * from './operations-routes.js';
 export * from './pilot-read-models.js';
