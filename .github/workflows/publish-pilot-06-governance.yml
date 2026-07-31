@@ -1,0 +1,108 @@
+name: Publish PILOT-06 Governance
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+permissions:
+  contents: write
+
+jobs:
+  update-progress-tracker:
+    if: github.head_ref == 'docs/pilot-runtime-projection-worker-v1' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: docs/pilot-runtime-projection-worker-v1
+          fetch-depth: 0
+
+      - name: Patch PILOT-06 governance tracker
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('docs/execution/04-progress-tracker.md')
+          source = path.read_text(encoding='utf-8')
+
+          def replace_once(old: str, new: str) -> None:
+              global source
+              count = source.count(old)
+              if count != 1:
+                  raise SystemExit(f'expected one tracker marker, got {count}: {old[:100]!r}')
+              source = source.replace(old, new)
+
+          replace_once(
+              "`GATE-PILOT-DATABASE-READ-MODEL-V1` and `GATE-PILOT-SAFE-MUTATION-V1` have passed.",
+              "`GATE-PILOT-DATABASE-READ-MODEL-V1`, `GATE-PILOT-SAFE-MUTATION-V1` and `GATE-PILOT-RUNTIME-PROJECTION-WORKER-V1` have passed.",
+          )
+          replace_once(
+              "one tightly allowlisted AAL2/idempotent/revision-checked runtime refresh command with atomic audit/outbox persistence, while real provider login, production identity, production projection population, production mutation consumers and general production mutations remain disabled.",
+              "one tightly allowlisted AAL2/idempotent/revision-checked runtime refresh command with atomic audit/outbox persistence, and a database-native SKIP LOCKED projection processor with applied-command deduplication, bounded retries and terminal dead-letter isolation, while real provider login, source publication, production database/worker bindings, production schedule activation and general production mutations remain disabled.",
+          )
+          replace_once(
+              "and the first safe database mutation envelope in [34-pilot-safe-database-mutation-v1.md](34-pilot-safe-database-mutation-v1.md) and [35-pilot-safe-database-mutation-release-evidence.md](35-pilot-safe-database-mutation-release-evidence.md).",
+              "and the first safe database mutation envelope in [34-pilot-safe-database-mutation-v1.md](34-pilot-safe-database-mutation-v1.md) and [35-pilot-safe-database-mutation-release-evidence.md](35-pilot-safe-database-mutation-release-evidence.md), followed by the durable runtime projection worker in [36-pilot-runtime-projection-worker-v1.md](36-pilot-runtime-projection-worker-v1.md) and [37-pilot-runtime-projection-worker-release-evidence.md](37-pilot-runtime-projection-worker-release-evidence.md).",
+          )
+          replace_once(
+              "| `GATE-PILOT-SAFE-MUTATION-V1` | passed | Implementation proof `2ff251c17d2b4d939a6f274402da99e6447707fd`; main merge `9f32a588d7b61d4ef8b1ac38dc4807fa329212de`; root CI `30608179482`; deploy/smoke `30608179484`; exact-origin AAL2/current-grant authorization, optimistic revision, replay-safe idempotency and atomic receipt/audit/outbox verified |",
+              "| `GATE-PILOT-SAFE-MUTATION-V1` | passed | Implementation proof `2ff251c17d2b4d939a6f274402da99e6447707fd`; main merge `9f32a588d7b61d4ef8b1ac38dc4807fa329212de`; root CI `30608179482`; deploy/smoke `30608179484`; exact-origin AAL2/current-grant authorization, optimistic revision, replay-safe idempotency and atomic receipt/audit/outbox verified |\n| `GATE-PILOT-RUNTIME-PROJECTION-WORKER-V1` | passed | Implementation proof `c1bb4d3f5713d093bd9865d9c37dcf3e9db2c829`; main merge `a731f89fc4c6476580129ab0cd734e9250c0aa64`; root CI `30635344251`; deploy/smoke `30635344238`; exact event allowlist, SKIP LOCKED claims, source integrity, applied-command deduplication, bounded retry and terminal dead-letter isolation verified |",
+          )
+          replace_once(
+              "| `PILOT-05` | post-integration | safe allowlisted database mutation gate passed; production mutation source/consumer disabled | proof `2ff251c17d2b4d939a6f274402da99e6447707fd`; main merge `9f32a588d7b61d4ef8b1ac38dc4807fa329212de`; CI `30608179482`; deploy `30608179484` |",
+              "| `PILOT-05` | post-integration | safe allowlisted database mutation gate passed; production mutation source/consumer disabled | proof `2ff251c17d2b4d939a6f274402da99e6447707fd`; main merge `9f32a588d7b61d4ef8b1ac38dc4807fa329212de`; CI `30608179482`; deploy `30608179484` |\n| `PILOT-06` | post-integration | durable runtime projection worker gate passed; source/database binding and schedule activation disabled | proof `c1bb4d3f5713d093bd9865d9c37dcf3e9db2c829`; main merge `a731f89fc4c6476580129ab0cd734e9250c0aa64`; CI `30635344251`; deploy `30635344238` |",
+          )
+          replace_once(
+              "## Live staging routes",
+              "## PILOT-06 durable runtime projection worker gate closure\n\nCompleted and verified on implementation proof `c1bb4d3f5713d093bd9865d9c37dcf3e9db2c829` and main merge `a731f89fc4c6476580129ab0cd734e9250c0aa64`:\n\n- one exact `platform.runtime_snapshot_refresh_requested` event type is processed;\n- bounded deterministic batches use `FOR UPDATE OF event SKIP LOCKED`;\n- immutable receipt, scope, projection revision and source integrity are revalidated;\n- duplicate command delivery cannot advance a projection twice;\n- expected failures use bounded exponential retry and terminal dead-letter isolation;\n- unknown receipts cannot roll back terminal isolation through the dead-letter foreign key;\n- `app_runtime` retains function-only access to source, applied-command and dead-letter state;\n- scheduled and readiness boundaries fail closed without database/source bindings;\n- Cloudflare Worker/API/web deployment and all live smoke assertions passed;\n- the current Cloudflare token could not publish the configured schedule, recorded explicitly as `STAGING_CRON_TRIGGER_STATE=unavailable`.\n\nVerification evidence:\n\n- repository tests: 654 passed, with one environment-dependent direct-Neon test skipped in the ordinary suite and passed separately against live Neon;\n- migrations: 40 canonical plus six post-integration migrations, producing 46 ledger entries;\n- format, lint, boundaries, TypeScript, builds, budget, audit, licence, provenance, browser and artifact gates passed;\n- root CI `30635344251` and Cloudflare deploy/smoke `30635344238` passed.\n\n## Live staging routes",
+          )
+          replace_once(
+              "- OIDC readiness: `https://international-school-platform-api-staging.rahmatullahzisan.workers.dev/auth/v1/readiness`",
+              "- OIDC readiness: `https://international-school-platform-api-staging.rahmatullahzisan.workers.dev/auth/v1/readiness`\n- Projection worker readiness: `https://international-school-platform-api-staging.rahmatullahzisan.workers.dev/auth/v1/runtime-projection-worker/readiness` — live and fail-closed without database/source bindings\n- Database runtime snapshot: `https://international-school-platform-api-staging.rahmatullahzisan.workers.dev/auth/v1/snapshot` — currently fail-closed without reviewed identity and read-model bindings\n- Safe runtime mutation: `https://international-school-platform-api-staging.rahmatullahzisan.workers.dev/auth/v1/commands/runtime.snapshot.refresh` — currently fail-closed without reviewed identity and mutation bindings",
+          )
+          replace_once(
+              "- AUTH-08 main merge: `3a81f7f32c794b18524f0050828300e76ad4df95`",
+              "- AUTH-08 main merge: `3a81f7f32c794b18524f0050828300e76ad4df95`\n- PILOT-04 proof: `f766fc6b426aa1f0f0c9074036a9fb25d27e9a80`\n- PILOT-04 main merge: `a81b0025d0427398a616b316dd96451d5e15bcaf`\n- PILOT-05 proof: `2ff251c17d2b4d939a6f274402da99e6447707fd`\n- PILOT-05 main merge: `9f32a588d7b61d4ef8b1ac38dc4807fa329212de`\n- PILOT-06 proof: `c1bb4d3f5713d093bd9865d9c37dcf3e9db2c829`\n- PILOT-06 main merge: `a731f89fc4c6476580129ab0cd734e9250c0aa64`",
+          )
+          replace_once(
+              "- Repository tests: 613 passed, with one environment-dependent direct-Neon test skipped in the ordinary suite and passed separately; AUTH-08 adds database-owned permission, current-grant/role, assurance, exact-origin HTTP and bounded-stream coverage without changing domain invariants.",
+              "- Repository tests: 654 passed, with one environment-dependent direct-Neon test skipped in the ordinary suite and passed separately; PILOT-06 adds database-native projection claims, source integrity, duplicate-delivery, retry/dead-letter, scheduled-boundary and readiness coverage without changing domain invariants.",
+          )
+          replace_once(
+              "- Post-integration AUTH manifest: three migrations; 43 total ledger entries verified.",
+              "- Post-integration manifest: six migrations through PILOT-06; 46 total ledger entries verified.",
+          )
+          replace_once(
+              "- configure a reviewed provider, production provider-cache binding and production database binding;\n- add reviewed provider front-channel logout/token revocation where supported;\n- replace synthetic snapshots with database-backed read models and tenant-safe server caching;\n- provide approved staging seed/reset tooling and safe mutations;\n- add monitoring, backup and rollback rehearsal;\n- complete owner-led UAT and explicit production authorization.",
+              "- configure a reviewed provider, production provider-cache binding, production database binding and exact production origins;\n- add reviewed provider front-channel logout/token revocation where supported;\n- implement reviewed source publishers into `runtime_projection_source`;\n- authorize and publish the intended non-production/production Cron Trigger with least-privilege Cloudflare credentials;\n- add projection outbox, retry and dead-letter monitoring plus approved source seed/reset tooling;\n- complete backup, restore and rollback rehearsal;\n- complete owner-led UAT, security sign-off and explicit production authorization.",
+          )
+          replace_once(
+              "AUTH-01 through AUTH-08 provide provider-neutral verification, PKCE flow, durable identity state, browser and provider session termination, bounded provider caching, signing-key rotation, fresh-AAL2 step-up and database-backed permission contracts with real login explicitly disabled. Production promotion requires all remaining provider, policy, data, monitoring, recovery and owner-authorization gates.",
+              "AUTH-01 through AUTH-08 provide provider-neutral verification, PKCE flow, durable identity state, browser and provider session termination, bounded provider caching, signing-key rotation, fresh-AAL2 step-up and database-backed permission contracts. PILOT-04 through PILOT-06 add tenant-safe database read models, one allowlisted safe mutation and a durable projection processor while real login, source publication, database/worker bindings and schedule activation remain explicitly disabled. Production promotion requires all remaining provider, policy, data, monitoring, recovery and owner-authorization gates.",
+          )
+
+          path.write_text(source, encoding='utf-8')
+          PY
+          git diff --check
+
+      - name: Commit tracker update
+        shell: bash
+        run: |
+          set -euo pipefail
+          branch_head="$(git rev-parse HEAD)"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/execution/04-progress-tracker.md
+          git diff --cached --quiet && exit 0
+          git commit -m 'docs(pilot): close runtime projection worker gate'
+          remote_head="$(git ls-remote origin refs/heads/docs/pilot-runtime-projection-worker-v1 | cut -f1)"
+          test "$remote_head" = "$branch_head"
+          git push origin HEAD:docs/pilot-runtime-projection-worker-v1
