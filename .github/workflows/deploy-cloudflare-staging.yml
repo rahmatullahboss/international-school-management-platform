@@ -73,9 +73,23 @@ jobs:
           trap 'rm -f "$secret_file"' EXIT
           umask 077
           printf 'PILOT_SESSION_SECRET=%s\n' "$(openssl rand -hex 32)" > "$secret_file"
+          set +e
           npx wrangler deploy --config apps/platform-api/wrangler.jsonc --env staging --secrets-file "$secret_file" 2>&1 | tee api-deploy.log
+          deploy_status=${PIPESTATUS[0]}
+          set -e
           api_url=$(grep -Eo 'https://[A-Za-z0-9.-]+\.workers\.dev' api-deploy.log | tail -1)
           test -n "$api_url"
+          if [[ "$deploy_status" != '0' ]]; then
+            if grep -Fq 'Some triggers failed to deploy' api-deploy.log \
+              && grep -Fq '/schedules) failed' api-deploy.log; then
+              echo 'STAGING_CRON_TRIGGER_STATE=unavailable' >> "$GITHUB_ENV"
+              echo '::warning::Cloudflare Worker deployed, but the current API token cannot publish the staging Cron Trigger.'
+            else
+              exit "$deploy_status"
+            fi
+          else
+            echo 'STAGING_CRON_TRIGGER_STATE=deployed' >> "$GITHUB_ENV"
+          fi
           echo "API_URL=$api_url" >> "$GITHUB_ENV"
 
       - name: Build and deploy staging web Worker
@@ -377,6 +391,7 @@ jobs:
             echo "- API health: $API_URL/health"
             echo "- OIDC readiness: $API_URL/auth/v1/readiness"
             echo "- Projection worker readiness: $API_URL/auth/v1/runtime-projection-worker/readiness"
+            echo "- Staging Cron Trigger publication: $STAGING_CRON_TRIGGER_STATE"
             echo "- Browser session introspection: $API_URL/auth/v1/session"
             echo "- Database permission decision: $API_URL/auth/v1/authorize"
             echo "- Database runtime snapshot: $API_URL/auth/v1/snapshot"
@@ -385,5 +400,5 @@ jobs:
             echo "- Provider back-channel logout: $API_URL/auth/v1/backchannel-logout"
             echo "- Signed pilot session: $API_URL/pilot/v1/sessions/admin"
             echo "- Signed scoped admin snapshot: $API_URL/pilot/v1/snapshots/admin"
-            echo '- Scope: tenant-safe reads, one allowlisted AAL2 refresh command and a database-native scheduled projection processor are verified with current-grant authorization, exact revisions, idempotent receipts, atomic audit/outbox persistence, SKIP LOCKED batches, retries and dead letters. The staging Cron Trigger remains fail closed because database/source bindings are intentionally absent; real provider login, production projection population and production promotion remain disabled until explicitly authorized.'
+            echo '- Scope: tenant-safe reads, one allowlisted AAL2 refresh command and a database-native scheduled projection processor are verified with current-grant authorization, exact revisions, idempotent receipts, atomic audit/outbox persistence, SKIP LOCKED batches, retries and dead letters. The staging Cron Trigger is configured and this run records whether the current account token published it; the handler remains fail closed because database/source bindings are intentionally absent. Real provider login, production projection population and production promotion remain disabled until explicitly authorized.'
           } >> "$GITHUB_STEP_SUMMARY"
