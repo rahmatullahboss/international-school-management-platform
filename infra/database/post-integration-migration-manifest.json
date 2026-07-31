@@ -1,8 +1,8 @@
 {
   "program": "international-school-platform-v1",
-  "gate": "GATE-AUTH-DATABASE-PERMISSION-V1",
+  "gate": "GATE-PILOT-DATABASE-READ-MODEL-V1",
   "baseManifest": "infra/database/migration-manifest.json",
-  "orderingRule": "apply the reviewed 40-migration Wave 2 manifest first, then post-integration authentication migrations in contiguous order",
+  "orderingRule": "apply the reviewed 40-migration Wave 2 manifest first, then all reviewed post-integration migrations in contiguous order",
   "migrations": [
     {
       "order": 1,
@@ -21,6 +21,12 @@
       "id": "202607310801_AUTH-08_database_permission_evaluation",
       "stream": "AUTH-08",
       "path": "infra/database/post-integration-migrations/202607310801_AUTH-08_database_permission_evaluation.sql"
+    },
+    {
+      "order": 4,
+      "id": "202607310901_PILOT-04_database_read_models",
+      "stream": "PILOT-04",
+      "path": "infra/database/post-integration-migrations/202607310901_PILOT-04_database_read_models.sql"
     }
   ]
 }
