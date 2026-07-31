@@ -18,6 +18,12 @@
       "vars": {
         "APP_ENV": "staging",
         "APP_REGION": "global",
+        "RUNTIME_PROJECTION_WORKER_ID": "projection-worker-staging-01",
+        "RUNTIME_PROJECTION_WORKER_BATCH_SIZE": "20",
+        "RUNTIME_PROJECTION_WORKER_MAX_ATTEMPTS": "5",
+      },
+      "triggers": {
+        "crons": ["*/5 * * * *"],
       },
     },
   },

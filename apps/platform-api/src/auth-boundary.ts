@@ -25,6 +25,7 @@ export interface AuthBindings {
   readonly AUTH_PERMISSION_SOURCE?: string;
   readonly RUNTIME_READ_MODEL_SOURCE?: string;
   readonly RUNTIME_MUTATION_SOURCE?: string;
+  readonly RUNTIME_PROJECTION_WORKER_SOURCE?: string;
   readonly AUTH_ALLOWED_WEB_ORIGINS?: string;
 }
 
@@ -42,6 +43,7 @@ export type AuthReadinessRequirement =
   | 'permission-source'
   | 'runtime-read-model-source'
   | 'runtime-mutation-source'
+  | 'runtime-projection-worker-source'
   | 'allowed-web-origins';
 
 export interface AuthReadiness {
@@ -104,6 +106,13 @@ export interface AuthReadiness {
     readonly optimisticMutationConcurrency: true;
     readonly atomicMutationAuditOutbox: true;
     readonly aal2MutationAuthorization: true;
+    readonly databaseNativeProjectionProcessing: true;
+    readonly exactProjectionEventAllowlist: true;
+    readonly concurrentProjectionClaims: true;
+    readonly appliedProjectionCommandDeduplication: true;
+    readonly boundedProjectionRetryBackoff: true;
+    readonly projectionDeadLetterIsolation: true;
+    readonly projectionSourceIntegrity: true;
   };
   readonly missingConfiguration: readonly AuthReadinessRequirement[];
 }
@@ -127,6 +136,7 @@ type AuthBindingName =
   | 'AUTH_PERMISSION_SOURCE'
   | 'RUNTIME_READ_MODEL_SOURCE'
   | 'RUNTIME_MUTATION_SOURCE'
+  | 'RUNTIME_PROJECTION_WORKER_SOURCE'
   | 'AUTH_ALLOWED_WEB_ORIGINS';
 
 function configuredValue(bindings: AuthBindings, name: AuthBindingName): string | undefined {
@@ -262,6 +272,9 @@ export function resolveAuthReadiness(bindings: AuthBindings): AuthReadiness {
   if (configuredValue(bindings, 'RUNTIME_MUTATION_SOURCE') !== 'database') {
     missingConfiguration.push('runtime-mutation-source');
   }
+  if (configuredValue(bindings, 'RUNTIME_PROJECTION_WORKER_SOURCE') !== 'database') {
+    missingConfiguration.push('runtime-projection-worker-source');
+  }
   if (!hasValidAuthMutationOrigins(configuredValue(bindings, 'AUTH_ALLOWED_WEB_ORIGINS'))) {
     missingConfiguration.push('allowed-web-origins');
   }
@@ -270,7 +283,7 @@ export function resolveAuthReadiness(bindings: AuthBindings): AuthReadiness {
     schemaVersion: 1,
     mode: 'oidc-bff',
     state:
-      missingConfiguration.length === 14
+      missingConfiguration.length === 15
         ? 'disabled'
         : missingConfiguration.length > 0
           ? 'incomplete'
@@ -331,6 +344,13 @@ export function resolveAuthReadiness(bindings: AuthBindings): AuthReadiness {
       optimisticMutationConcurrency: true,
       atomicMutationAuditOutbox: true,
       aal2MutationAuthorization: true,
+      databaseNativeProjectionProcessing: true,
+      exactProjectionEventAllowlist: true,
+      concurrentProjectionClaims: true,
+      appliedProjectionCommandDeduplication: true,
+      boundedProjectionRetryBackoff: true,
+      projectionDeadLetterIsolation: true,
+      projectionSourceIntegrity: true,
     },
     missingConfiguration,
   };

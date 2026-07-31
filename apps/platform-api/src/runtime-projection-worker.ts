@@ -15,10 +15,7 @@ export interface RuntimeProjectionWorkerReadiness {
     readonly deadLetterIsolation: true;
     readonly sourceProjectionIntegrity: true;
   };
-  readonly missingConfiguration: readonly (
-    | 'database-url'
-    | 'runtime-projection-worker-source'
-  )[];
+  readonly missingConfiguration: readonly ('database-url' | 'runtime-projection-worker-source')[];
 }
 
 export interface RuntimeProjectionBatchResult {
@@ -61,10 +58,7 @@ function validCount(value: unknown): value is number {
   return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
 }
 
-function validBatchResult(
-  value: RuntimeProjectionBatchResult,
-  batchSize: number,
-): boolean {
+function validBatchResult(value: RuntimeProjectionBatchResult, batchSize: number): boolean {
   if (
     !validCount(value.claimed) ||
     !validCount(value.completed) ||
@@ -82,10 +76,7 @@ function validBatchResult(
 export function resolveRuntimeProjectionWorkerReadiness(
   bindings: RuntimeProjectionWorkerBindings,
 ): RuntimeProjectionWorkerReadiness {
-  const missingConfiguration: (
-    | 'database-url'
-    | 'runtime-projection-worker-source'
-  )[] = [];
+  const missingConfiguration: ('database-url' | 'runtime-projection-worker-source')[] = [];
   if (configuredValue(bindings.DATABASE_URL) === undefined) {
     missingConfiguration.push('database-url');
   }

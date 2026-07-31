@@ -135,6 +135,7 @@ DECLARE
   selected_membership_id uuid;
   selected_campus_id uuid;
   selected_expected_revision bigint;
+  selected_actor_account_id uuid;
   current_projection_revision bigint;
   next_attempt integer;
   retry_seconds integer;
@@ -185,6 +186,7 @@ BEGIN
     selected_membership_id := NULL;
     selected_campus_id := NULL;
     selected_expected_revision := NULL;
+    selected_actor_account_id := NULL;
 
     BEGIN
       IF selected_event.schema_version <> 1
@@ -253,14 +255,19 @@ BEGIN
         AND receipt.command_type = 'runtime.snapshot.refresh'
       FOR UPDATE OF receipt;
 
-      IF NOT FOUND
-         OR receipt_row.tenant_id IS DISTINCT FROM selected_event.tenant_id
+      IF NOT FOUND THEN
+        selected_command_id := NULL;
+        RAISE EXCEPTION 'invalid runtime projection event' USING ERRCODE = 'P1001';
+      END IF;
+
+      IF receipt_row.tenant_id IS DISTINCT FROM selected_event.tenant_id
          OR receipt_row.membership_id IS DISTINCT FROM selected_membership_id
          OR receipt_row.campus_id IS DISTINCT FROM selected_campus_id
          OR receipt_row.expected_revision IS DISTINCT FROM selected_expected_revision
          OR receipt_row.correlation_id::text IS DISTINCT FROM selected_event.correlation_id THEN
         RAISE EXCEPTION 'invalid runtime projection event' USING ERRCODE = 'P1001';
       END IF;
+      selected_actor_account_id := receipt_row.actor_account_id;
 
       IF EXISTS (
         SELECT 1
@@ -365,7 +372,7 @@ BEGIN
         metadata
       ) VALUES (
         selected_event.tenant_id,
-        receipt_row.actor_account_id,
+        selected_actor_account_id,
         'runtime.snapshot.refresh.completed',
         'runtime_projection',
         selected_membership_id::text,
@@ -429,7 +436,7 @@ BEGIN
           metadata
         ) VALUES (
           selected_event.tenant_id,
-          receipt_row.actor_account_id,
+          selected_actor_account_id,
           'runtime.snapshot.refresh.dead_lettered',
           'runtime_projection_event',
           selected_event.event_id::text,

@@ -33,9 +33,7 @@ describe('scheduled runtime projection execution', () => {
     });
     const storeFactory = vi.fn().mockReturnValue({ processBatch });
 
-    await expect(
-      runRuntimeProjectionScheduled(configuredBindings, storeFactory),
-    ).resolves.toEqual({
+    await expect(runRuntimeProjectionScheduled(configuredBindings, storeFactory)).resolves.toEqual({
       ok: true,
       result: { claimed: 2, completed: 1, retried: 0, deadLettered: 1 },
     });
