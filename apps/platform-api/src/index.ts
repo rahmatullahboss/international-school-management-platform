@@ -844,5 +844,7 @@ export * from './runtime-mutation.js';
 export * from './runtime-projection-worker.js';
 export * from './runtime-projection-scheduled.js';
 export * from './database-projection-worker-store.js';
+export * from './runtime-admin-projection-composer.js';
+export * from './database-admin-projection-composer-store.js';
 export * from './runtime-projection-source-publisher.js';
 export * from './database-projection-source-publisher-store.js';
