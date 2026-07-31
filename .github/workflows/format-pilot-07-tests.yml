@@ -1,0 +1,41 @@
+name: Format PILOT-07 Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - synchronize
+
+permissions:
+  contents: write
+
+jobs:
+  format-tests:
+    if: github.head_ref == 'pilot/runtime-projection-source-publisher-v1' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: pilot/runtime-projection-source-publisher-v1
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.2'
+          cache: npm
+      - run: npm ci
+      - run: npx prettier --write apps/platform-api/src/runtime-projection-source-publisher.test.ts apps/platform-api/src/database-projection-source-publisher-store.test.ts
+      - name: Commit formatted tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          branch_head="$(git rev-parse HEAD)"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add apps/platform-api/src/runtime-projection-source-publisher.test.ts apps/platform-api/src/database-projection-source-publisher-store.test.ts
+          git diff --cached --quiet && exit 0
+          git commit -m 'style(pilot): format source publisher tests'
+          remote_head="$(git ls-remote origin refs/heads/pilot/runtime-projection-source-publisher-v1 | cut -f1)"
+          test "$remote_head" = "$branch_head"
+          git push origin HEAD:pilot/runtime-projection-source-publisher-v1
