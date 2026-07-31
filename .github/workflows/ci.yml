@@ -40,8 +40,10 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Apply PILOT-04 HTTP integration
-        run: python3 scripts/implement_pilot_04_http.py
-      - run: rm scripts/implement_pilot_04_http.py
+        run: |
+          python3 scripts/implement_pilot_04_http.py
+          python3 scripts/fix_pilot_04_http_exact_optional.py
+      - run: rm scripts/implement_pilot_04_http.py scripts/fix_pilot_04_http_exact_optional.py
       - run: npm run format
       - run: npm run lint -- --fix
       - run: npm run format
