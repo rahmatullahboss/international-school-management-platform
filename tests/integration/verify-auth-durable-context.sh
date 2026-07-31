@@ -12,19 +12,19 @@ import { existsSync, readFileSync } from 'node:fs';
 
 const manifestPath = process.argv[2];
 const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
-if (manifest.gate !== 'GATE-AUTH-BACKCHANNEL-LOGOUT-V1') {
+if (manifest.gate !== 'GATE-AUTH-DATABASE-PERMISSION-V1') {
   throw new Error(`unexpected post-integration gate: ${manifest.gate}`);
 }
 if (manifest.baseManifest !== 'infra/database/migration-manifest.json') {
   throw new Error('post-integration manifest must name the canonical base manifest');
 }
 const migrations = manifest.migrations ?? [];
-if (migrations.length !== 2) {
-  throw new Error(`expected two AUTH migrations, got ${migrations.length}`);
+if (migrations.length !== 3) {
+  throw new Error(`expected three AUTH migrations, got ${migrations.length}`);
 }
 for (const [index, migration] of migrations.entries()) {
   if (migration.order !== index + 1) throw new Error('AUTH migration orders are not contiguous');
-  if (!['AUTH-03', 'AUTH-07'].includes(migration.stream)) throw new Error(`unexpected stream: ${migration.stream}`);
+  if (!['AUTH-03', 'AUTH-07', 'AUTH-08'].includes(migration.stream)) throw new Error(`unexpected stream: ${migration.stream}`);
   if (!existsSync(migration.path)) throw new Error(`missing migration: ${migration.path}`);
   console.log(migration.path);
 }
@@ -38,11 +38,11 @@ done
 "${PSQL[@]}" <<'SQL'
 DO $verification$
 BEGIN
-  IF (SELECT count(*) FROM platform.schema_migration) <> 42 THEN
-    RAISE EXCEPTION 'expected 42 total migration ledger rows';
+  IF (SELECT count(*) FROM platform.schema_migration) <> 43 THEN
+    RAISE EXCEPTION 'expected 43 total migration ledger rows';
   END IF;
   IF (SELECT count(*) FROM platform.schema_migration WHERE stream_id = 'AUTH-03') <> 1 THEN
-    RAISE EXCEPTION 'expected two AUTH migrations ledger row';
+    RAISE EXCEPTION 'expected three AUTH migrations ledger row';
   END IF;
   IF to_regclass('iam.oauth_transaction_consumption') IS NULL
      OR to_regclass('iam.oidc_membership_binding') IS NULL
@@ -113,6 +113,29 @@ INSERT INTO iam.role (
   false
 )
 ON CONFLICT (tenant_id, role_id) DO NOTHING;
+
+
+
+INSERT INTO iam.permission(permission_key, description, required_assurance) VALUES
+  ('finance.read', 'Read finance summaries', 'aal1'),
+  ('records.approve', 'Approve academic records', 'aal2'),
+  ('care.restricted.read', 'Read restricted care records', 'aal2')
+ON CONFLICT (permission_key) DO UPDATE
+SET description = EXCLUDED.description,
+    required_assurance = EXCLUDED.required_assurance;
+
+INSERT INTO iam.role_permission(tenant_id, role_id, permission_key) VALUES
+  (
+    '30000000-0000-4000-8000-000000000001',
+    '30000000-0000-4000-8000-000000000005',
+    'finance.read'
+  ),
+  (
+    '30000000-0000-4000-8000-000000000001',
+    '30000000-0000-4000-8000-000000000005',
+    'records.approve'
+  )
+ON CONFLICT DO NOTHING;
 
 INSERT INTO iam.membership (
   tenant_id, membership_id, account_id, campus_id, status
@@ -245,6 +268,43 @@ BEGIN
   IF NOT iam.is_browser_session_active('30000000-0000-4000-8000-000000000009') THEN
     RAISE EXCEPTION 'registered session must be active';
   END IF;
+
+  IF iam.evaluate_browser_permission(
+    '30000000-0000-4000-8000-000000000009',
+    'finance.read'
+  ) <> '{"allowed": true, "reason": "role-grant"}'::jsonb THEN
+    RAISE EXCEPTION 'database-granted AAL1 permission must be allowed';
+  END IF;
+  IF iam.evaluate_browser_permission(
+    '30000000-0000-4000-8000-000000000009',
+    'care.restricted.read'
+  ) <> '{"allowed": false, "reason": "permission-not-granted"}'::jsonb THEN
+    RAISE EXCEPTION 'ungranted restricted permission must be denied';
+  END IF;
+
+
+
+  IF NOT iam.register_browser_session(
+    '30000000-0000-4000-8000-00000000000b',
+    '30000000-0000-4000-8000-000000000004',
+    '30000000-0000-4000-8000-000000000001',
+    '30000000-0000-4000-8000-000000000006',
+    '30000000-0000-4000-8000-000000000003',
+    'provider-session-aal1',
+    ARRAY['30000000-0000-4000-8000-000000000005'::uuid],
+    'aal1',
+    clock_timestamp(),
+    clock_timestamp() + interval '30 minutes'
+  ) THEN
+    RAISE EXCEPTION 'AAL1 browser session registration must succeed';
+  END IF;
+  IF iam.evaluate_browser_permission(
+    '30000000-0000-4000-8000-00000000000b',
+    'records.approve'
+  ) <> '{"allowed": false, "reason": "step-up-required", "requiredAssurance": "aal2"}'::jsonb THEN
+    RAISE EXCEPTION 'AAL1 session must require AAL2 step-up';
+  END IF;
+
   IF iam.process_oidc_backchannel_logout(
     'logout-token-verification',
     'https://identity.school.test',
@@ -302,6 +362,14 @@ BEGIN
   IF iam.is_browser_session_active('30000000-0000-4000-8000-00000000000a') THEN
     RAISE EXCEPTION 'role removal must invalidate the session';
   END IF;
+
+  IF iam.evaluate_browser_permission(
+    '30000000-0000-4000-8000-00000000000a',
+    'finance.read'
+  ) <> '{"allowed": false, "reason": "session-inactive"}'::jsonb THEN
+    RAISE EXCEPTION 'role removal must invalidate permission evaluation';
+  END IF;
+
 END
 $role_change_verification$;
 RESET ROLE;
@@ -323,11 +391,12 @@ BEGIN
     '30000000-0000-4000-8000-000000000004',
     'verification logout all'
   );
-  IF revoked_count <> 1 THEN
-    RAISE EXCEPTION 'expected one active account session to be revoked, got %', revoked_count;
+  IF revoked_count <> 2 THEN
+    RAISE EXCEPTION 'expected two active account sessions to be revoked, got %', revoked_count;
   END IF;
-  IF iam.is_browser_session_active('30000000-0000-4000-8000-00000000000a') THEN
-    RAISE EXCEPTION 'account-wide revocation must invalidate the session';
+  IF iam.is_browser_session_active('30000000-0000-4000-8000-00000000000a')
+     OR iam.is_browser_session_active('30000000-0000-4000-8000-00000000000b') THEN
+    RAISE EXCEPTION 'account-wide revocation must invalidate every active session';
   END IF;
 END
 $account_revoke_verification$;

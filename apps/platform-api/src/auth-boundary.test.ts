@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 
 import { BROWSER_SESSION_COOKIE_NAME, issueBrowserSession } from '@school/policy';
 
-import { resolveAuthenticatedBrowserSession, resolveAuthReadiness } from './auth-boundary.js';
+import {
+  resolveAuthenticatedBrowserSession,
+  resolveAuthenticatedBrowserSessionContext,
+  resolveAuthReadiness,
+} from './auth-boundary.js';
 
 const completeBindings = {
   OIDC_ISSUER: 'https://identity.school.test',
@@ -20,6 +24,7 @@ const completeBindings = {
   AUTH_SESSION_SECRET: 'session-signing-secret-with-at-least-32-characters',
   AUTH_SESSION_REGISTRY_SOURCE: 'database',
   AUTH_MEMBERSHIP_SOURCE: 'database',
+  AUTH_PERMISSION_SOURCE: 'database',
   AUTH_ALLOWED_WEB_ORIGINS: 'https://school.test,https://admin.school.test',
 };
 
@@ -72,6 +77,10 @@ describe('OIDC BFF readiness', () => {
         logoutTokenReplayProtection: true,
         providerSessionRevocation: true,
         durableProviderCache: true,
+        databasePermissionEvaluation: true,
+        currentRoleRevalidation: true,
+        assuranceAwarePermissionDecision: true,
+        serverOwnedAuthorizationScope: true,
       },
       missingConfiguration: [
         'provider-metadata',
@@ -84,6 +93,7 @@ describe('OIDC BFF readiness', () => {
         'session-signing-key',
         'session-registry-source',
         'membership-source',
+        'permission-source',
         'allowed-web-origins',
       ],
     });
@@ -147,6 +157,19 @@ describe('durable browser-session introspection', () => {
     });
     if (!issued.ok) throw new Error(issued.message);
     const cookie = `${BROWSER_SESSION_COOKIE_NAME}=${issued.token}`;
+
+    const contextResolution = await resolveAuthenticatedBrowserSessionContext(
+      completeBindings,
+      cookie,
+      async () => {
+        await Promise.resolve();
+        return true;
+      },
+    );
+    expect(contextResolution).toMatchObject({
+      ok: true,
+      context: { sessionId: issued.claims.sessionId },
+    });
 
     await expect(
       resolveAuthenticatedBrowserSession(completeBindings, cookie, async () => {

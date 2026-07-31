@@ -22,6 +22,7 @@ export interface AuthBindings {
   readonly AUTH_SESSION_SECRET?: string;
   readonly AUTH_SESSION_REGISTRY_SOURCE?: string;
   readonly AUTH_MEMBERSHIP_SOURCE?: string;
+  readonly AUTH_PERMISSION_SOURCE?: string;
   readonly AUTH_ALLOWED_WEB_ORIGINS?: string;
 }
 
@@ -36,6 +37,7 @@ export type AuthReadinessRequirement =
   | 'session-signing-key'
   | 'session-registry-source'
   | 'membership-source'
+  | 'permission-source'
   | 'allowed-web-origins';
 
 export interface AuthReadiness {
@@ -84,6 +86,10 @@ export interface AuthReadiness {
     readonly logoutTokenReplayProtection: true;
     readonly providerSessionRevocation: true;
     readonly durableProviderCache: true;
+    readonly databasePermissionEvaluation: true;
+    readonly currentRoleRevalidation: true;
+    readonly assuranceAwarePermissionDecision: true;
+    readonly serverOwnedAuthorizationScope: true;
   };
   readonly missingConfiguration: readonly AuthReadinessRequirement[];
 }
@@ -104,6 +110,7 @@ type AuthBindingName =
   | 'AUTH_SESSION_SECRET'
   | 'AUTH_SESSION_REGISTRY_SOURCE'
   | 'AUTH_MEMBERSHIP_SOURCE'
+  | 'AUTH_PERMISSION_SOURCE'
   | 'AUTH_ALLOWED_WEB_ORIGINS';
 
 function configuredValue(bindings: AuthBindings, name: AuthBindingName): string | undefined {
@@ -230,6 +237,9 @@ export function resolveAuthReadiness(bindings: AuthBindings): AuthReadiness {
   if (configuredValue(bindings, 'AUTH_MEMBERSHIP_SOURCE') === undefined) {
     missingConfiguration.push('membership-source');
   }
+  if (configuredValue(bindings, 'AUTH_PERMISSION_SOURCE') !== 'database') {
+    missingConfiguration.push('permission-source');
+  }
   if (!hasValidAuthMutationOrigins(configuredValue(bindings, 'AUTH_ALLOWED_WEB_ORIGINS'))) {
     missingConfiguration.push('allowed-web-origins');
   }
@@ -238,7 +248,7 @@ export function resolveAuthReadiness(bindings: AuthBindings): AuthReadiness {
     schemaVersion: 1,
     mode: 'oidc-bff',
     state:
-      missingConfiguration.length === 11
+      missingConfiguration.length === 12
         ? 'disabled'
         : missingConfiguration.length > 0
           ? 'incomplete'
@@ -285,35 +295,40 @@ export function resolveAuthReadiness(bindings: AuthBindings): AuthReadiness {
       logoutTokenReplayProtection: true,
       providerSessionRevocation: true,
       durableProviderCache: true,
+      databasePermissionEvaluation: true,
+      currentRoleRevalidation: true,
+      assuranceAwarePermissionDecision: true,
+      serverOwnedAuthorizationScope: true,
     },
     missingConfiguration,
   };
 }
 
-export async function resolveAuthenticatedBrowserSession(
-  bindings: AuthBindings,
-  cookieHeader: string | undefined,
-  isSessionActive?: (sessionId: string) => Promise<boolean>,
-): Promise<
-  | {
-      readonly ok: true;
-      readonly session: {
-        readonly principalId: string;
-        readonly membershipId: string;
-        readonly tenantId: string;
-        readonly campusId?: string;
-        readonly roleIds: readonly string[];
-        readonly assurance: 'aal1' | 'aal2';
-        readonly expiresAt: string;
-      };
-    }
+export interface AuthenticatedBrowserSessionContext {
+  readonly sessionId: string;
+  readonly principalId: string;
+  readonly membershipId: string;
+  readonly tenantId: string;
+  readonly campusId?: string;
+  readonly roleIds: readonly string[];
+  readonly assurance: 'aal1' | 'aal2';
+  readonly expiresAt: string;
+}
+
+export type AuthenticatedBrowserSessionContextResult =
+  | { readonly ok: true; readonly context: AuthenticatedBrowserSessionContext }
   | {
       readonly ok: false;
       readonly status: 401 | 503;
       readonly code: string;
       readonly message: string;
-    }
-> {
+    };
+
+export async function resolveAuthenticatedBrowserSessionContext(
+  bindings: AuthBindings,
+  cookieHeader: string | undefined,
+  isSessionActive?: (sessionId: string) => Promise<boolean>,
+): Promise<AuthenticatedBrowserSessionContextResult> {
   const verification = await verifyBrowserSession(bindings.AUTH_SESSION_SECRET, cookieHeader);
   if (!verification.ok) {
     return {
@@ -357,7 +372,8 @@ export async function resolveAuthenticatedBrowserSession(
 
   return {
     ok: true,
-    session: {
+    context: {
+      sessionId: verification.claims.sessionId,
       principalId: verification.claims.principalId,
       membershipId: verification.claims.membershipId,
       tenantId: verification.claims.tenantId,
@@ -369,4 +385,31 @@ export async function resolveAuthenticatedBrowserSession(
       expiresAt: new Date(verification.claims.expiresAt * 1000).toISOString(),
     },
   };
+}
+
+export async function resolveAuthenticatedBrowserSession(
+  bindings: AuthBindings,
+  cookieHeader: string | undefined,
+  isSessionActive?: (sessionId: string) => Promise<boolean>,
+): Promise<
+  | {
+      readonly ok: true;
+      readonly session: Omit<AuthenticatedBrowserSessionContext, 'sessionId'>;
+    }
+  | {
+      readonly ok: false;
+      readonly status: 401 | 503;
+      readonly code: string;
+      readonly message: string;
+    }
+> {
+  const resolution = await resolveAuthenticatedBrowserSessionContext(
+    bindings,
+    cookieHeader,
+    isSessionActive,
+  );
+  if (!resolution.ok) return resolution;
+  const { sessionId, ...session } = resolution.context;
+  void sessionId;
+  return { ok: true, session };
 }

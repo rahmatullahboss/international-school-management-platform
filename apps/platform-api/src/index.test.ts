@@ -16,6 +16,7 @@ const environment = {
   PILOT_SESSION_SECRET: 'pilot-test-session-secret-with-at-least-32-characters',
   AUTH_SESSION_SECRET: authSessionSecret,
   AUTH_SESSION_REGISTRY_SOURCE: 'database',
+  AUTH_PERMISSION_SOURCE: 'database',
   AUTH_ALLOWED_WEB_ORIGINS: 'https://school.test',
   DATABASE_URL: 'postgresql://test.invalid/school',
 };
@@ -160,6 +161,115 @@ describe('platform API', () => {
         campusId: 'campus-main',
         roleIds: ['school-admin'],
         assurance: 'aal2',
+      },
+    });
+  });
+
+  it('authorizes permissions from the active database session and current grants', async () => {
+    databaseQuery
+      .mockResolvedValueOnce([{ value: true }])
+      .mockResolvedValueOnce([{ value: { allowed: true, reason: 'role-grant' } }]);
+    const response = await app.request(
+      '/auth/v1/authorize',
+      {
+        method: 'POST',
+        headers: {
+          origin: 'https://school.test',
+          'content-type': 'application/json',
+          cookie: await issueBrowserCookie(),
+        },
+        body: JSON.stringify({ permission: 'finance.read' }),
+      },
+      environment,
+    );
+    expect(response.status).toBe(200);
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(response.headers.get('access-control-allow-origin')).toBe('https://school.test');
+    expect(response.headers.get('access-control-allow-credentials')).toBe('true');
+    await expect(response.json()).resolves.toEqual({
+      schemaVersion: 1,
+      allowed: true,
+      reason: 'role-grant',
+    });
+    expect(databaseQuery.mock.calls[0]?.[0]).toContain('iam.is_browser_session_active');
+    expect(databaseQuery.mock.calls[1]?.[0]).toContain('iam.evaluate_browser_permission');
+    expect(databaseQuery).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining('iam.evaluate_browser_permission'),
+      [expect.any(String), 'finance.read'],
+    );
+  });
+
+  it('returns step-up and rejects browser-supplied authorization scope', async () => {
+    databaseQuery
+      .mockResolvedValueOnce([{ value: true }])
+      .mockResolvedValueOnce([
+        { value: { allowed: false, reason: 'step-up-required', requiredAssurance: 'aal2' } },
+      ]);
+    const stepUp = await app.request(
+      '/auth/v1/authorize',
+      {
+        method: 'POST',
+        headers: {
+          origin: 'https://school.test',
+          'content-type': 'application/json',
+          cookie: await issueBrowserCookie(),
+        },
+        body: JSON.stringify({ permission: 'records.approve' }),
+      },
+      environment,
+    );
+    expect(stepUp.status).toBe(403);
+    await expect(stepUp.json()).resolves.toEqual({
+      schemaVersion: 1,
+      allowed: false,
+      reason: 'step-up-required',
+      requiredAssurance: 'aal2',
+    });
+
+    databaseQuery.mockReset();
+    const injected = await app.request(
+      '/auth/v1/authorize',
+      {
+        method: 'POST',
+        headers: {
+          origin: 'https://school.test',
+          'content-type': 'application/json',
+          cookie: await issueBrowserCookie(),
+        },
+        body: JSON.stringify({
+          permission: 'finance.read',
+          tenantId: 'attacker-tenant',
+          roleId: 'attacker-role',
+        }),
+      },
+      environment,
+    );
+    expect(injected.status).toBe(400);
+    expect(databaseQuery).not.toHaveBeenCalled();
+  });
+
+  it('keeps database permission evaluation fail-closed without approved bindings', async () => {
+    const response = await app.request(
+      '/auth/v1/authorize',
+      {
+        method: 'POST',
+        headers: {
+          origin: 'https://school.test',
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({ permission: 'finance.read' }),
+      },
+      { APP_ENV: 'test', APP_REGION: 'local' },
+    );
+    expect(response.status).toBe(503);
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(response.headers.get('set-cookie')).toBeNull();
+    expect(databaseQuery).not.toHaveBeenCalled();
+    await expect(response.json()).resolves.toEqual({
+      error: {
+        code: 'permission_configuration_invalid',
+        message: 'Permission evaluation is not configured.',
       },
     });
   });

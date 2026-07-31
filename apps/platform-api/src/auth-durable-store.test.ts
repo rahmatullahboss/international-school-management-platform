@@ -188,6 +188,50 @@ describe('DurableAuthStore', () => {
     ]);
   });
 
+  it('evaluates active database permissions without browser-declared scope', async () => {
+    const query = vi
+      .fn()
+      .mockResolvedValueOnce([{ value: { allowed: true, reason: 'role-grant' } }])
+      .mockResolvedValueOnce([
+        { value: { allowed: false, reason: 'step-up-required', requiredAssurance: 'aal2' } },
+      ])
+      .mockResolvedValueOnce([{ value: { allowed: false, reason: 'permission-not-granted' } }])
+      .mockResolvedValueOnce([{ value: { allowed: false, reason: 'session-inactive' } }]);
+    const store = new DurableAuthStore({ query });
+
+    await expect(store.evaluatePermission(ids.session, 'finance.read')).resolves.toEqual({
+      allowed: true,
+      reason: 'role-grant',
+    });
+    await expect(store.evaluatePermission(ids.session, 'records.approve')).resolves.toEqual({
+      allowed: false,
+      reason: 'step-up-required',
+      requiredAssurance: 'aal2',
+    });
+    await expect(store.evaluatePermission(ids.session, 'care.restricted.read')).resolves.toEqual({
+      allowed: false,
+      reason: 'permission-not-granted',
+    });
+    await expect(store.evaluatePermission(ids.session, 'finance.read')).resolves.toEqual({
+      allowed: false,
+      reason: 'session-inactive',
+    });
+
+    expect(query.mock.calls[0]?.[0]).toContain('iam.evaluate_browser_permission');
+    expect(query.mock.calls[0]?.[1]).toEqual([ids.session, 'finance.read']);
+  });
+
+  it('rejects malformed permission keys before database access', async () => {
+    const query = vi.fn();
+    const store = new DurableAuthStore({ query });
+    for (const permission of ['', 'Finance.Read', 'finance read', 'x'.repeat(129)]) {
+      await expect(store.evaluatePermission(ids.session, permission)).rejects.toThrow(
+        'permission is invalid',
+      );
+    }
+    expect(query).not.toHaveBeenCalled();
+  });
+
   it('stores provider cache records only through security-definer functions', async () => {
     const query = vi
       .fn()

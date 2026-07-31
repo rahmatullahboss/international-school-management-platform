@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   verify-deploy-smoke:
-    if: github.event_name == 'workflow_dispatch' || github.head_ref == 'deploy/cloudflare-staging-pilot' || github.head_ref == 'pilot/runtime-portal-composition' || github.head_ref == 'ux/smooth-operational-experience-v1' || github.head_ref == 'pilot/permission-aware-read-api-v1' || github.head_ref == 'pilot/signed-session-context-v1' || github.head_ref == 'pilot/oidc-trust-boundary-v1' || github.head_ref == 'pilot/oidc-pkce-flow-v1' || github.head_ref == 'pilot/auth-durable-context-v1' || github.head_ref == 'pilot/auth-session-termination-v1' || github.head_ref == 'pilot/oidc-key-rotation-v1' || github.head_ref == 'auth/provider-backchannel-stepup-v1' || github.head_ref == 'auth/backchannel-logout-v1'
+    if: github.event_name == 'workflow_dispatch' || github.head_ref == 'deploy/cloudflare-staging-pilot' || github.head_ref == 'pilot/runtime-portal-composition' || github.head_ref == 'ux/smooth-operational-experience-v1' || github.head_ref == 'pilot/permission-aware-read-api-v1' || github.head_ref == 'pilot/signed-session-context-v1' || github.head_ref == 'pilot/oidc-trust-boundary-v1' || github.head_ref == 'pilot/oidc-pkce-flow-v1' || github.head_ref == 'pilot/auth-durable-context-v1' || github.head_ref == 'pilot/auth-session-termination-v1' || github.head_ref == 'pilot/oidc-key-rotation-v1' || github.head_ref == 'auth/provider-backchannel-stepup-v1' || github.head_ref == 'auth/backchannel-logout-v1' || github.head_ref == 'auth/database-permission-evaluation-v1'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     environment: cloudflare-staging
@@ -138,6 +138,16 @@ jobs:
           fetch_with_retry "$API_URL/auth/v1/readiness" auth-readiness.json "OIDC readiness endpoint"
           unauthenticated_status=$(curl --silent --show-error --output auth-session-error.json --write-out '%{http_code}' "$API_URL/auth/v1/session")
           test "$unauthenticated_status" = '503'
+          authorize_status=$(curl --silent --show-error \
+            --dump-header authorize-headers.txt \
+            --output auth-authorize-error.json \
+            --write-out '%{http_code}' \
+            --request POST \
+            -H "Origin: $staging_origin" \
+            -H 'Content-Type: application/json' \
+            --data '{"permission":"finance.read"}' \
+            "$API_URL/auth/v1/authorize")
+          test "$authorize_status" = '503'
           logout_status=$(curl --silent --show-error --output auth-logout-error.json --write-out '%{http_code}' \
             --request POST \
             -H "Origin: $staging_origin" \
@@ -194,7 +204,9 @@ jobs:
               'providerTokensWithheldFromBrowser', 'stepUpAssurance',
               'forcedReauthentication', 'boundedFreshAuthentication', 'reviewedAcrValues',
               'backChannelLogout', 'typedLogoutTokens', 'logoutTokenReplayProtection',
-              'providerSessionRevocation', 'durableProviderCache'
+              'providerSessionRevocation', 'durableProviderCache',
+              'databasePermissionEvaluation', 'currentRoleRevalidation',
+              'assuranceAwarePermissionDecision', 'serverOwnedAuthorizationScope'
           ]:
               assert controls.get(control) is True, (control, readiness)
           assert readiness.get('missingConfiguration') == [
@@ -202,7 +214,7 @@ jobs:
               'backchannel-logout-source', 'provider-client-credential',
               'transaction-signing-key', 'transaction-replay-source',
               'session-signing-key', 'session-registry-source',
-              'membership-source', 'allowed-web-origins'
+              'membership-source', 'permission-source', 'allowed-web-origins'
           ], readiness
           serialized_readiness = json.dumps(readiness).lower()
           for forbidden in ['oidc_', 'auth_', 'secret-value', 'client-secret-value']:
@@ -210,6 +222,13 @@ jobs:
 
           auth_error = json.loads(Path('auth-session-error.json').read_text(encoding='utf-8'))
           assert auth_error.get('error', {}).get('code') == 'browser_session_configuration_invalid', auth_error
+
+          authorize_error = json.loads(Path('auth-authorize-error.json').read_text(encoding='utf-8'))
+          assert authorize_error.get('error', {}).get('code') == 'permission_configuration_invalid', authorize_error
+          authorize_headers = Path('authorize-headers.txt').read_text(encoding='utf-8').lower()
+          assert 'set-cookie:' not in authorize_headers, authorize_headers
+          assert 'access-control-allow-origin:' not in authorize_headers, authorize_headers
+          assert 'cache-control: no-store' in authorize_headers, authorize_headers
 
           logout_error = json.loads(Path('auth-logout-error.json').read_text(encoding='utf-8'))
           assert logout_error.get('error', {}).get('code') == 'logout_configuration_invalid', logout_error
@@ -263,9 +282,10 @@ jobs:
             echo "- API health: $API_URL/health"
             echo "- OIDC readiness: $API_URL/auth/v1/readiness"
             echo "- Browser session introspection: $API_URL/auth/v1/session"
+            echo "- Database permission decision: $API_URL/auth/v1/authorize"
             echo "- Browser logout: $API_URL/auth/v1/logout"
             echo "- Provider back-channel logout: $API_URL/auth/v1/backchannel-logout"
             echo "- Signed pilot session: $API_URL/pilot/v1/sessions/admin"
             echo "- Signed scoped admin snapshot: $API_URL/pilot/v1/snapshots/admin"
-            echo '- Scope: typed signed Logout Tokens, durable replay denial, provider sid/sub session revocation, database-backed provider cache, fail-closed back-channel HTTP handling and fresh AAL2 step-up controls are verified; real provider login remains disabled until approved provider endpoints, credentials and production bindings are configured.'
+            echo '- Scope: database-backed permission evaluation, current-role revalidation, assurance-aware step-up decisions, server-owned authorization scope, bounded request streaming, typed Logout Tokens and provider session revocation are verified; real provider login and production data access remain disabled until approved production bindings are configured.'
           } >> "$GITHUB_STEP_SUMMARY"
