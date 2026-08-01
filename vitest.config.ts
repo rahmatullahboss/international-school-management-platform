@@ -17,6 +17,12 @@ export default defineConfig({
       exclude: ['**/*.test.ts', '**/*.test.tsx', '**/*.d.ts'],
       reporter: ['text', 'json', 'json-summary', 'html'],
       reportOnFailure: true,
+      thresholds: {
+        statements: 79,
+        branches: 70,
+        functions: 84,
+        lines: 83,
+      },
     },
   },
 });
