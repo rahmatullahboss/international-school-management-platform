@@ -4,6 +4,7 @@ import {
   allocateSequenceNumber,
   createDefaultInvoiceNumberingPolicy,
   createNumberingPolicy,
+  type NumberingContext,
   type NumberingPolicy,
   type NumberingSequence,
 } from './numbering.js';
@@ -146,7 +147,7 @@ describe('billing numbering contracts', () => {
   });
 
   it('enforces tenant, legal-entity and campus scopes', () => {
-    const cases: readonly [NumberingSequence, Record<string, string>][] = [
+    const cases: readonly [NumberingSequence, NumberingContext][] = [
       [sequence({ scope: 'tenant', scopeRef: 'tenant-1' }), { tenantId: 'tenant-2' }],
       [
         sequence({ scope: 'legal-entity', scopeRef: 'entity-1' }),
