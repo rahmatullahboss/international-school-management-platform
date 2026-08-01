@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 
 import type { PilotModulePage } from './pilot-data';
+import { GuidedWalkthrough } from './guided-walkthrough';
 import './pilot-resource.css';
 import './pilot-ux.css';
 
@@ -46,9 +47,7 @@ export function PilotDataStatus(props: {
   readonly updatedAt: string;
   readonly message: string | undefined;
   readonly onRefresh: () => void;
-}): ReactElement | null {
-  if (!props.apiConfigured) return null;
-
+}): ReactElement {
   const copy =
     props.state === 'refreshing'
       ? {
@@ -77,19 +76,29 @@ export function PilotDataStatus(props: {
               };
 
   return (
-    <aside className="pilot-data-status" data-state={props.state} role="status" aria-live="polite">
-      <span aria-hidden="true" />
-      <div>
-        <strong>{copy.label}</strong>
-        <p>{copy.detail}</p>
-        <time dateTime={props.updatedAt}>Evidence current at {props.updatedAt}</time>
-      </div>
-      {props.state === 'refreshing' ? null : (
-        <button type="button" onClick={props.onRefresh}>
-          Check again
-        </button>
-      )}
-    </aside>
+    <>
+      {props.apiConfigured ? (
+        <aside
+          className="pilot-data-status"
+          data-state={props.state}
+          role="status"
+          aria-live="polite"
+        >
+          <span aria-hidden="true" />
+          <div>
+            <strong>{copy.label}</strong>
+            <p>{copy.detail}</p>
+            <time dateTime={props.updatedAt}>Evidence current at {props.updatedAt}</time>
+          </div>
+          {props.state === 'refreshing' ? null : (
+            <button type="button" onClick={props.onRefresh}>
+              Check again
+            </button>
+          )}
+        </aside>
+      ) : null}
+      <GuidedWalkthrough />
+    </>
   );
 }
 
