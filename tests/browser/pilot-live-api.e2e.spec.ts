@@ -86,7 +86,7 @@ test('live pilot session is role-bound and cannot be replayed across portals', a
     },
   });
   expect(denied.status()).toBe(401);
-  const deniedBody = await denied.json();
+  const deniedBody: unknown = await denied.json();
   expect(deniedBody).toMatchObject({
     error: { code: 'pilot_session_invalid' },
   });
@@ -107,7 +107,7 @@ test('live pilot API rejects an untrusted browser origin', async ({ request }) =
   });
 
   expect(response.status()).toBe(403);
-  const responseBody = await response.json();
+  const responseBody: unknown = await response.json();
   expect(responseBody).toMatchObject({
     error: { code: 'pilot_origin_denied' },
   });
