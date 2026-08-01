@@ -207,6 +207,18 @@ for (const role of Object.keys(operatorRoots) as PilotOperatorRole[]) {
     expect((await wrongTenant.json()) as unknown).toMatchObject({
       error: { code: 'pilot_scope_denied' },
     });
+
+    const wrongCampus = await request.post(
+      `${liveApiUrl}/pilot/v1/commands/${role}/${commandByRole[role]}`,
+      {
+        headers: { ...headers, 'idempotency-key': `${idempotencyKey}-wrong-campus` },
+        data: { ...data, campusId: 'campus-other' },
+      },
+    );
+    expect(wrongCampus.status()).toBe(403);
+    expect((await wrongCampus.json()) as unknown).toMatchObject({
+      error: { code: 'pilot_scope_denied' },
+    });
   });
 }
 
