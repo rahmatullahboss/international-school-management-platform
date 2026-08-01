@@ -198,7 +198,7 @@ export function authorizePilotOperatorPermission(
   permission: string,
   assurance: PilotOperatorAssurance,
 ): PilotOperatorPermissionDecision {
-  if (!operatorDefinitions[role].capabilities.includes(permission as never)) {
+  if (!operatorDefinitions[role].capabilities.some((capability) => capability === permission)) {
     return { allowed: false, reason: 'permission-not-granted' };
   }
   if (aal2Permissions.has(permission) && assurance !== 'aal2') {
