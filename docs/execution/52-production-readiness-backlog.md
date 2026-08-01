@@ -21,7 +21,7 @@ Before production-depth E2E can be claimed:
 
 ## 2. Durable deployed authorization for operator personas
 
-Admissions, Finance/Cashier and Platform/Support currently have explicit non-production pilot identities plus canonical PostgreSQL authorization proofs. Production-depth staging must additionally prove that deployed browser sessions resolve through the durable session registry and database permission service for those personas.
+Admissions, Finance/Cashier and Platform/Support have explicit non-production pilot identities, canonical PostgreSQL authorization proofs and PILOT-13 database-owned domain command primitives. Production-depth staging must additionally prove that deployed browser sessions resolve through the durable session registry and database permission service for those personas.
 
 Required checks:
 
@@ -31,17 +31,24 @@ Required checks:
 - no operator receives implicit cross-tenant or tenant-configuration mutation authority;
 - denial responses remain bounded and do not disclose sensitive tenancy, identity or policy data.
 
-## 3. Replace synthetic operator commands with reviewed domain commands
+## 3. Deploy reviewed operator domain commands through a production-grade service boundary
 
-The PR #80 browser command route records controlled pilot audit evidence. It is not a general production mutation API.
+PILOT-13 closes the database-command design gap for three bounded workflows:
 
-Before domain writes are enabled, define and review separate command contracts for at least:
+- Admissions application review with exact campus lineage, optimistic application versioning and append-only review evidence;
+- Finance/Cashier exact bank-line reconciliation against one compatible settled payment in the session legal entity;
+- Platform/Support AAL2, time-bounded privileged-access request creation that remains pending until separately approved.
 
-- Admissions application review/status transitions using canonical admissions invariants;
-- Finance/Cashier receipt, cashier-session and reconciliation operations using canonical finance immutability, balancing and approval rules;
-- Platform/Support diagnostics and break-glass actions with explicit tenancy ownership boundaries and privileged-access evidence.
+These commands have request-bound idempotency, current durable-session/permission evaluation, exact server-owned scope, atomic domain change plus audit/outbox evidence and negative cross-scope verification. They are intentionally non-HTTP and are not production-enabled.
 
-Each production-bound command must have exact authorization, assurance, idempotency, optimistic concurrency, validation, audit/outbox evidence, replay behavior, rollback semantics and negative cross-tenant tests.
+Remaining work before deployed domain writes are claimed:
+
+- define and review the external service/HTTP boundary that resolves the authenticated durable session and calls only the allowlisted database command;
+- add bounded request-body, origin/CORS, rate-limit and failure contracts without accepting caller-supplied tenant/campus/account/persona/capability scope;
+- connect the deployed staging Worker to the reviewed database command store using non-browser credentials;
+- run real-IdP staging write journeys and assert post-write domain state, command receipts, audit and outbox evidence;
+- add any further production-required Admissions transitions and Finance/Cashier receipt/cash-session commands as separately reviewed domain contracts rather than broadening the three PILOT-13 functions;
+- keep Support approval, grant use, revocation and expiry as separate reviewed privileged-access workflows; a request command must never self-approve.
 
 ## 4. Runtime projection production wiring
 
@@ -68,7 +75,7 @@ The matrix must cover:
 - allow/deny permission boundaries and cross-role replay denial;
 - exact tenant/campus isolation;
 - safe read-model refresh and approved operator/domain mutations;
-- post-write database state, audit, outbox and projection assertions;
+- post-write database state, command-receipt, audit, outbox and projection assertions;
 - cache/ETag behavior and last-safe-data behavior during API outages;
 - responsive, keyboard, RTL/reduced-motion and role-isolation browser journeys where applicable.
 
@@ -96,4 +103,4 @@ Production promotion remains blocked until:
 
 ## Current boundary
 
-No item in this backlog is automatically completed by PR #77, PR #80 or PILOT-12. Those checkpoints provide verified implementation and non-production evidence only. Until the gates above are closed, real provider login, production credentials, production source population, production schedules and general production mutations remain disabled.
+PR #77, PR #83, PILOT-04 through PILOT-13 and their governance evidence provide verified non-production implementation and canonical-CI contracts only. PILOT-13 proves database-owned operator domain commands but does not expose or activate them through a deployed production-grade service boundary. Until the gates above are closed, real provider login, production credentials, production source population, production schedules, deployed operator-domain mutation wiring and general production mutations remain disabled.
