@@ -104,6 +104,7 @@ describe('operator domain command boundary', () => {
       { ...financeInput(), applicationId },
       { ...supportInput(), requestedMinutes: 31 },
       { ...supportInput(), requestedMinutes: 4 },
+      { ...supportInput(), requestedMinutes: 15.5 },
       { ...supportInput(), targetTenantId: 'caller-selected-tenant' },
     ];
 
