@@ -1,5 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
+import type { PilotReadRole } from '../../apps/platform-api/src/pilot-read-models.js';
+
 const liveApiUrl = 'http://127.0.0.1:8787';
 const webOrigin = 'http://127.0.0.1:4173';
 
@@ -8,9 +10,7 @@ const roleRoots = {
   teacher: '/teacher',
   guardian: '/family',
   student: '/student',
-} as const;
-
-type BrowserPilotRole = keyof typeof roleRoots;
+} as const satisfies Readonly<Record<PilotReadRole, string>>;
 
 async function configureLivePilotApi(page: Page): Promise<void> {
   await page.addInitScript((apiUrl) => {
@@ -18,7 +18,7 @@ async function configureLivePilotApi(page: Page): Promise<void> {
   }, liveApiUrl);
 }
 
-for (const [role, root] of Object.entries(roleRoots) as [BrowserPilotRole, string][]) {
+for (const [role, root] of Object.entries(roleRoots) as [PilotReadRole, string][]) {
   test(`${role} portal revalidates through the live local Worker`, async ({ page }) => {
     await configureLivePilotApi(page);
 
