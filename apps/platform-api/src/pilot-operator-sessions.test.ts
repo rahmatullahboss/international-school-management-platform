@@ -1,62 +1,51 @@
+import { createHmac } from 'node:crypto';
+
 import { describe, expect, it } from 'vitest';
 
 import {
   issuePilotOperatorSession,
-  pilotOperatorSessionHeaders,
+  operatorSnapshotHeaders,
   verifyPilotOperatorSession,
 } from './pilot-operator-sessions.js';
 
-const secret = 'pilot-operator-session-test-secret-0123456789abcdef';
-const baseNow = Date.UTC(2026, 7, 1, 8, 0, 0);
+const secret = 'operator-session-coverage-secret-0123456789abcdef';
+const baseNow = Date.parse('2026-08-01T00:00:00.000Z');
 
-function encodeBase64Url(value: Uint8Array | string): string {
-  const bytes = typeof value === 'string' ? new TextEncoder().encode(value) : value;
-  let binary = '';
-  for (const byte of bytes) binary += String.fromCharCode(byte);
-  return btoa(binary).replace(/\+/gu, '-').replace(/\//gu, '_').replace(/=+$/gu, '');
-}
-
-function decodeBase64UrlText(value: string): string {
-  const normalized = value.replace(/-/gu, '+').replace(/_/gu, '/');
-  const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
-  return new TextDecoder().decode(Uint8Array.from(atob(padded), (char) => char.charCodeAt(0)));
+function encode(value: string): string {
+  return Buffer.from(value).toString('base64url');
 }
 
 async function signPayload(payload: string): Promise<string> {
-  const encoded = encodeBase64Url(payload);
-  const key = await crypto.subtle.importKey(
-    'raw',
-    new TextEncoder().encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign'],
-  );
-  const signature = new Uint8Array(
-    await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(encoded)),
-  );
-  return `${encoded}.${encodeBase64Url(signature)}`;
+  const encodedPayload = encode(payload);
+  const signature = createHmac('sha256', secret).update(encodedPayload).digest('base64url');
+  return `${encodedPayload}.${signature}`;
 }
 
-async function validClaims() {
-  const issued = await issuePilotOperatorSession(secret, 'admissions', baseNow);
-  if (!issued.ok) throw new Error('expected session issuance');
-  const [payload] = issued.token.split('.');
-  if (payload === undefined) throw new Error('expected payload');
-  return JSON.parse(decodeBase64UrlText(payload)) as Record<string, unknown>;
+function validClaims(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+  return {
+    version: 1,
+    issuer: 'school-platform-pilot',
+    audience: 'school-platform-pilot-web',
+    role: 'admissions',
+    tenantId: 'tenant-alpha',
+    campusId: 'campus-main',
+    subjectId: 'admissions-pilot',
+    assurance: 'aal1',
+    issuedAt: new Date(baseNow).toISOString(),
+    expiresAt: new Date(baseNow + 10 * 60 * 1000).toISOString(),
+    sessionId: 'pilot-admissions-0123456789abcdef',
+    ...overrides,
+  };
 }
 
 describe('pilot operator sessions', () => {
   it('fails closed when issuance configuration is missing or too short', async () => {
-    await expect(
-      issuePilotOperatorSession(undefined, 'admissions', baseNow),
-    ).resolves.toMatchObject({
+    await expect(issuePilotOperatorSession(undefined, 'admissions', baseNow)).resolves.toEqual({
       ok: false,
       status: 503,
       code: 'pilot_session_unavailable',
     });
-    await expect(
-      issuePilotOperatorSession('too-short', 'admissions', baseNow),
-    ).resolves.toMatchObject({
+    await expect(issuePilotOperatorSession('short', 'admissions', baseNow)).resolves.toEqual({
       ok: false,
       status: 503,
       code: 'pilot_session_unavailable',
@@ -64,57 +53,41 @@ describe('pilot operator sessions', () => {
   });
 
   it('rejects issuance for an unpublished role', async () => {
-    await expect(issuePilotOperatorSession(secret, 'admin', baseNow)).resolves.toMatchObject({
+    await expect(issuePilotOperatorSession(secret, 'admin' as 'admissions', baseNow)).resolves.toEqual({
       ok: false,
       status: 404,
       code: 'pilot_role_not_found',
     });
   });
 
-  it.each([
-    ['admissions', 'admissions-1', 'aal1'],
-    ['finance', 'cashier-1', 'aal1'],
-    ['support', 'support-operator-1', 'aal2'],
-  ] as const)('issues and verifies a scoped %s session', async (role, subjectId, assurance) => {
-    const issued = await issuePilotOperatorSession(secret, role, baseNow);
-    expect(issued.ok).toBe(true);
-    if (!issued.ok) throw new Error('expected session issuance');
-    expect(issued.scope).toEqual({
-      tenantId: 'tenant-pilot-001',
-      campusId: 'campus-main',
-      role,
-      subjectId,
-      assurance,
-    });
-    expect(issued.expiresAt).toBe(new Date((baseNow / 1000 + 15 * 60) * 1000).toISOString());
+  it.each(['admissions', 'finance', 'support'] as const)(
+    'issues and verifies a scoped %s session',
+    async (role) => {
+      const issued = await issuePilotOperatorSession(secret, role, baseNow);
+      expect(issued.ok).toBe(true);
+      if (!issued.ok) throw new Error('expected session issuance');
+      expect(issued.claims).toMatchObject({ role, assurance: 'aal1' });
+      expect(issued.expiresAt).toBe(new Date(baseNow + 10 * 60 * 1000).toISOString());
 
-    const verified = await verifyPilotOperatorSession(
-      secret,
-      `Bearer ${issued.token}`,
-      role,
-      baseNow + 1000,
-    );
-    expect(verified.ok).toBe(true);
-    if (!verified.ok) throw new Error('expected valid session');
-    expect(verified.claims).toMatchObject({ role, subjectId, assurance });
-    expect(verified.claims.sessionId.length).toBeGreaterThanOrEqual(8);
-  });
+      const verified = await verifyPilotOperatorSession(
+        secret,
+        `Bearer ${issued.token}`,
+        role,
+        baseNow + 1000,
+      );
+      expect(verified.ok).toBe(true);
+      if (!verified.ok) throw new Error('expected verified operator session');
+      expect(verified.claims).toEqual(issued.claims);
+    },
+  );
 
   it('fails closed when verifier configuration is missing or too short', async () => {
     await expect(
-      verifyPilotOperatorSession(undefined, 'Bearer token', 'admissions'),
-    ).resolves.toMatchObject({
-      ok: false,
-      status: 503,
-      code: 'pilot_session_unavailable',
-    });
+      verifyPilotOperatorSession(undefined, 'Bearer token', 'admissions', baseNow),
+    ).resolves.toEqual({ ok: false, status: 503, code: 'pilot_session_unavailable' });
     await expect(
-      verifyPilotOperatorSession('short', 'Bearer token', 'admissions'),
-    ).resolves.toMatchObject({
-      ok: false,
-      status: 503,
-      code: 'pilot_session_unavailable',
-    });
+      verifyPilotOperatorSession('short', 'Bearer token', 'admissions', baseNow),
+    ).resolves.toEqual({ ok: false, status: 503, code: 'pilot_session_unavailable' });
   });
 
   it.each([undefined, '', 'Basic abc', 'Bearer', 'Bearer one two'])(
@@ -122,11 +95,7 @@ describe('pilot operator sessions', () => {
     async (authorization) => {
       await expect(
         verifyPilotOperatorSession(secret, authorization, 'admissions', baseNow),
-      ).resolves.toMatchObject({
-        ok: false,
-        status: 401,
-        code: 'pilot_session_required',
-      });
+      ).resolves.toMatchObject({ ok: false, status: 401, code: 'pilot_session_required' });
     },
   );
 
@@ -135,11 +104,7 @@ describe('pilot operator sessions', () => {
     async (token) => {
       await expect(
         verifyPilotOperatorSession(secret, `Bearer ${token}`, 'admissions', baseNow),
-      ).resolves.toMatchObject({
-        ok: false,
-        status: 401,
-        code: 'pilot_session_invalid',
-      });
+      ).resolves.toMatchObject({ ok: false, status: 401, code: 'pilot_session_invalid' });
     },
   );
 
@@ -172,8 +137,8 @@ describe('pilot operator sessions', () => {
     if (!issued.ok) throw new Error('expected session issuance');
     const [payload, signature] = issued.token.split('.');
     if (payload === undefined || signature === undefined) throw new Error('expected token parts');
-    const replacement = signature.endsWith('A') ? 'B' : 'A';
-    const tampered = `${payload}.${signature.slice(0, -1)}${replacement}`;
+    const replacement = signature.startsWith('A') ? 'B' : 'A';
+    const tampered = `${payload}.${replacement}${signature.slice(1)}`;
 
     await expect(
       verifyPilotOperatorSession(secret, `Bearer ${tampered}`, 'admissions', baseNow),
@@ -194,13 +159,11 @@ describe('pilot operator sessions', () => {
     ['campusId', 'campus-other'],
     ['subjectId', 'different-subject'],
     ['assurance', 'aal2'],
-    ['issuedAt', 'not-a-number'],
-    ['expiresAt', 'not-a-number'],
+    ['issuedAt', 'not-a-date'],
+    ['expiresAt', 'not-a-date'],
     ['sessionId', 'short'],
-  ] as const)('rejects signed claims with invalid %s', async (field, value) => {
-    const claims = await validClaims();
-    claims[field] = value;
-    const token = await signPayload(JSON.stringify(claims));
+  ])('rejects signed claims with invalid %s', async (field, value) => {
+    const token = await signPayload(JSON.stringify(validClaims({ [field]: value })));
     await expect(
       verifyPilotOperatorSession(secret, `Bearer ${token}`, 'admissions', baseNow + 1000),
     ).resolves.toMatchObject({ ok: false, status: 401, code: 'pilot_session_invalid' });
@@ -215,14 +178,15 @@ describe('pilot operator sessions', () => {
       'support',
       baseNow + 1000,
     );
-    if (!verified.ok) throw new Error('expected verified session');
+    if (!verified.ok) throw new Error('expected verified support session');
 
-    expect(Object.fromEntries(pilotOperatorSessionHeaders(verified.claims).entries())).toEqual({
-      'x-school-assurance': 'aal2',
-      'x-school-campus-id': 'campus-main',
-      'x-school-role': 'support',
-      'x-school-subject-id': 'support-operator-1',
-      'x-school-tenant-id': 'tenant-pilot-001',
+    const headers = operatorSnapshotHeaders(verified.claims);
+    expect(headers).toEqual({
+      'x-pilot-role': 'support',
+      'x-pilot-tenant-id': verified.claims.tenantId,
+      'x-pilot-campus-id': verified.claims.campusId,
+      'x-pilot-subject-id': verified.claims.subjectId,
+      'x-pilot-assurance': verified.claims.assurance,
     });
   });
 });
