@@ -1,15 +1,16 @@
 name: Format persona v2
 
 on:
-  push:
+  pull_request:
     branches:
-      - test/full-product-persona-e2e-v2
+      - test/full-role-e2e-coverage-v1
 
 permissions:
   contents: write
 
 jobs:
   format:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'test/full-product-persona-e2e-v2'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
