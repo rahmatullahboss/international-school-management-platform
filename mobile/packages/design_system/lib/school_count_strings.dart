@@ -285,14 +285,10 @@ final class SchoolCountStrings {
       )) {
         SchoolPluralCategory.zero =>
           'لا توجد عمليات مشفرة بانتظار قبول الخادم.',
-        SchoolPluralCategory.one =>
-          'عملية مشفرة واحدة بانتظار قبول الخادم.',
-        SchoolPluralCategory.two =>
-          'عمليتان مشفرتان بانتظار قبول الخادم.',
-        SchoolPluralCategory.few =>
-          '$digits عمليات مشفرة بانتظار قبول الخادم.',
-        SchoolPluralCategory.many =>
-          '$digits عملية مشفرة بانتظار قبول الخادم.',
+        SchoolPluralCategory.one => 'عملية مشفرة واحدة بانتظار قبول الخادم.',
+        SchoolPluralCategory.two => 'عمليتان مشفرتان بانتظار قبول الخادم.',
+        SchoolPluralCategory.few => '$digits عمليات مشفرة بانتظار قبول الخادم.',
+        SchoolPluralCategory.many => '$digits عملية مشفرة بانتظار قبول الخادم.',
         SchoolPluralCategory.other =>
           '$digits عملية مشفرة بانتظار قبول الخادم.',
       },
@@ -306,18 +302,19 @@ final class SchoolCountStrings {
       SchoolLanguage.english => switch (count) {
         0 => 'No operations require manual review.',
         1 => '1 operation is conflicted, rejected or requires reconciliation.',
-        _ => '$digits operations are conflicted, rejected or require reconciliation.',
+        _ =>
+          '$digits operations are conflicted, rejected or require reconciliation.',
       },
       SchoolLanguage.bangla => switch (count) {
         0 => 'কোনো অপারেশন ম্যানুয়াল পর্যালোচনা প্রয়োজন করে না।',
-        _ => '$digitsটি অপারেশন দ্বন্দ্বে আছে, প্রত্যাখ্যাত হয়েছে বা সমন্বয় প্রয়োজন।',
+        _ =>
+          '$digitsটি অপারেশন দ্বন্দ্বে আছে, প্রত্যাখ্যাত হয়েছে বা সমন্বয় প্রয়োজন।',
       },
       SchoolLanguage.arabic => switch (SchoolCardinalPluralRules.categoryFor(
         locale,
         count,
       )) {
-        SchoolPluralCategory.zero =>
-          'لا توجد عمليات تتطلب مراجعة يدوية.',
+        SchoolPluralCategory.zero => 'لا توجد عمليات تتطلب مراجعة يدوية.',
         SchoolPluralCategory.one =>
           'عملية واحدة متعارضة أو مرفوضة أو تتطلب تسوية.',
         SchoolPluralCategory.two =>
