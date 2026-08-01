@@ -324,9 +324,19 @@ describe('identity session cache lifecycle', () => {
     const candidates = [
       '{bad-json',
       JSON.stringify({ sessionVersion: 2 }),
-      JSON.stringify({ sessionVersion: 1, accessToken: 5, expiresAt: now + 60_000, scope: validScope }),
+      JSON.stringify({
+        sessionVersion: 1,
+        accessToken: 5,
+        expiresAt: now + 60_000,
+        scope: validScope,
+      }),
       JSON.stringify({ sessionVersion: 1, accessToken, expiresAt: 'later', scope: validScope }),
-      JSON.stringify({ sessionVersion: 1, accessToken, expiresAt: now + 20_000, scope: validScope }),
+      JSON.stringify({
+        sessionVersion: 1,
+        accessToken,
+        expiresAt: now + 20_000,
+        scope: validScope,
+      }),
       JSON.stringify({ sessionVersion: 1, accessToken, expiresAt: now + 60_000, scope: null }),
       JSON.stringify({
         sessionVersion: 1,
@@ -404,7 +414,9 @@ describe('pilot session API requests', () => {
   it('issues and stores a scoped session from the API', async () => {
     const fetchMock = vi.fn(() => Promise.resolve(jsonResponse(sessionPayload('teacher'))));
     vi.stubGlobal('fetch', fetchMock);
-    await expect(pilotResourceClientContract.requestSession(apiBase, 'teacher')).resolves.toMatchObject({
+    await expect(
+      pilotResourceClientContract.requestSession(apiBase, 'teacher'),
+    ).resolves.toMatchObject({
       sessionVersion: 1,
       accessToken,
       scope: { role: 'teacher', subjectId: 'teacher-1' },
