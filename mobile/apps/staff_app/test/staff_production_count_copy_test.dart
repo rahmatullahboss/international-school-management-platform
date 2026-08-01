@@ -8,6 +8,8 @@ void main() {
 
     expect(copy.rosterStudents(1), '1 student');
     expect(copy.rosterStudents(24), '24 students');
+    expect(copy.assignedMeetings(0), 'No assigned meetings');
+    expect(copy.assignedMeetings(2), '2 assigned meetings');
     expect(
       copy.encryptedOperationsWaiting(2),
       '2 encrypted operations are waiting for server acceptance.',
@@ -22,6 +24,7 @@ void main() {
     final copy = StaffProductionCountCopy.forLocale(const Locale('bn', 'BD'));
 
     expect(copy.rosterStudents(12), '১২ জন শিক্ষার্থী');
+    expect(copy.assignedMeetings(3), '৩টি নির্ধারিত ক্লাস');
     expect(
       copy.encryptedOperationsWaiting(2),
       '২টি এনক্রিপ্টেড অপারেশন সার্ভারের অনুমোদনের অপেক্ষায় আছে।',
@@ -36,6 +39,7 @@ void main() {
     final copy = StaffProductionCountCopy.forLocale(const Locale('ar', 'SA'));
 
     expect(copy.rosterStudents(2), 'طالبان');
+    expect(copy.assignedMeetings(2), 'حصتان مسندتان');
     expect(
       copy.encryptedOperationsWaiting(2),
       'عمليتان مشفرتان بانتظار قبول الخادم.',
@@ -50,6 +54,7 @@ void main() {
     final copy = StaffProductionCountCopy.forLocale(const Locale('en'));
 
     expect(() => copy.rosterStudents(-1), throwsRangeError);
+    expect(() => copy.assignedMeetings(-1), throwsRangeError);
     expect(() => copy.encryptedOperationsWaiting(-1), throwsRangeError);
     expect(() => copy.operationsRequireReview(-1), throwsRangeError);
   });
