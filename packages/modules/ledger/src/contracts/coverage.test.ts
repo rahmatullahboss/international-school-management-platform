@@ -272,10 +272,9 @@ describe('ledger analytical dimensions', () => {
       errors: [],
     });
     expect(
-      validateDimensions(
-        { custom: 'anything' },
-        [{ ...definition, code: 'custom', isRequired: false, allowedValues: [] }],
-      ),
+      validateDimensions({ custom: 'anything' }, [
+        { ...definition, code: 'custom', isRequired: false, allowedValues: [] },
+      ]),
     ).toEqual({ isValid: true, errors: [] });
   });
 
@@ -316,7 +315,9 @@ describe('fiscal period contracts', () => {
         'Period must be in closing status before closing',
       ],
     });
-    expect(validatePeriodTransition(period({ status: 'closed' }), 'open', 'u', 'reason').errors).toEqual([
+    expect(
+      validatePeriodTransition(period({ status: 'closed' }), 'open', 'u', 'reason').errors,
+    ).toEqual([
       'Cannot transition from closed to open',
       'Period must be in reopening status before reopening',
     ]);
@@ -341,24 +342,24 @@ describe('posting rule contracts', () => {
   it('evaluates all supported condition operators and scalar guards', () => {
     const context = { status: 'paid', amount: 100, active: true, object: { nested: true } };
     expect(evaluateConditions([], context)).toBe(true);
-    expect(evaluateConditions([{ field: 'status', operator: 'equals', value: 'paid' }], context)).toBe(
-      true,
-    );
+    expect(
+      evaluateConditions([{ field: 'status', operator: 'equals', value: 'paid' }], context),
+    ).toBe(true);
     expect(
       evaluateConditions([{ field: 'status', operator: 'not-equals', value: 'void' }], context),
     ).toBe(true);
-    expect(evaluateConditions([{ field: 'status', operator: 'in', value: ['paid'] }], context)).toBe(
-      true,
-    );
+    expect(
+      evaluateConditions([{ field: 'status', operator: 'in', value: ['paid'] }], context),
+    ).toBe(true);
     expect(
       evaluateConditions([{ field: 'amount', operator: 'greater-than', value: [50, 99] }], context),
     ).toBe(true);
     expect(
       evaluateConditions([{ field: 'amount', operator: 'less-than', value: [101, 200] }], context),
     ).toBe(true);
-    expect(evaluateConditions([{ field: 'missing', operator: 'equals', value: 'x' }], context)).toBe(
-      false,
-    );
+    expect(
+      evaluateConditions([{ field: 'missing', operator: 'equals', value: 'x' }], context),
+    ).toBe(false);
     expect(evaluateConditions([{ field: 'object', operator: 'equals', value: 'x' }], context)).toBe(
       false,
     );
@@ -419,7 +420,10 @@ describe('posting rule contracts', () => {
       validatePostingRule({
         ...rule,
         version: 0.5,
-        lines: [{ ...rule.lines[0]!, lineNumber: 1 }, { ...rule.lines[0]!, lineNumber: 1 }],
+        lines: [
+          { ...rule.lines[0]!, lineNumber: 1 },
+          { ...rule.lines[0]!, lineNumber: 1 },
+        ],
       }),
     ).toEqual({
       isValid: false,
@@ -474,15 +478,21 @@ describe('journal contracts', () => {
   });
 
   it('reverses posted entries and rejects invalid reversal requests', () => {
-    expect(() => createReversalEntry(journalEntry({ status: 'draft' }), [debit, credit], 'u', 'fix')).toThrow(
-      'Only posted entries may be reversed',
-    );
+    expect(() =>
+      createReversalEntry(journalEntry({ status: 'draft' }), [debit, credit], 'u', 'fix'),
+    ).toThrow('Only posted entries may be reversed');
     expect(() => createReversalEntry(journalEntry(), [debit, credit], 'u', ' ')).toThrow(
       'Reversal reason is required',
     );
 
     const reversedAt = new Date('2026-08-01T10:00:00.000Z');
-    const reversal = createReversalEntry(journalEntry(), [debit, credit], 'reviewer', 'Correction', reversedAt);
+    const reversal = createReversalEntry(
+      journalEntry(),
+      [debit, credit],
+      'reviewer',
+      'Correction',
+      reversedAt,
+    );
     expect(reversal.entry).toMatchObject({
       description: 'Reversal: Tuition',
       reference: 'entry-1',
@@ -496,7 +506,15 @@ describe('journal contracts', () => {
     });
     expect(reversal.entry.entryDate).toEqual(reversedAt);
     expect(reversal.lines).toHaveLength(2);
-    expect(reversal.lines[0]).toMatchObject({ lineNumber: 1, side: 'credit', entryId: reversal.entry.id });
-    expect(reversal.lines[1]).toMatchObject({ lineNumber: 2, side: 'debit', entryId: reversal.entry.id });
+    expect(reversal.lines[0]).toMatchObject({
+      lineNumber: 1,
+      side: 'credit',
+      entryId: reversal.entry.id,
+    });
+    expect(reversal.lines[1]).toMatchObject({
+      lineNumber: 2,
+      side: 'debit',
+      entryId: reversal.entry.id,
+    });
   });
 });
