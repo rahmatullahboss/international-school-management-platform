@@ -31,9 +31,15 @@ function sequence(overrides: Partial<NumberingSequence> = {}): NumberingSequence
 
 describe('billing rounding contracts', () => {
   it('rejects invalid precision definitions', () => {
-    expect(() => createRoundingPolicy('half-even', -1)).toThrow('Precision must be between 0 and 10');
-    expect(() => createRoundingPolicy('half-even', 11)).toThrow('Precision must be between 0 and 10');
-    expect(() => createRoundingPolicy('half-even', 1.5)).toThrow('Precision must be between 0 and 10');
+    expect(() => createRoundingPolicy('half-even', -1)).toThrow(
+      'Precision must be between 0 and 10',
+    );
+    expect(() => createRoundingPolicy('half-even', 11)).toThrow(
+      'Precision must be between 0 and 10',
+    );
+    expect(() => createRoundingPolicy('half-even', 1.5)).toThrow(
+      'Precision must be between 0 and 10',
+    );
   });
 
   it('covers every rounding mode, ties, signs and finite guards', () => {
@@ -163,9 +169,9 @@ describe('billing numbering contracts', () => {
           },
         ],
       );
-      expect(() =>
-        allocateSequenceNumber(policy, 'invoice', context, 'idem-key-123'),
-      ).toThrow('Numbering scope mismatch');
+      expect(() => allocateSequenceNumber(policy, 'invoice', context, 'idem-key-123')).toThrow(
+        'Numbering scope mismatch',
+      );
     }
   });
 
@@ -232,7 +238,9 @@ describe('finance source-document guards', () => {
   });
 
   it('recognizes finance-error envelopes only when required keys exist', () => {
-    expect(isFinanceError({ code: 'FIN_NOT_FOUND', message: 'Missing', retryable: false })).toBe(true);
+    expect(isFinanceError({ code: 'FIN_NOT_FOUND', message: 'Missing', retryable: false })).toBe(
+      true,
+    );
     expect(isFinanceError(null)).toBe(false);
     expect(isFinanceError('error')).toBe(false);
     expect(isFinanceError({ message: 'Missing', retryable: false })).toBe(false);
