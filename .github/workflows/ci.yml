@@ -39,7 +39,8 @@ jobs:
       - run: npm run lint
       - run: npm run check:boundaries
       - run: npm run typecheck
-      - run: npm run test
+      - name: Run application tests with runtime coverage
+        run: npm run test:coverage
       - name: Verify all Wave 2 migrations on fresh PostgreSQL
         env:
           PGHOST: 127.0.0.1
