@@ -106,7 +106,10 @@ function storedSnapshot(
   };
 }
 
-function storedSession(role: CoreRole, overrides: Partial<StoredSessionContract> = {}): StoredSessionContract {
+function storedSession(
+  role: CoreRole,
+  overrides: Partial<StoredSessionContract> = {},
+): StoredSessionContract {
   return {
     sessionVersion: 1,
     accessToken,
@@ -327,9 +330,19 @@ describe('identity session cache lifecycle', () => {
     const candidates = [
       '{bad-json',
       JSON.stringify({ sessionVersion: 2 }),
-      JSON.stringify({ sessionVersion: 1, accessToken: 5, expiresAt: now + 60_000, scope: validScope }),
+      JSON.stringify({
+        sessionVersion: 1,
+        accessToken: 5,
+        expiresAt: now + 60_000,
+        scope: validScope,
+      }),
       JSON.stringify({ sessionVersion: 1, accessToken, expiresAt: 'later', scope: validScope }),
-      JSON.stringify({ sessionVersion: 1, accessToken, expiresAt: now + 20_000, scope: validScope }),
+      JSON.stringify({
+        sessionVersion: 1,
+        accessToken,
+        expiresAt: now + 20_000,
+        scope: validScope,
+      }),
       JSON.stringify({ sessionVersion: 1, accessToken, expiresAt: now + 60_000, scope: null }),
       JSON.stringify({
         sessionVersion: 1,
