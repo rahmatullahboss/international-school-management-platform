@@ -2,7 +2,7 @@
 
 **Program:** `international-school-platform-v1`  
 **Updated:** 2026-08-01  
-**Current repository state:** All planned domain module streams are complete and integrated. The non-production pilot/canonical-CI implementation now has explicit E2E coverage for all seven principal product personas: Admin, Admissions, Finance/Cashier, Teacher, Guardian, Student and Platform/Support. PR #77 provides the four original pilot-role E2E baseline and PR #80 adds the remaining three independent operator personas. The implementation checkpoint is green, but the program is **not yet production-ready**: the E2E PR chain is not merged to `main`, real external IdP login for all seven personas is not proven on deployed staging, the three new operator personas are not yet end-to-end bound to durable production-style browser sessions/database-backed reads and real domain writes in staging, and production credentials/bindings/schedules/general mutations remain disabled.
+**Current repository state:** All planned domain module streams are complete and integrated. The non-production pilot/canonical-CI implementation now has explicit E2E coverage for all seven principal product personas: Admin, Admissions, Finance/Cashier, Teacher, Guardian, Student and Platform/Support. PR #77, which provides the four original pilot-role E2E baseline, is merged to `main` at `18f50ecd252473034e6132cc6e911015c8ceb831`. PR #80 adds the remaining three independent operator personas and is the only pending integration PR for the seven-persona checkpoint. The program is **not yet production-ready**: real external IdP login for all seven personas is not proven on deployed staging, the three new operator personas are not yet end-to-end bound to durable production-style browser sessions/database-backed reads and real domain writes in staging, and production credentials/bindings/schedules/general mutations remain disabled.
 
 Detailed checkpoint evidence is preserved in the dedicated execution documents. The newest status documents are:
 
@@ -46,8 +46,8 @@ Historical checkpoint-by-checkpoint evidence through Wave 3 remains in [the arch
 | `GATE-PILOT-TEACHER-RUNTIME-COMPOSER-V1` | passed | Proof `0db23a475b8cd5db980b657922813e907077bed8`; main `e6301efaaa374e34b9e2719977f3a5eee51ec651`; CI `30659200077` |
 | `GATE-PILOT-GUARDIAN-RUNTIME-COMPOSER-V1` | passed | Proof `d59334952813afafd00b2ddf4ae9b5e06d5f3286`; main `6c6273adf1e42dc2a5e19b1130747a3ae5de46ee`; CI `30662644211` |
 | `GATE-PILOT-STUDENT-RUNTIME-COMPOSER-V1` | passed | PILOT-11 proof `9a3978e294bc3d9f463780ec9154bed67d802eb8`; main `f260d18bab8084ab2132767f2d8fb3040290c6cd`; CI `30678621687` |
-| `E2E-V1-FOUR-PILOT-ROLES` | implementation passed; merge pending | PR #77; head `d331bd11fdd1af9329bfeeddff9d1a389bcbe65b`; canonical CI `30692087194`; 51 platform browser tests / 65 aggregate browser tests at that checkpoint |
-| `E2E-V2-SEVEN-PRINCIPAL-PERSONAS` | implementation passed; production-depth open | PR #80; implementation proof `a14fa756ad9391bcce98a14b3ea5a6dea7b8455a`; canonical CI `30693986766`; 75 platform / 89 aggregate browser tests; PostgreSQL persona verifier passed |
+| `E2E-V1-FOUR-PILOT-ROLES` | passed and merged | PR #77; head `d331bd11fdd1af9329bfeeddff9d1a389bcbe65b`; merge `18f50ecd252473034e6132cc6e911015c8ceb831`; canonical CI `30692087194`; 51 platform / 65 aggregate browser tests |
+| `E2E-V2-SEVEN-PRINCIPAL-PERSONAS` | implementation passed; PR #80 integration and production-depth open | PR #80; implementation proof `a14fa756ad9391bcce98a14b3ea5a6dea7b8455a`; canonical CI `30693986766`; 75 platform / 89 aggregate browser tests; PostgreSQL persona verifier passed |
 
 ## Stream tracker
 
@@ -75,8 +75,8 @@ Historical checkpoint-by-checkpoint evidence through Wave 3 remains in [the arch
 | `PILOT-09` | post-integration | teacher composer passed; production cadence/source population disabled | `0db23a475b8cd5db980b657922813e907077bed8`; CI `30659200077` |
 | `PILOT-10` | post-integration | guardian composer passed; production cadence/source population disabled | `d59334952813afafd00b2ddf4ae9b5e06d5f3286`; CI `30662644211` |
 | `PILOT-11` | post-integration | student composer passed; production cadence/source population disabled | `9a3978e294bc3d9f463780ec9154bed67d802eb8`; main `f260d18bab8084ab2132767f2d8fb3040290c6cd`; CI `30678621687` |
-| `E2E-V1` | post-integration | four existing pilot roles fully browser-covered; merge pending | PR #77; `d331bd11fdd1af9329bfeeddff9d1a389bcbe65b`; CI `30692087194` |
-| `E2E-V2` | post-integration | seven principal personas explicit at pilot/canonical-CI level; production-depth staging open | PR #80; `a14fa756ad9391bcce98a14b3ea5a6dea7b8455a`; CI `30693986766` |
+| `E2E-V1` | post-integration | four existing pilot roles fully browser-covered and merged | PR #77; merge `18f50ecd252473034e6132cc6e911015c8ceb831`; CI `30692087194` |
+| `E2E-V2` | post-integration | seven principal personas explicit at pilot/canonical-CI level; PR #80 integration and production-depth staging open | PR #80; implementation proof `a14fa756ad9391bcce98a14b3ea5a6dea7b8455a`; CI `30693986766` |
 
 ## E2E-V2 seven-persona checkpoint
 
@@ -90,7 +90,7 @@ The implementation checkpoint now covers every principal persona defined by `PRO
 6. Student
 7. Platform/Support
 
-PR #77 covers every currently published route for Admin, Teacher, Guardian and Student and adds real local Wrangler Worker session/snapshot E2E. PR #80 adds independent Admissions, Finance/Cashier and Platform/Support pilot identities/workspaces plus explicit role-bound sessions, snapshots, permission allow/deny behavior, cross-role replay denial, tenant/campus command scope and controlled audit receipts.
+Merged PR #77 covers every currently published route for Admin, Teacher, Guardian and Student and adds real local Wrangler Worker session/snapshot E2E. PR #80 adds independent Admissions, Finance/Cashier and Platform/Support pilot identities/workspaces plus explicit role-bound sessions, snapshots, permission allow/deny behavior, cross-role replay denial, tenant/campus command scope and controlled audit receipts.
 
 Canonical PostgreSQL verification for the three new operator personas proves explicit account/membership/role provisioning, least-privilege grants, Admissions/Finance/Support negative permission paths, Support AAL1-to-AAL2 step-up, idempotent mutation receipts, audit/outbox evidence and immediate authorization loss after finance-session revocation.
 
@@ -108,7 +108,7 @@ This is an **implementation checkpoint**, not a production-depth completion clai
 
 ## Current live staging boundary
 
-The previously deployed staging stack continues to expose the existing four runtime role roots and fail-closed auth/runtime endpoints. The V2 Admissions, Finance/Cashier and Platform/Support workspaces are **not claimed as deployed staging evidence until PR #77 and PR #80 are merged and a new staging deploy/smoke matrix passes**.
+The previously deployed staging stack continues to expose the existing four runtime role roots and fail-closed auth/runtime endpoints. The V2 Admissions, Finance/Cashier and Platform/Support workspaces are **not claimed as deployed staging evidence until PR #80 is merged and a new staging deploy/smoke matrix passes**.
 
 Existing staging roots:
 
@@ -135,7 +135,8 @@ Production auth/database endpoints remain fail-closed without reviewed identity,
 
 - All domain streams remain complete and integrated.
 - Admin, Teacher, Guardian and Student runtime composer gates are complete; PILOT-11 closes the four original database-owned home-composer set.
-- Seven principal personas now have explicit non-production E2E implementation coverage through PR #77 + PR #80.
+- PR #77 is merged; PR #80 carries the three remaining persona implementation and documentation update.
+- Seven principal personas have explicit non-production E2E implementation coverage through the merged V1 baseline plus PR #80.
 - Latest implementation checkpoint: 137 passed Vitest files / 698 passed tests and 89 passed aggregate browser tests.
 - Format, lint, architecture boundaries, TypeScript, Worker/Vite builds, budgets, audit, licences, provenance and execution-artifact gates passed.
 
@@ -151,7 +152,7 @@ Production auth/database endpoints remain fail-closed without reviewed identity,
 
 The detailed backlog and exit conditions are in [50-production-readiness-backlog.md](50-production-readiness-backlog.md). Highest-priority remaining work is:
 
-1. merge PR #77 and then PR #80; rerun canonical `main` CI and record final merge SHAs;
+1. merge PR #80; rerun canonical `main` CI and record the final merge SHA/run ID;
 2. deploy the merged seven-persona runtime to staging and run the full staging smoke matrix;
 3. configure a reviewed real external IdP and prove login/logout/revocation/fresh-AAL2 lifecycle for all seven personas;
 4. bind Admissions, Finance/Cashier and Platform/Support browser sessions to durable database session/permission evaluation end to end;
@@ -170,4 +171,4 @@ No Git branch, worktree or Neon branch is deleted by this checkpoint. Cleanup re
 
 ## Production boundary
 
-No production deployment, real account, real tenant/student data or unrestricted production database mutation is claimed by E2E-V2. AUTH-01 through AUTH-08 provide provider-neutral verification, PKCE flow, durable identity state, browser/provider session termination, bounded provider caching, signing-key rotation, fresh-AAL2 and database-backed permission contracts. PILOT-04 through PILOT-11 provide tenant-safe runtime read/projection infrastructure, the allowlisted safe mutation envelope, projection worker/source publication and database-owned Admin/Teacher/Guardian/Student composers. E2E-V1/V2 complete the explicit browser/authorization implementation checkpoint for all seven principal personas, while real provider login, production credentials/source population, deployed seven-persona staging proof, database-backed operator read/write journeys, production bindings, schedule activation and general production mutations remain explicitly gated.
+No production deployment, real account, real tenant/student data or unrestricted production database mutation is claimed by E2E-V2. AUTH-01 through AUTH-08 provide provider-neutral verification, PKCE flow, durable identity state, browser/provider session termination, bounded provider caching, signing-key rotation, fresh-AAL2 and database-backed permission contracts. PILOT-04 through PILOT-11 provide tenant-safe runtime read/projection infrastructure, the allowlisted safe mutation envelope, projection worker/source publication and database-owned Admin/Teacher/Guardian/Student composers. The merged E2E-V1 baseline plus PR #80 complete the explicit browser/authorization implementation checkpoint for all seven principal personas, while real provider login, production credentials/source population, deployed seven-persona staging proof, database-backed operator read/write journeys, production bindings, schedule activation and general production mutations remain explicitly gated.
