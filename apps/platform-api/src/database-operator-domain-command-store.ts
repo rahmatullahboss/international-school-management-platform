@@ -80,7 +80,7 @@ function validateReceipt(
   }
   return {
     commandId: value.commandId,
-    command: value.command as OperatorDomainCommandName,
+    command: value.command,
     domainEvidenceId: value.domainEvidenceId,
     idempotencyKey: value.idempotencyKey,
     correlationId: value.correlationId,
