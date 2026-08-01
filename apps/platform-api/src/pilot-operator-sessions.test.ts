@@ -89,7 +89,12 @@ describe('pilot operator sessions', () => {
 
   it('accepts a manually signed claim set that matches the production contract', async () => {
     const token = signPayload(JSON.stringify(validClaims()));
-    const verified = await verifyPilotOperatorSession(secret, `Bearer ${token}`, 'admissions', baseNow);
+    const verified = await verifyPilotOperatorSession(
+      secret,
+      `Bearer ${token}`,
+      'admissions',
+      baseNow,
+    );
     expect(verified.ok).toBe(true);
     if (!verified.ok) throw new Error('expected manually signed claims to verify');
     expect(verified.claims).toMatchObject({
