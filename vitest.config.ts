@@ -13,7 +13,10 @@ export default defineConfig({
     ],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html'],
+      include: ['apps/**/src/**/*.{ts,tsx}', 'packages/**/src/**/*.{ts,tsx}'],
+      exclude: ['**/*.test.ts', '**/*.test.tsx', '**/*.d.ts'],
+      reporter: ['text', 'json', 'json-summary', 'html'],
+      reportOnFailure: true,
     },
   },
 });
