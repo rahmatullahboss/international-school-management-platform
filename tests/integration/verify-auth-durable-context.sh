@@ -12,19 +12,19 @@ import { existsSync, readFileSync } from 'node:fs';
 
 const manifestPath = process.argv[2];
 const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
-if (manifest.gate !== 'GATE-PILOT-RUNTIME-PROJECTION-OPERATIONS-MONITOR-V1') {
+if (manifest.gate !== 'GATE-PILOT-OPERATOR-DOMAIN-COMMANDS-V1') {
   throw new Error(`unexpected post-integration gate: ${manifest.gate}`);
 }
 if (manifest.baseManifest !== 'infra/database/migration-manifest.json') {
   throw new Error('post-integration manifest must name the canonical base manifest');
 }
 const migrations = manifest.migrations ?? [];
-if (migrations.length !== 12) {
-  throw new Error(`expected twelve post-integration migrations, got ${migrations.length}`);
+if (migrations.length !== 13) {
+  throw new Error(`expected thirteen post-integration migrations, got ${migrations.length}`);
 }
 for (const [index, migration] of migrations.entries()) {
   if (migration.order !== index + 1) throw new Error('AUTH migration orders are not contiguous');
-  if (!['AUTH-03', 'AUTH-07', 'AUTH-08', 'PILOT-04', 'PILOT-05', 'PILOT-06', 'PILOT-07', 'PILOT-08', 'PILOT-09', 'PILOT-10', 'PILOT-11', 'PILOT-12'].includes(migration.stream)) throw new Error(`unexpected stream: ${migration.stream}`);
+  if (!['AUTH-03', 'AUTH-07', 'AUTH-08', 'PILOT-04', 'PILOT-05', 'PILOT-06', 'PILOT-07', 'PILOT-08', 'PILOT-09', 'PILOT-10', 'PILOT-11', 'PILOT-12', 'PILOT-13'].includes(migration.stream)) throw new Error(`unexpected stream: ${migration.stream}`);
   if (!existsSync(migration.path)) throw new Error(`missing migration: ${migration.path}`);
   console.log(migration.path);
 }
@@ -38,8 +38,8 @@ done
 "${PSQL[@]}" <<'SQL'
 DO $verification$
 BEGIN
-  IF (SELECT count(*) FROM platform.schema_migration) <> 52 THEN
-    RAISE EXCEPTION 'expected 52 total migration ledger rows';
+  IF (SELECT count(*) FROM platform.schema_migration) <> 53 THEN
+    RAISE EXCEPTION 'expected 53 total migration ledger rows';
   END IF;
   IF (SELECT count(*) FROM platform.schema_migration WHERE stream_id = 'AUTH-03') <> 1 THEN
     RAISE EXCEPTION 'expected three AUTH migrations ledger row';
@@ -62,7 +62,11 @@ BEGIN
      OR to_regprocedure('platform.compose_teacher_runtime_projection_source(uuid,uuid,uuid,bigint,text,uuid)') IS NULL
      OR to_regprocedure('platform.compose_guardian_runtime_projection_source(uuid,uuid,uuid,bigint,text,uuid)') IS NULL
      OR to_regprocedure('platform.compose_student_runtime_projection_source(uuid,uuid,uuid,bigint,text,uuid)') IS NULL
-     OR to_regprocedure('platform.read_runtime_projection_operations_snapshot(uuid,integer,integer)') IS NULL THEN
+     OR to_regprocedure('platform.read_runtime_projection_operations_snapshot(uuid,integer,integer)') IS NULL
+     OR to_regclass('platform.operator_domain_command_receipt') IS NULL
+     OR to_regprocedure('admissions.record_application_review_command(uuid,uuid,bigint,text,numeric,text,text,uuid)') IS NULL
+     OR to_regprocedure('billing.reconcile_bank_statement_line_command(uuid,uuid,uuid,text,text,uuid)') IS NULL
+     OR to_regprocedure('iam.request_privileged_support_access_command(uuid,text,integer,text,uuid)') IS NULL THEN
     RAISE EXCEPTION 'AUTH-03 durable tables are incomplete';
   END IF;
 END
@@ -4439,8 +4443,8 @@ $account_revoke_verification$;
 RESET ROLE;
 
 SELECT json_build_object(
-  'canonical_migrations', (SELECT count(*) FROM platform.schema_migration WHERE stream_id NOT IN ('AUTH-03', 'AUTH-07', 'AUTH-08', 'PILOT-04', 'PILOT-05', 'PILOT-06', 'PILOT-07', 'PILOT-08', 'PILOT-09', 'PILOT-10', 'PILOT-11', 'PILOT-12')),
-  'post_integration_migrations', (SELECT count(*) FROM platform.schema_migration WHERE stream_id IN ('AUTH-03', 'AUTH-07', 'AUTH-08', 'PILOT-04', 'PILOT-05', 'PILOT-06', 'PILOT-07', 'PILOT-08', 'PILOT-09', 'PILOT-10', 'PILOT-11', 'PILOT-12')),
+  'canonical_migrations', (SELECT count(*) FROM platform.schema_migration WHERE stream_id NOT IN ('AUTH-03', 'AUTH-07', 'AUTH-08', 'PILOT-04', 'PILOT-05', 'PILOT-06', 'PILOT-07', 'PILOT-08', 'PILOT-09', 'PILOT-10', 'PILOT-11', 'PILOT-12', 'PILOT-13')),
+  'post_integration_migrations', (SELECT count(*) FROM platform.schema_migration WHERE stream_id IN ('AUTH-03', 'AUTH-07', 'AUTH-08', 'PILOT-04', 'PILOT-05', 'PILOT-06', 'PILOT-07', 'PILOT-08', 'PILOT-09', 'PILOT-10', 'PILOT-11', 'PILOT-12', 'PILOT-13')),
   'oauth_transactions', (SELECT count(*) FROM iam.oauth_transaction_consumption),
   'membership_bindings', (SELECT count(*) FROM iam.oidc_membership_binding),
   'session_rows', (SELECT count(*) FROM iam.browser_session_registry),
@@ -4461,7 +4465,8 @@ SELECT json_build_object(
       'platform.runtime_projection_persona_role',
       'platform.runtime_projection_persona_role_event',
       'platform.runtime_projection_source_publication',
-      'platform.runtime_projection_composition_run'
+      'platform.runtime_projection_composition_run',
+      'platform.operator_domain_command_receipt'
     ]) AS protected(table_name)
   )
 );
