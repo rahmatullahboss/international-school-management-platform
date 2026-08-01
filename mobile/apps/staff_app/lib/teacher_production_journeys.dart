@@ -1,5 +1,23 @@
 part of 'main.dart';
 
+final class StaffProductionCountCopy {
+  StaffProductionCountCopy.forLocale(Locale locale)
+    : _strings = SchoolCountStrings.forLocale(locale);
+
+  factory StaffProductionCountCopy.of(BuildContext context) =>
+      StaffProductionCountCopy.forLocale(Localizations.localeOf(context));
+
+  final SchoolCountStrings _strings;
+
+  String rosterStudents(int count) => _strings.rosterStudents(count);
+
+  String encryptedOperationsWaiting(int count) =>
+      _strings.encryptedOperationsWaiting(count);
+
+  String operationsRequireReview(int count) =>
+      _strings.operationsRequireReview(count);
+}
+
 class _StaffJourneyView extends StatelessWidget {
   const _StaffJourneyView({required this.builder, required this.journey});
 
@@ -118,17 +136,21 @@ class _TeacherMeetingTile extends StatelessWidget {
   final VoidCallback? onOpenRoster;
 
   @override
-  Widget build(BuildContext context) => ListTile(
-    contentPadding: EdgeInsets.zero,
-    leading: const Icon(Icons.class_outlined),
-    onTap: onOpenRoster,
-    subtitle: Text(
-      '${meeting.sectionLabel} · ${meeting.roomLabel} · ${meeting.rosterCount} student(s)'
-      '${meeting.isSubstitution ? ' · Substitution' : ''}',
-    ),
-    title: Text(meeting.subjectLabel),
-    trailing: onOpenRoster == null ? null : const Icon(Icons.chevron_right),
-  );
+  Widget build(BuildContext context) {
+    final countCopy = StaffProductionCountCopy.of(context);
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.class_outlined),
+      onTap: onOpenRoster,
+      subtitle: Text(
+        '${meeting.sectionLabel} · ${meeting.roomLabel} · '
+        '${countCopy.rosterStudents(meeting.rosterCount)}'
+        '${meeting.isSubstitution ? ' · Substitution' : ''}',
+      ),
+      title: Text(meeting.subjectLabel),
+      trailing: onOpenRoster == null ? null : const Icon(Icons.chevron_right),
+    );
+  }
 }
 
 class _TeacherRosterScreen extends StatefulWidget {
@@ -343,6 +365,7 @@ class _AttendanceSyncStatus extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final countCopy = StaffProductionCountCopy.of(context);
     if (state.phase == StaffSyncPhase.failed) {
       return SchoolStatusBanner(
         label: 'Sync unavailable',
@@ -355,8 +378,7 @@ class _AttendanceSyncStatus extends StatelessWidget {
     if (state.attentionCount > 0) {
       return SchoolStatusBanner(
         label: 'Manual review required',
-        message:
-            '${state.attentionCount} operation(s) are conflicted, rejected or require reconciliation.',
+        message: countCopy.operationsRequireReview(state.attentionCount),
         tone: SchoolStatusTone.error,
       );
     }
@@ -371,8 +393,7 @@ class _AttendanceSyncStatus extends StatelessWidget {
     if (state.pendingCount > 0) {
       return SchoolStatusBanner(
         label: 'Saved on device',
-        message:
-            '${state.pendingCount} encrypted operation(s) are waiting for server acceptance.',
+        message: countCopy.encryptedOperationsWaiting(state.pendingCount),
         tone: SchoolStatusTone.warning,
       );
     }
