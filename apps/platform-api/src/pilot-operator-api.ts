@@ -254,8 +254,7 @@ async function handleCommand(
     typeof reason !== 'string' ||
     reason.trim() !== reason ||
     reason.length < 1 ||
-    reason.length > 500 ||
-    /[\u0000-\u001F\u007F]/u.test(reason)
+    reason.length > 500
   ) {
     const scopeMismatch =
       body !== undefined &&
