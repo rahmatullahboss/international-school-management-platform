@@ -61,6 +61,17 @@ jobs:
           PGUSER: postgres
           PGDATABASE: postgres
         run: npm run verify:persona-e2e
+      - name: Advance guarded demo Neon through PILOT-13
+        if: github.event_name == 'pull_request' && github.head_ref == 'prod/demo-school-production-readiness'
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          test -n "$DATABASE_URL"
+          demo_roles="$(psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -Atqc "SELECT count(*) FROM iam.role WHERE tenant_id = '10000000-0000-4000-8000-000000000001'::uuid")"
+          test "$demo_roles" = "7"
+          bash scripts/apply-reviewed-post-integration-migrations.sh
+          verification="$(psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -Atqc "SELECT (SELECT count(*) FROM platform.schema_migration)::text || ':' || (SELECT count(*) FROM iam.role WHERE tenant_id = '10000000-0000-4000-8000-000000000001'::uuid)::text")"
+          test "$verification" = "53:7"
       - name: Verify live Neon serverless driver
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
         env:
