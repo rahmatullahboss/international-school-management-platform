@@ -2,6 +2,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { pilotResourceClientContract } from './pilot-resource.js';
 
+type StoredSnapshotContract = Parameters<typeof pilotResourceClientContract.storeSnapshot>[1];
+type SnapshotEnvelopeContract = StoredSnapshotContract['envelope'];
+type StoredSessionContract = Parameters<typeof pilotResourceClientContract.storeSession>[1];
+type SessionScopeContract = StoredSessionContract['scope'];
+
 class MemoryStorage implements Storage {
   readonly values = new Map<string, string>();
   failGet = false;
@@ -39,42 +44,39 @@ class MemoryStorage implements Storage {
 const now = Date.parse('2026-08-01T12:00:00.000Z');
 const apiBase = 'https://platform-api.test';
 const accessToken = 'a'.repeat(48);
+const subjectByRole = {
+  admin: 'principal-1',
+  teacher: 'teacher-1',
+  guardian: 'guardian-1',
+  student: 'student-1',
+} as const;
 
-function sessionPayload(
-  role: 'admin' | 'teacher' | 'guardian' | 'student' = 'admin',
-  overrides: Record<string, unknown> = {},
-): Record<string, unknown> {
-  const subjectByRole = {
-    admin: 'principal-1',
-    teacher: 'teacher-1',
-    guardian: 'guardian-1',
-    student: 'student-1',
-  } as const;
+type CoreRole = keyof typeof subjectByRole;
+
+function sessionScope(role: CoreRole): SessionScopeContract {
+  return {
+    tenantId: 'tenant-pilot-001',
+    campusId: 'campus-main',
+    role,
+    subjectId: subjectByRole[role],
+  };
+}
+
+function sessionPayload(role: CoreRole = 'admin', overrides: Record<string, unknown> = {}) {
   return {
     schemaVersion: 1,
     tokenType: 'Bearer',
     accessToken,
     expiresAt: new Date(now + 15 * 60_000).toISOString(),
-    scope: {
-      tenantId: 'tenant-pilot-001',
-      campusId: 'campus-main',
-      role,
-      subjectId: subjectByRole[role],
-    },
+    scope: sessionScope(role),
     ...overrides,
   };
 }
 
 function snapshotEnvelope(
-  role: 'admin' | 'teacher' | 'guardian' | 'student' = 'admin',
-  overrides: Record<string, unknown> = {},
-): Record<string, unknown> {
-  const subjectByRole = {
-    admin: 'principal-1',
-    teacher: 'teacher-1',
-    guardian: 'guardian-1',
-    student: 'student-1',
-  } as const;
+  role: CoreRole = 'admin',
+  overrides: Partial<SnapshotEnvelopeContract> = {},
+): SnapshotEnvelopeContract {
   return {
     schemaVersion: 1,
     sourceVersion: 'source-v1',
@@ -87,6 +89,29 @@ function snapshotEnvelope(
       capabilities: ['pilot.read'],
     },
     data: { value: `${role}-snapshot` },
+    ...overrides,
+  };
+}
+
+function storedSnapshot(
+  role: CoreRole,
+  overrides: Partial<StoredSnapshotContract> = {},
+): StoredSnapshotContract {
+  return {
+    cacheVersion: 1,
+    etag: undefined,
+    receivedAt: now,
+    envelope: snapshotEnvelope(role),
+    ...overrides,
+  };
+}
+
+function storedSession(role: CoreRole, overrides: Partial<StoredSessionContract> = {}): StoredSessionContract {
+  return {
+    sessionVersion: 1,
+    accessToken,
+    expiresAt: now + 15 * 60_000,
+    scope: sessionScope(role),
     ...overrides,
   };
 }
@@ -188,7 +213,7 @@ describe('pilot payload scope guards', () => {
 
   it('rejects every snapshot scope mismatch and malformed capability', () => {
     const valid = snapshotEnvelope('admin');
-    const scope = valid.scope as Record<string, unknown>;
+    const scope = valid.scope;
     for (const changedScope of [
       { ...scope, tenantId: 'other' },
       { ...scope, campusId: 'other' },
@@ -206,7 +231,7 @@ describe('pilot payload scope guards', () => {
   it('accepts a scoped session and rejects malformed identity/session values', () => {
     const valid = sessionPayload('guardian');
     expect(pilotResourceClientContract.isMatchingSession(valid, 'guardian')).toBe(true);
-    const scope = valid.scope as Record<string, unknown>;
+    const scope = sessionScope('guardian');
     for (const invalid of [
       null,
       [],
@@ -230,12 +255,7 @@ describe('snapshot cache lifecycle', () => {
   it('persists a snapshot, serves memory first, then restores it from local storage', () => {
     const { localStorage } = installWindow();
     const key = pilotResourceClientContract.cacheKey(apiBase, 'admin');
-    const stored = {
-      cacheVersion: 1 as const,
-      etag: '"etag-1"',
-      receivedAt: now,
-      envelope: snapshotEnvelope('admin'),
-    };
+    const stored = storedSnapshot('admin', { etag: '"etag-1"' });
     pilotResourceClientContract.storeSnapshot(key, stored);
     expect(pilotResourceClientContract.readStoredSnapshot(key, 'admin')).toEqual(stored);
     expect(localStorage.length).toBe(1);
@@ -280,12 +300,7 @@ describe('snapshot cache lifecycle', () => {
     localStorage.failSet = true;
     installWindow({ localStorage });
     const key = pilotResourceClientContract.cacheKey(apiBase, 'student');
-    const stored = {
-      cacheVersion: 1 as const,
-      etag: undefined,
-      receivedAt: now,
-      envelope: snapshotEnvelope('student'),
-    };
+    const stored = storedSnapshot('student');
     expect(() => pilotResourceClientContract.storeSnapshot(key, stored)).not.toThrow();
     expect(pilotResourceClientContract.readStoredSnapshot(key, 'student')).toEqual(stored);
   });
@@ -295,17 +310,7 @@ describe('identity session cache lifecycle', () => {
   it('persists a valid future session and restores it from session storage', () => {
     const { sessionStorage } = installWindow();
     const key = pilotResourceClientContract.sessionKey(apiBase, 'teacher');
-    const stored = {
-      sessionVersion: 1 as const,
-      accessToken,
-      expiresAt: now + 15 * 60_000,
-      scope: sessionPayload('teacher').scope as {
-        tenantId: string;
-        campusId: string;
-        role: 'teacher';
-        subjectId: string;
-      },
-    };
+    const stored = storedSession('teacher');
     pilotResourceClientContract.storeSession(key, stored);
     expect(pilotResourceClientContract.readStoredSession(key, 'teacher')).toEqual(stored);
     expect(sessionStorage.length).toBe(1);
@@ -318,47 +323,37 @@ describe('identity session cache lifecycle', () => {
     const { sessionStorage } = installWindow();
     const key = pilotResourceClientContract.sessionKey(apiBase, 'guardian');
     const storageKey = pilotResourceClientContract.sessionStorageKey(key);
-    const validScope = sessionPayload('guardian').scope;
+    const validScope = sessionScope('guardian');
     const candidates = [
       '{bad-json',
       JSON.stringify({ sessionVersion: 2 }),
-      JSON.stringify({
-        sessionVersion: 1,
-        accessToken: 5,
-        expiresAt: now + 60_000,
-        scope: validScope,
-      }),
+      JSON.stringify({ sessionVersion: 1, accessToken: 5, expiresAt: now + 60_000, scope: validScope }),
       JSON.stringify({ sessionVersion: 1, accessToken, expiresAt: 'later', scope: validScope }),
-      JSON.stringify({
-        sessionVersion: 1,
-        accessToken,
-        expiresAt: now + 20_000,
-        scope: validScope,
-      }),
+      JSON.stringify({ sessionVersion: 1, accessToken, expiresAt: now + 20_000, scope: validScope }),
       JSON.stringify({ sessionVersion: 1, accessToken, expiresAt: now + 60_000, scope: null }),
       JSON.stringify({
         sessionVersion: 1,
         accessToken,
         expiresAt: now + 60_000,
-        scope: { ...(validScope as object), tenantId: 'other' },
+        scope: { ...validScope, tenantId: 'other' },
       }),
       JSON.stringify({
         sessionVersion: 1,
         accessToken,
         expiresAt: now + 60_000,
-        scope: { ...(validScope as object), campusId: 'other' },
+        scope: { ...validScope, campusId: 'other' },
       }),
       JSON.stringify({
         sessionVersion: 1,
         accessToken,
         expiresAt: now + 60_000,
-        scope: { ...(validScope as object), role: 'student' },
+        scope: { ...validScope, role: 'student' },
       }),
       JSON.stringify({
         sessionVersion: 1,
         accessToken,
         expiresAt: now + 60_000,
-        scope: { ...(validScope as object), subjectId: 'student-1' },
+        scope: { ...validScope, subjectId: 'student-1' },
       }),
     ];
     for (const candidate of candidates) {
@@ -376,17 +371,7 @@ describe('identity session cache lifecycle', () => {
     sessionStorage.failSet = true;
     installWindow({ sessionStorage });
     const key = pilotResourceClientContract.sessionKey(apiBase, 'student');
-    const stored = {
-      sessionVersion: 1 as const,
-      accessToken,
-      expiresAt: now + 60_000,
-      scope: sessionPayload('student').scope as {
-        tenantId: string;
-        campusId: string;
-        role: 'student';
-        subjectId: string;
-      },
-    };
+    const stored = storedSession('student', { expiresAt: now + 60_000 });
     expect(() => pilotResourceClientContract.storeSession(key, stored)).not.toThrow();
     expect(pilotResourceClientContract.readStoredSession(key, 'student')).toEqual(stored);
 
@@ -399,17 +384,7 @@ describe('identity session cache lifecycle', () => {
 describe('pilot session API requests', () => {
   it('reuses a valid stored session unless force renewal is requested', async () => {
     const key = pilotResourceClientContract.sessionKey(apiBase, 'admin');
-    const stored = {
-      sessionVersion: 1 as const,
-      accessToken,
-      expiresAt: now + 60_000,
-      scope: sessionPayload('admin').scope as {
-        tenantId: string;
-        campusId: string;
-        role: 'admin';
-        subjectId: string;
-      },
-    };
+    const stored = storedSession('admin', { expiresAt: now + 60_000 });
     pilotResourceClientContract.storeSession(key, stored);
     const fetchMock = vi.fn(() => Promise.resolve(jsonResponse(sessionPayload('admin'))));
     vi.stubGlobal('fetch', fetchMock);
@@ -504,12 +479,7 @@ describe('pilot snapshot API requests', () => {
   });
 
   it('sends If-None-Match and refreshes cached receipt time on 304', async () => {
-    const current = {
-      cacheVersion: 1 as const,
-      etag: '"cached"',
-      receivedAt: now - 120_000,
-      envelope: snapshotEnvelope('teacher'),
-    };
+    const current = storedSnapshot('teacher', { etag: '"cached"', receivedAt: now - 120_000 });
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(jsonResponse(sessionPayload('teacher')))
