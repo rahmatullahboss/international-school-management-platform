@@ -71,7 +71,9 @@ interface OperatorConfig {
   readonly subjectId: string;
   readonly capabilities: readonly string[];
   readonly data: OperatorData;
-  readonly pages: Readonly<Record<string, { readonly title: string; readonly description: string }>>;
+  readonly pages: Readonly<
+    Record<string, { readonly title: string; readonly description: string }>
+  >;
   readonly command: string;
   readonly commandLabel: string;
   readonly commandReason: string;
@@ -81,7 +83,8 @@ const operatorConfigs: Readonly<Record<OperatorRole, OperatorConfig>> = {
   admissions: {
     root: '/admissions',
     title: 'Admissions workspace',
-    description: 'Process enquiries, applications, interviews and enrolment conversion without finance or restricted-care access.',
+    description:
+      'Process enquiries, applications, interviews and enrolment conversion without finance or restricted-care access.',
     userName: 'Farhana Islam · Admissions Officer',
     subjectId: 'admissions-1',
     capabilities: [
@@ -134,7 +137,8 @@ const operatorConfigs: Readonly<Record<OperatorRole, OperatorConfig>> = {
   finance: {
     root: '/finance',
     title: 'Finance and cashier workspace',
-    description: 'Issue receipts, manage a cashier session and reconcile payments with least-privilege controls.',
+    description:
+      'Issue receipts, manage a cashier session and reconcile payments with least-privilege controls.',
     userName: 'Nusrat Jahan · Cashier',
     subjectId: 'cashier-1',
     capabilities: [
@@ -186,7 +190,8 @@ const operatorConfigs: Readonly<Record<OperatorRole, OperatorConfig>> = {
   support: {
     root: '/support',
     title: 'Platform support workspace',
-    description: 'Diagnose tenant and deployment health through time-bound audited access without implicit student-data access.',
+    description:
+      'Diagnose tenant and deployment health through time-bound audited access without implicit student-data access.',
     userName: 'Platform Support · Verified operator',
     subjectId: 'support-operator-1',
     capabilities: [
@@ -224,7 +229,8 @@ const operatorConfigs: Readonly<Record<OperatorRole, OperatorConfig>> = {
       },
       '/support/health': {
         title: 'Deployment health',
-        description: 'Inspect approved operational health signals without tenant-owned record mutation.',
+        description:
+          'Inspect approved operational health signals without tenant-owned record mutation.',
       },
       '/support/access': {
         title: 'Privileged access',
@@ -247,10 +253,14 @@ function isOperatorRole(value: unknown): value is OperatorRole {
 
 function resolveApiBase(): string | undefined {
   const runtimeOverride = window.__PLATFORM_API_URL__?.trim();
-  if (runtimeOverride !== undefined && runtimeOverride !== '') return runtimeOverride.replace(/\/$/u, '');
+  if (runtimeOverride !== undefined && runtimeOverride !== '')
+    return runtimeOverride.replace(/\/$/u, '');
   const buildValue = (import.meta.env.VITE_PLATFORM_API_URL as string | undefined)?.trim();
   if (buildValue !== undefined && buildValue !== '') return buildValue.replace(/\/$/u, '');
-  if (window.location.hostname === 'international-school-platform-web-staging.rahmatullahzisan.workers.dev') {
+  if (
+    window.location.hostname ===
+    'international-school-platform-web-staging.rahmatullahzisan.workers.dev'
+  ) {
     return 'https://international-school-platform-api-staging.rahmatullahzisan.workers.dev';
   }
   return undefined;
@@ -258,7 +268,12 @@ function resolveApiBase(): string | undefined {
 
 function isMatchingSession(value: unknown, role: OperatorRole): value is OperatorSession {
   if (!isRecord(value) || value.schemaVersion !== 1 || value.tokenType !== 'Bearer') return false;
-  if (typeof value.accessToken !== 'string' || value.accessToken.length < 32 || !isRecord(value.scope)) return false;
+  if (
+    typeof value.accessToken !== 'string' ||
+    value.accessToken.length < 32 ||
+    !isRecord(value.scope)
+  )
+    return false;
   return (
     value.scope.tenantId === 'tenant-pilot-001' &&
     value.scope.campusId === 'campus-main' &&
@@ -269,7 +284,8 @@ function isMatchingSession(value: unknown, role: OperatorRole): value is Operato
 }
 
 function isMatchingSnapshot(value: unknown, role: OperatorRole): value is OperatorSnapshot {
-  if (!isRecord(value) || value.schemaVersion !== 1 || typeof value.generatedAt !== 'string') return false;
+  if (!isRecord(value) || value.schemaVersion !== 1 || typeof value.generatedAt !== 'string')
+    return false;
   if (!isRecord(value.scope) || !isRecord(value.data)) return false;
   return (
     value.scope.tenantId === 'tenant-pilot-001' &&
@@ -304,16 +320,20 @@ function useOperatorResource(role: OperatorRole) {
         method: 'POST',
         cache: 'no-store',
       });
-      if (!sessionResponse.ok) throw new Error(`Pilot session API returned ${sessionResponse.status}.`);
+      if (!sessionResponse.ok)
+        throw new Error(`Pilot session API returned ${sessionResponse.status}.`);
       const sessionValue: unknown = await sessionResponse.json();
-      if (!isMatchingSession(sessionValue, role)) throw new Error('Pilot session scope is invalid.');
+      if (!isMatchingSession(sessionValue, role))
+        throw new Error('Pilot session scope is invalid.');
       const snapshotResponse = await fetch(`${apiBase}/pilot/v1/snapshots/${role}`, {
         headers: { authorization: `Bearer ${sessionValue.accessToken}` },
         cache: 'no-store',
       });
-      if (!snapshotResponse.ok) throw new Error(`Pilot snapshot API returned ${snapshotResponse.status}.`);
+      if (!snapshotResponse.ok)
+        throw new Error(`Pilot snapshot API returned ${snapshotResponse.status}.`);
       const snapshotValue: unknown = await snapshotResponse.json();
-      if (!isMatchingSnapshot(snapshotValue, role)) throw new Error('Pilot snapshot scope is invalid.');
+      if (!isMatchingSnapshot(snapshotValue, role))
+        throw new Error('Pilot snapshot scope is invalid.');
       setAccessToken(sessionValue.accessToken);
       setData(snapshotValue.data);
       setCapabilities(snapshotValue.scope.capabilities);
@@ -347,7 +367,11 @@ function useOperatorResource(role: OperatorRole) {
       .then(async (response) => {
         if (!response.ok) throw new Error(`Controlled action returned ${response.status}.`);
         const body: unknown = await response.json();
-        if (!isRecord(body) || !isRecord(body.receipt) || typeof body.receipt.auditId !== 'string') {
+        if (
+          !isRecord(body) ||
+          !isRecord(body.receipt) ||
+          typeof body.receipt.auditId !== 'string'
+        ) {
           throw new Error('Controlled action did not return audit evidence.');
         }
         setCommandStatus(`Audit receipt recorded · ${body.receipt.auditId}`);
@@ -377,17 +401,23 @@ export function operatorRoleForPath(pathname: string): OperatorRole | undefined 
   )?.[0];
 }
 
-export function OperatorPortal(props: { readonly role: OperatorRole; readonly path: string }): ReactElement {
+export function OperatorPortal(props: {
+  readonly role: OperatorRole;
+  readonly path: string;
+}): ReactElement {
   const config = operatorConfigs[props.role];
   const page = config.pages[props.path];
   const known = props.path === config.root || page !== undefined;
-  const title = props.path === config.root ? config.title : page?.title ?? config.title;
-  const description = props.path === config.root ? config.description : page?.description ?? config.description;
+  const title = props.path === config.root ? config.title : (page?.title ?? config.title);
+  const description =
+    props.path === config.root ? config.description : (page?.description ?? config.description);
   const resource = useOperatorResource(props.role);
 
   return (
     <div className="pilot-entry" data-role={props.role}>
-      <a className="pilot-skip-link" href="#main-content">Skip to main content</a>
+      <a className="pilot-skip-link" href="#main-content">
+        Skip to main content
+      </a>
       <header className="pilot-entry__masthead">
         <div>
           <p className="pilot-kicker">Scoped operator persona · synthetic pilot data</p>
@@ -416,7 +446,9 @@ export function OperatorPortal(props: { readonly role: OperatorRole; readonly pa
           <>
             <nav className="pilot-actions" aria-label={`${config.title} navigation`}>
               {Object.entries(config.pages).map(([href, route]) => (
-                <a href={href} key={href}>{route.title}</a>
+                <a href={href} key={href}>
+                  {route.title}
+                </a>
               ))}
             </nav>
 
@@ -452,11 +484,20 @@ export function OperatorPortal(props: { readonly role: OperatorRole; readonly pa
 
             <section className="pilot-demo-note" aria-label="Controlled pilot mutation">
               <strong>Audited controlled action</strong>
-              <span>Records non-production evidence only; live financial or student records are not changed.</span>
-              <button type="button" onClick={resource.submitControlledAction} disabled={resource.apiBase === undefined}>
+              <span>
+                Records non-production evidence only; live financial or student records are not
+                changed.
+              </span>
+              <button
+                type="button"
+                onClick={resource.submitControlledAction}
+                disabled={resource.apiBase === undefined}
+              >
                 {config.commandLabel}
               </button>
-              {resource.commandStatus === undefined ? null : <p role="status">{resource.commandStatus}</p>}
+              {resource.commandStatus === undefined ? null : (
+                <p role="status">{resource.commandStatus}</p>
+              )}
             </section>
           </>
         )}
@@ -468,7 +509,9 @@ export function OperatorPortal(props: { readonly role: OperatorRole; readonly pa
 export function mountOperatorPortal(role: OperatorRole): void {
   const root = document.getElementById('root');
   if (root === null) throw new Error('Root element not found');
-  createRoot(root).render(<OperatorPortal role={role} path={window.location.pathname.replace(/\/+$/u, '') || '/'} />);
+  createRoot(root).render(
+    <OperatorPortal role={role} path={window.location.pathname.replace(/\/+$/u, '') || '/'} />,
+  );
 }
 
 export function operatorLandingCards(): readonly {
@@ -490,7 +533,8 @@ export function operatorLandingCards(): readonly {
       role: 'finance',
       href: '/finance',
       title: 'Finance or cashier',
-      detail: 'Handle invoices, receipts, cashier sessions and reconciliation with least privilege.',
+      detail:
+        'Handle invoices, receipts, cashier sessions and reconciliation with least privilege.',
       action: 'Go to finance',
     },
     {

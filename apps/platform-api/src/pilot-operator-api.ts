@@ -124,7 +124,9 @@ async function readJsonBody(request: Request): Promise<Record<string, unknown> |
   }
 }
 
-function operatorRoute(url: URL):
+function operatorRoute(
+  url: URL,
+):
   | { readonly kind: 'session'; readonly role: PilotOperatorRole }
   | { readonly kind: 'snapshot'; readonly role: PilotOperatorRole }
   | { readonly kind: 'authorize'; readonly role: PilotOperatorRole }
@@ -148,11 +150,7 @@ function operatorRoute(url: URL):
     return { kind: 'audit', role: audit[1] };
   }
   const command = url.pathname.match(/^\/pilot\/v1\/commands\/([^/]+)\/([^/]+)$/u);
-  if (
-    command?.[1] !== undefined &&
-    command[2] !== undefined &&
-    isPilotOperatorRole(command[1])
-  ) {
+  if (command?.[1] !== undefined && command[2] !== undefined && isPilotOperatorRole(command[1])) {
     return { kind: 'command', role: command[1], command: command[2] };
   }
   return undefined;
@@ -198,11 +196,17 @@ async function handleCommand(
   command: string,
   corsHeaders: Headers,
 ): Promise<Response> {
-  if (request.method !== 'POST') return jsonResponse({ error: { code: 'method_not_allowed' } }, 405);
+  if (request.method !== 'POST')
+    return jsonResponse({ error: { code: 'method_not_allowed' } }, 405);
   const definition = commandDefinition(role, command);
   if (definition === undefined) {
     return jsonResponse(
-      { error: { code: 'pilot_command_not_found', message: 'The requested command is not available.' } },
+      {
+        error: {
+          code: 'pilot_command_not_found',
+          message: 'The requested command is not available.',
+        },
+      },
       404,
       corsHeaders,
     );
@@ -310,7 +314,8 @@ export async function handlePilotOperatorRequest(
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
 
   if (route.kind === 'session') {
-    if (request.method !== 'POST') return jsonResponse({ error: { code: 'method_not_allowed' } }, 405, cors);
+    if (request.method !== 'POST')
+      return jsonResponse({ error: { code: 'method_not_allowed' } }, 405, cors);
     const issuance = await issuePilotOperatorSession(environment.PILOT_SESSION_SECRET, route.role);
     if (!issuance.ok) {
       return jsonResponse(
@@ -334,7 +339,8 @@ export async function handlePilotOperatorRequest(
   }
 
   if (route.kind === 'snapshot') {
-    if (request.method !== 'GET') return jsonResponse({ error: { code: 'method_not_allowed' } }, 405, cors);
+    if (request.method !== 'GET')
+      return jsonResponse({ error: { code: 'method_not_allowed' } }, 405, cors);
     const claims = await authenticatedClaims(request, environment, route.role);
     if (claims instanceof Response) return claims;
     const resolution = resolvePilotOperatorSnapshot(
@@ -358,7 +364,8 @@ export async function handlePilotOperatorRequest(
   }
 
   if (route.kind === 'authorize') {
-    if (request.method !== 'POST') return jsonResponse({ error: { code: 'method_not_allowed' } }, 405, cors);
+    if (request.method !== 'POST')
+      return jsonResponse({ error: { code: 'method_not_allowed' } }, 405, cors);
     const claims = await authenticatedClaims(request, environment, route.role);
     if (claims instanceof Response) return claims;
     const body = await readJsonBody(request);
@@ -375,7 +382,8 @@ export async function handlePilotOperatorRequest(
   }
 
   if (route.kind === 'audit') {
-    if (request.method !== 'GET') return jsonResponse({ error: { code: 'method_not_allowed' } }, 405, cors);
+    if (request.method !== 'GET')
+      return jsonResponse({ error: { code: 'method_not_allowed' } }, 405, cors);
     const claims = await authenticatedClaims(request, environment, route.role);
     if (claims instanceof Response) return claims;
     const entries = auditByRole.get(route.role) ?? [];

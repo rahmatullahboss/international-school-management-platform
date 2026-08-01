@@ -44,7 +44,9 @@ function FullPersonaLanding(): ReactElement {
 
   return (
     <div className="pilot-entry">
-      <a className="pilot-skip-link" href="#main-content">Skip to main content</a>
+      <a className="pilot-skip-link" href="#main-content">
+        Skip to main content
+      </a>
       <header className="pilot-entry__masthead">
         <div>
           <p className="pilot-kicker">Cloudflare staging · synthetic pilot data</p>
@@ -102,7 +104,10 @@ function FullPersonaLanding(): ReactElement {
               ['Student support', 'Health, wellbeing, safeguarding and learning support'],
               ['Communication', 'Messages, announcements, forms, documents and notifications'],
               ['Integrations', 'Imports, country settings, OneRoster, LTI, SSO and webhooks'],
-              ['Trust and governance', 'Permissions, audit history, isolation and recovery evidence'],
+              [
+                'Trust and governance',
+                'Permissions, audit history, isolation and recovery evidence',
+              ],
             ].map(([title, detail]) => (
               <article key={title}>
                 <h3>{title}</h3>
@@ -116,9 +121,8 @@ function FullPersonaLanding(): ReactElement {
   );
 }
 
-const normalizedPath = window.location.pathname === '/'
-  ? '/'
-  : window.location.pathname.replace(/\/+$/u, '');
+const normalizedPath =
+  window.location.pathname === '/' ? '/' : window.location.pathname.replace(/\/+$/u, '');
 const operatorRole = operatorRoleForPath(normalizedPath);
 
 if (operatorRole !== undefined) {

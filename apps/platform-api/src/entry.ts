@@ -1,8 +1,5 @@
 import coreWorkerModule from './index.js';
-import {
-  handlePilotOperatorRequest,
-  type PilotOperatorBindings,
-} from './pilot-operator-api.js';
+import { handlePilotOperatorRequest, type PilotOperatorBindings } from './pilot-operator-api.js';
 
 interface WorkerEnvironment extends PilotOperatorBindings {
   readonly APP_REGION: string;

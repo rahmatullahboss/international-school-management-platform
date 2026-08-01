@@ -151,7 +151,8 @@ const operatorDefinitions = {
         {
           id: 'support-2',
           title: 'Review privileged access request',
-          detail: 'Any sensitive access requires explicit tenant, purpose, expiry and audit evidence.',
+          detail:
+            'Any sensitive access requires explicit tenant, purpose, expiry and audit evidence.',
           status: 'Restricted',
           href: '/support/access',
           requiredCapability: 'support.access.request',

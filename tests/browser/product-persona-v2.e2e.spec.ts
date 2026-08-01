@@ -215,5 +215,7 @@ test('finance browser action records controlled audit evidence', async ({ page }
   await page.goto('/finance');
   await expect(page.getByText('Current from staging API')).toBeVisible();
   await page.getByRole('button', { name: 'Record reconciliation evidence' }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'Audit receipt recorded' })).toBeVisible();
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Audit receipt recorded' }),
+  ).toBeVisible();
 });
