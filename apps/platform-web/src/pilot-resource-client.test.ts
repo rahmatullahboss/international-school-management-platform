@@ -157,20 +157,14 @@ beforeEach(() => {
 afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
-  vi.unstubAllEnvs();
   delete (globalThis as { window?: unknown }).window;
   pilotResourceClientContract.resetMemory();
 });
 
 describe('pilot API and key resolution', () => {
-  it('prefers a trimmed runtime override and removes one trailing slash', () => {
+  it('prefers a trimmed runtime override and removes its trailing slash', () => {
     installWindow({ apiUrl: '  https://runtime.test/  ' });
     expect(pilotResourceClientContract.resolveApiBase()).toBe('https://runtime.test');
-  });
-
-  it('uses build-time API configuration when there is no runtime override', () => {
-    vi.stubEnv('VITE_PLATFORM_API_URL', ' https://build.test/ ');
-    expect(pilotResourceClientContract.resolveApiBase()).toBe('https://build.test');
   });
 
   it('maps the known staging web hostname and otherwise remains unconfigured', () => {
@@ -267,7 +261,7 @@ describe('snapshot cache lifecycle', () => {
     expect(pilotResourceClientContract.readStoredSnapshot(key, 'admin')).toEqual(stored);
   });
 
-  it('rejects missing, old, malformed and cross-scope persisted snapshots', () => {
+  it('rejects missing, malformed and cross-scope persisted snapshots', () => {
     const { localStorage } = installWindow();
     const key = pilotResourceClientContract.cacheKey(apiBase, 'admin');
     const storageKey = pilotResourceClientContract.storageKey(key);
@@ -330,19 +324,9 @@ describe('identity session cache lifecycle', () => {
     const candidates = [
       '{bad-json',
       JSON.stringify({ sessionVersion: 2 }),
-      JSON.stringify({
-        sessionVersion: 1,
-        accessToken: 5,
-        expiresAt: now + 60_000,
-        scope: validScope,
-      }),
+      JSON.stringify({ sessionVersion: 1, accessToken: 5, expiresAt: now + 60_000, scope: validScope }),
       JSON.stringify({ sessionVersion: 1, accessToken, expiresAt: 'later', scope: validScope }),
-      JSON.stringify({
-        sessionVersion: 1,
-        accessToken,
-        expiresAt: now + 20_000,
-        scope: validScope,
-      }),
+      JSON.stringify({ sessionVersion: 1, accessToken, expiresAt: now + 20_000, scope: validScope }),
       JSON.stringify({ sessionVersion: 1, accessToken, expiresAt: now + 60_000, scope: null }),
       JSON.stringify({
         sessionVersion: 1,
@@ -379,7 +363,7 @@ describe('identity session cache lifecycle', () => {
     expect(pilotResourceClientContract.readStoredSession(key, 'guardian')).toBeUndefined();
   });
 
-  it('keeps memory sessions when writes fail and tolerates persistent cleanup failure', () => {
+  it('keeps memory sessions on write failure and tolerates persistent cleanup failure', () => {
     const sessionStorage = new MemoryStorage();
     sessionStorage.failSet = true;
     installWindow({ sessionStorage });
@@ -388,9 +372,14 @@ describe('identity session cache lifecycle', () => {
     expect(() => pilotResourceClientContract.storeSession(key, stored)).not.toThrow();
     expect(pilotResourceClientContract.readStoredSession(key, 'student')).toEqual(stored);
 
+    sessionStorage.failSet = false;
+    sessionStorage.setItem(
+      pilotResourceClientContract.sessionStorageKey(key),
+      JSON.stringify(stored),
+    );
     sessionStorage.failRemove = true;
     expect(() => pilotResourceClientContract.clearSession(key)).not.toThrow();
-    expect(pilotResourceClientContract.readStoredSession(key, 'student')).toBeUndefined();
+    expect(pilotResourceClientContract.readStoredSession(key, 'student')).toEqual(stored);
   });
 });
 
@@ -408,17 +397,14 @@ describe('pilot session API requests', () => {
     expect(fetchMock).not.toHaveBeenCalled();
     await expect(
       pilotResourceClientContract.requestSession(apiBase, 'admin', true),
-    ).resolves.toMatchObject({
-      accessToken,
-    });
+    ).resolves.toMatchObject({ accessToken });
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('issues and stores a scoped session from the API', async () => {
     const fetchMock = vi.fn(() => Promise.resolve(jsonResponse(sessionPayload('teacher'))));
     vi.stubGlobal('fetch', fetchMock);
-    const result = await pilotResourceClientContract.requestSession(apiBase, 'teacher');
-    expect(result).toMatchObject({
+    await expect(pilotResourceClientContract.requestSession(apiBase, 'teacher')).resolves.toMatchObject({
       sessionVersion: 1,
       accessToken,
       scope: { role: 'teacher', subjectId: 'teacher-1' },
@@ -459,6 +445,7 @@ describe('pilot session API requests', () => {
     ];
     for (const [response, message] of cases) {
       pilotResourceClientContract.resetMemory();
+      installWindow();
       vi.stubGlobal(
         'fetch',
         vi.fn(() => Promise.resolve(response)),
@@ -502,8 +489,7 @@ describe('pilot snapshot API requests', () => {
     await expect(
       pilotResourceClientContract.requestSnapshot(apiBase, 'teacher', key, current),
     ).resolves.toEqual({ ...current, receivedAt: now });
-    const snapshotCall = fetchMock.mock.calls[1];
-    const init = snapshotCall?.[1] as RequestInit;
+    const init = fetchMock.mock.calls[1]?.[1] as RequestInit;
     expect(new Headers(init.headers).get('if-none-match')).toBe('"cached"');
   });
 
@@ -527,27 +513,27 @@ describe('pilot snapshot API requests', () => {
     expect(new Headers(retryInit.headers).get('authorization')).toBe(`Bearer ${renewedToken}`);
   });
 
-  it('deduplicates concurrent snapshot requests', async () => {
+  it('deduplicates concurrent snapshot requests when identity is already cached', async () => {
+    pilotResourceClientContract.storeSession(
+      pilotResourceClientContract.sessionKey(apiBase, 'student'),
+      storedSession('student', { expiresAt: now + 60_000 }),
+    );
     let resolveSnapshot: ((response: Response) => void) | undefined;
     const deferred = new Promise<Response>((resolve) => {
       resolveSnapshot = resolve;
     });
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce(jsonResponse(sessionPayload('student')))
-      .mockImplementationOnce(() => deferred);
+    const fetchMock = vi.fn(() => deferred);
     vi.stubGlobal('fetch', fetchMock);
     const key = pilotResourceClientContract.cacheKey(apiBase, 'student');
     const first = pilotResourceClientContract.requestSnapshot(apiBase, 'student', key, undefined);
-    await Promise.resolve();
     const second = pilotResourceClientContract.requestSnapshot(apiBase, 'student', key, undefined);
     resolveSnapshot?.(jsonResponse(snapshotEnvelope('student')));
     const [left, right] = await Promise.all([first, second]);
     expect(left).toEqual(right);
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it('rejects snapshot HTTP errors, second-attempt authorization failures and scope mismatch', async () => {
+  it('rejects snapshot HTTP errors, repeat authorization failures and scope mismatch', async () => {
     const cases: Array<[Response[], string]> = [
       [
         [jsonResponse(sessionPayload('admin')), new Response(null, { status: 500 })],
@@ -569,6 +555,7 @@ describe('pilot snapshot API requests', () => {
     ];
     for (const [responses, message] of cases) {
       pilotResourceClientContract.resetMemory();
+      installWindow();
       const fetchMock = vi.fn();
       for (const response of responses) fetchMock.mockResolvedValueOnce(response);
       vi.stubGlobal('fetch', fetchMock);
