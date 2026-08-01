@@ -254,7 +254,9 @@ describe('pilot operator authorization and audit API', () => {
     );
     expect(missingSession.status).toBe(401);
 
-    const audit = await requiredResponse(authorizedRequest('/pilot/v1/audit/finance', 'GET', token));
+    const audit = await requiredResponse(
+      authorizedRequest('/pilot/v1/audit/finance', 'GET', token),
+    );
     expect(audit.status).toBe(200);
     await expect(audit.json()).resolves.toMatchObject({
       schemaVersion: 1,
@@ -313,9 +315,21 @@ describe('pilot operator command request integrity', () => {
   });
 
   it.each([
-    ['bad content type', { contentType: 'text/plain' }, { tenantId: 'tenant-pilot-001', campusId: 'campus-main', reason: 'ok' }],
-    ['bad content length', { contentLength: 'not-a-number' }, { tenantId: 'tenant-pilot-001', campusId: 'campus-main', reason: 'ok' }],
-    ['oversize declared length', { contentLength: '4097' }, { tenantId: 'tenant-pilot-001', campusId: 'campus-main', reason: 'ok' }],
+    [
+      'bad content type',
+      { contentType: 'text/plain' },
+      { tenantId: 'tenant-pilot-001', campusId: 'campus-main', reason: 'ok' },
+    ],
+    [
+      'bad content length',
+      { contentLength: 'not-a-number' },
+      { tenantId: 'tenant-pilot-001', campusId: 'campus-main', reason: 'ok' },
+    ],
+    [
+      'oversize declared length',
+      { contentLength: '4097' },
+      { tenantId: 'tenant-pilot-001', campusId: 'campus-main', reason: 'ok' },
+    ],
     ['invalid JSON', {}, '{not-json'],
     ['array JSON', {}, []],
   ] as const)('rejects %s command bodies', async (_label, overrides, body) => {
@@ -399,11 +413,15 @@ describe('pilot operator command request integrity', () => {
       receipt: { auditId: acceptedBody.receipt.auditId },
     });
 
-    const audit = await requiredResponse(authorizedRequest('/pilot/v1/audit/finance', 'GET', token));
+    const audit = await requiredResponse(
+      authorizedRequest('/pilot/v1/audit/finance', 'GET', token),
+    );
     const auditBody = (await audit.json()) as {
       readonly entries: readonly { readonly auditId: string }[];
     };
-    expect(auditBody.entries.some((entry) => entry.auditId === acceptedBody.receipt.auditId)).toBe(true);
+    expect(auditBody.entries.some((entry) => entry.auditId === acceptedBody.receipt.auditId)).toBe(
+      true,
+    );
   });
 
   it('rejects a changed request replayed under the same idempotency key', async () => {

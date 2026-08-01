@@ -39,16 +39,22 @@ describe('pilot operator models', () => {
   });
 
   it('enforces grants and AAL2 step-up requirements', () => {
-    expect(authorizePilotOperatorPermission('admissions', 'finance.receipt.create', 'aal1')).toEqual({
+    expect(
+      authorizePilotOperatorPermission('admissions', 'finance.receipt.create', 'aal1'),
+    ).toEqual({
       allowed: false,
       reason: 'permission-not-granted',
     });
-    expect(authorizePilotOperatorPermission('support', 'support.break-glass.request', 'aal1')).toEqual({
+    expect(
+      authorizePilotOperatorPermission('support', 'support.break-glass.request', 'aal1'),
+    ).toEqual({
       allowed: false,
       reason: 'step-up-required',
       requiredAssurance: 'aal2',
     });
-    expect(authorizePilotOperatorPermission('support', 'support.break-glass.request', 'aal2')).toEqual({
+    expect(
+      authorizePilotOperatorPermission('support', 'support.break-glass.request', 'aal2'),
+    ).toEqual({
       allowed: true,
       reason: 'role-grant',
     });
@@ -102,7 +108,9 @@ describe('pilot operator models', () => {
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error('expected valid operator snapshot');
 
-    expect(result.etag).toContain(`${PILOT_OPERATOR_TENANT_ID}:${PILOT_OPERATOR_CAMPUS_ID}:${role}`);
+    expect(result.etag).toContain(
+      `${PILOT_OPERATOR_TENANT_ID}:${PILOT_OPERATOR_CAMPUS_ID}:${role}`,
+    );
     expect(result.snapshot.generatedAt).toBe(generatedAt);
     expect(result.snapshot.scope).toMatchObject({
       tenantId: PILOT_OPERATOR_TENANT_ID,

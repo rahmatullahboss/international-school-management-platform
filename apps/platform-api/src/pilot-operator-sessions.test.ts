@@ -47,12 +47,16 @@ async function validClaims() {
 
 describe('pilot operator sessions', () => {
   it('fails closed when issuance configuration is missing or too short', async () => {
-    await expect(issuePilotOperatorSession(undefined, 'admissions', baseNow)).resolves.toMatchObject({
+    await expect(
+      issuePilotOperatorSession(undefined, 'admissions', baseNow),
+    ).resolves.toMatchObject({
       ok: false,
       status: 503,
       code: 'pilot_session_unavailable',
     });
-    await expect(issuePilotOperatorSession('too-short', 'admissions', baseNow)).resolves.toMatchObject({
+    await expect(
+      issuePilotOperatorSession('too-short', 'admissions', baseNow),
+    ).resolves.toMatchObject({
       ok: false,
       status: 503,
       code: 'pilot_session_unavailable',
@@ -97,12 +101,16 @@ describe('pilot operator sessions', () => {
   });
 
   it('fails closed when verifier configuration is missing or too short', async () => {
-    await expect(verifyPilotOperatorSession(undefined, 'Bearer token', 'admissions')).resolves.toMatchObject({
+    await expect(
+      verifyPilotOperatorSession(undefined, 'Bearer token', 'admissions'),
+    ).resolves.toMatchObject({
       ok: false,
       status: 503,
       code: 'pilot_session_unavailable',
     });
-    await expect(verifyPilotOperatorSession('short', 'Bearer token', 'admissions')).resolves.toMatchObject({
+    await expect(
+      verifyPilotOperatorSession('short', 'Bearer token', 'admissions'),
+    ).resolves.toMatchObject({
       ok: false,
       status: 503,
       code: 'pilot_session_unavailable',
@@ -144,7 +152,12 @@ describe('pilot operator sessions', () => {
     ).resolves.toMatchObject({ ok: false, status: 401, code: 'pilot_session_invalid' });
 
     await expect(
-      verifyPilotOperatorSession(secret, `Bearer ${issued.token}`, 'admissions', baseNow + 15 * 60 * 1000),
+      verifyPilotOperatorSession(
+        secret,
+        `Bearer ${issued.token}`,
+        'admissions',
+        baseNow + 15 * 60 * 1000,
+      ),
     ).resolves.toMatchObject({ ok: false, status: 401, code: 'pilot_session_invalid' });
 
     const future = await issuePilotOperatorSession(secret, 'admissions', baseNow + 2 * 60 * 1000);

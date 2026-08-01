@@ -72,14 +72,16 @@ async function issueSession(request: APIRequestContext, role: PilotOperatorRole)
 
 test('operator route E2E matrix exactly matches production published routes', () => {
   const source = readFileSync('apps/platform-web/src/operator-portal.tsx', 'utf8');
-  const productionRoots = [...source.matchAll(/^\s{4}root: '(\/(?:admissions|finance|support))',$/gmu)].map(
-    (match) => match[1],
-  );
+  const productionRoots = [
+    ...source.matchAll(/^\s{4}root: '(\/(?:admissions|finance|support))',$/gmu),
+  ].map((match) => match[1]);
   const productionPages = [
     ...source.matchAll(/^\s{6}'(\/(?:admissions|finance|support)\/[^']+)': \{$/gmu),
   ].map((match) => match[1]);
   const productionPaths = [...productionRoots, ...productionPages].sort();
-  const coveredPaths = (Object.values(routeMatrix) as readonly (readonly { readonly path: string }[])[])
+  const coveredPaths = (
+    Object.values(routeMatrix) as readonly (readonly { readonly path: string }[])[]
+  )
     .flatMap((routes) => routes.map((route) => route.path))
     .sort();
 
