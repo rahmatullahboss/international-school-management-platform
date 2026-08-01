@@ -75,11 +75,10 @@ BEGIN
     '30000000-0000-4000-8000-000000000001',
     '61000000-0000-4000-8000-000000000006',
     '30000000-0000-4000-8000-000000000003',
-    'persona-admissions-session',
     ARRAY['61000000-0000-4000-8000-000000000005'::uuid],
     'aal2',
-    extract(epoch FROM clock_timestamp())::bigint,
-    extract(epoch FROM clock_timestamp() + interval '1 hour')::bigint
+    clock_timestamp(),
+    clock_timestamp() + interval '1 hour'
   ) THEN
     RAISE EXCEPTION 'admissions session registration failed';
   END IF;
@@ -90,11 +89,10 @@ BEGIN
     '30000000-0000-4000-8000-000000000001',
     '62000000-0000-4000-8000-000000000006',
     '30000000-0000-4000-8000-000000000003',
-    'persona-finance-session',
     ARRAY['62000000-0000-4000-8000-000000000005'::uuid],
     'aal2',
-    extract(epoch FROM clock_timestamp())::bigint,
-    extract(epoch FROM clock_timestamp() + interval '1 hour')::bigint
+    clock_timestamp(),
+    clock_timestamp() + interval '1 hour'
   ) THEN
     RAISE EXCEPTION 'finance session registration failed';
   END IF;
@@ -105,11 +103,10 @@ BEGIN
     '30000000-0000-4000-8000-000000000001',
     '63000000-0000-4000-8000-000000000006',
     '30000000-0000-4000-8000-000000000003',
-    'persona-support-aal1',
     ARRAY['63000000-0000-4000-8000-000000000005'::uuid],
     'aal1',
-    extract(epoch FROM clock_timestamp())::bigint,
-    extract(epoch FROM clock_timestamp() + interval '1 hour')::bigint
+    clock_timestamp(),
+    clock_timestamp() + interval '1 hour'
   ) THEN
     RAISE EXCEPTION 'support AAL1 session registration failed';
   END IF;
@@ -120,11 +117,10 @@ BEGIN
     '30000000-0000-4000-8000-000000000001',
     '63000000-0000-4000-8000-000000000006',
     '30000000-0000-4000-8000-000000000003',
-    'persona-support-aal2',
     ARRAY['63000000-0000-4000-8000-000000000005'::uuid],
     'aal2',
-    extract(epoch FROM clock_timestamp())::bigint,
-    extract(epoch FROM clock_timestamp() + interval '1 hour')::bigint
+    clock_timestamp(),
+    clock_timestamp() + interval '1 hour'
   ) THEN
     RAISE EXCEPTION 'support AAL2 session registration failed';
   END IF;
