@@ -78,7 +78,9 @@ describe('operator persona route contracts', () => {
 
   it('reports browser connectivity without inventing a degraded state', () => {
     expect(withBrowserState({ online: true }, () => currentOperatorConnectivity())).toBe('online');
-    expect(withBrowserState({ online: false }, () => currentOperatorConnectivity())).toBe('offline');
+    expect(withBrowserState({ online: false }, () => currentOperatorConnectivity())).toBe(
+      'offline',
+    );
   });
 });
 
