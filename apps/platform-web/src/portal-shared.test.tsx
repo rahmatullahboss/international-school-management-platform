@@ -91,9 +91,10 @@ describe('shared pilot portal rendering', () => {
   });
 
   it('resolves role-home, module and fallback headings', () => {
-    expect(resolvePageHeading('admin', '/admin', page, 'Fallback', 'Fallback detail')).toEqual(
-      roleDescriptions.admin,
-    );
+    expect(resolvePageHeading('admin', '/admin', page, 'Fallback', 'Fallback detail')).toEqual({
+      title: roleDescriptions.admin.title,
+      description: roleDescriptions.admin.detail,
+    });
     expect(
       resolvePageHeading('admin', '/admin/academics', page, 'Fallback', 'Fallback detail'),
     ).toEqual({ title: page.title, description: page.description });
