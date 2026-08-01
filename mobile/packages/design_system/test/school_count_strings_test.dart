@@ -25,10 +25,7 @@ void main() {
     expect(strings.rosterStudents(25), '25 students');
     expect(strings.assignedMeetings(2), '2 assigned meetings');
     expect(strings.documentsAvailable(1), '1 document available');
-    expect(
-      strings.formsAwaitingResponse(3),
-      '3 forms are awaiting a response',
-    );
+    expect(strings.formsAwaitingResponse(3), '3 forms are awaiting a response');
     expect(strings.openConversations(2), '2 open conversations');
     expect(
       strings.encryptedOperationsWaiting(1),
@@ -52,10 +49,7 @@ void main() {
     expect(strings.rosterStudents(12), '১২ জন শিক্ষার্থী');
     expect(strings.assignedMeetings(3), '৩টি নির্ধারিত ক্লাস');
     expect(strings.documentsAvailable(4), '৪টি নথি উপলভ্য');
-    expect(
-      strings.formsAwaitingResponse(2),
-      '২টি ফর্ম উত্তরের অপেক্ষায় আছে',
-    );
+    expect(strings.formsAwaitingResponse(2), '২টি ফর্ম উত্তরের অপেক্ষায় আছে');
     expect(strings.openConversations(5), '৫টি চলমান কথোপকথন');
     expect(
       strings.encryptedOperationsWaiting(2),
