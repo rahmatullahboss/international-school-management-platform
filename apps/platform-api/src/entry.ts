@@ -42,8 +42,3 @@ const worker = {
 };
 
 export default worker;
-
-export * from './index.js';
-export * from './pilot-operator-api.js';
-export * from './pilot-operator-models.js';
-export * from './pilot-operator-sessions.js';
