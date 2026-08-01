@@ -852,5 +852,7 @@ export * from './runtime-guardian-projection-composer.js';
 export * from './database-guardian-projection-composer-store.js';
 export * from './runtime-student-projection-composer.js';
 export * from './database-student-projection-composer-store.js';
+export * from './runtime-projection-operations-monitor.js';
+export * from './database-projection-operations-monitor-store.js';
 export * from './runtime-projection-source-publisher.js';
 export * from './database-projection-source-publisher-store.js';

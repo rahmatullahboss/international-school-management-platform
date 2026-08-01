@@ -123,11 +123,7 @@ function validateSnapshot(
     'unapplied',
     'missingForMappedMemberships',
   ]);
-  const mappings = validateCounts(snapshot.mappings, [
-    'activeUnique',
-    'unmapped',
-    'ambiguous',
-  ]);
+  const mappings = validateCounts(snapshot.mappings, ['activeUnique', 'unmapped', 'ambiguous']);
 
   return {
     schemaVersion: 1,

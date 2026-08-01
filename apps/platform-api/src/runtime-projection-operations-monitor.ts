@@ -47,7 +47,9 @@ export interface RuntimeProjectionOperationsSnapshot {
 }
 
 export interface RuntimeProjectionOperationsMonitorStore {
-  read(input: RuntimeProjectionOperationsMonitorInput): Promise<RuntimeProjectionOperationsSnapshot>;
+  read(
+    input: RuntimeProjectionOperationsMonitorInput,
+  ): Promise<RuntimeProjectionOperationsSnapshot>;
 }
 
 export type RuntimeProjectionOperationsMonitorResolution =
@@ -65,10 +67,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function validInteger(value: unknown, minimum: number, maximum: number): value is number {
   return (
-    typeof value === 'number' &&
-    Number.isSafeInteger(value) &&
-    value >= minimum &&
-    value <= maximum
+    typeof value === 'number' && Number.isSafeInteger(value) && value >= minimum && value <= maximum
   );
 }
 
