@@ -35,16 +35,6 @@ jobs:
           node-version: '22.22.2'
           cache: npm
       - run: npm ci
-      - name: Format operator session test for branch repair
-        run: npx prettier --write apps/platform-api/src/pilot-operator-sessions.test.ts
-      - name: Upload formatted operator session test
-        uses: actions/upload-artifact@v4
-        with:
-          name: formatted-operator-sessions
-          path: apps/platform-api/src/pilot-operator-sessions.test.ts
-          retention-days: 1
-      - name: Stop until formatted source is committed
-        run: git diff --exit-code -- apps/platform-api/src/pilot-operator-sessions.test.ts
       - run: npm run format:check
       - run: npm run lint
       - run: npm run check:boundaries
