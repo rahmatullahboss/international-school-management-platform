@@ -84,10 +84,7 @@ describe('pilot operator API coverage boundary', () => {
       handlePilotOperatorRequest(new Request('https://api.school.test/health'), environment),
     ).resolves.toBeUndefined();
     await expect(
-      handlePilotOperatorRequest(
-        requestFor('/pilot/v1/sessions/admin', 'POST'),
-        environment,
-      ),
+      handlePilotOperatorRequest(requestFor('/pilot/v1/sessions/admin', 'POST'), environment),
     ).resolves.toBeUndefined();
   });
 
@@ -133,16 +130,19 @@ describe('pilot operator session and snapshot HTTP contract', () => {
     });
   });
 
-  it.each(['admissions', 'finance', 'support'] as const)('issues %s session envelopes', async (role) => {
-    const response = await requiredResponse(requestFor(`/pilot/v1/sessions/${role}`, 'POST'));
-    expect(response.status).toBe(201);
-    expect(response.headers.get('cache-control')).toBe('no-store');
-    expect(await jsonObject(response)).toMatchObject({
-      schemaVersion: 1,
-      tokenType: 'Bearer',
-      scope: { role },
-    });
-  });
+  it.each(['admissions', 'finance', 'support'] as const)(
+    'issues %s session envelopes',
+    async (role) => {
+      const response = await requiredResponse(requestFor(`/pilot/v1/sessions/${role}`, 'POST'));
+      expect(response.status).toBe(201);
+      expect(response.headers.get('cache-control')).toBe('no-store');
+      expect(await jsonObject(response)).toMatchObject({
+        schemaVersion: 1,
+        tokenType: 'Bearer',
+        scope: { role },
+      });
+    },
+  );
 
   it('protects snapshots and supports ETag revalidation', async () => {
     const token = await tokenFor('finance');
@@ -151,7 +151,9 @@ describe('pilot operator session and snapshot HTTP contract', () => {
     );
     expect(wrongMethod.status).toBe(405);
 
-    const unauthenticated = await requiredResponse(requestFor('/pilot/v1/snapshots/finance', 'GET'));
+    const unauthenticated = await requiredResponse(
+      requestFor('/pilot/v1/snapshots/finance', 'GET'),
+    );
     expect(unauthenticated.status).toBe(401);
     expect(unauthenticated.headers.get('cache-control')).toBe('no-store');
 
@@ -351,15 +353,11 @@ describe('pilot operator command HTTP contract coverage', () => {
       receipt: { auditId: receipt.auditId },
     });
 
-    const audit = await requiredResponse(
-      requestFor('/pilot/v1/audit/finance', 'GET', { token }),
-    );
+    const audit = await requiredResponse(requestFor('/pilot/v1/audit/finance', 'GET', { token }));
     const auditPayload = await jsonObject(audit);
     if (!Array.isArray(auditPayload.entries)) throw new Error('expected audit entries');
     expect(
-      auditPayload.entries.some(
-        (entry) => isRecord(entry) && entry.auditId === receipt.auditId,
-      ),
+      auditPayload.entries.some((entry) => isRecord(entry) && entry.auditId === receipt.auditId),
     ).toBe(true);
   });
 });
