@@ -96,6 +96,7 @@ describe('operator domain command boundary', () => {
       { ...admissionsInput(), idempotencyKey: 'bad key' },
       { ...admissionsInput(), correlationId: 'bad-correlation' },
       { ...admissionsInput(), expectedVersion: 0 },
+      { ...admissionsInput(), expectedVersion: 3.5 },
       { ...admissionsInput(), recommendation: 'auto-admit' },
       { ...admissionsInput(), score: 101 },
       { ...admissionsInput(), notes: 'x'.repeat(2001) },
