@@ -11,6 +11,8 @@ final class StaffProductionCountCopy {
 
   String rosterStudents(int count) => _strings.rosterStudents(count);
 
+  String assignedMeetings(int count) => _strings.assignedMeetings(count);
+
   String encryptedOperationsWaiting(int count) =>
       _strings.encryptedOperationsWaiting(count);
 
@@ -79,10 +81,12 @@ class _TeacherTodayScreen extends StatelessWidget {
     journey: journey,
     builder: (context, state) {
       final today = state.today!;
+      final countCopy = StaffProductionCountCopy.of(context);
       return ListView(
         children: [
           SchoolPageSection(
             description:
+                '${countCopy.assignedMeetings(today.meetings.length)} · '
                 'Assigned meetings and substitutions for the selected school campus.',
             title: today.teacherDisplayName,
             child: SchoolPanel(

@@ -15,6 +15,8 @@ final class FamilyProductionCountCopy {
       _strings.formsAwaitingResponse(count);
 
   String openConversations(int count) => _strings.openConversations(count);
+
+  String unreadMessages(int count) => _strings.unreadMessages(count);
 }
 
 class _FamilyServicesScreen extends StatelessWidget {
@@ -769,7 +771,7 @@ class _FamilyConversationsScreen extends StatelessWidget {
                               '/conversations/${Uri.encodeComponent(interactions.conversations[index].conversationId)}',
                             ),
                             subtitle: Text(
-                              '${interactions.conversations[index].unreadCount} unread · ${_familyDateTimeLabel(context, interactions.conversations[index].latestMessageAt)}',
+                              '${countCopy.unreadMessages(interactions.conversations[index].unreadCount)} · ${_familyDateTimeLabel(context, interactions.conversations[index].latestMessageAt)}',
                             ),
                             title: Text(
                               interactions.conversations[index].subject,
