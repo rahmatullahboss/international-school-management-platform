@@ -32,6 +32,8 @@ jobs:
           node-version: '22.22.2'
           cache: npm
       - run: npm ci
+      - name: Harden PILOT-12 authoring markers
+        run: python3 scripts/fix_author_pilot_12_summary_markers.py
       - name: Apply guarded PILOT-12 authoring patch
         run: python3 scripts/author_pilot_12.py
       - run: npm run format
@@ -75,7 +77,7 @@ jobs:
           set -euo pipefail
           initial_head="$(git rev-parse HEAD)"
           test "$initial_head" = "${{ github.event.pull_request.head.sha }}"
-          rm scripts/author_pilot_12.py
+          rm scripts/author_pilot_12.py scripts/fix_author_pilot_12_summary_markers.py
           git show "${{ github.event.pull_request.base.sha }}:.github/workflows/ci.yml" > .github/workflows/ci.yml
           git add .github/workflows/ci.yml \
             apps/platform-api/src/index.ts \
@@ -86,7 +88,8 @@ jobs:
             infra/database/post-integration-migration-manifest.json \
             infra/database/post-integration-migrations/202608010401_PILOT-12_runtime_projection_operations_monitor.sql \
             tests/integration/verify-auth-durable-context.sh \
-            scripts/author_pilot_12.py
+            scripts/author_pilot_12.py \
+            scripts/fix_author_pilot_12_summary_markers.py
           git diff --cached --check
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
