@@ -29,9 +29,10 @@ Final tests cover:
 
 ## Verification lineage
 
-- full authoring CI `30678506882` passed application, 51-migration lifecycle, live Neon, builds, audit and browser gates;
-- final canonical CI `30678621687` passed on exact clean head `9a3978e294bc3d9f463780ec9154bed67d802eb8`;
-- runtime PR #72 was squash merged as `f260d18bab8084ab2132767f2d8fb3040290c6cd` with expected-head protection.
+- full runtime authoring CI `30678506882` passed application, 51-migration lifecycle, live Neon, builds, audit and browser gates;
+- final canonical runtime CI `30678621687` passed on exact clean head `9a3978e294bc3d9f463780ec9154bed67d802eb8`;
+- runtime PR #72 was squash merged as `f260d18bab8084ab2132767f2d8fb3040290c6cd` with expected-head protection;
+- governance authoring CI `30678861591` passed the same full repository gate and published only the three reviewed closure documents.
 
 The final canonical run passed:
 
@@ -48,7 +49,7 @@ The final canonical run passed:
 - the complete browser suite;
 - execution-artifact validation.
 
-Cloudflare staging was expectedly skipped because PILOT-11 adds no deployed route, binding or schedule. The docs-only governance head preserves that same non-deployment boundary and must not be treated as a staging or production activation signal.
+Cloudflare staging was expectedly skipped because PILOT-11 adds no deployed route, binding or schedule.
 
 ## Migration evidence
 
