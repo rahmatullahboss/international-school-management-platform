@@ -109,6 +109,14 @@ describe('database projection operations monitor store', () => {
       [{ value: snapshot() }, { value: snapshot() }],
       [{ value: { ...snapshot(), tenantId: 'cross-tenant' } }],
       [{ value: { ...snapshot(), health: 'unknown' } }],
+      [
+        {
+          value: {
+            ...snapshot(),
+            controls: { ...snapshot().controls, payloadRedacted: false },
+          },
+        },
+      ],
       [{ value: { ...snapshot(), backlog: { ...snapshot().backlog, eligible: -1 } } }],
       [{ value: { ...snapshot(), payload: { secret: 'leaked' } } }],
       [{ value: { ...snapshot(), databaseUrl: 'postgres://secret@database.internal' } }],
