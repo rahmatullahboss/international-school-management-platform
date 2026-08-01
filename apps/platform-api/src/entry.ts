@@ -1,7 +1,8 @@
 import coreWorkerModule from './index.js';
+import { handleAuthLoginRequest, type AuthLoginBindings } from './auth-login-routes.js';
 import { handlePilotOperatorRequest, type PilotOperatorBindings } from './pilot-operator-api.js';
 
-interface WorkerEnvironment extends PilotOperatorBindings {
+interface WorkerEnvironment extends PilotOperatorBindings, AuthLoginBindings {
   readonly APP_REGION: string;
   readonly [key: string]: unknown;
 }
@@ -27,6 +28,8 @@ const worker = {
     environment: WorkerEnvironment,
     executionContext: ExecutionContext,
   ): Promise<Response> {
+    const authResponse = await handleAuthLoginRequest(request, environment);
+    if (authResponse !== undefined) return authResponse;
     const operatorResponse = await handlePilotOperatorRequest(request, environment);
     if (operatorResponse !== undefined) return operatorResponse;
     return coreWorker.fetch(request, environment, executionContext);
