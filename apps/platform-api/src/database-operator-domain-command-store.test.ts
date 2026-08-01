@@ -142,10 +142,12 @@ describe('database operator domain command store', () => {
     }
 
     const ambiguousDatabase = {
-      query: vi.fn().mockResolvedValue([
-        { value: { accepted: false, reason: 'session-inactive' } },
-        { value: { accepted: false, reason: 'session-inactive' } },
-      ]),
+      query: vi
+        .fn()
+        .mockResolvedValue([
+          { value: { accepted: false, reason: 'session-inactive' } },
+          { value: { accepted: false, reason: 'session-inactive' } },
+        ]),
     };
     await expect(
       new DatabaseOperatorDomainCommandStore(ambiguousDatabase).submit(input),
