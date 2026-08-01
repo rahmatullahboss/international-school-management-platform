@@ -48,7 +48,7 @@ The final canonical run passed:
 - the complete browser suite;
 - execution-artifact validation.
 
-Cloudflare staging was expectedly skipped because PILOT-11 adds no deployed route, binding or schedule.
+Cloudflare staging was expectedly skipped because PILOT-11 adds no deployed route, binding or schedule. The docs-only governance head preserves that same non-deployment boundary and must not be treated as a staging or production activation signal.
 
 ## Migration evidence
 
