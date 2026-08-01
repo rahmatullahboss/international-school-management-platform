@@ -53,7 +53,9 @@ describe('pilot operator sessions', () => {
   });
 
   it('rejects issuance for an unpublished role', async () => {
-    await expect(issuePilotOperatorSession(secret, 'admin' as 'admissions', baseNow)).resolves.toEqual({
+    await expect(
+      issuePilotOperatorSession(secret, 'admin' as 'admissions', baseNow),
+    ).resolves.toEqual({
       ok: false,
       status: 404,
       code: 'pilot_role_not_found',
