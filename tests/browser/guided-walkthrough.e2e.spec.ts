@@ -21,7 +21,9 @@ for (const roleCase of roleCases) {
   });
 }
 
-test('admin walkthrough explains governed modules and can be restarted after completion', async ({ page }) => {
+test('admin walkthrough explains governed modules and can be restarted after completion', async ({
+  page,
+}) => {
   await page.goto('/admin');
 
   const dialog = page.getByRole('dialog');
