@@ -82,12 +82,7 @@ export type OperatorDomainCommandResolution =
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
 const IDEMPOTENCY_KEY_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$/u;
-const ADMISSIONS_RECOMMENDATIONS = new Set([
-  'admit',
-  'waitlist',
-  'decline',
-  'more-information',
-]);
+const ADMISSIONS_RECOMMENDATIONS = new Set(['admit', 'waitlist', 'decline', 'more-information']);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -120,7 +115,9 @@ function validBoundedText(value: unknown, minimum: number, maximum: number): val
   );
 }
 
-function validateAdmissions(value: Record<string, unknown>): AdmissionsApplicationReviewCommand | undefined {
+function validateAdmissions(
+  value: Record<string, unknown>,
+): AdmissionsApplicationReviewCommand | undefined {
   const expectedKeys = [
     'sessionId',
     'idempotencyKey',
@@ -155,7 +152,9 @@ function validateAdmissions(value: Record<string, unknown>): AdmissionsApplicati
   return value as unknown as AdmissionsApplicationReviewCommand;
 }
 
-function validateFinance(value: Record<string, unknown>): FinanceBankLineReconcileCommand | undefined {
+function validateFinance(
+  value: Record<string, unknown>,
+): FinanceBankLineReconcileCommand | undefined {
   const expectedKeys = [
     'sessionId',
     'idempotencyKey',
@@ -177,7 +176,9 @@ function validateFinance(value: Record<string, unknown>): FinanceBankLineReconci
   return value as unknown as FinanceBankLineReconcileCommand;
 }
 
-function validateSupport(value: Record<string, unknown>): SupportBreakGlassRequestCommand | undefined {
+function validateSupport(
+  value: Record<string, unknown>,
+): SupportBreakGlassRequestCommand | undefined {
   const expectedKeys = [
     'sessionId',
     'idempotencyKey',

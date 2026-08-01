@@ -88,7 +88,10 @@ function validateReceipt(
   };
 }
 
-function validateResult(value: unknown, input: OperatorDomainCommandInput): OperatorDomainCommandResult {
+function validateResult(
+  value: unknown,
+  input: OperatorDomainCommandInput,
+): OperatorDomainCommandResult {
   if (!isRecord(value) || typeof value.accepted !== 'boolean') throw invalidResponse();
   if (value.accepted) {
     const keys = Object.keys(value);

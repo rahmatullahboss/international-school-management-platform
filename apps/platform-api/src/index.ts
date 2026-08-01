@@ -856,3 +856,5 @@ export * from './runtime-projection-operations-monitor.js';
 export * from './database-projection-operations-monitor-store.js';
 export * from './runtime-projection-source-publisher.js';
 export * from './database-projection-source-publisher-store.js';
+export * from './operator-domain-commands.js';
+export * from './database-operator-domain-command-store.js';

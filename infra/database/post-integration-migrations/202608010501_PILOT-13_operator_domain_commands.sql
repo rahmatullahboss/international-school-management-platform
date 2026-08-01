@@ -190,6 +190,7 @@ BEGIN
      OR p_application_id IS NULL
      OR p_expected_version IS NULL
      OR p_expected_version < 1
+     OR p_recommendation IS NULL
      OR p_recommendation NOT IN ('admit', 'waitlist', 'decline', 'more-information')
      OR (p_score IS NOT NULL AND (p_score < 0 OR p_score > 100))
      OR (p_notes IS NOT NULL AND (
@@ -290,7 +291,7 @@ BEGIN
     RETURN jsonb_build_object('accepted', false, 'reason', 'scope-not-found');
   END IF;
 
-  SELECT count(DISTINCT campus_scope.campus_id), min(campus_scope.campus_id)
+  SELECT count(DISTINCT campus_scope.campus_id), min(campus_scope.campus_id::text)::uuid
   INTO selected_campus_count, selected_application_campus_id
   FROM (
     SELECT offer.campus_id
