@@ -75,7 +75,9 @@ function exactStaticProviderMatch(
   );
 }
 
-async function resolveRuntime(environment: AuthLoginBindings): Promise<AuthLoginRuntime | Response> {
+async function resolveRuntime(
+  environment: AuthLoginBindings,
+): Promise<AuthLoginRuntime | Response> {
   if (!hasDurableLoginConfiguration(environment)) {
     return failureResponse('oidc_login_unavailable', 'OIDC login is not configured.');
   }
@@ -140,7 +142,8 @@ export async function handleAuthLoginRequest(
   const url = new URL(request.url);
 
   if (url.pathname === '/auth/v1/readiness') {
-    if (request.method !== 'GET') return failureResponse('method_not_allowed', 'Method not allowed.', 405);
+    if (request.method !== 'GET')
+      return failureResponse('method_not_allowed', 'Method not allowed.', 405);
     const readiness = resolveAuthReadiness(environment);
     return jsonResponse(
       {
@@ -155,7 +158,8 @@ export async function handleAuthLoginRequest(
   if (url.pathname !== '/auth/v1/login' && url.pathname !== '/auth/v1/callback') {
     return undefined;
   }
-  if (request.method !== 'GET') return failureResponse('method_not_allowed', 'Method not allowed.', 405);
+  if (request.method !== 'GET')
+    return failureResponse('method_not_allowed', 'Method not allowed.', 405);
 
   const runtime = await resolveRuntime(environment);
   if (runtime instanceof Response) return runtime;
@@ -197,7 +201,8 @@ export async function handleAuthLoginRequest(
     dependencies: {
       consumeTransaction: (transactionId, providerIssuer, expiresAt) =>
         runtime.store.consumeTransaction(transactionId, providerIssuer, expiresAt),
-      resolveMembership: (identity, selection) => runtime.store.resolveMembership(identity, selection),
+      resolveMembership: (identity, selection) =>
+        runtime.store.resolveMembership(identity, selection),
       registerSession: (claims) => runtime.store.registerSession(claims),
       resolveSigningKeys: async (providerConfiguration, forceRefresh) => {
         const keys = await runtime.cache.resolveJwks({
