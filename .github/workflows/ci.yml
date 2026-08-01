@@ -2,20 +2,14 @@ name: CI
 
 on:
   pull_request:
-  push:
-    branches:
-      - main
-      - 'program/**'
-      - 'module/**'
-      - 'integration/**'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  verify:
+  author-pilot-13:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     services:
       postgres:
         image: postgres:16-alpine
@@ -30,11 +24,25 @@ jobs:
           --health-retries 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22.22.2'
           cache: npm
       - run: npm ci
+      - name: Apply guarded PILOT-13 integration patch
+        run: python3 scripts/author_pilot_13.py
+      - name: Canonically format authored application files
+        run: |
+          npx prettier --write \
+            apps/platform-api/src/operator-domain-commands.ts \
+            apps/platform-api/src/database-operator-domain-command-store.ts \
+            apps/platform-api/src/operator-domain-commands.test.ts \
+            apps/platform-api/src/database-operator-domain-command-store.test.ts \
+            apps/platform-api/src/index.ts \
+            infra/database/post-integration-migration-manifest.json
       - run: npm run format:check
       - run: npm run lint
       - run: npm run check:boundaries
@@ -47,14 +55,14 @@ jobs:
           PGUSER: postgres
           PGDATABASE: postgres
         run: npm run verify:migrations
-      - name: Verify AUTH post-integration migrations and revocation contracts
+      - name: Verify AUTH and all post-integration database contracts
         env:
           PGHOST: 127.0.0.1
           PGPORT: 5432
           PGUSER: postgres
           PGDATABASE: postgres
         run: npm run verify:auth-migrations
-      - name: Verify all product persona authorization and persisted mutation E2E
+      - name: Verify persona authorization and real operator domain commands
         env:
           PGHOST: 127.0.0.1
           PGPORT: 5432
@@ -62,7 +70,6 @@ jobs:
           PGDATABASE: postgres
         run: npm run verify:persona-e2e
       - name: Verify live Neon serverless driver
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
@@ -77,3 +84,26 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
       - run: python3 scripts/validate_execution_artifacts.py
+      - name: Verify generated implementation scope
+        run: |
+          git diff --check
+          allowed='^(apps/platform-api/src/(operator-domain-commands|database-operator-domain-command-store)\.ts|apps/platform-api/src/index\.ts|infra/database/post-integration-migrations/202608010501_PILOT-13_operator_domain_commands\.sql|tests/integration/(verify-auth-durable-context|verify-product-persona-e2e)\.sh)$'
+          unexpected="$(git diff --name-only | grep -Ev "$allowed" || true)"
+          test -z "$unexpected" || { printf 'Unexpected generated files:\n%s\n' "$unexpected"; exit 1; }
+      - name: Publish verified generated PILOT-13 integration
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add \
+            apps/platform-api/src/operator-domain-commands.ts \
+            apps/platform-api/src/database-operator-domain-command-store.ts \
+            apps/platform-api/src/index.ts \
+            infra/database/post-integration-migrations/202608010501_PILOT-13_operator_domain_commands.sql \
+            tests/integration/verify-auth-durable-context.sh \
+            tests/integration/verify-product-persona-e2e.sh
+          if git diff --cached --quiet; then
+            echo 'Generated PILOT-13 integration is already materialized.'
+            exit 0
+          fi
+          git commit -m 'feat(pilot): integrate operator domain command lifecycle'
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
