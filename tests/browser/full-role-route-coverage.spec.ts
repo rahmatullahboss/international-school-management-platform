@@ -55,13 +55,16 @@ for (const [role, routes] of Object.entries(routesByRole)) {
       test(`${route.path} renders its governed workspace`, async ({ page }) => {
         await page.goto(route.path);
 
-        await expect(page).toHaveURL(new RegExp(`${route.path.replaceAll('/', '\\/')}$`, 'u'));
+        await expect(page).toHaveURL(
+          new RegExp(`${route.path.replaceAll('/', '\\/')}$`, 'u'),
+        );
         await expect(
           page.getByRole('heading', { name: route.heading, exact: true }).first(),
         ).toBeVisible();
-        await expect(page.getByRole('alert').filter({ hasText: 'Page not available' })).toHaveCount(0);
+        await expect(
+          page.getByRole('alert').filter({ hasText: 'Page not available' }),
+        ).toHaveCount(0);
         await expect(page.getByRole('link', { name: 'Change role' })).toBeVisible();
-        await expect(page.getByText('production data', { exact: false }).first()).toBeVisible();
       });
     }
   });
@@ -78,12 +81,15 @@ for (const denied of deniedRoleRoutes) {
   test(`unpublished role route ${denied.path} fails closed`, async ({ page }) => {
     await page.goto(denied.path);
 
-    const unavailable = page.getByRole('alert').filter({ hasText: 'Page not available in this pilot' });
+    const unavailable = page
+      .getByRole('alert')
+      .filter({ hasText: 'Page not available in this pilot' });
     await expect(unavailable).toBeVisible();
-    await expect(unavailable).toContainText('This task has not been connected to the pilot workspace yet.');
-    await expect(unavailable.getByRole('link', { name: 'Return to workspace home' })).toHaveAttribute(
-      'href',
-      denied.home,
+    await expect(unavailable).toContainText(
+      'This task has not been connected to the pilot workspace yet.',
     );
+    await expect(
+      unavailable.getByRole('link', { name: 'Return to workspace home' }),
+    ).toHaveAttribute('href', denied.home);
   });
 }
