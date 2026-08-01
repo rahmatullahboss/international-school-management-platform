@@ -21,7 +21,8 @@ jobs:
           node-version: 22.22.2
           cache: npm
       - run: npm ci
-      - run: npx prettier --write packages/modules/billing/src/contracts/primitives-coverage.test.ts
+      - name: Format finance primitive coverage
+        run: npx prettier --write packages/modules/billing/src/contracts/primitives-coverage.test.ts
       - name: Commit formatting
         run: |
           if git diff --quiet; then
