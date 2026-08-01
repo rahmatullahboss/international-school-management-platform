@@ -185,8 +185,8 @@ function commandDefinition(
   return definitions[command];
 }
 
-function auditKey(role: PilotOperatorRole, idempotencyKey: string): string {
-  return `${PILOT_OPERATOR_TENANT_ID}|${PILOT_OPERATOR_CAMPUS_ID}|${role}|${idempotencyKey}`;
+function auditKey(role: PilotOperatorRole, command: string, idempotencyKey: string): string {
+  return `${PILOT_OPERATOR_TENANT_ID}|${PILOT_OPERATOR_CAMPUS_ID}|${role}|${command}|${idempotencyKey}`;
 }
 
 async function handleCommand(
@@ -241,7 +241,12 @@ async function handleCommand(
   const tenantId = body?.tenantId;
   const campusId = body?.campusId;
   const reason = body?.reason;
+  const bodyKeys = body === undefined ? [] : Object.keys(body);
+  const hasExactBodyShape =
+    bodyKeys.length === 3 &&
+    bodyKeys.every((key) => key === 'tenantId' || key === 'campusId' || key === 'reason');
   if (
+    !hasExactBodyShape ||
     idempotencyKey === undefined ||
     !IDEMPOTENCY_KEY_PATTERN.test(idempotencyKey) ||
     tenantId !== claims.tenantId ||
@@ -249,7 +254,8 @@ async function handleCommand(
     typeof reason !== 'string' ||
     reason.trim() !== reason ||
     reason.length < 1 ||
-    reason.length > 500
+    reason.length > 500 ||
+    /[\u0000-\u001F\u007F]/u.test(reason)
   ) {
     const scopeMismatch =
       body !== undefined &&
@@ -269,9 +275,21 @@ async function handleCommand(
     );
   }
 
-  const key = auditKey(role, idempotencyKey);
+  const key = auditKey(role, command, idempotencyKey);
   const existing = receiptByIdempotencyKey.get(key);
   if (existing !== undefined) {
+    if (existing.reason !== reason) {
+      return jsonResponse(
+        {
+          error: {
+            code: 'pilot_idempotency_conflict',
+            message: 'The idempotency key is already bound to a different command request.',
+          },
+        },
+        409,
+        corsHeaders,
+      );
+    }
     return jsonResponse({ schemaVersion: 1, replayed: true, receipt: existing }, 200, corsHeaders);
   }
 
