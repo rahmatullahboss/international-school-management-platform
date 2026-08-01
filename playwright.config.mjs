@@ -12,7 +12,7 @@ export default defineConfig({
   webServer: [
     {
       command:
-        'npm run dev --workspace=@school/platform-api -- --ip 127.0.0.1 --port 8787 --var PILOT_SESSION_SECRET:playwright-pilot-session-secret-0123456789abcdef',
+        'npx wrangler dev tests/browser/platform-api-e2e-worker.ts --config apps/platform-api/wrangler.jsonc --ip 127.0.0.1 --port 8787 --var PILOT_SESSION_SECRET:playwright-pilot-session-secret-0123456789abcdef',
       url: 'http://127.0.0.1:8787/health',
       reuseExistingServer: !process.env.CI,
     },
