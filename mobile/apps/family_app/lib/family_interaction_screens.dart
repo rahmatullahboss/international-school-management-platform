@@ -1,5 +1,22 @@
 part of 'main.dart';
 
+final class FamilyProductionCountCopy {
+  FamilyProductionCountCopy.forLocale(Locale locale)
+    : _strings = SchoolCountStrings.forLocale(locale);
+
+  factory FamilyProductionCountCopy.of(BuildContext context) =>
+      FamilyProductionCountCopy.forLocale(Localizations.localeOf(context));
+
+  final SchoolCountStrings _strings;
+
+  String documentsAvailable(int count) => _strings.documentsAvailable(count);
+
+  String formsAwaitingResponse(int count) =>
+      _strings.formsAwaitingResponse(count);
+
+  String openConversations(int count) => _strings.openConversations(count);
+}
+
 class _FamilyServicesScreen extends StatelessWidget {
   const _FamilyServicesScreen({
     required this.interactions,
@@ -112,10 +129,12 @@ class _FamilyDocumentsScreen extends StatelessWidget {
               title: 'Documents unavailable',
             );
           }
+          final countCopy = FamilyProductionCountCopy.of(context);
           return ListView(
             children: [
               SchoolPageSection(
                 description:
+                    '${countCopy.documentsAvailable(interactions.documents.length)} · '
                     'Only metadata is shown. Restricted files remain no-store and raw download credentials are never exposed.',
                 title: '${directory.activeStudent.displayName} documents',
                 child: SchoolPanel(
@@ -293,10 +312,15 @@ class _FamilyFormsScreen extends StatelessWidget {
               title: 'Forms unavailable',
             );
           }
+          final countCopy = FamilyProductionCountCopy.of(context);
+          final openFormCount = interactions.forms
+              .where((form) => form.status == FamilyFormStatus.open)
+              .length;
           return ListView(
             children: [
               SchoolPageSection(
                 description:
+                    '${countCopy.formsAwaitingResponse(openFormCount)} · '
                     'Submission uses the server-issued base and schema versions. The client does not infer a newer revision.',
                 title: '${directory.activeStudent.displayName} forms',
                 child: SchoolPanel(
@@ -718,10 +742,12 @@ class _FamilyConversationsScreen extends StatelessWidget {
               title: 'Conversations unavailable',
             );
           }
+          final countCopy = FamilyProductionCountCopy.of(context);
           return ListView(
             children: [
               SchoolPageSection(
                 description:
+                    '${countCopy.openConversations(interactions.conversations.length)} · '
                     'Conversation access follows the active school relationship and capability scope.',
                 title: '${directory.activeStudent.displayName} conversations',
                 child: SchoolPanel(
