@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  canTransition,
-  transitionApproval,
-  type ApprovalRequest,
-} from './approval.js';
+import { canTransition, transitionApproval, type ApprovalRequest } from './approval.js';
 import { createId, formatId, isValidId, parseId, type OpaqueId } from './ids.js';
 import {
   allocateMoney,
@@ -98,10 +94,12 @@ describe('approval state machine', () => {
       rejectedBy: 'approver-1',
       rejectionReason: 'Rejected',
     });
-    expect(transitionApproval(approval(), 'reject', 'approver-1', 'Policy mismatch')).toMatchObject({
-      state: 'rejected',
-      rejectionReason: 'Policy mismatch',
-    });
+    expect(transitionApproval(approval(), 'reject', 'approver-1', 'Policy mismatch')).toMatchObject(
+      {
+        state: 'rejected',
+        rejectionReason: 'Policy mismatch',
+      },
+    );
     expect(transitionApproval(approval(), 'cancel', 'requester-1')).toMatchObject({
       state: 'cancelled',
     });
@@ -112,18 +110,14 @@ describe('approval state machine', () => {
   });
 
   it('rejects forbidden state, assignee and self-approval paths', () => {
-    expect(() => transitionApproval(approval({ state: 'approved' }), 'reject', 'approver-1')).toThrow(
-      'Cannot reject from state approved',
-    );
+    expect(() =>
+      transitionApproval(approval({ state: 'approved' }), 'reject', 'approver-1'),
+    ).toThrow('Cannot reject from state approved');
     expect(() => transitionApproval(approval(), 'approve', 'outsider')).toThrow(
       'Principal is not an assigned approver',
     );
     expect(() =>
-      transitionApproval(
-        approval({ requestedBy: 'approver-1' }),
-        'approve',
-        'approver-1',
-      ),
+      transitionApproval(approval({ requestedBy: 'approver-1' }), 'approve', 'approver-1'),
     ).toThrow('Requester cannot approve own request');
   });
 });
@@ -285,12 +279,12 @@ describe('finance permission contracts', () => {
         campusId: 'campus-1',
       }),
     ).not.toThrow();
-    expect(() => authorizeFinance(principal, 'billing.refund.write', { tenantId: 'tenant-1' })).toThrow(
-      'FIN_FORBIDDEN:billing.refund.write',
-    );
-    expect(() => authorizeFinance(principal, 'billing.invoice.read', { tenantId: 'tenant-2' })).toThrow(
-      'FIN_SCOPE_MISMATCH',
-    );
+    expect(() =>
+      authorizeFinance(principal, 'billing.refund.write', { tenantId: 'tenant-1' }),
+    ).toThrow('FIN_FORBIDDEN:billing.refund.write');
+    expect(() =>
+      authorizeFinance(principal, 'billing.invoice.read', { tenantId: 'tenant-2' }),
+    ).toThrow('FIN_SCOPE_MISMATCH');
     expect(() =>
       authorizeFinance(principal, 'ledger.period.reopen', {
         tenantId: 'tenant-1',
