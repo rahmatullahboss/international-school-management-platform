@@ -56,7 +56,9 @@ for (const [role, root] of Object.entries(roleRoots) as [BrowserPilotRole, strin
   });
 }
 
-test('live pilot session is role-bound and cannot be replayed across portals', async ({ request }) => {
+test('live pilot session is role-bound and cannot be replayed across portals', async ({
+  request,
+}) => {
   const sessionResponse = await request.post(`${liveApiUrl}/pilot/v1/sessions/teacher`, {
     headers: { origin: webOrigin },
   });
@@ -84,7 +86,8 @@ test('live pilot session is role-bound and cannot be replayed across portals', a
     },
   });
   expect(denied.status()).toBe(401);
-  await expect(denied.json()).resolves.toMatchObject({
+  const deniedBody = await denied.json();
+  expect(deniedBody).toMatchObject({
     error: { code: 'pilot_session_invalid' },
   });
 
@@ -104,7 +107,8 @@ test('live pilot API rejects an untrusted browser origin', async ({ request }) =
   });
 
   expect(response.status()).toBe(403);
-  await expect(response.json()).resolves.toMatchObject({
+  const responseBody = await response.json();
+  expect(responseBody).toMatchObject({
     error: { code: 'pilot_origin_denied' },
   });
 });
