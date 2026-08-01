@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 
 import type { PilotOperatorRole } from '../../apps/platform-api/src/pilot-operator-models.js';
 
@@ -58,10 +58,7 @@ async function configureLivePilotApi(page: Page): Promise<void> {
   }, liveApiUrl);
 }
 
-async function issueSession(
-  request: Parameters<Parameters<typeof test>[1]>[0]['request'],
-  role: PilotOperatorRole,
-): Promise<string> {
+async function issueSession(request: APIRequestContext, role: PilotOperatorRole): Promise<string> {
   const response = await request.post(`${liveApiUrl}/pilot/v1/sessions/${role}`, {
     headers: { origin: webOrigin },
   });
