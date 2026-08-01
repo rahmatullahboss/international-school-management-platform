@@ -35,16 +35,16 @@ jobs:
           node-version: '22.22.2'
           cache: npm
       - run: npm ci
-      - name: Format finance primitive coverage test for branch repair
-        run: npx prettier --write packages/modules/billing/src/contracts/primitives-coverage.test.ts
-      - name: Upload formatted finance primitive coverage test
+      - name: Format operator session test for branch repair
+        run: npx prettier --write apps/platform-api/src/pilot-operator-sessions.test.ts
+      - name: Upload formatted operator session test
         uses: actions/upload-artifact@v4
         with:
-          name: formatted-finance-primitives
-          path: packages/modules/billing/src/contracts/primitives-coverage.test.ts
+          name: formatted-operator-sessions
+          path: apps/platform-api/src/pilot-operator-sessions.test.ts
           retention-days: 1
       - name: Stop until formatted source is committed
-        run: git diff --exit-code -- packages/modules/billing/src/contracts/primitives-coverage.test.ts
+        run: git diff --exit-code -- apps/platform-api/src/pilot-operator-sessions.test.ts
       - run: npm run format:check
       - run: npm run lint
       - run: npm run check:boundaries
