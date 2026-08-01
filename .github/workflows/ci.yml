@@ -35,6 +35,18 @@ jobs:
           node-version: '22.22.2'
           cache: npm
       - run: npm ci
+      - name: Format pilot resource coverage files
+        run: npx prettier --write apps/platform-web/src/pilot-resource-client.test.ts apps/platform-web/src/pilot-resource.ts
+      - name: Upload formatted pilot resource coverage files
+        uses: actions/upload-artifact@v4
+        with:
+          name: formatted-pilot-resource-coverage
+          path: |
+            apps/platform-web/src/pilot-resource-client.test.ts
+            apps/platform-web/src/pilot-resource.ts
+          retention-days: 1
+      - name: Stop until formatted source is committed
+        run: exit 1
       - run: npm run format:check
       - run: npm run lint
       - run: npm run check:boundaries
