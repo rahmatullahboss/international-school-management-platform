@@ -21,7 +21,8 @@ jobs:
           node-version: 22.22.2
           cache: npm
       - run: npm ci
-      - run: npx prettier --write apps/platform-web/src/pilot-resource-client.test.ts apps/platform-web/src/pilot-resource.ts
+      - name: Format pilot resource coverage files
+        run: npx prettier --write apps/platform-web/src/pilot-resource-client.test.ts apps/platform-web/src/pilot-resource.ts
       - name: Commit formatting
         run: |
           if git diff --quiet; then
