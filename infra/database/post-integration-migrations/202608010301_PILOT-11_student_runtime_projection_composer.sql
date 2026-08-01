@@ -151,9 +151,9 @@ BEGIN
   )
   SELECT
     count(*),
-    min(person_id),
-    min(student_profile_id),
-    min(enrollment_id)
+    min(person_id::text)::uuid,
+    min(student_profile_id::text)::uuid,
+    min(enrollment_id::text)::uuid
   INTO
     student_candidate_count,
     selected_person_id,

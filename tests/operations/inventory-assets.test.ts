@@ -43,6 +43,7 @@ function setup(): InventoryAssetService {
     scope,
     new InMemoryOperationsEventPublisher(),
     new InMemoryOperationsAuditWriter(),
+    { now: () => new Date('2026-07-30T00:00:00.000Z') },
   );
 }
 
