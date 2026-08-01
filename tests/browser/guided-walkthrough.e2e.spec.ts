@@ -34,7 +34,9 @@ test('admin walkthrough explains governed modules and can be restarted after com
   await expect(dialog.getByRole('heading', { name: 'Role-based navigation' })).toBeVisible();
   await dialog.getByRole('button', { name: 'Next' }).click();
   await expect(dialog.getByRole('heading', { name: 'Students & admissions' })).toBeVisible();
-  await expect(page.locator('a[href="/admin/sis"]')).toHaveClass(/guided-walkthrough__target/u);
+  await expect(page.locator('.experience-nav a[href="/admin/sis"]')).toHaveClass(
+    /guided-walkthrough__target/u,
+  );
 
   await dialog.getByRole('button', { name: 'Skip tour' }).click();
   await expect(dialog).toHaveCount(0);
@@ -52,5 +54,5 @@ test('walkthrough is keyboard dismissible and leaves the workspace usable', asyn
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Today’s teaching workspace' })).toBeVisible();
-  await expect(page.getByRole('link', { name: /Attendance:/u })).toBeVisible();
+  await expect(page.locator('.experience-nav a[href="/teacher/attendance"]')).toBeVisible();
 });
