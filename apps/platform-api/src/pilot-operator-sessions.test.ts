@@ -1,5 +1,3 @@
-import { createHmac } from 'node:crypto';
-
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -12,14 +10,26 @@ const secret = 'operator-session-coverage-secret-0123456789abcdef';
 const baseNow = Date.parse('2026-08-01T00:00:00.000Z');
 const baseNowSeconds = Math.floor(baseNow / 1000);
 
-function encode(value: string): string {
-  return Buffer.from(value).toString('base64url');
+function encodeBase64Url(value: Uint8Array | string): string {
+  const bytes = typeof value === 'string' ? new TextEncoder().encode(value) : value;
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/gu, '-').replace(/\//gu, '_').replace(/=+$/gu, '');
 }
 
-function signPayload(payload: string): string {
-  const encodedPayload = encode(payload);
-  const signature = createHmac('sha256', secret).update(encodedPayload).digest('base64url');
-  return `${encodedPayload}.${signature}`;
+async function signPayload(payload: string): Promise<string> {
+  const encodedPayload = encodeBase64Url(payload);
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const signature = new Uint8Array(
+    await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(encodedPayload)),
+  );
+  return `${encodedPayload}.${encodeBase64Url(signature)}`;
 }
 
 function validClaims(overrides: Record<string, unknown> = {}): Record<string, unknown> {
@@ -88,7 +98,7 @@ describe('pilot operator sessions', () => {
   );
 
   it('accepts a manually signed claim set that matches the production contract', async () => {
-    const token = signPayload(JSON.stringify(validClaims()));
+    const token = await signPayload(JSON.stringify(validClaims()));
     const verified = await verifyPilotOperatorSession(
       secret,
       `Bearer ${token}`,
@@ -179,7 +189,7 @@ describe('pilot operator sessions', () => {
       verifyPilotOperatorSession(secret, `Bearer ${tampered}`, 'admissions', baseNow),
     ).resolves.toMatchObject({ ok: false, status: 401, code: 'pilot_session_invalid' });
 
-    const invalidJson = signPayload('{not-json');
+    const invalidJson = await signPayload('{not-json');
     await expect(
       verifyPilotOperatorSession(secret, `Bearer ${invalidJson}`, 'admissions', baseNow),
     ).resolves.toMatchObject({ ok: false, status: 401, code: 'pilot_session_invalid' });
@@ -198,7 +208,7 @@ describe('pilot operator sessions', () => {
     ['expiresAt', 'not-a-number'],
     ['sessionId', 'short'],
   ])('rejects signed claims with invalid %s', async (field, value) => {
-    const token = signPayload(JSON.stringify(validClaims({ [field]: value })));
+    const token = await signPayload(JSON.stringify(validClaims({ [field]: value })));
     await expect(
       verifyPilotOperatorSession(secret, `Bearer ${token}`, 'admissions', baseNow + 1000),
     ).resolves.toMatchObject({ ok: false, status: 401, code: 'pilot_session_invalid' });
