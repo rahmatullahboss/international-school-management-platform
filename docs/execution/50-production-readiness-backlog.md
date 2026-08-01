@@ -8,27 +8,27 @@
 
 All planned domain module streams are complete and integrated, and the browser/pilot authorization surface now covers all seven principal product personas at the non-production pilot/canonical-CI level.
 
+PR #77 is already merged to `main` at `18f50ecd252473034e6132cc6e911015c8ceb831`. PR #80 remains the only integration PR for the seven-persona V2 checkpoint.
+
 The remaining work is therefore **production-depth and rollout work**, not another broad domain-module build.
 
 This document is the canonical short backlog for reaching a production go-live decision.
 
 ## P0 — integrate the E2E checkpoint
 
-### 1. Merge the prerequisite E2E PRs in order
+### 1. Merge PR #80 and verify `main`
 
-Required order:
+PR #77 — full route/live-Worker coverage for Admin, Teacher, Guardian and Student — is merged.
 
-1. PR #77 — full route/live-Worker coverage for Admin, Teacher, Guardian and Student.
-2. PR #80 — Admissions, Finance/Cashier and Platform/Support V2.
+Remaining integration work:
 
-After both merges:
-
-- run canonical CI on `main`;
-- verify the final `main` SHA is clean;
+- merge PR #80 — Admissions, Finance/Cashier and Platform/Support V2;
+- run canonical CI on the resulting `main` SHA;
+- verify the final `main` tree is clean;
 - confirm no regression in migration, auth, Neon, build or browser gates;
-- record the final merge SHAs and CI run IDs in the progress tracker/release evidence.
+- record the PR #80 merge SHA and final `main` CI run ID in the progress tracker/release evidence.
 
-**Status:** open until merged to `main`.
+**Status:** PR #77 complete; PR #80 open.
 
 ## P0 — real staging identity and session lifecycle
 
@@ -249,8 +249,9 @@ The following are already complete at the implementation/integration level and s
 - experience/persona shells;
 - current pilot auth hardening through database permission evaluation;
 - current runtime read/projection/mutation infrastructure;
-- four original runtime persona composers;
-- seven-principal-persona browser/authorization E2E implementation checkpoint.
+- Admin/Teacher/Guardian/Student runtime composers, including PILOT-11 student composition;
+- four-role E2E V1 baseline now merged through PR #77;
+- seven-principal-persona browser/authorization E2E V2 implementation checkpoint on PR #80.
 
 ## Exit condition
 
@@ -258,4 +259,4 @@ The program may be described as **production-ready** only after all P0 items are
 
 Until then, the accurate status is:
 
-> Domain implementation and seven-persona E2E implementation are complete; production-depth staging and production activation remain in progress.
+> Domain implementation and seven-persona E2E implementation are complete; PR #80 integration, production-depth staging and production activation remain in progress.
