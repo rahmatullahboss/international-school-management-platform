@@ -55,15 +55,13 @@ for (const [role, routes] of Object.entries(routesByRole)) {
       test(`${route.path} renders its governed workspace`, async ({ page }) => {
         await page.goto(route.path);
 
-        await expect(page).toHaveURL(
-          new RegExp(`${route.path.replaceAll('/', '\\/')}$`, 'u'),
-        );
+        await expect(page).toHaveURL(new RegExp(`${route.path.replaceAll('/', '\\/')}$`, 'u'));
         await expect(
           page.getByRole('heading', { name: route.heading, exact: true }).first(),
         ).toBeVisible();
-        await expect(
-          page.getByRole('alert').filter({ hasText: 'Page not available' }),
-        ).toHaveCount(0);
+        await expect(page.getByRole('alert').filter({ hasText: 'Page not available' })).toHaveCount(
+          0,
+        );
         await expect(page.getByRole('link', { name: 'Change role' })).toBeVisible();
       });
     }
