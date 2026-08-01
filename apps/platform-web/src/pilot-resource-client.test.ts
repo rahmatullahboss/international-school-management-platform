@@ -91,12 +91,14 @@ function snapshotEnvelope(
   };
 }
 
-function installWindow(options: {
-  hostname?: string;
-  apiUrl?: string;
-  localStorage?: MemoryStorage;
-  sessionStorage?: MemoryStorage;
-} = {}): { localStorage: MemoryStorage; sessionStorage: MemoryStorage } {
+function installWindow(
+  options: {
+    hostname?: string;
+    apiUrl?: string;
+    localStorage?: MemoryStorage;
+    sessionStorage?: MemoryStorage;
+  } = {},
+): { localStorage: MemoryStorage; sessionStorage: MemoryStorage } {
   const localStorage = options.localStorage ?? new MemoryStorage();
   const sessionStorage = options.sessionStorage ?? new MemoryStorage();
   Object.defineProperty(globalThis, 'window', {
@@ -159,9 +161,7 @@ describe('pilot API and key resolution', () => {
     const session = pilotResourceClientContract.sessionKey(apiBase, 'teacher');
     expect(cache).toBe(`${apiBase}|tenant-pilot-001|campus-main|teacher|teacher-1`);
     expect(session).toBe(`${apiBase}|teacher|teacher-1`);
-    expect(pilotResourceClientContract.storageKey(cache)).toContain(
-      'school-platform:pilot-read:',
-    );
+    expect(pilotResourceClientContract.storageKey(cache)).toContain('school-platform:pilot-read:');
     expect(pilotResourceClientContract.sessionStorageKey(session)).toContain(
       'school-platform:pilot-session:',
     );
@@ -299,12 +299,12 @@ describe('identity session cache lifecycle', () => {
       sessionVersion: 1 as const,
       accessToken,
       expiresAt: now + 15 * 60_000,
-      scope: (sessionPayload('teacher').scope as {
+      scope: sessionPayload('teacher').scope as {
         tenantId: string;
         campusId: string;
         role: 'teacher';
         subjectId: string;
-      }),
+      },
     };
     pilotResourceClientContract.storeSession(key, stored);
     expect(pilotResourceClientContract.readStoredSession(key, 'teacher')).toEqual(stored);
@@ -322,9 +322,19 @@ describe('identity session cache lifecycle', () => {
     const candidates = [
       '{bad-json',
       JSON.stringify({ sessionVersion: 2 }),
-      JSON.stringify({ sessionVersion: 1, accessToken: 5, expiresAt: now + 60_000, scope: validScope }),
+      JSON.stringify({
+        sessionVersion: 1,
+        accessToken: 5,
+        expiresAt: now + 60_000,
+        scope: validScope,
+      }),
       JSON.stringify({ sessionVersion: 1, accessToken, expiresAt: 'later', scope: validScope }),
-      JSON.stringify({ sessionVersion: 1, accessToken, expiresAt: now + 20_000, scope: validScope }),
+      JSON.stringify({
+        sessionVersion: 1,
+        accessToken,
+        expiresAt: now + 20_000,
+        scope: validScope,
+      }),
       JSON.stringify({ sessionVersion: 1, accessToken, expiresAt: now + 60_000, scope: null }),
       JSON.stringify({
         sessionVersion: 1,
@@ -404,9 +414,13 @@ describe('pilot session API requests', () => {
     const fetchMock = vi.fn(() => Promise.resolve(jsonResponse(sessionPayload('admin'))));
     vi.stubGlobal('fetch', fetchMock);
 
-    await expect(pilotResourceClientContract.requestSession(apiBase, 'admin')).resolves.toEqual(stored);
+    await expect(pilotResourceClientContract.requestSession(apiBase, 'admin')).resolves.toEqual(
+      stored,
+    );
     expect(fetchMock).not.toHaveBeenCalled();
-    await expect(pilotResourceClientContract.requestSession(apiBase, 'admin', true)).resolves.toMatchObject({
+    await expect(
+      pilotResourceClientContract.requestSession(apiBase, 'admin', true),
+    ).resolves.toMatchObject({
       accessToken,
     });
     expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -451,15 +465,16 @@ describe('pilot session API requests', () => {
         'Pilot session API returned an expired identity session.',
       ],
       [
-        jsonResponse(
-          sessionPayload('admin', { expiresAt: new Date(now + 20_000).toISOString() }),
-        ),
+        jsonResponse(sessionPayload('admin', { expiresAt: new Date(now + 20_000).toISOString() })),
         'Pilot session API returned an expired identity session.',
       ],
     ];
     for (const [response, message] of cases) {
       pilotResourceClientContract.resetMemory();
-      vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(response)));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(() => Promise.resolve(response)),
+      );
       await expect(pilotResourceClientContract.requestSession(apiBase, 'admin')).rejects.toThrow(
         message,
       );
@@ -477,7 +492,12 @@ describe('pilot snapshot API requests', () => {
       );
     vi.stubGlobal('fetch', fetchMock);
     const key = pilotResourceClientContract.cacheKey(apiBase, 'admin');
-    const result = await pilotResourceClientContract.requestSnapshot(apiBase, 'admin', key, undefined);
+    const result = await pilotResourceClientContract.requestSnapshot(
+      apiBase,
+      'admin',
+      key,
+      undefined,
+    );
     expect(result).toMatchObject({ etag: '"snapshot-v1"', receivedAt: now });
     expect(result.envelope).toMatchObject({ scope: { role: 'admin' } });
     expect(fetchMock).toHaveBeenCalledTimes(2);
