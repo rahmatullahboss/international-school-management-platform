@@ -35,9 +35,6 @@ jobs:
           node-version: '22.22.2'
           cache: npm
       - run: npm ci
-      - name: Print canonical auth-route formatting
-        if: github.event_name == 'pull_request' && github.head_ref == 'prod/demo-school-production-readiness'
-        run: npx prettier apps/platform-api/src/auth-login-routes.ts
       - run: npm run format:check
       - run: npm run lint
       - run: npm run check:boundaries
