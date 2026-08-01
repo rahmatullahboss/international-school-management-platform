@@ -11,5 +11,9 @@
       "name": "international-school-platform-web-staging",
       "workers_dev": true,
     },
+    "production": {
+      "name": "international-school-platform-web-production",
+      "workers_dev": true,
+    },
   },
 }
