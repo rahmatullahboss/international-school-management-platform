@@ -1,6 +1,6 @@
 {
   "program": "international-school-platform-v1",
-  "gate": "GATE-PILOT-STUDENT-RUNTIME-COMPOSER-V1",
+  "gate": "GATE-PILOT-RUNTIME-PROJECTION-OPERATIONS-MONITOR-V1",
   "baseManifest": "infra/database/migration-manifest.json",
   "orderingRule": "apply the reviewed 40-migration Wave 2 manifest first, then all reviewed post-integration migrations in contiguous order",
   "migrations": [
@@ -69,6 +69,12 @@
       "id": "202608010301_PILOT-11_student_runtime_projection_composer",
       "stream": "PILOT-11",
       "path": "infra/database/post-integration-migrations/202608010301_PILOT-11_student_runtime_projection_composer.sql"
+    },
+    {
+      "order": 12,
+      "id": "202608010401_PILOT-12_runtime_projection_operations_monitor",
+      "stream": "PILOT-12",
+      "path": "infra/database/post-integration-migrations/202608010401_PILOT-12_runtime_projection_operations_monitor.sql"
     }
   ]
 }
