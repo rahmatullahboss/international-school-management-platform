@@ -247,10 +247,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function isOperatorRole(value: unknown): value is OperatorRole {
-  return value === 'admissions' || value === 'finance' || value === 'support';
-}
-
 function resolveApiBase(): string | undefined {
   const runtimeOverride = window.__PLATFORM_API_URL__?.trim();
   if (runtimeOverride !== undefined && runtimeOverride !== '')
