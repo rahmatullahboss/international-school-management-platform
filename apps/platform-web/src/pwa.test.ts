@@ -29,7 +29,7 @@ describe('platform PWA registration', () => {
         listener();
       },
     };
-    const register = vi.fn(async () => registration);
+    const register = vi.fn(() => Promise.resolve(registration));
     const container: ServiceWorkerContainerTarget = { controller: {}, register };
     const originalNavigator = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
     Object.defineProperty(globalThis, 'navigator', {
@@ -67,10 +67,10 @@ describe('platform PWA registration', () => {
     };
     const container: ServiceWorkerContainerTarget = {
       controller: {},
-      async register(scriptUrl, options) {
+      register(scriptUrl, options) {
         expect(scriptUrl).toBe('/custom-sw.js');
         expect(options).toEqual({ scope: '/school/' });
-        return registration;
+        return Promise.resolve(registration);
       },
     };
 
@@ -89,14 +89,14 @@ describe('platform PWA registration', () => {
     const onUpdateAvailable = vi.fn();
     const container: ServiceWorkerContainerTarget = {
       controller: null,
-      async register() {
-        return {
+      register() {
+        return Promise.resolve({
           installing: null,
           waiting: null,
           addEventListener(_type, listener) {
             listener();
           },
-        };
+        });
       },
     };
     await expect(registerPlatformServiceWorker({ container, onUpdateAvailable })).resolves.toEqual({
@@ -116,14 +116,14 @@ describe('platform PWA registration', () => {
     };
     const container: ServiceWorkerContainerTarget = {
       controller: null,
-      async register() {
-        return {
+      register() {
+        return Promise.resolve({
           installing: worker,
           waiting: null,
           addEventListener(_type, listener) {
             listener();
           },
-        };
+        });
       },
     };
     await expect(registerPlatformServiceWorker({ container, onUpdateAvailable })).resolves.toEqual({
@@ -136,8 +136,8 @@ describe('platform PWA registration', () => {
   it('fails closed when service-worker registration rejects', async () => {
     const container: ServiceWorkerContainerTarget = {
       controller: null,
-      async register() {
-        throw new Error('registration unavailable');
+      register() {
+        return Promise.reject(new Error('registration unavailable'));
       },
     };
     await expect(registerPlatformServiceWorker({ container })).resolves.toEqual({
