@@ -133,7 +133,7 @@ function validateSnapshot(
     schemaVersion: 1,
     tenantId: snapshot.tenantId,
     health: snapshot.health as RuntimeProjectionOperationsHealth,
-    generatedAt: snapshot.generatedAt as string,
+    generatedAt: snapshot.generatedAt,
     controls: {
       exactEventAllowlist: true,
       tenantScoped: true,
@@ -146,9 +146,9 @@ function validateSnapshot(
       oldestEligibleSeconds: backlog.oldestEligibleSeconds as number,
     },
     delivery: {
-      appliedLastHour: delivery.appliedLastHour as number,
-      deadLetterTotal: delivery.deadLetterTotal as number,
-      deadLettersLast24Hours: delivery.deadLettersLast24Hours as number,
+      appliedLastHour: delivery.appliedLastHour,
+      deadLetterTotal: delivery.deadLetterTotal,
+      deadLettersLast24Hours: delivery.deadLettersLast24Hours,
       byCode: {
         invalidEvent: byCode.invalidEvent as number,
         sourceUnavailable: byCode.sourceUnavailable as number,
