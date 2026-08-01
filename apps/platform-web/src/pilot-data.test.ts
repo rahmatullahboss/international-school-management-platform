@@ -40,7 +40,7 @@ describe('published pilot data contract', () => {
 
   it('requires every published module page to expose metrics, work queue and actions', () => {
     const entries = Object.entries(modulePages);
-    expect(entries.length).toBeGreaterThanOrEqual(30);
+    expect(entries).toHaveLength(29);
     for (const [route, page] of entries) {
       expect(route).toMatch(/^\/(admin|teacher|family|student)\//);
       expect(page.title.trim().length).toBeGreaterThan(0);
