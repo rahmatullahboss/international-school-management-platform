@@ -21,7 +21,12 @@ jobs:
           node-version: 22.22.2
           cache: npm
       - run: npm ci
-      - run: npx prettier --write packages/modules/ledger/src/contracts/coverage.test.ts
+      - name: Format coverage tests
+        run: >-
+          npx prettier --write
+          packages/modules/ledger/src/contracts/coverage.test.ts
+          packages/modules/billing/src/contracts/coverage.test.ts
+          apps/platform-web/src/pwa.test.ts
       - name: Commit formatting
         run: |
           if git diff --quiet; then
@@ -29,6 +34,9 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add packages/modules/ledger/src/contracts/coverage.test.ts
-          git commit -m "style(test): format ledger coverage batch"
+          git add \
+            packages/modules/ledger/src/contracts/coverage.test.ts \
+            packages/modules/billing/src/contracts/coverage.test.ts \
+            apps/platform-web/src/pwa.test.ts
+          git commit -m "style(test): format coverage batches"
           git push origin HEAD:integration/coverage-e2e-100-v1
