@@ -7,10 +7,10 @@ const origin = 'http://127.0.0.1:4173';
 
 function executionContext(promises: Promise<unknown>[] = []): ExecutionContext {
   return {
-    waitUntil(promise) {
+    waitUntil(promise: Promise<unknown>): void {
       promises.push(promise);
     },
-    passThroughOnException() {},
+    passThroughOnException(): void {},
     props: {},
   } as unknown as ExecutionContext;
 }
@@ -54,7 +54,7 @@ describe('platform worker entry composition', () => {
     const promises: Promise<unknown>[] = [];
     const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
 
-    worker.scheduled({} as ScheduledController, environment, executionContext(promises));
+    await worker.scheduled({} as ScheduledController, environment, executionContext(promises));
 
     expect(promises).toHaveLength(1);
     await Promise.all(promises);
