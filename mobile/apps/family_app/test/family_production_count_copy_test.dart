@@ -16,10 +16,7 @@ void main() {
     final copy = FamilyProductionCountCopy.forLocale(const Locale('bn', 'BD'));
 
     expect(copy.documentsAvailable(12), '১২টি নথি উপলভ্য');
-    expect(
-      copy.formsAwaitingResponse(2),
-      '২টি ফর্ম উত্তরের অপেক্ষায় আছে',
-    );
+    expect(copy.formsAwaitingResponse(2), '২টি ফর্ম উত্তরের অপেক্ষায় আছে');
     expect(copy.openConversations(4), '৪টি চলমান কথোপকথন');
   });
 
