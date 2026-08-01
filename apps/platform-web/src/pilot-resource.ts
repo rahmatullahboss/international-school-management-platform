@@ -419,3 +419,26 @@ export function usePilotResource<T extends Readonly<Record<string, unknown>>>(
     refresh,
   };
 }
+
+export const pilotResourceClientContract = {
+  resolveApiBase,
+  cacheKey,
+  storageKey,
+  sessionKey,
+  sessionStorageKey,
+  isMatchingEnvelope,
+  isMatchingSession,
+  readStoredSnapshot,
+  storeSnapshot,
+  readStoredSession,
+  storeSession,
+  clearSession,
+  requestSession,
+  requestSnapshot,
+  resetMemory(): void {
+    memoryCache.clear();
+    inFlight.clear();
+    sessionMemory.clear();
+    sessionInFlight.clear();
+  },
+} as const;
