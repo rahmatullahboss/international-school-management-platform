@@ -181,21 +181,17 @@ export async function handleAuthLoginRequest(
     return new Response(null, { status: 302, headers });
   }
 
+  const code = optionalQueryValue(url, 'code');
+  const state = optionalQueryValue(url, 'state');
+  const issuer = optionalQueryValue(url, 'iss');
+  const error = optionalQueryValue(url, 'error');
   const result = await completeOidcLogin({
     configuration,
     callback: {
-      ...(optionalQueryValue(url, 'code') === undefined
-        ? {}
-        : { code: optionalQueryValue(url, 'code') }),
-      ...(optionalQueryValue(url, 'state') === undefined
-        ? {}
-        : { state: optionalQueryValue(url, 'state') }),
-      ...(optionalQueryValue(url, 'iss') === undefined
-        ? {}
-        : { issuer: optionalQueryValue(url, 'iss') }),
-      ...(optionalQueryValue(url, 'error') === undefined
-        ? {}
-        : { error: optionalQueryValue(url, 'error') }),
+      ...(code === undefined ? {} : { code }),
+      ...(state === undefined ? {} : { state }),
+      ...(issuer === undefined ? {} : { issuer }),
+      ...(error === undefined ? {} : { error }),
     },
     cookieHeader: request.headers.get('cookie') ?? undefined,
     dependencies: {
