@@ -68,6 +68,13 @@ jobs:
           PGUSER: postgres
           PGDATABASE: postgres
         run: bash tests/integration/verify-production-runtime.sh
+      - name: Verify production runtime login credential identity
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: 5432
+          PGUSER: postgres
+          PGDATABASE: postgres
+        run: bash tests/integration/verify-production-runtime-credential.sh
       - name: Verify production operator work queues
         env:
           PGHOST: 127.0.0.1
