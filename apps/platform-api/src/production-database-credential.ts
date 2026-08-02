@@ -26,7 +26,9 @@ function jsonResponse(payload: unknown, status: number): Response {
   });
 }
 
-function configuredDatabaseUrl(environment: ProductionDatabaseCredentialBindings): string | undefined {
+function configuredDatabaseUrl(
+  environment: ProductionDatabaseCredentialBindings,
+): string | undefined {
   const databaseUrl = environment.DATABASE_URL?.trim();
   return databaseUrl ? databaseUrl : undefined;
 }

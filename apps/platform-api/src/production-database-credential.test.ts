@@ -24,7 +24,9 @@ function database(rows: readonly Record<string, unknown>[]): HttpDatabase {
 
 describe('production database credential verification', () => {
   it('accepts only one explicit boolean readiness row', async () => {
-    await expect(verifyProductionDatabaseCredential(database([{ ready: true }]))).resolves.toBe(true);
+    await expect(verifyProductionDatabaseCredential(database([{ ready: true }]))).resolves.toBe(
+      true,
+    );
     await expect(verifyProductionDatabaseCredential(database([{ ready: false }]))).resolves.toBe(
       false,
     );
@@ -39,10 +41,14 @@ describe('production database credential verification', () => {
   it('does not expose the guard outside production or outside auth routes', async () => {
     const verify = vi.fn().mockResolvedValue(false);
     await expect(
-      enforceProductionDatabaseCredential(request('/auth/v1/workspace'), {
-        ...environment,
-        APP_ENV: 'staging',
-      }, { verify }),
+      enforceProductionDatabaseCredential(
+        request('/auth/v1/workspace'),
+        {
+          ...environment,
+          APP_ENV: 'staging',
+        },
+        { verify },
+      ),
     ).resolves.toBeUndefined();
     await expect(
       enforceProductionDatabaseCredential(request('/health'), environment, { verify }),
@@ -105,7 +111,9 @@ describe('production database credential verification', () => {
   });
 
   it('maps verifier failures to the same redacted denial', async () => {
-    const verify = vi.fn().mockRejectedValue(new Error('postgresql://secret-user:secret@db.example'));
+    const verify = vi
+      .fn()
+      .mockRejectedValue(new Error('postgresql://secret-user:secret@db.example'));
     const response = await enforceProductionDatabaseCredential(
       request('/auth/v1/database-credential/readiness'),
       environment,
