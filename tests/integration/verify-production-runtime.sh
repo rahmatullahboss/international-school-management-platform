@@ -17,8 +17,8 @@ if (manifest.baseManifest !== 'infra/database/post-integration-migration-manifes
   throw new Error('production manifest must extend the reviewed post-integration manifest');
 }
 const migrations = manifest.migrations ?? [];
-if (migrations.length !== 2) {
-  throw new Error(`expected two production migrations, got ${migrations.length}`);
+if (migrations.length !== 3) {
+  throw new Error(`expected three production migrations, got ${migrations.length}`);
 }
 for (const [index, migration] of migrations.entries()) {
   if (migration.order !== index + 1) throw new Error('production migration orders are not contiguous');
@@ -37,14 +37,64 @@ done
 "${PSQL[@]}" <<'SQL'
 DO $verification$
 BEGIN
-  IF (SELECT count(*) FROM platform.schema_migration) <> 55 THEN
-    RAISE EXCEPTION 'expected 55 total migration ledger rows after production hardening';
+  IF (SELECT count(*) FROM platform.schema_migration) <> 56 THEN
+    RAISE EXCEPTION 'expected 56 total migration ledger rows after production hardening';
   END IF;
   IF to_regprocedure('iam.resolve_browser_workspace(uuid)') IS NULL THEN
     RAISE EXCEPTION 'browser workspace resolver is missing';
   END IF;
   IF to_regprocedure('platform.resolve_operator_work_queue(uuid)') IS NULL THEN
     RAISE EXCEPTION 'operator work queue resolver is missing';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_roles
+    WHERE rolname = 'app_production_runtime'
+      AND NOT rolcanlogin
+      AND NOT rolsuper
+      AND NOT rolcreatedb
+      AND NOT rolcreaterole
+      AND NOT rolreplication
+      AND NOT rolbypassrls
+  ) THEN
+    RAISE EXCEPTION 'production runtime capability role flags are invalid';
+  END IF;
+  IF pg_has_role('app_production_runtime', 'app_runtime', 'MEMBER') THEN
+    RAISE EXCEPTION 'production runtime role must not inherit app_runtime';
+  END IF;
+  IF EXISTS (
+    SELECT 1
+    FROM pg_class AS relation
+    JOIN pg_namespace AS namespace ON namespace.oid = relation.relnamespace
+    WHERE namespace.nspname NOT IN ('pg_catalog', 'information_schema', 'pg_toast')
+      AND namespace.nspname NOT LIKE 'pg_temp_%'
+      AND namespace.nspname NOT LIKE 'pg_toast_temp_%'
+      AND relation.relkind IN ('r', 'p', 'v', 'm', 'f')
+      AND (
+        has_table_privilege('app_production_runtime', relation.oid, 'SELECT')
+        OR has_table_privilege('app_production_runtime', relation.oid, 'INSERT')
+        OR has_table_privilege('app_production_runtime', relation.oid, 'UPDATE')
+        OR has_table_privilege('app_production_runtime', relation.oid, 'DELETE')
+      )
+  ) THEN
+    RAISE EXCEPTION 'production runtime role must not have application table CRUD';
+  END IF;
+  IF (
+    SELECT count(*)
+    FROM pg_proc AS function
+    JOIN pg_namespace AS namespace ON namespace.oid = function.pronamespace
+    WHERE function.prosecdef
+      AND namespace.nspname NOT IN ('pg_catalog', 'information_schema', 'pg_toast', 'public')
+      AND has_function_privilege('app_production_runtime', function.oid, 'EXECUTE')
+  ) <> 18 THEN
+    RAISE EXCEPTION 'production runtime SECURITY DEFINER allowlist is not exact';
+  END IF;
+  IF has_function_privilege('app_production_runtime', 'billing.allocate_document_number(uuid,text,text)', 'EXECUTE')
+     OR has_function_privilege('app_production_runtime', 'ledger.close_period(uuid,text)', 'EXECUTE')
+     OR has_function_privilege('app_production_runtime', 'ledger.post_journal_entry(uuid,text)', 'EXECUTE')
+     OR has_function_privilege('app_production_runtime', 'ledger.reopen_period(uuid,text,text)', 'EXECUTE')
+     OR has_function_privilege('app_production_runtime', 'public.show_db_tree()', 'EXECUTE') THEN
+    RAISE EXCEPTION 'production runtime role can execute an unreviewed privileged helper';
   END IF;
   IF NOT has_function_privilege('app_runtime', 'iam.resolve_browser_workspace(uuid)', 'EXECUTE') THEN
     RAISE EXCEPTION 'app_runtime must execute the workspace resolver';
@@ -195,20 +245,20 @@ END
 $session$;
 SQL
 
-workspace="$("${PSQL[@]}" -Atqc "SET ROLE app_runtime; SELECT role_key || ':' || array_to_string(capabilities, ',') FROM iam.resolve_browser_workspace('95000000-0000-4000-8000-000000000008'::uuid);")"
+workspace="$("${PSQL[@]}" -Atqc "SET ROLE app_production_runtime; SELECT role_key || ':' || array_to_string(capabilities, ',') FROM iam.resolve_browser_workspace('95000000-0000-4000-8000-000000000008'::uuid);")"
 if [[ "$workspace" != "admin:production.workspace.read" ]]; then
   echo "Unexpected production workspace result: $workspace" >&2
   exit 1
 fi
 
-admin_queue="$("${PSQL[@]}" -Atqc "SET ROLE app_runtime; SELECT COALESCE(platform.resolve_operator_work_queue('95000000-0000-4000-8000-000000000008'::uuid)::text, 'null');")"
+admin_queue="$("${PSQL[@]}" -Atqc "SET ROLE app_production_runtime; SELECT COALESCE(platform.resolve_operator_work_queue('95000000-0000-4000-8000-000000000008'::uuid)::text, 'null');")"
 if [[ "$admin_queue" != "null" ]]; then
   echo 'Non-operator admin session unexpectedly resolved an operator work queue.' >&2
   exit 1
 fi
 
 "${PSQL[@]}" -Atqc "SELECT iam.revoke_browser_session('95000000-0000-4000-8000-000000000008'::uuid, 'production workspace verification complete')" >/dev/null
-post_revoke="$("${PSQL[@]}" -Atqc "SET ROLE app_runtime; SELECT count(*) FROM iam.resolve_browser_workspace('95000000-0000-4000-8000-000000000008'::uuid);")"
+post_revoke="$("${PSQL[@]}" -Atqc "SET ROLE app_production_runtime; SELECT count(*) FROM iam.resolve_browser_workspace('95000000-0000-4000-8000-000000000008'::uuid);")"
 if [[ "$post_revoke" != "0" ]]; then
   echo 'Revoked session still resolved a production workspace.' >&2
   exit 1
