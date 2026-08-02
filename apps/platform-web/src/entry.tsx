@@ -2,6 +2,13 @@ import { StrictMode, type ReactElement } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { mountOperatorPortal, operatorLandingCards, operatorRoleForPath } from './operator-portal';
+import {
+  isProductionWebHost,
+  mountProductionGate,
+  pathBelongsToWorkspace,
+  resolveProductionWorkspace,
+} from './production-gateway';
+import { mountProductionOperatorPortal } from './production-operator-portal';
 import './pilot.css';
 import './styles.css';
 
@@ -123,19 +130,8 @@ function FullPersonaLanding(): ReactElement {
 
 const normalizedPath =
   window.location.pathname === '/' ? '/' : window.location.pathname.replace(/\/+$/u, '');
-const operatorRole = operatorRoleForPath(normalizedPath);
 
-if (operatorRole !== undefined) {
-  mountOperatorPortal(operatorRole);
-} else if (normalizedPath === '/') {
-  const root = document.getElementById('root');
-  if (root === null) throw new Error('Root element not found');
-  createRoot(root).render(
-    <StrictMode>
-      <FullPersonaLanding />
-    </StrictMode>,
-  );
-} else {
+function installHomeNavigationHandler(): void {
   document.addEventListener(
     'click',
     (event) => {
@@ -151,5 +147,51 @@ if (operatorRole !== undefined) {
     },
     true,
   );
-  void import('./main');
+}
+
+async function bootstrapProduction(): Promise<void> {
+  const resolution = await resolveProductionWorkspace();
+  if (resolution.state !== 'current') {
+    mountProductionGate(resolution.state);
+    return;
+  }
+  const { workspace } = resolution;
+  if (normalizedPath === '/') {
+    window.location.replace(workspace.path);
+    return;
+  }
+  if (!pathBelongsToWorkspace(normalizedPath, workspace.path)) {
+    mountProductionGate('denied', workspace);
+    return;
+  }
+  if (
+    workspace.role === 'admissions' ||
+    workspace.role === 'finance' ||
+    workspace.role === 'support'
+  ) {
+    mountProductionOperatorPortal(workspace, normalizedPath);
+    return;
+  }
+  installHomeNavigationHandler();
+  await import('./main');
+}
+
+if (isProductionWebHost()) {
+  void bootstrapProduction();
+} else {
+  const operatorRole = operatorRoleForPath(normalizedPath);
+  if (operatorRole !== undefined) {
+    mountOperatorPortal(operatorRole);
+  } else if (normalizedPath === '/') {
+    const root = document.getElementById('root');
+    if (root === null) throw new Error('Root element not found');
+    createRoot(root).render(
+      <StrictMode>
+        <FullPersonaLanding />
+      </StrictMode>,
+    );
+  } else {
+    installHomeNavigationHandler();
+    void import('./main');
+  }
 }
