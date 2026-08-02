@@ -5,7 +5,7 @@ import { applyWebSecurityHeaders, webContentSecurityPolicy } from './security-he
 function response(headers?: HeadersInit): Response {
   return new Response('<!doctype html><title>School</title>', {
     status: 200,
-    headers,
+    ...(headers === undefined ? {} : { headers }),
   });
 }
 
