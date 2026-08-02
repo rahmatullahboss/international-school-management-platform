@@ -10,7 +10,7 @@ This backlog separates verified production-support implementation from the remai
 
 ## Completed production-support baseline
 
-PR #88 was merged to `main` as `cd1031b9c397020d87bb752bdfd1cfbee2be2793` after clean CI `30725691727` passed.
+PR #88 was merged to `main` as `cd1031b9c397020d87bb752bdfd1cfbee2be2793` after clean CI `30725691727` passed. PR #89 was merged as `49673ffec01bac2c2f7d92a1d7c8823dbdfe6e1e` after clean CI `30727829848` passed.
 
 Completed and verified:
 
@@ -21,12 +21,15 @@ Completed and verified:
 - every synthetic `/pilot` and `/pilot/*` route returns `404` when `APP_ENV=production`;
 - Admin, Teacher, Guardian and Student production surfaces consume database-owned runtime read models instead of synthetic pilot sessions;
 - Admissions, Finance/Cashier and Platform/Support have authenticated production shells driven by current database capabilities rather than synthetic operator metrics;
+- production Admissions review, Finance reconciliation and Support privileged-access request forms submit only to the reviewed PILOT-13 database-owned command contracts;
+- the production operator command API derives session, tenant/campus/account scope and correlation server-side, revalidates current database workspace, denies cross-role replay and preserves database-owned permission/AAL2/idempotency/concurrency enforcement;
 - `PROD-01` adds function-only current-workspace resolution through `iam.resolve_browser_workspace(uuid)` without granting `app_runtime` direct durable-session table reads;
-- canonical CI verifies the production migration, function-only resolution, revoked-session denial, API/web builds and both Cloudflare production Wrangler dry-runs;
+- canonical CI verifies production migration/runtime boundaries, revoked-session denial, operator command request validation, API/web builds and both Cloudflare production Wrangler dry-runs;
 - the reviewed Neon integration branch contains the 53-migration pilot baseline plus `PROD-01`, for 54 ledger entries total;
 - one Bangladesh demo tenant, one Dhaka campus, seven IAM roles/accounts/memberships and seven placeholder OIDC membership bindings are seeded;
 - Teacher staff linkage, Student profile/enrolment and verified Guardian authority are seeded;
 - Admin, Teacher, Guardian and Student have canonical persona mappings, source payloads and materialized runtime projections at revision 1;
+- deterministic Admissions and Finance command-QA fixtures are seeded without resetting existing demo data;
 - demo projection bootstrap retains append-only audit evidence;
 - verification left zero active demo browser sessions.
 
@@ -58,14 +61,14 @@ Required before deployment:
 
 ## 3. Operator production writes — partially complete
 
-PILOT-13 provides reviewed database-owned domain command contracts for bounded Admissions review, Finance reconciliation and AAL2 Support access requests, with authorization, idempotency, optimistic concurrency where applicable, receipt/audit/outbox evidence and negative tests.
+PILOT-13 provides reviewed database-owned domain command contracts for bounded Admissions review, Finance reconciliation and AAL2 Support access requests, with authorization, idempotency, optimistic concurrency where applicable, receipt/audit/outbox evidence and negative tests. PR #89 connected the authenticated production Admissions/Finance/Support browser surfaces to these exact command contracts through a same-origin, durable-session API; browser-selected tenancy/session/correlation scope and cross-role command replay are denied.
 
 Still required:
 
-- connect the authenticated production Admissions/Finance/Support browser surfaces to those reviewed domain command contracts;
-- keep synthetic pilot command endpoints unavailable in production;
-- verify post-write database state, audit and outbox evidence through the deployed production-like path;
-- retain AAL2 for privileged finance/support actions and exact tenant/campus ownership.
+- replace raw operator record identifiers with bounded database-owned work queues/context so authorized users select only current scoped candidates;
+- verify post-write database state, audit and outbox evidence through the deployed production-like path with a real IdP/session;
+- verify fresh AAL2 step-up end-to-end for privileged finance/support actions against the real provider;
+- retain exact tenant/campus ownership and keep synthetic pilot command endpoints unavailable in production.
 
 ## 4. Runtime projection operations — partially complete
 
@@ -119,6 +122,6 @@ Production promotion remains blocked until:
 
 ## Current boundary
 
-`main` now contains the fail-closed production-support code and the reviewed Neon integration branch contains the demo-school database baseline. This does **not** mean production is active.
+`main` now contains the fail-closed production-support code plus authenticated operator command wiring, and the reviewed Neon integration branch contains the demo-school and command-QA database baseline. This does **not** mean production is active.
 
 Real provider login, real provider-subject mappings, production secrets, a login-capable least-privilege runtime database credential, production schedules/alerts, deployed seven-persona production-like E2E, recovery sign-off and explicit production authorization remain outstanding. Synthetic pilot identities and `/pilot/*` APIs remain unavailable in production by design.
