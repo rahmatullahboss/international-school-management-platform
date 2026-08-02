@@ -1,11 +1,6 @@
 import { useMemo, useState, type ReactElement } from 'react';
 
-import {
-  adminOverview,
-  guardianOverview,
-  studentOverview,
-  teacherOverview,
-} from './pilot-data';
+import { adminOverview, guardianOverview, studentOverview, teacherOverview } from './pilot-data';
 
 type AdminOverview = typeof adminOverview;
 type TeacherOverview = typeof teacherOverview;
@@ -69,7 +64,10 @@ function RegisterSurface(props: { readonly view: RegisterView }): ReactElement {
   const selected = props.view.rows.find((row) => row.id === selectedId);
 
   return (
-    <section className="operator-register persona-register" aria-labelledby="persona-register-title">
+    <section
+      className="operator-register persona-register"
+      aria-labelledby="persona-register-title"
+    >
       <header className="operator-register__header">
         <div>
           <p>Current authorised records</p>
@@ -301,7 +299,13 @@ export function TeacherRouteWorkspace(props: {
           rows: props.overview.studentContext.map((item) => ({
             id: item.id,
             status: 'Assigned',
-            cells: [item.displayName, item.classLabel, item.learningSummary, item.nextAction, 'Assigned'],
+            cells: [
+              item.displayName,
+              item.classLabel,
+              item.learningSummary,
+              item.nextAction,
+              'Assigned',
+            ],
             detail: [
               { label: 'Class', value: item.classLabel },
               { label: 'Permitted tags', value: item.permittedTags.join(', ') },
@@ -344,7 +348,10 @@ export function TeacherRouteWorkspace(props: {
     );
   }
 
-  return unavailable('Class resources', 'The current teacher projection does not yet include route-level resource records.');
+  return unavailable(
+    'Class resources',
+    'The current teacher projection does not yet include route-level resource records.',
+  );
 }
 
 export function GuardianRouteWorkspace(props: {
@@ -362,7 +369,13 @@ export function GuardianRouteWorkspace(props: {
           rows: props.overview.children.map((item) => ({
             id: item.childId,
             status: 'Linked',
-            cells: [item.displayName, item.yearLabel, item.campusLabel, item.relationshipLabel, 'Linked'],
+            cells: [
+              item.displayName,
+              item.yearLabel,
+              item.campusLabel,
+              item.relationshipLabel,
+              'Linked',
+            ],
             detail: [
               { label: 'Preferred name', value: item.preferredName },
               { label: 'Year', value: item.yearLabel },
@@ -380,13 +393,20 @@ export function GuardianRouteWorkspace(props: {
       <RegisterSurface
         view={{
           title: 'Family applications',
-          description: 'Application status, due dates and the next action requested from the household.',
+          description:
+            'Application status, due dates and the next action requested from the household.',
           columns: ['Applicant', 'Programme', 'Next action', 'Due', 'Status'],
           noun: 'application',
           rows: props.overview.applications.map((item) => ({
             id: item.id,
             status: item.statusLabel,
-            cells: [item.applicantName, item.programmeLabel, item.nextAction, dateTime(item.dueAt), item.statusLabel],
+            cells: [
+              item.applicantName,
+              item.programmeLabel,
+              item.nextAction,
+              dateTime(item.dueAt),
+              item.statusLabel,
+            ],
             detail: [
               { label: 'Programme', value: item.programmeLabel },
               { label: 'Next action', value: item.nextAction },
@@ -410,7 +430,13 @@ export function GuardianRouteWorkspace(props: {
           rows: props.overview.attendance.map((item) => ({
             id: item.id,
             status: item.notice,
-            cells: [item.periodLabel, String(item.presentCount), String(item.absentCount), String(item.lateCount), item.notice],
+            cells: [
+              item.periodLabel,
+              String(item.presentCount),
+              String(item.absentCount),
+              String(item.lateCount),
+              item.notice,
+            ],
             detail: [
               { label: 'Published', value: dateTime(item.publishedAt) },
               { label: 'Present', value: String(item.presentCount) },
@@ -434,7 +460,13 @@ export function GuardianRouteWorkspace(props: {
           rows: props.overview.grades.map((item) => ({
             id: item.id,
             status: item.publicationState,
-            cells: [item.subjectLabel, item.resultLabel, dateTime(item.publishedAt), item.teacherComment, item.publicationState],
+            cells: [
+              item.subjectLabel,
+              item.resultLabel,
+              dateTime(item.publishedAt),
+              item.teacherComment,
+              item.publicationState,
+            ],
             detail: [
               { label: 'Subject', value: item.subjectLabel },
               { label: 'Result', value: item.resultLabel },
@@ -460,7 +492,13 @@ export function GuardianRouteWorkspace(props: {
           rows: props.overview.fees.map((item) => ({
             id: item.id,
             status: item.balanceState,
-            cells: [item.label, currency(item.amountMinor, item.currency), dateTime(item.dueAt), item.balanceState, item.balanceState],
+            cells: [
+              item.label,
+              currency(item.amountMinor, item.currency),
+              dateTime(item.dueAt),
+              item.balanceState,
+              item.balanceState,
+            ],
             detail: [
               { label: 'Charge', value: item.label },
               { label: 'Amount', value: currency(item.amountMinor, item.currency) },
@@ -484,7 +522,13 @@ export function GuardianRouteWorkspace(props: {
           rows: props.overview.forms.map((item) => ({
             id: item.id,
             status: item.state,
-            cells: [item.title, item.description, dateTime(item.dueAt), item.requiresAssurance, item.state],
+            cells: [
+              item.title,
+              item.description,
+              dateTime(item.dueAt),
+              item.requiresAssurance,
+              item.state,
+            ],
             detail: [
               { label: 'Description', value: item.description },
               { label: 'Due', value: dateTime(item.dueAt) },
@@ -508,7 +552,13 @@ export function GuardianRouteWorkspace(props: {
           rows: props.overview.documents.map((item) => ({
             id: item.id,
             status: 'Available',
-            cells: [item.title, item.category, dateTime(item.publishedAt), 'Household', 'Available'],
+            cells: [
+              item.title,
+              item.category,
+              dateTime(item.publishedAt),
+              'Household',
+              'Available',
+            ],
             detail: [
               { label: 'Category', value: item.category },
               { label: 'Published', value: dateTime(item.publishedAt) },
@@ -532,7 +582,13 @@ export function GuardianRouteWorkspace(props: {
           rows: props.overview.conversations.map((item) => ({
             id: item.id,
             status: item.unreadCount > 0 ? 'Unread' : 'Read',
-            cells: [item.subject, item.participantLabel, dateTime(item.lastMessageAt), String(item.unreadCount), item.unreadCount > 0 ? 'Unread' : 'Read'],
+            cells: [
+              item.subject,
+              item.participantLabel,
+              dateTime(item.lastMessageAt),
+              String(item.unreadCount),
+              item.unreadCount > 0 ? 'Unread' : 'Read',
+            ],
             detail: [
               { label: 'Participant', value: item.participantLabel },
               { label: 'Last message', value: dateTime(item.lastMessageAt) },
@@ -545,7 +601,10 @@ export function GuardianRouteWorkspace(props: {
     );
   }
 
-  return unavailable('Family workspace', 'No route-specific family projection is connected for this destination.');
+  return unavailable(
+    'Family workspace',
+    'No route-specific family projection is connected for this destination.',
+  );
 }
 
 export function StudentRouteWorkspace(props: {
@@ -563,7 +622,13 @@ export function StudentRouteWorkspace(props: {
           rows: props.overview.lessons.map((item) => ({
             id: item.id,
             status: item.state,
-            cells: [item.subject, item.teacherLabel, dateTime(item.startsAt), item.room, item.state],
+            cells: [
+              item.subject,
+              item.teacherLabel,
+              dateTime(item.startsAt),
+              item.room,
+              item.state,
+            ],
             detail: [
               { label: 'Teacher', value: item.teacherLabel },
               { label: 'Starts', value: dateTime(item.startsAt) },
@@ -587,7 +652,13 @@ export function StudentRouteWorkspace(props: {
           rows: props.overview.attendance.map((item) => ({
             id: item.id,
             status: item.publicationState,
-            cells: [item.periodLabel, String(item.presentCount), String(item.absentCount), String(item.lateCount), item.publicationState],
+            cells: [
+              item.periodLabel,
+              String(item.presentCount),
+              String(item.absentCount),
+              String(item.lateCount),
+              item.publicationState,
+            ],
             detail: [
               { label: 'Explanation', value: item.explanationStatus },
               { label: 'Published', value: dateTime(item.publishedAt) },
@@ -611,7 +682,13 @@ export function StudentRouteWorkspace(props: {
           rows: props.overview.results.map((item) => ({
             id: item.id,
             status: item.publicationState,
-            cells: [item.subjectLabel, item.assessmentLabel, item.resultLabel, dateTime(item.publishedAt), item.publicationState],
+            cells: [
+              item.subjectLabel,
+              item.assessmentLabel,
+              item.resultLabel,
+              dateTime(item.publishedAt),
+              item.publicationState,
+            ],
             detail: [
               { label: 'Assessment', value: item.assessmentLabel },
               { label: 'Result', value: item.resultLabel },
@@ -635,7 +712,13 @@ export function StudentRouteWorkspace(props: {
           rows: props.overview.resources.map((item) => ({
             id: item.id,
             status: 'Available',
-            cells: [item.title, item.subjectLabel, item.resourceType, dateOnly(item.availableUntil), 'Available'],
+            cells: [
+              item.title,
+              item.subjectLabel,
+              item.resourceType,
+              dateOnly(item.availableUntil),
+              'Available',
+            ],
             detail: [
               { label: 'Subject', value: item.subjectLabel },
               { label: 'Description', value: item.description },
@@ -659,7 +742,13 @@ export function StudentRouteWorkspace(props: {
           rows: props.overview.requests.map((item) => ({
             id: item.id,
             status: item.state,
-            cells: [item.title, dateTime(item.submittedAt), item.nextAction, item.requiredCapability, item.state],
+            cells: [
+              item.title,
+              dateTime(item.submittedAt),
+              item.nextAction,
+              item.requiredCapability,
+              item.state,
+            ],
             detail: [
               { label: 'Description', value: item.description },
               { label: 'Submitted', value: dateTime(item.submittedAt) },
@@ -683,7 +772,13 @@ export function StudentRouteWorkspace(props: {
           rows: props.overview.documents.map((item) => ({
             id: item.id,
             status: item.publicationState,
-            cells: [item.title, item.category, dateTime(item.publishedAt), 'Student', item.publicationState],
+            cells: [
+              item.title,
+              item.category,
+              dateTime(item.publishedAt),
+              'Student',
+              item.publicationState,
+            ],
             detail: [
               { label: 'Category', value: item.category },
               { label: 'Published', value: dateTime(item.publishedAt) },
@@ -707,7 +802,13 @@ export function StudentRouteWorkspace(props: {
           rows: props.overview.conversations.map((item) => ({
             id: item.id,
             status: item.unreadCount > 0 ? 'Unread' : 'Read',
-            cells: [item.subject, item.participantLabel, dateTime(item.lastMessageAt), String(item.unreadCount), item.unreadCount > 0 ? 'Unread' : 'Read'],
+            cells: [
+              item.subject,
+              item.participantLabel,
+              dateTime(item.lastMessageAt),
+              String(item.unreadCount),
+              item.unreadCount > 0 ? 'Unread' : 'Read',
+            ],
             detail: [
               { label: 'Participant', value: item.participantLabel },
               { label: 'Last message', value: dateTime(item.lastMessageAt) },
@@ -720,7 +821,10 @@ export function StudentRouteWorkspace(props: {
     );
   }
 
-  return unavailable('Student workspace', 'No route-specific student projection is connected for this destination.');
+  return unavailable(
+    'Student workspace',
+    'No route-specific student projection is connected for this destination.',
+  );
 }
 
 export function AdminRouteWorkspace(props: {
@@ -733,7 +837,13 @@ export function AdminRouteWorkspace(props: {
       .map((item) => ({
         id: item.id,
         status: item.status,
-        cells: [item.title, item.summary, item.severity, item.dueAt === undefined ? '—' : dateTime(item.dueAt), item.status],
+        cells: [
+          item.title,
+          item.summary,
+          item.severity,
+          item.dueAt === undefined ? '—' : dateTime(item.dueAt),
+          item.status,
+        ],
         detail: [
           { label: 'Area', value: item.area },
           { label: 'Severity', value: item.severity },
@@ -745,7 +855,8 @@ export function AdminRouteWorkspace(props: {
       <RegisterSurface
         view={{
           title: 'Academic operations exceptions',
-          description: 'Current authorised academic and attendance exceptions from the admin projection.',
+          description:
+            'Current authorised academic and attendance exceptions from the admin projection.',
           columns: ['Exception', 'Summary', 'Severity', 'Due', 'Status'],
           noun: 'exception',
           rows,
@@ -791,7 +902,13 @@ export function AdminRouteWorkspace(props: {
       .map((item) => ({
         id: item.id,
         status: item.status,
-        cells: [item.title, item.summary, item.severity, item.requiredAssurance ?? 'aal1', item.status],
+        cells: [
+          item.title,
+          item.summary,
+          item.severity,
+          item.requiredAssurance ?? 'aal1',
+          item.status,
+        ],
         detail: [
           { label: 'Area', value: item.area },
           { label: 'Assurance', value: item.requiredAssurance ?? 'aal1' },
@@ -803,7 +920,8 @@ export function AdminRouteWorkspace(props: {
       <RegisterSurface
         view={{
           title: 'Permitted student-support work',
-          description: 'Restricted support items remain masked until the required assurance is satisfied.',
+          description:
+            'Restricted support items remain masked until the required assurance is satisfied.',
           columns: ['Task', 'Summary', 'Severity', 'Assurance', 'Status'],
           noun: 'support task',
           rows,

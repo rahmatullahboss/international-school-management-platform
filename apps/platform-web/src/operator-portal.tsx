@@ -72,7 +72,9 @@ interface OperatorConfig {
   readonly subjectId: string;
   readonly capabilities: readonly string[];
   readonly data: OperatorData;
-  readonly pages: Readonly<Record<string, { readonly title: string; readonly description: string }>>;
+  readonly pages: Readonly<
+    Record<string, { readonly title: string; readonly description: string }>
+  >;
   readonly command: string;
   readonly commandLabel: string;
   readonly commandReason: string;
@@ -402,7 +404,10 @@ function OperatorHome(props: {
 }): ReactElement {
   return (
     <>
-      <section className="pilot-metrics" aria-label={`${operatorConfigs[props.role].title} summary`}>
+      <section
+        className="pilot-metrics"
+        aria-label={`${operatorConfigs[props.role].title} summary`}
+      >
         {props.data.metrics.map((metric) => (
           <article key={metric.label}>
             <span>{metric.label}</span>
@@ -499,8 +504,8 @@ export function OperatorPortal(props: {
               <section className="pilot-demo-note" aria-label="Controlled pilot mutation">
                 <strong>Audited pilot evidence</strong>
                 <span>
-                  This control records non-production evidence only. It does not change live financial
-                  or student records.
+                  This control records non-production evidence only. It does not change live
+                  financial or student records.
                 </span>
                 <button
                   type="button"

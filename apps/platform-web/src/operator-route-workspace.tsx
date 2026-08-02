@@ -21,14 +21,21 @@ interface RegisterDefinition {
 const registers: Readonly<Record<string, RegisterDefinition>> = {
   '/admissions/enquiries': {
     title: 'Enquiry register',
-    description: 'Find prospective families, see ownership and follow-up state, then open the enquiry context.',
+    description:
+      'Find prospective families, see ownership and follow-up state, then open the enquiry context.',
     columns: ['Family / applicant', 'Interested in', 'Owner', 'Last contact', 'Status'],
     recordLabel: 'enquiry',
     rows: [
       {
         id: 'enquiry-1001',
         status: 'Follow up today',
-        cells: ['Rahman family · Aya Rahman', 'Year 6 · 2027 intake', 'Farhana Islam', 'Today · 09:10', 'Follow up today'],
+        cells: [
+          'Rahman family · Aya Rahman',
+          'Year 6 · 2027 intake',
+          'Farhana Islam',
+          'Today · 09:10',
+          'Follow up today',
+        ],
         detail: [
           { label: 'Primary contact', value: 'Mrs Rahman · guardian' },
           { label: 'Contact channel', value: 'Email and phone' },
@@ -39,7 +46,13 @@ const registers: Readonly<Record<string, RegisterDefinition>> = {
       {
         id: 'enquiry-1002',
         status: 'New',
-        cells: ['Hasan family · Karim Hasan', 'Year 3 · 2027 intake', 'Unassigned', 'Yesterday · 16:40', 'New'],
+        cells: [
+          'Hasan family · Karim Hasan',
+          'Year 3 · 2027 intake',
+          'Unassigned',
+          'Yesterday · 16:40',
+          'New',
+        ],
         detail: [
           { label: 'Primary contact', value: 'Mr Hasan · guardian' },
           { label: 'Contact channel', value: 'Phone' },
@@ -50,7 +63,13 @@ const registers: Readonly<Record<string, RegisterDefinition>> = {
       {
         id: 'enquiry-1003',
         status: 'Waiting for family',
-        cells: ['Noor family · Nabil Noor', 'Year 3 · 2027 intake', 'Farhana Islam', '31 Jul · 14:20', 'Waiting for family'],
+        cells: [
+          'Noor family · Nabil Noor',
+          'Year 3 · 2027 intake',
+          'Farhana Islam',
+          '31 Jul · 14:20',
+          'Waiting for family',
+        ],
         detail: [
           { label: 'Primary contact', value: 'Mr Noor · guardian' },
           { label: 'Contact channel', value: 'Email' },
@@ -62,15 +81,23 @@ const registers: Readonly<Record<string, RegisterDefinition>> = {
   },
   '/admissions/applications': {
     title: 'Application review register',
-    description: 'Review submission readiness and open the application context before recording a decision.',
+    description:
+      'Review submission readiness and open the application context before recording a decision.',
     columns: ['Applicant', 'Programme', 'Submitted', 'Documents', 'Status'],
     recordLabel: 'application',
-    mutationNote: 'Production review decisions use the database-owned application work queue and reviewed command contract.',
+    mutationNote:
+      'Production review decisions use the database-owned application work queue and reviewed command contract.',
     rows: [
       {
         id: 'application-1001',
         status: 'Ready for review',
-        cells: ['Nabil Noor', 'Year 3 · 2027 intake', '30 Jul · 11:06', '6 / 6 verified', 'Ready for review'],
+        cells: [
+          'Nabil Noor',
+          'Year 3 · 2027 intake',
+          '30 Jul · 11:06',
+          '6 / 6 verified',
+          'Ready for review',
+        ],
         detail: [
           { label: 'Application number', value: 'APP-DEMO-0001' },
           { label: 'Family', value: 'Noor family' },
@@ -81,7 +108,13 @@ const registers: Readonly<Record<string, RegisterDefinition>> = {
       {
         id: 'application-1002',
         status: 'Missing document',
-        cells: ['Aya Rahman', 'Year 6 · 2027 intake', '29 Jul · 15:18', '5 / 6 verified', 'Missing document'],
+        cells: [
+          'Aya Rahman',
+          'Year 6 · 2027 intake',
+          '29 Jul · 15:18',
+          '5 / 6 verified',
+          'Missing document',
+        ],
         detail: [
           { label: 'Application number', value: 'APP-DEMO-0002' },
           { label: 'Family', value: 'Rahman family' },
@@ -92,7 +125,13 @@ const registers: Readonly<Record<string, RegisterDefinition>> = {
       {
         id: 'application-1003',
         status: 'Interview booked',
-        cells: ['Karim Hasan', 'Year 3 · 2027 intake', '28 Jul · 10:32', '6 / 6 verified', 'Interview booked'],
+        cells: [
+          'Karim Hasan',
+          'Year 3 · 2027 intake',
+          '28 Jul · 10:32',
+          '6 / 6 verified',
+          'Interview booked',
+        ],
         detail: [
           { label: 'Application number', value: 'APP-DEMO-0003' },
           { label: 'Family', value: 'Hasan family' },
@@ -104,15 +143,23 @@ const registers: Readonly<Record<string, RegisterDefinition>> = {
   },
   '/admissions/interviews': {
     title: 'Interview schedule',
-    description: 'See applicants, appointment time, interviewer and next action in one working register.',
+    description:
+      'See applicants, appointment time, interviewer and next action in one working register.',
     columns: ['Applicant', 'Programme', 'When', 'Interviewer / location', 'Status'],
     recordLabel: 'interview',
-    mutationNote: 'Scheduling and interview-outcome mutations are not yet connected to an approved production API; this staging route is intentionally read-only rather than presenting a fake action.',
+    mutationNote:
+      'Scheduling and interview-outcome mutations are not yet connected to an approved production API; this staging route is intentionally read-only rather than presenting a fake action.',
     rows: [
       {
         id: 'interview-1001',
         status: 'Scheduled',
-        cells: ['Nabil Noor', 'Year 3 · 2027 intake', '04 Aug · 10:00', 'Farhana Islam · Admissions room 2', 'Scheduled'],
+        cells: [
+          'Nabil Noor',
+          'Year 3 · 2027 intake',
+          '04 Aug · 10:00',
+          'Farhana Islam · Admissions room 2',
+          'Scheduled',
+        ],
         detail: [
           { label: 'Type', value: 'Family interview' },
           { label: 'Duration', value: '30 minutes' },
@@ -123,7 +170,13 @@ const registers: Readonly<Record<string, RegisterDefinition>> = {
       {
         id: 'interview-1002',
         status: 'Needs confirmation',
-        cells: ['Aya Rahman', 'Year 6 · 2027 intake', '05 Aug · 11:30', 'Farhana Islam · Video call', 'Needs confirmation'],
+        cells: [
+          'Aya Rahman',
+          'Year 6 · 2027 intake',
+          '05 Aug · 11:30',
+          'Farhana Islam · Video call',
+          'Needs confirmation',
+        ],
         detail: [
           { label: 'Type', value: 'Student and family interview' },
           { label: 'Duration', value: '45 minutes' },
@@ -134,7 +187,13 @@ const registers: Readonly<Record<string, RegisterDefinition>> = {
       {
         id: 'interview-1003',
         status: 'Completed',
-        cells: ['Karim Hasan', 'Year 3 · 2027 intake', '01 Aug · 09:30', 'M. Akter · Admissions room 1', 'Completed'],
+        cells: [
+          'Karim Hasan',
+          'Year 3 · 2027 intake',
+          '01 Aug · 09:30',
+          'M. Akter · Admissions room 1',
+          'Completed',
+        ],
         detail: [
           { label: 'Type', value: 'Family interview' },
           { label: 'Duration', value: '30 minutes' },
@@ -176,7 +235,8 @@ const registers: Readonly<Record<string, RegisterDefinition>> = {
   },
   '/finance/cashier': {
     title: 'Cashier session',
-    description: 'Inspect the active counter session and receipt activity without losing balancing context.',
+    description:
+      'Inspect the active counter session and receipt activity without losing balancing context.',
     columns: ['Receipt', 'Household', 'Method', 'Amount', 'Status'],
     recordLabel: 'receipt',
     rows: [
@@ -194,7 +254,13 @@ const registers: Readonly<Record<string, RegisterDefinition>> = {
       {
         id: 'receipt-1002',
         status: 'Pending bank match',
-        cells: ['RCPT-2026-0629', 'Hasan family', 'Bank transfer', 'BDT 15,000', 'Pending bank match'],
+        cells: [
+          'RCPT-2026-0629',
+          'Hasan family',
+          'Bank transfer',
+          'BDT 15,000',
+          'Pending bank match',
+        ],
         detail: [
           { label: 'Counter', value: 'Counter A' },
           { label: 'Cashier', value: 'Nusrat Jahan' },
@@ -206,10 +272,12 @@ const registers: Readonly<Record<string, RegisterDefinition>> = {
   },
   '/finance/reconciliation': {
     title: 'Reconciliation candidates',
-    description: 'Review unmatched bank evidence and the payment candidate before committing a match.',
+    description:
+      'Review unmatched bank evidence and the payment candidate before committing a match.',
     columns: ['Booking date', 'Bank reference', 'Payment', 'Amount', 'Status'],
     recordLabel: 'reconciliation candidate',
-    mutationNote: 'Production matching uses the database-owned reconciliation work queue and reviewed bank-line command.',
+    mutationNote:
+      'Production matching uses the database-owned reconciliation work queue and reviewed bank-line command.',
     rows: [
       {
         id: 'reconciliation-1001',
@@ -278,7 +346,8 @@ const registers: Readonly<Record<string, RegisterDefinition>> = {
     description: 'Review purpose-bound support access state and assurance requirements.',
     columns: ['Request', 'Purpose', 'Requested', 'Assurance', 'Status'],
     recordLabel: 'access request',
-    mutationNote: 'Production privileged-access requests use the reviewed support command and require fresh AAL2.',
+    mutationNote:
+      'Production privileged-access requests use the reviewed support command and require fresh AAL2.',
     rows: [
       {
         id: 'access-1001',
@@ -296,7 +365,9 @@ const registers: Readonly<Record<string, RegisterDefinition>> = {
 };
 
 function statusValues(rows: readonly RegisterRow[]): readonly string[] {
-  return Array.from(new Set(rows.map((row) => row.status))).sort((left, right) => left.localeCompare(right));
+  return Array.from(new Set(rows.map((row) => row.status))).sort((left, right) =>
+    left.localeCompare(right),
+  );
 }
 
 export function OperatorRouteWorkspace(props: {
@@ -310,14 +381,16 @@ export function OperatorRouteWorkspace(props: {
 
   const filteredRows = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase();
-    return definition?.rows.filter((row) => {
-      if (status !== 'all' && row.status !== status) return false;
-      if (normalizedQuery === '') return true;
-      return [...row.cells, ...row.detail.flatMap((item) => [item.label, item.value])]
-        .join(' ')
-        .toLocaleLowerCase()
-        .includes(normalizedQuery);
-    }) ?? [];
+    return (
+      definition?.rows.filter((row) => {
+        if (status !== 'all' && row.status !== status) return false;
+        if (normalizedQuery === '') return true;
+        return [...row.cells, ...row.detail.flatMap((item) => [item.label, item.value])]
+          .join(' ')
+          .toLocaleLowerCase()
+          .includes(normalizedQuery);
+      }) ?? []
+    );
   }, [definition, query, status]);
 
   if (definition === undefined) return null;
@@ -326,7 +399,11 @@ export function OperatorRouteWorkspace(props: {
   const statuses = statusValues(definition.rows);
 
   return (
-    <section className="operator-register" aria-labelledby="operator-register-title" data-role={props.role}>
+    <section
+      className="operator-register"
+      aria-labelledby="operator-register-title"
+      data-role={props.role}
+    >
       <header className="operator-register__header">
         <div>
           <p>Synthetic staging register</p>
@@ -357,14 +434,23 @@ export function OperatorRouteWorkspace(props: {
         </div>
       </header>
 
-      <div className="operator-register__table" tabIndex={0} role="region" aria-label={`${definition.title} table`}>
+      <div
+        className="operator-register__table"
+        tabIndex={0}
+        role="region"
+        aria-label={`${definition.title} table`}
+      >
         <table>
           <thead>
             <tr>
               {definition.columns.map((column) => (
-                <th key={column} scope="col">{column}</th>
+                <th key={column} scope="col">
+                  {column}
+                </th>
               ))}
-              <th scope="col"><span className="operator-register__sr-only">Action</span></th>
+              <th scope="col">
+                <span className="operator-register__sr-only">Action</span>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -403,7 +489,11 @@ export function OperatorRouteWorkspace(props: {
               <p>Selected {definition.recordLabel}</p>
               <h3 id="operator-record-preview-title">{selected.cells[0]}</h3>
             </div>
-            <button type="button" onClick={() => setSelectedId(undefined)} aria-label="Close selected record preview">
+            <button
+              type="button"
+              onClick={() => setSelectedId(undefined)}
+              aria-label="Close selected record preview"
+            >
               Close
             </button>
           </div>
