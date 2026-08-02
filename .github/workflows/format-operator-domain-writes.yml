@@ -1,0 +1,49 @@
+name: Format Operator Domain Writes
+
+on:
+  push:
+    branches:
+      - prod/operator-domain-writes
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: prod/operator-domain-writes
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.2'
+          cache: npm
+      - run: npm ci
+      - name: Apply canonical formatting
+        run: |
+          npx prettier --write \
+            apps/platform-api/src/entry.ts \
+            apps/platform-api/src/production-operator-command-api.test.ts \
+            apps/platform-api/src/production-operator-command-api.ts \
+            apps/platform-web/src/production-operator-command.test.ts \
+            apps/platform-web/src/production-operator-command.ts \
+            apps/platform-web/src/production-operator-portal.tsx
+      - name: Commit formatting if needed
+        run: |
+          if git diff --quiet; then
+            echo 'No formatting changes required.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add \
+            apps/platform-api/src/entry.ts \
+            apps/platform-api/src/production-operator-command-api.test.ts \
+            apps/platform-api/src/production-operator-command-api.ts \
+            apps/platform-web/src/production-operator-command.test.ts \
+            apps/platform-web/src/production-operator-command.ts \
+            apps/platform-web/src/production-operator-portal.tsx
+          git commit -m 'style(prod): apply canonical operator command formatting'
+          git push origin HEAD:prod/operator-domain-writes
