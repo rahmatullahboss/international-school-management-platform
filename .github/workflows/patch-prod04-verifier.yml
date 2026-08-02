@@ -1,0 +1,53 @@
+name: Patch PROD-04 Verifier
+
+on:
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.head_ref == 'prod/runtime-credential-self-check'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: prod/runtime-credential-self-check
+      - name: Patch production runtime verifier
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('tests/integration/verify-production-runtime.sh')
+          text = path.read_text()
+          replacements = {
+              "if (migrations.length !== 3) {": "if (migrations.length !== 4) {",
+              "expected three production migrations": "expected four production migrations",
+              "<> 56 THEN": "<> 57 THEN",
+              "expected 56 total migration ledger rows": "expected 57 total migration ledger rows",
+              ") <> 18 THEN\n    RAISE EXCEPTION 'production runtime SECURITY DEFINER allowlist is not exact';": ") <> 19 THEN\n    RAISE EXCEPTION 'production runtime SECURITY DEFINER allowlist is not exact';",
+          }
+          for old, new in replacements.items():
+              if old not in text:
+                  raise SystemExit(f'missing verifier marker: {old}')
+              text = text.replace(old, new, 1)
+
+          marker = """  IF to_regprocedure('platform.resolve_operator_work_queue(uuid)') IS NULL THEN\n    RAISE EXCEPTION 'operator work queue resolver is missing';\n  END IF;\n"""
+          addition = marker + """  IF to_regprocedure('platform.production_runtime_credential_ready()') IS NULL THEN\n    RAISE EXCEPTION 'production runtime credential readiness function is missing';\n  END IF;\n  IF NOT has_function_privilege(\n    'app_production_runtime',\n    'platform.production_runtime_credential_ready()',\n    'EXECUTE'\n  ) THEN\n    RAISE EXCEPTION 'production runtime capability role cannot execute credential readiness';\n  END IF;\n"""
+          if marker not in text:
+              raise SystemExit('runtime function verification marker not found')
+          text = text.replace(marker, addition, 1)
+          path.write_text(text)
+          PY
+      - name: Commit verifier patch
+        run: |
+          if git diff --quiet; then
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tests/integration/verify-production-runtime.sh
+          git commit -m 'test(prod): verify runtime credential readiness migration'
+          git push origin HEAD:prod/runtime-credential-self-check
