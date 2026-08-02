@@ -2,7 +2,6 @@ import type { HttpDatabase } from '@school/database';
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 const POSITIVE_INTEGER_PATTERN = /^[1-9][0-9]*$/u;
-const ADMISSIONS_STATUSES = new Set(['submitted', 'under-review']);
 
 export interface AdmissionsReviewCandidate {
   readonly applicationId: string;
@@ -45,6 +44,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+function isAdmissionsStatus(value: unknown): value is AdmissionsReviewCandidate['status'] {
+  return value === 'submitted' || value === 'under-review';
+}
+
 function validIsoTimestamp(value: string): boolean {
   return Number.isFinite(Date.parse(value));
 }
@@ -59,8 +62,7 @@ function validateAdmissionsCandidate(value: unknown): AdmissionsReviewCandidate 
     applicationNumber.length < 1 ||
     applicationNumber.length > 128 ||
     applicationNumber.trim() !== applicationNumber ||
-    typeof status !== 'string' ||
-    !ADMISSIONS_STATUSES.has(status) ||
+    !isAdmissionsStatus(status) ||
     typeof version !== 'number' ||
     !Number.isSafeInteger(version) ||
     version < 1 ||
@@ -71,9 +73,9 @@ function validateAdmissionsCandidate(value: unknown): AdmissionsReviewCandidate 
   return {
     applicationId,
     applicationNumber,
-    status: status as AdmissionsReviewCandidate['status'],
+    status,
     version,
-    submittedAt: submittedAt as string | null,
+    submittedAt,
   };
 }
 
