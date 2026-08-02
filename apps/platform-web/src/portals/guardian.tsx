@@ -10,9 +10,9 @@ import {
   schoolName,
 } from '../pilot-data';
 import { usePilotResource } from '../pilot-resource';
+import { GuardianRouteWorkspace } from '../persona-route-workspace';
 import {
   PilotDataStatus,
-  PilotModuleSurface,
   UnknownRoute,
   resolvePageHeading,
   shellUtilityActions,
@@ -90,7 +90,7 @@ export default function GuardianPortal(props: GuardianPortalProps): ReactElement
       ) : page === undefined ? (
         <UnknownRoute homeHref="/family" />
       ) : (
-        <PilotModuleSurface page={page} />
+        <GuardianRouteWorkspace path={props.path} overview={overview} />
       )}
     </GuardianExperienceShell>
   );
