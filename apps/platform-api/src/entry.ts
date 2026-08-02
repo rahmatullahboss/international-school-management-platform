@@ -1,6 +1,7 @@
 import coreWorkerModule from './index.js';
 import { handleAuthLoginRequest, type AuthLoginBindings } from './auth-login-routes.js';
 import { handlePilotOperatorRequest, type PilotOperatorBindings } from './pilot-operator-api.js';
+import { enforceProductionPilotBoundary } from './production-boundary.js';
 
 interface WorkerEnvironment extends PilotOperatorBindings, AuthLoginBindings {
   readonly APP_REGION: string;
@@ -30,6 +31,8 @@ const worker = {
   ): Promise<Response> {
     const authResponse = await handleAuthLoginRequest(request, environment);
     if (authResponse !== undefined) return authResponse;
+    const productionBoundary = enforceProductionPilotBoundary(request, environment);
+    if (productionBoundary !== undefined) return productionBoundary;
     const operatorResponse = await handlePilotOperatorRequest(request, environment);
     if (operatorResponse !== undefined) return operatorResponse;
     return coreWorker.fetch(request, environment, executionContext);
