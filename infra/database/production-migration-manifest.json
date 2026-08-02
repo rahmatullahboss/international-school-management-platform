@@ -9,6 +9,12 @@
       "id": "202608020001_PROD-01_browser_workspace_resolution",
       "stream": "PROD-01",
       "path": "infra/database/post-integration-migrations/202608020001_PROD-01_browser_workspace_resolution.sql"
+    },
+    {
+      "order": 2,
+      "id": "202608020002_PROD-02_operator_work_queue",
+      "stream": "PROD-02",
+      "path": "infra/database/post-integration-migrations/202608020002_PROD-02_operator_work_queue.sql"
     }
   ]
 }

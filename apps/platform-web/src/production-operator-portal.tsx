@@ -1,4 +1,4 @@
-import { StrictMode, useState, type FormEvent, type ReactElement } from 'react';
+import { StrictMode, useEffect, useState, type FormEvent, type ReactElement } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import type { ProductionWorkspace } from './production-gateway';
@@ -8,10 +8,19 @@ import {
   type ProductionOperatorCommandBody,
   type ProductionOperatorCommandResult,
 } from './production-operator-command';
+import {
+  loadProductionOperatorWorkQueue,
+  type ProductionOperatorWorkQueue,
+} from './production-operator-work-queue';
 import './pilot.css';
 import './styles.css';
 
 type OperatorRole = Extract<ProductionWorkspace['role'], 'admissions' | 'finance' | 'support'>;
+
+type OperatorCommandConfig = {
+  readonly command: ProductionOperatorCommandBody['command'];
+  readonly permission: string;
+};
 
 const operatorConfig: Readonly<
   Record<
@@ -85,6 +94,28 @@ const operatorConfig: Readonly<
   },
 };
 
+function commandConfig(role: OperatorRole, pathname: string): OperatorCommandConfig | undefined {
+  if (role === 'admissions' && pathname === '/admissions/applications') {
+    return {
+      command: 'admissions.application.review.record',
+      permission: 'admissions.application.review',
+    };
+  }
+  if (role === 'finance' && pathname === '/finance/reconciliation') {
+    return {
+      command: 'finance.bank-line.reconcile',
+      permission: 'finance.reconciliation.write',
+    };
+  }
+  if (role === 'support' && pathname === '/support/access') {
+    return {
+      command: 'support.break-glass.request',
+      permission: 'support.break-glass.request',
+    };
+  }
+  return undefined;
+}
+
 function formString(form: FormData, key: string): string {
   const value = form.get(key);
   return typeof value === 'string' ? value.trim() : '';
@@ -123,6 +154,34 @@ function resultMessage(result: ProductionOperatorCommandResult): ReactElement {
   );
 }
 
+function queueMessage(queue: ProductionOperatorWorkQueue | undefined): ReactElement {
+  if (queue === undefined) {
+    return (
+      <div className="pilot-demo-note" role="status">
+        <strong>Loading current work queue…</strong>
+        <span>Only database-owned candidates in the signed-in scope will be shown.</span>
+      </div>
+    );
+  }
+  if (queue.state !== 'ready') {
+    return (
+      <div className="pilot-demo-note" role="alert">
+        <strong>Work queue unavailable</strong>
+        <span>{queue.message}</span>
+      </div>
+    );
+  }
+  if (queue.items.length === 0) {
+    return (
+      <div className="pilot-demo-note" role="status">
+        <strong>No current candidates</strong>
+        <span>There is no eligible work in the current database-owned scope.</span>
+      </div>
+    );
+  }
+  return <></>;
+}
+
 function OperatorCommandPanel(props: {
   readonly role: OperatorRole;
   readonly pathname: string;
@@ -130,22 +189,33 @@ function OperatorCommandPanel(props: {
 }): ReactElement | null {
   const [pending, setPending] = useState(false);
   const [result, setResult] = useState<ProductionOperatorCommandResult>();
+  const [workQueue, setWorkQueue] = useState<ProductionOperatorWorkQueue>();
+  const config = commandConfig(props.role, props.pathname);
+  const command = config?.command;
+  const permission = config?.permission;
+  const allowed = permission !== undefined && props.capabilities.includes(permission);
+  const needsWorkQueue =
+    command === 'admissions.application.review.record' || command === 'finance.bank-line.reconcile';
 
-  let command: ProductionOperatorCommandBody['command'] | undefined;
-  let permission: string | undefined;
-  if (props.role === 'admissions' && props.pathname === '/admissions/applications') {
-    command = 'admissions.application.review.record';
-    permission = 'admissions.application.review';
-  } else if (props.role === 'finance' && props.pathname === '/finance/reconciliation') {
-    command = 'finance.bank-line.reconcile';
-    permission = 'finance.reconciliation.write';
-  } else if (props.role === 'support' && props.pathname === '/support/access') {
-    command = 'support.break-glass.request';
-    permission = 'support.break-glass.request';
-  }
-  if (command === undefined || permission === undefined) return null;
+  useEffect(() => {
+    let cancelled = false;
+    if (!allowed || !needsWorkQueue) {
+      setWorkQueue(undefined);
+      return () => {
+        cancelled = true;
+      };
+    }
+    setWorkQueue(undefined);
+    void loadProductionOperatorWorkQueue().then((queue) => {
+      if (!cancelled) setWorkQueue(queue);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [allowed, needsWorkQueue, props.pathname, props.role]);
 
-  const allowed = props.capabilities.includes(permission);
+  if (config === undefined || command === undefined || permission === undefined) return null;
+
   if (!allowed) {
     return (
       <section className="pilot-demo-note" aria-labelledby="operator-command-title">
@@ -155,6 +225,13 @@ function OperatorCommandPanel(props: {
     );
   }
 
+  const queueReadyForCommand =
+    !needsWorkQueue ||
+    (workQueue?.state === 'ready' &&
+      ((command === 'admissions.application.review.record' && workQueue.role === 'admissions') ||
+        (command === 'finance.bank-line.reconcile' && workQueue.role === 'finance')) &&
+      workQueue.items.length > 0);
+
   const submit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
     if (pending) return;
@@ -162,22 +239,44 @@ function OperatorCommandPanel(props: {
     let body: ProductionOperatorCommandBody;
 
     if (command === 'admissions.application.review.record') {
+      if (workQueue?.state !== 'ready' || workQueue.role !== 'admissions') return;
+      const applicationId = formString(form, 'candidate');
+      const candidate = workQueue.items.find((item) => item.applicationId === applicationId);
+      if (candidate === undefined) {
+        setResult({
+          state: 'unavailable',
+          message: 'The selected application is no longer in the current work queue.',
+        });
+        return;
+      }
       const scoreValue = formString(form, 'score');
       const notesValue = formString(form, 'notes');
       body = {
         command,
-        applicationId: formString(form, 'applicationId'),
-        expectedVersion: Number(formString(form, 'expectedVersion')),
+        applicationId: candidate.applicationId,
+        expectedVersion: candidate.version,
         recommendation: formString(form, 'recommendation') as
           'admit' | 'waitlist' | 'decline' | 'more-information',
         score: scoreValue === '' ? null : Number(scoreValue),
         notes: notesValue === '' ? null : notesValue,
       };
     } else if (command === 'finance.bank-line.reconcile') {
+      if (workQueue?.state !== 'ready' || workQueue.role !== 'finance') return;
+      const candidateKey = formString(form, 'candidate');
+      const candidate = workQueue.items.find(
+        (item) => `${item.bankStatementLineId}:${item.paymentId}` === candidateKey,
+      );
+      if (candidate === undefined) {
+        setResult({
+          state: 'unavailable',
+          message: 'The selected reconciliation candidate is no longer in the current work queue.',
+        });
+        return;
+      }
       body = {
         command,
-        bankStatementLineId: formString(form, 'bankStatementLineId'),
-        paymentId: formString(form, 'paymentId'),
+        bankStatementLineId: candidate.bankStatementLineId,
+        paymentId: candidate.paymentId,
         reason: formString(form, 'reason'),
       };
     } else {
@@ -195,6 +294,9 @@ function OperatorCommandPanel(props: {
       newOperatorIdempotencyKey(command),
     );
     setResult(nextResult);
+    if (nextResult.state === 'accepted' && needsWorkQueue) {
+      setWorkQueue(await loadProductionOperatorWorkQueue());
+    }
     setPending(false);
   };
 
@@ -210,27 +312,30 @@ function OperatorCommandPanel(props: {
               : 'Request privileged support access'}
         </h2>
         <span>
-          The browser cannot choose tenant, campus, account, session or correlation scope. Those are
-          resolved server-side from the current durable session.
+          The browser cannot choose tenant, campus, account, session or correlation scope.
+          Admissions and Finance candidates are also loaded from the current server-owned database
+          scope.
         </span>
       </div>
+      {needsWorkQueue && !queueReadyForCommand ? queueMessage(workQueue) : null}
       <form className="pilot-demo-note" onSubmit={(event) => void submit(event)}>
         {command === 'admissions.application.review.record' ? (
           <>
             <label>
-              Application ID
-              <input name="applicationId" required autoComplete="off" />
-            </label>
-            <label>
-              Expected version
-              <input
-                name="expectedVersion"
-                type="number"
-                min="1"
-                step="1"
-                defaultValue="1"
-                required
-              />
+              Current application
+              <select name="candidate" required defaultValue="" disabled={!queueReadyForCommand}>
+                <option value="" disabled>
+                  Select an eligible application
+                </option>
+                {workQueue?.state === 'ready' && workQueue.role === 'admissions'
+                  ? workQueue.items.map((candidate) => (
+                      <option key={candidate.applicationId} value={candidate.applicationId}>
+                        {candidate.applicationNumber} · {candidate.status} · version{' '}
+                        {candidate.version}
+                      </option>
+                    ))
+                  : null}
+              </select>
             </label>
             <label>
               Recommendation
@@ -253,12 +358,23 @@ function OperatorCommandPanel(props: {
         ) : command === 'finance.bank-line.reconcile' ? (
           <>
             <label>
-              Bank statement line ID
-              <input name="bankStatementLineId" required autoComplete="off" />
-            </label>
-            <label>
-              Payment ID
-              <input name="paymentId" required autoComplete="off" />
+              Current reconciliation candidate
+              <select name="candidate" required defaultValue="" disabled={!queueReadyForCommand}>
+                <option value="" disabled>
+                  Select an eligible bank-line/payment pair
+                </option>
+                {workQueue?.state === 'ready' && workQueue.role === 'finance'
+                  ? workQueue.items.map((candidate) => (
+                      <option
+                        key={`${candidate.bankStatementLineId}:${candidate.paymentId}`}
+                        value={`${candidate.bankStatementLineId}:${candidate.paymentId}`}
+                      >
+                        {candidate.bookingDate} · {candidate.currency} {candidate.amountMinor} minor
+                        units
+                      </option>
+                    ))
+                  : null}
+              </select>
             </label>
             <label>
               Reconciliation reason
@@ -286,7 +402,7 @@ function OperatorCommandPanel(props: {
             <span>Support access remains pending and requires fresh AAL2 authorization.</span>
           </>
         )}
-        <button type="submit" disabled={pending}>
+        <button type="submit" disabled={pending || !queueReadyForCommand}>
           {pending ? 'Submitting…' : 'Submit reviewed command'}
         </button>
       </form>
@@ -346,7 +462,7 @@ function ProductionOperatorPortal(props: {
           <strong>Database-authorized production surface</strong>
           <span>
             Synthetic pilot sessions and synthetic operator metrics are disabled here. Approved
-            writes use the durable database command contracts and current server-resolved scope.
+            writes use durable database commands and database-owned current work queues.
           </span>
         </section>
         <OperatorCommandPanel
