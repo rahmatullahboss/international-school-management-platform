@@ -29,7 +29,14 @@ REVOKE EXECUTE ON FUNCTION billing.allocate_document_number(uuid, text, text) FR
 REVOKE EXECUTE ON FUNCTION ledger.close_period(uuid, text) FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION ledger.post_journal_entry(uuid, text) FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION ledger.reopen_period(uuid, text, text) FROM PUBLIC;
-REVOKE EXECUTE ON FUNCTION public.show_db_tree() FROM PUBLIC;
+
+DO $debug_helper$
+BEGIN
+  IF to_regprocedure('public.show_db_tree()') IS NOT NULL THEN
+    REVOKE EXECUTE ON FUNCTION public.show_db_tree() FROM PUBLIC;
+  END IF;
+END
+$debug_helper$;
 
 DO $tables$
 DECLARE
