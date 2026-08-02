@@ -21,6 +21,12 @@
       "id": "202608020003_PROD-03_production_runtime_role",
       "stream": "PROD-03",
       "path": "infra/database/post-integration-migrations/202608020003_PROD-03_production_runtime_role.sql"
+    },
+    {
+      "order": 4,
+      "id": "202608020004_PROD-04_runtime_credential_readiness",
+      "stream": "PROD-04",
+      "path": "infra/database/post-integration-migrations/202608020004_PROD-04_runtime_credential_readiness.sql"
     }
   ]
 }

@@ -3,6 +3,10 @@ import { handleAuthLoginRequest, type AuthLoginBindings } from './auth-login-rou
 import { handlePilotOperatorRequest, type PilotOperatorBindings } from './pilot-operator-api.js';
 import { enforceProductionPilotBoundary } from './production-boundary.js';
 import {
+  enforceProductionDatabaseCredential,
+  type ProductionDatabaseCredentialBindings,
+} from './production-database-credential.js';
+import {
   handleProductionOperatorCommandRequest,
   type ProductionOperatorCommandBindings,
 } from './production-operator-command-api.js';
@@ -15,6 +19,7 @@ interface WorkerEnvironment
   extends
     PilotOperatorBindings,
     AuthLoginBindings,
+    ProductionDatabaseCredentialBindings,
     ProductionOperatorCommandBindings,
     ProductionOperatorWorkQueueBindings {
   readonly APP_REGION: string;
@@ -42,6 +47,12 @@ const worker = {
     environment: WorkerEnvironment,
     executionContext: ExecutionContext,
   ): Promise<Response> {
+    const databaseCredentialResponse = await enforceProductionDatabaseCredential(
+      request,
+      environment,
+    );
+    if (databaseCredentialResponse !== undefined) return databaseCredentialResponse;
+
     const authResponse = await handleAuthLoginRequest(request, environment);
     if (authResponse !== undefined) return authResponse;
     const productionWorkQueueResponse = await handleProductionOperatorWorkQueueRequest(
