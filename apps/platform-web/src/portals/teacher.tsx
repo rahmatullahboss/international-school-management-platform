@@ -10,9 +10,9 @@ import {
   teacherOverview,
 } from '../pilot-data';
 import { usePilotResource } from '../pilot-resource';
-import { TeacherRouteWorkspace } from '../persona-route-workspace';
 import {
   PilotDataStatus,
+  PilotModuleSurface,
   UnknownRoute,
   resolvePageHeading,
   shellUtilityActions,
@@ -89,7 +89,7 @@ export default function TeacherPortal(props: TeacherPortalProps): ReactElement {
       ) : page === undefined ? (
         <UnknownRoute homeHref="/teacher" />
       ) : (
-        <TeacherRouteWorkspace path={props.path} overview={overview} />
+        <PilotModuleSurface page={page} />
       )}
     </TeacherExperienceShell>
   );
