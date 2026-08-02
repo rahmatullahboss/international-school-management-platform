@@ -137,6 +137,23 @@ describe('production operator command API', () => {
     expect(deps.submit).not.toHaveBeenCalled();
   });
 
+  it('rejects an undeclared streamed body over the byte cap before session work', async () => {
+    const deps = dependencies();
+    const oversized = request({ ...admissionsBody(), notes: 'x'.repeat(5000) });
+    expect(oversized.headers.get('content-length')).toBeNull();
+    const response = await handleProductionOperatorCommandRequest(
+      oversized,
+      environment,
+      deps.value,
+    );
+    expect(response?.status).toBe(400);
+    await expect(response?.json()).resolves.toMatchObject({
+      error: { code: 'operator_command_invalid' },
+    });
+    expect(deps.value.resolveSession).not.toHaveBeenCalled();
+    expect(deps.submit).not.toHaveBeenCalled();
+  });
+
   it('rejects browser-selected session and tenancy scope', async () => {
     const deps = dependencies();
     for (const body of [

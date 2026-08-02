@@ -15,6 +15,7 @@ import {
 import {
   handleOidcBackchannelLogoutRequest,
   isOidcBackchannelDeclaredLengthAllowed,
+  readBoundedOidcBackchannelBody,
 } from './auth-backchannel.js';
 import { DurableAuthStore, DurableOidcProviderCacheStore } from './auth-durable-store.js';
 import {
@@ -174,11 +175,7 @@ app.post('/auth/v1/backchannel-logout', async (context) => {
   const declaredLengthAllowed = isOidcBackchannelDeclaredLengthAllowed(contentLength);
   let rawBody = '';
   if (configured && declaredLengthAllowed) {
-    try {
-      rawBody = await context.req.text();
-    } catch {
-      rawBody = '';
-    }
+    rawBody = (await readBoundedOidcBackchannelBody(context.req.raw.body)) ?? '';
   }
   const result = await handleOidcBackchannelLogoutRequest({
     configured,
