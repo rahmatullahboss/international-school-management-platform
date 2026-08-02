@@ -165,7 +165,7 @@ function parseBrowserBody(value: unknown): BrowserOperatorCommandBody | undefine
   return undefined;
 }
 
-async function readJsonBody(request: Request): Promise<unknown | undefined> {
+async function readJsonBody(request: Request): Promise<unknown> {
   const contentType = request.headers.get('content-type')?.toLowerCase() ?? '';
   if (!/^application\/json(?:\s*;.*)?$/u.test(contentType)) return undefined;
   const declaredLength = request.headers.get('content-length');
