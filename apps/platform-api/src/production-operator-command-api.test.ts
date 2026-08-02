@@ -105,9 +105,11 @@ describe('production operator command API', () => {
 
   it('fails closed when durable mutation configuration is incomplete', async () => {
     const deps = dependencies();
+    const unconfiguredEnvironment = { ...environment };
+    delete unconfiguredEnvironment.DATABASE_URL;
     const response = await handleProductionOperatorCommandRequest(
       request(admissionsBody()),
-      { ...environment, DATABASE_URL: undefined },
+      unconfiguredEnvironment,
       deps.value,
     );
     expect(response?.status).toBe(503);
