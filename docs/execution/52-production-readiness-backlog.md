@@ -15,7 +15,8 @@ Reviewed production-support checkpoints now on `main`:
 - PR #88: `cd1031b9c397020d87bb752bdfd1cfbee2be2793` — fail-closed production OIDC/workspace/runtime foundation;
 - PR #89: `49673ffec01bac2c2f7d92a1d7c8823dbdfe6e1e` — authenticated production operator command path;
 - PR #90: `d84d17fff38d27abc589703386e8395bba9f0746` — database-owned Admissions/Finance operator work queues;
-- PR #91: `63fe4e32eee398f49ace9954b9cc089e955cae1a` — least-privilege production runtime capability boundary.
+- PR #91: `63fe4e32eee398f49ace9954b9cc089e955cae1a` — least-privilege production runtime capability boundary;
+- PR #92: `3175c81aaa5359febe393bd7942fd4588adc9fd9` — fail-closed production database login credential self-check.
 
 Completed and verified:
 
@@ -30,12 +31,15 @@ Completed and verified:
 - the production operator command API derives session, tenant/campus/account scope and correlation server-side, revalidates current database workspace, denies cross-role replay and preserves database-owned permission/AAL2/idempotency/concurrency enforcement;
 - `PROD-01` adds current-workspace resolution through `iam.resolve_browser_workspace(uuid)` without granting direct protected IAM session-table reads;
 - `PROD-02` adds bounded, session-scoped Admissions/Finance work queues so production browser forms select database-owned current candidates instead of accepting raw domain UUIDs;
-- `PROD-03` adds `app_production_runtime` as a NOLOGIN capability role with zero application relation CRUD and an exact reviewed 18-function SECURITY DEFINER execution surface;
+- `PROD-03` adds `app_production_runtime` as a NOLOGIN capability role with zero application relation CRUD and the reviewed production SECURITY DEFINER execution surface;
 - `app_production_runtime` does not inherit the broader legacy/internal `app_runtime` role;
 - PUBLIC execution is revoked from privileged billing document-number allocation, ledger close/post/reopen helpers and the optional noncanonical database-tree debug helper;
-- canonical CI verifies production migrations/runtime boundaries, revoked-session denial, operator command validation, work-queue scope/precision, least-privilege role invariants, API/web builds and both Cloudflare production Wrangler dry-runs;
-- the reviewed Neon integration branch contains the 53-migration pilot baseline plus `PROD-01`, `PROD-02` and `PROD-03`, for **56** ledger entries total;
-- live Neon verification shows zero application relations with CRUD authority for `app_production_runtime`, exactly 18 reviewed SECURITY DEFINER functions executable, no `app_runtime` inheritance and all privileged helper denials active;
+- `PROD-04` adds database-owned login-identity readiness through `platform.production_runtime_credential_ready()` and production `/auth/*` requests now fail closed when the bound `DATABASE_URL` uses an owner, broad or otherwise overprivileged credential;
+- the runtime credential readiness contract rejects direct application relation/sequence authority, broad `app_runtime` membership and Neon `neon_superuser` membership, while requiring a real LOGIN principal bound to `app_production_runtime`;
+- `/auth/v1/database-credential/readiness` exposes only redacted ready/not-ready diagnostics and the base `/auth/v1/readiness` remains available for configuration diagnosis;
+- canonical CI verifies production migrations/runtime boundaries, revoked-session denial, operator command validation, work-queue scope/precision, least-privilege role invariants, runtime login credential privilege-drift behavior, API/web builds and both Cloudflare production Wrangler dry-runs;
+- the reviewed Neon integration branch contains the 53-migration pilot baseline plus `PROD-01` through `PROD-04`, for **57** ledger entries total;
+- live Neon verification shows zero application relations with CRUD authority for `app_production_runtime`, exactly **19** reviewed SECURITY DEFINER functions executable, no `app_runtime` inheritance, owner credential readiness `false` and all privileged helper denials active;
 - one Bangladesh demo tenant, one Dhaka campus, seven IAM roles/accounts/memberships and seven placeholder OIDC membership bindings are seeded;
 - Teacher staff linkage, Student profile/enrolment and verified Guardian authority are seeded;
 - Admin, Teacher, Guardian and Student have canonical persona mappings, source payloads and materialized runtime projections at revision 1;
@@ -59,12 +63,13 @@ Until these are configured, production login intentionally remains fail-closed.
 
 ## 2. Production database credential and bindings — partially complete
 
-The broad legacy/internal `app_runtime` role is **not** an approved production credential. `PROD-03` now provides the reviewed NOLOGIN capability role `app_production_runtime`, which has zero application-table CRUD and only the approved production function surface.
+The broad legacy/internal `app_runtime` role is **not** an approved production credential. `PROD-03` provides the reviewed NOLOGIN capability role `app_production_runtime`, and `PROD-04` now causes production auth paths to reject any bound database login that does not satisfy the reviewed least-privilege identity contract.
 
 Still required before deployment:
 
 - provision a password-bearing login principal outside repository source and grant it only `app_production_runtime` membership;
 - bind that principal's exact production `DATABASE_URL` to the API Worker as a secret;
+- confirm deployed `/auth/v1/database-credential/readiness` returns ready using that exact secret-bound connection;
 - do not use the Neon owner connection or the broader `app_runtime` role as the application runtime credential;
 - configure the reviewed production provider-cache, session, permission, read-model and mutation bindings;
 - verify the deployed Worker connects as the intended login principal and cannot directly read or mutate restricted application/IAM/runtime tables outside reviewed functions;
@@ -133,6 +138,6 @@ Production promotion remains blocked until:
 
 ## Current boundary
 
-`main` now contains the fail-closed production-support code, authenticated operator command/work-queue wiring and the least-privilege production database capability boundary. The reviewed Neon integration branch contains the demo-school baseline through PROD-03 with 56 migration ledger entries. This does **not** mean production is active.
+`main` now contains the fail-closed production-support code, authenticated operator command/work-queue wiring, least-privilege production database capability role and the database-login self-check that rejects owner/broad runtime credentials. The reviewed Neon integration branch contains the demo-school baseline through PROD-04 with **57** migration ledger entries. This does **not** mean production is active.
 
 Real provider login, real provider-subject mappings, production secrets, a password-bearing login principal bound only to `app_production_runtime`, production schedules/alerts, deployed seven-persona production-like E2E, recovery/security sign-off and explicit production authorization remain outstanding. Synthetic pilot identities and `/pilot/*` APIs remain unavailable in production by design.
