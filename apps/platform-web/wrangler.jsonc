@@ -1,15 +1,34 @@
 {
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "international-school-platform-web",
+  "main": "./src/web-worker.ts",
   "compatibility_date": "2026-07-29",
   "assets": {
     "directory": "./dist",
+    "binding": "ASSETS",
     "not_found_handling": "single-page-application",
+    "run_worker_first": ["/auth", "/auth/*"],
   },
   "env": {
     "staging": {
       "name": "international-school-platform-web-staging",
       "workers_dev": true,
+      "services": [
+        {
+          "binding": "PLATFORM_API",
+          "service": "international-school-platform-api-staging",
+        },
+      ],
+    },
+    "production": {
+      "name": "international-school-platform-web-production",
+      "workers_dev": true,
+      "services": [
+        {
+          "binding": "PLATFORM_API",
+          "service": "international-school-platform-api-production",
+        },
+      ],
     },
   },
 }

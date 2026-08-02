@@ -61,6 +61,13 @@ jobs:
           PGUSER: postgres
           PGDATABASE: postgres
         run: npm run verify:persona-e2e
+      - name: Verify production runtime hardening
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: 5432
+          PGUSER: postgres
+          PGDATABASE: postgres
+        run: bash tests/integration/verify-production-runtime.sh
       - name: Verify live Neon serverless driver
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
         env:
@@ -69,6 +76,10 @@ jobs:
           test -n "$DATABASE_URL"
           npm run test:neon
       - run: npm run build
+      - name: Validate production Cloudflare bundles
+        run: |
+          (cd apps/platform-api && npx wrangler deploy --dry-run --env production --outdir /tmp/platform-api-production)
+          (cd apps/platform-web && npx wrangler deploy --dry-run --env production --outdir /tmp/platform-web-production)
       - run: npm run check:experience-budget
       - run: npm audit --audit-level=high
       - run: npm run licenses:check
