@@ -17,8 +17,8 @@ if (manifest.baseManifest !== 'infra/database/post-integration-migration-manifes
   throw new Error('production manifest must extend the reviewed post-integration manifest');
 }
 const migrations = manifest.migrations ?? [];
-if (migrations.length !== 3) {
-  throw new Error(`expected three production migrations, got ${migrations.length}`);
+if (migrations.length !== 4) {
+  throw new Error(`expected four production migrations, got ${migrations.length}`);
 }
 for (const [index, migration] of migrations.entries()) {
   if (migration.order !== index + 1) throw new Error('production migration orders are not contiguous');
@@ -37,14 +37,24 @@ done
 "${PSQL[@]}" <<'SQL'
 DO $verification$
 BEGIN
-  IF (SELECT count(*) FROM platform.schema_migration) <> 56 THEN
-    RAISE EXCEPTION 'expected 56 total migration ledger rows after production hardening';
+  IF (SELECT count(*) FROM platform.schema_migration) <> 57 THEN
+    RAISE EXCEPTION 'expected 57 total migration ledger rows after production hardening';
   END IF;
   IF to_regprocedure('iam.resolve_browser_workspace(uuid)') IS NULL THEN
     RAISE EXCEPTION 'browser workspace resolver is missing';
   END IF;
   IF to_regprocedure('platform.resolve_operator_work_queue(uuid)') IS NULL THEN
     RAISE EXCEPTION 'operator work queue resolver is missing';
+  END IF;
+  IF to_regprocedure('platform.production_runtime_credential_ready()') IS NULL THEN
+    RAISE EXCEPTION 'production runtime credential readiness function is missing';
+  END IF;
+  IF NOT has_function_privilege(
+    'app_production_runtime',
+    'platform.production_runtime_credential_ready()',
+    'EXECUTE'
+  ) THEN
+    RAISE EXCEPTION 'production runtime capability role cannot execute credential readiness';
   END IF;
   IF NOT EXISTS (
     SELECT 1
@@ -86,7 +96,7 @@ BEGIN
     WHERE function.prosecdef
       AND namespace.nspname NOT IN ('pg_catalog', 'information_schema', 'pg_toast', 'public')
       AND has_function_privilege('app_production_runtime', function.oid, 'EXECUTE')
-  ) <> 18 THEN
+  ) <> 19 THEN
     RAISE EXCEPTION 'production runtime SECURITY DEFINER allowlist is not exact';
   END IF;
   IF has_function_privilege('app_production_runtime', 'billing.allocate_document_number(uuid,text,text)', 'EXECUTE')
