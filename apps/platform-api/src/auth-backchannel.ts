@@ -1,5 +1,7 @@
 import type { OidcBackchannelLogoutProcessResult } from '@school/policy';
 
+import { readBoundedUtf8RequestBody } from './bounded-request-body.js';
+
 const MAX_LOGOUT_TOKEN_LENGTH = 16 * 1024;
 const MAX_REQUEST_LENGTH = MAX_LOGOUT_TOKEN_LENGTH + 1024;
 
@@ -48,6 +50,12 @@ export function isOidcBackchannelDeclaredLengthAllowed(value: string | undefined
   if (!/^\d+$/u.test(value)) return false;
   const length = Number(value);
   return Number.isSafeInteger(length) && length >= 0 && length <= MAX_REQUEST_LENGTH;
+}
+
+export async function readBoundedOidcBackchannelBody(
+  body: ReadableStream<Uint8Array> | null,
+): Promise<string | undefined> {
+  return readBoundedUtf8RequestBody(body, MAX_REQUEST_LENGTH);
 }
 
 function parseLogoutToken(rawBody: string): string | undefined {
