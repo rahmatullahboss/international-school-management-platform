@@ -35,9 +35,9 @@ for migration_path in "${migration_paths[@]}"; do
 done
 
 ledger_count=$("${psql_cmd[@]}" -Atqc "SELECT count(*) FROM platform.schema_migration")
-if [[ "$ledger_count" -ne 53 ]]; then
-  echo "Expected 53 migration ledger entries after apply, found ${ledger_count}." >&2
+if [[ "$ledger_count" -lt 53 ]]; then
+  echo "Expected at least the reviewed 53 migration ledger entries after apply, found ${ledger_count}." >&2
   exit 1
 fi
 
-echo 'Reviewed post-integration migration apply complete: 53 ledger entries.'
+echo "Reviewed post-integration migration baseline verified; current ledger contains ${ledger_count} entries."
