@@ -9,18 +9,22 @@ BEGIN
       NOREPLICATION
       NOBYPASSRLS
       INHERIT;
+  ELSIF NOT EXISTS (
+    SELECT 1
+    FROM pg_roles
+    WHERE rolname = 'app_production_runtime'
+      AND NOT rolcanlogin
+      AND NOT rolsuper
+      AND NOT rolcreatedb
+      AND NOT rolcreaterole
+      AND NOT rolreplication
+      AND NOT rolbypassrls
+      AND rolinherit
+  ) THEN
+    RAISE EXCEPTION 'PROD_RUNTIME_ROLE_FLAGS_INVALID';
   END IF;
 END
 $role$;
-
-ALTER ROLE app_production_runtime
-  NOLOGIN
-  NOSUPERUSER
-  NOCREATEDB
-  NOCREATEROLE
-  NOREPLICATION
-  NOBYPASSRLS
-  INHERIT;
 
 COMMENT ON ROLE app_production_runtime IS
   'Production API capability role. Attach only reviewed login credentials; direct application-table access is forbidden.';
