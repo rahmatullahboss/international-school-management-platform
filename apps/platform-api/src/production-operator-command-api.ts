@@ -7,6 +7,7 @@ import {
 } from './auth-boundary.js';
 import { DurableAuthStore } from './auth-durable-store.js';
 import { isAllowedAuthMutationOrigin } from './auth-logout.js';
+import { readBoundedUtf8RequestBody } from './bounded-request-body.js';
 import { DatabaseOperatorDomainCommandStore } from './database-operator-domain-command-store.js';
 import { DatabaseWorkspaceStore, type DatabaseWorkspaceRole } from './database-workspace-store.js';
 import {
@@ -174,9 +175,9 @@ async function readJsonBody(request: Request): Promise<unknown> {
     const length = Number(declaredLength);
     if (!Number.isSafeInteger(length) || length > MAX_BODY_BYTES) return undefined;
   }
+  const text = await readBoundedUtf8RequestBody(request.body, MAX_BODY_BYTES);
+  if (text === undefined || text === '') return undefined;
   try {
-    const text = await request.text();
-    if (new TextEncoder().encode(text).byteLength > MAX_BODY_BYTES) return undefined;
     return JSON.parse(text) as unknown;
   } catch {
     return undefined;
