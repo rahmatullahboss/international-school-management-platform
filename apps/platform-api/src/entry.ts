@@ -6,9 +6,16 @@ import {
   handleProductionOperatorCommandRequest,
   type ProductionOperatorCommandBindings,
 } from './production-operator-command-api.js';
+import {
+  handleProductionOperatorWorkQueueRequest,
+  type ProductionOperatorWorkQueueBindings,
+} from './production-operator-work-queue-api.js';
 
 interface WorkerEnvironment
-  extends PilotOperatorBindings, AuthLoginBindings, ProductionOperatorCommandBindings {
+  extends PilotOperatorBindings,
+    AuthLoginBindings,
+    ProductionOperatorCommandBindings,
+    ProductionOperatorWorkQueueBindings {
   readonly APP_REGION: string;
   readonly [key: string]: unknown;
 }
@@ -36,6 +43,11 @@ const worker = {
   ): Promise<Response> {
     const authResponse = await handleAuthLoginRequest(request, environment);
     if (authResponse !== undefined) return authResponse;
+    const productionWorkQueueResponse = await handleProductionOperatorWorkQueueRequest(
+      request,
+      environment,
+    );
+    if (productionWorkQueueResponse !== undefined) return productionWorkQueueResponse;
     const productionOperatorResponse = await handleProductionOperatorCommandRequest(
       request,
       environment,
