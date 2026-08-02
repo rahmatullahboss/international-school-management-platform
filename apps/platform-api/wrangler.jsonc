@@ -29,6 +29,16 @@
     "production": {
       "name": "international-school-platform-api-production",
       "workers_dev": true,
+      "ratelimits": [
+        {
+          "name": "AUTH_PRELOGIN_RATE_LIMITER",
+          "namespace_id": "2608021",
+          "simple": {
+            "limit": 30,
+            "period": 60,
+          },
+        },
+      ],
       "vars": {
         "APP_ENV": "production",
         "APP_REGION": "global",

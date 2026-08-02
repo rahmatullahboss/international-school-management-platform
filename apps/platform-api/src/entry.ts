@@ -1,6 +1,10 @@
 import coreWorkerModule from './index.js';
 import { handleAuthLoginRequest, type AuthLoginBindings } from './auth-login-routes.js';
 import { handlePilotOperatorRequest, type PilotOperatorBindings } from './pilot-operator-api.js';
+import {
+  enforceProductionPreAuthRateLimit,
+  type ProductionAuthRateLimitBindings,
+} from './production-auth-rate-limit.js';
 import { enforceProductionPilotBoundary } from './production-boundary.js';
 import {
   enforceProductionDatabaseCredential,
@@ -19,6 +23,7 @@ interface WorkerEnvironment
   extends
     PilotOperatorBindings,
     AuthLoginBindings,
+    ProductionAuthRateLimitBindings,
     ProductionDatabaseCredentialBindings,
     ProductionOperatorCommandBindings,
     ProductionOperatorWorkQueueBindings {
@@ -47,6 +52,9 @@ const worker = {
     environment: WorkerEnvironment,
     executionContext: ExecutionContext,
   ): Promise<Response> {
+    const rateLimitResponse = await enforceProductionPreAuthRateLimit(request, environment);
+    if (rateLimitResponse !== undefined) return rateLimitResponse;
+
     const databaseCredentialResponse = await enforceProductionDatabaseCredential(
       request,
       environment,
