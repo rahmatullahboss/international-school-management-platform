@@ -35,25 +35,6 @@ jobs:
           node-version: '22.22.2'
           cache: npm
       - run: npm ci
-      - name: Canonically format production-candidate files for verification
-        if: github.event_name == 'pull_request' && github.head_ref == 'prod/demo-school-production-readiness'
-        run: |
-          npx prettier --write \
-            apps/platform-api/src/auth-login-routes.ts \
-            apps/platform-api/src/database-workspace-store.ts \
-            apps/platform-api/src/database-workspace-store.test.ts \
-            apps/platform-api/src/production-boundary.test.ts \
-            apps/platform-web/src/pilot-resource.ts \
-            apps/platform-web/src/production-gateway.tsx \
-            apps/platform-web/src/production-operator-portal.tsx
-          git diff -- \
-            apps/platform-api/src/auth-login-routes.ts \
-            apps/platform-api/src/database-workspace-store.ts \
-            apps/platform-api/src/database-workspace-store.test.ts \
-            apps/platform-api/src/production-boundary.test.ts \
-            apps/platform-web/src/pilot-resource.ts \
-            apps/platform-web/src/production-gateway.tsx \
-            apps/platform-web/src/production-operator-portal.tsx
       - run: npm run format:check
       - run: npm run lint
       - run: npm run check:boundaries
