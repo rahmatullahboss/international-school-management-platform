@@ -44,7 +44,7 @@ jobs:
       NEON_DATABASE_NAME: neondb
       NEON_ROLE_NAME: neondb_owner
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Require Neon API credential
         run: |
