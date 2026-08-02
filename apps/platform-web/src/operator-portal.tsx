@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
 import { createRoot } from 'react-dom/client';
 
+import { OperatorRouteWorkspace } from './operator-route-workspace';
 import { PilotDataStatus, UnknownRoute, type PilotConnectivity } from './portal-shared';
 import './pilot.css';
 import './pilot-resource.css';
@@ -71,9 +72,7 @@ interface OperatorConfig {
   readonly subjectId: string;
   readonly capabilities: readonly string[];
   readonly data: OperatorData;
-  readonly pages: Readonly<
-    Record<string, { readonly title: string; readonly description: string }>
-  >;
+  readonly pages: Readonly<Record<string, { readonly title: string; readonly description: string }>>;
   readonly command: string;
   readonly commandLabel: string;
   readonly commandReason: string;
@@ -397,16 +396,55 @@ export function operatorRoleForPath(pathname: string): OperatorRole | undefined 
   )?.[0];
 }
 
+function OperatorHome(props: {
+  readonly role: OperatorRole;
+  readonly data: OperatorData;
+}): ReactElement {
+  return (
+    <>
+      <section className="pilot-metrics" aria-label={`${operatorConfigs[props.role].title} summary`}>
+        {props.data.metrics.map((metric) => (
+          <article key={metric.label}>
+            <span>{metric.label}</span>
+            <strong>{metric.value}</strong>
+            <p>{metric.detail}</p>
+          </article>
+        ))}
+      </section>
+
+      <section className="pilot-work-queue" aria-labelledby={`${props.role}-work-title`}>
+        <div>
+          <p>Permission-scoped work</p>
+          <h2 id={`${props.role}-work-title`}>Priority work</h2>
+          <span>Only actions granted to this persona are shown.</span>
+        </div>
+        <ol>
+          {props.data.workItems.map((item) => (
+            <li key={item.id}>
+              <div>
+                <strong>{item.title}</strong>
+                <span>{item.detail}</span>
+              </div>
+              <span className="pilot-status">{item.status}</span>
+              <a href={item.href}>Open task</a>
+            </li>
+          ))}
+        </ol>
+      </section>
+    </>
+  );
+}
+
 export function OperatorPortal(props: {
   readonly role: OperatorRole;
   readonly path: string;
 }): ReactElement {
   const config = operatorConfigs[props.role];
   const page = config.pages[props.path];
-  const known = props.path === config.root || page !== undefined;
-  const title = props.path === config.root ? config.title : (page?.title ?? config.title);
-  const description =
-    props.path === config.root ? config.description : (page?.description ?? config.description);
+  const isHome = props.path === config.root;
+  const known = isHome || page !== undefined;
+  const title = isHome ? config.title : (page?.title ?? config.title);
+  const description = isHome ? config.description : (page?.description ?? config.description);
   const resource = useOperatorResource(props.role);
 
   return (
@@ -441,60 +479,41 @@ export function OperatorPortal(props: {
         ) : (
           <>
             <nav className="pilot-actions" aria-label={`${config.title} navigation`}>
+              <a href={config.root} aria-current={isHome ? 'page' : undefined}>
+                Overview
+              </a>
               {Object.entries(config.pages).map(([href, route]) => (
-                <a href={href} key={href}>
+                <a href={href} key={href} aria-current={href === props.path ? 'page' : undefined}>
                   {route.title}
                 </a>
               ))}
             </nav>
 
-            <section className="pilot-metrics" aria-label={`${title} summary`}>
-              {resource.data.metrics.map((metric) => (
-                <article key={metric.label}>
-                  <span>{metric.label}</span>
-                  <strong>{metric.value}</strong>
-                  <p>{metric.detail}</p>
-                </article>
-              ))}
-            </section>
+            {isHome ? (
+              <OperatorHome role={props.role} data={resource.data} />
+            ) : (
+              <OperatorRouteWorkspace role={props.role} path={props.path} />
+            )}
 
-            <section className="pilot-work-queue" aria-labelledby={`${props.role}-work-title`}>
-              <div>
-                <p>Permission-scoped work</p>
-                <h2 id={`${props.role}-work-title`}>Priority work</h2>
-                <span>Only actions granted to this persona are shown.</span>
-              </div>
-              <ol>
-                {resource.data.workItems.map((item) => (
-                  <li key={item.id}>
-                    <div>
-                      <strong>{item.title}</strong>
-                      <span>{item.detail}</span>
-                    </div>
-                    <span className="pilot-status">{item.status}</span>
-                    <a href={item.href}>Review</a>
-                  </li>
-                ))}
-              </ol>
-            </section>
-
-            <section className="pilot-demo-note" aria-label="Controlled pilot mutation">
-              <strong>Audited controlled action</strong>
-              <span>
-                Records non-production evidence only; live financial or student records are not
-                changed.
-              </span>
-              <button
-                type="button"
-                onClick={resource.submitControlledAction}
-                disabled={resource.apiBase === undefined}
-              >
-                {config.commandLabel}
-              </button>
-              {resource.commandStatus === undefined ? null : (
-                <p role="status">{resource.commandStatus}</p>
-              )}
-            </section>
+            {isHome ? (
+              <section className="pilot-demo-note" aria-label="Controlled pilot mutation">
+                <strong>Audited pilot evidence</strong>
+                <span>
+                  This control records non-production evidence only. It does not change live financial
+                  or student records.
+                </span>
+                <button
+                  type="button"
+                  onClick={resource.submitControlledAction}
+                  disabled={resource.apiBase === undefined}
+                >
+                  {config.commandLabel}
+                </button>
+                {resource.commandStatus === undefined ? null : (
+                  <p role="status">{resource.commandStatus}</p>
+                )}
+              </section>
+            ) : null}
           </>
         )}
       </main>
