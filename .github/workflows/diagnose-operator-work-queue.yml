@@ -41,6 +41,26 @@ jobs:
       - name: Verify persona baseline
         run: npm run verify:persona-e2e
       - name: Apply production hardening baseline
-        run: bash -x tests/integration/verify-production-runtime.sh
-      - name: Diagnose operator work queues
-        run: bash -x tests/integration/verify-production-operator-work-queue.sh
+        run: bash tests/integration/verify-production-runtime.sh
+      - name: Prepare operator queue fixtures
+        run: |
+          awk 'BEGIN { copy = 0 } /^INSERT INTO tenancy\.campus \($/ { copy = 1 } copy && $0 == "SQL" { exit } copy { print }' \
+            tests/integration/verify-production-operator-work-queue.sh \
+            | psql -X -v ON_ERROR_STOP=1 -d "$PGDATABASE"
+      - name: Verify Admissions queue
+        run: |
+          actual="$(psql -X -v ON_ERROR_STOP=1 -d "$PGDATABASE" -AtF '|' -c "SET ROLE app_runtime; WITH q AS (SELECT platform.resolve_operator_work_queue('95100000-0000-4000-8000-000000000008'::uuid) AS value) SELECT value->>'role', jsonb_array_length(value->'items'), value->'items'->0->>'applicationId', value->'items'->0->>'applicationNumber', value->'items'->0->>'version' FROM q;")"
+          echo "Admissions queue: $actual"
+          test "$actual" = "admissions|1|95100000-0000-4000-8000-000000000203|APP-PROD-QUEUE-001|1"
+      - name: Verify Finance queue
+        run: |
+          actual="$(psql -X -v ON_ERROR_STOP=1 -d "$PGDATABASE" -AtF '|' -c "SET ROLE app_runtime; WITH q AS (SELECT platform.resolve_operator_work_queue('95200000-0000-4000-8000-000000000008'::uuid) AS value) SELECT value->>'role', jsonb_array_length(value->'items'), value->'items'->0->>'bankStatementLineId', value->'items'->0->>'paymentId', value->'items'->0->>'amountMinor', jsonb_typeof(value->'items'->0->'amountMinor') FROM q;")"
+          echo "Finance queue: $actual"
+          test "$actual" = "finance|1|95200000-0000-4000-8000-000000000113|95200000-0000-4000-8000-000000000112|1500000|string"
+      - name: Verify revocation
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -d "$PGDATABASE" -Atqc "SELECT iam.revoke_browser_session('95100000-0000-4000-8000-000000000008'::uuid, 'operator work queue verification complete')" >/dev/null
+          psql -X -v ON_ERROR_STOP=1 -d "$PGDATABASE" -Atqc "SELECT iam.revoke_browser_session('95200000-0000-4000-8000-000000000008'::uuid, 'operator work queue verification complete')" >/dev/null
+          actual="$(psql -X -v ON_ERROR_STOP=1 -d "$PGDATABASE" -Atqc "SET ROLE app_runtime; SELECT COALESCE(platform.resolve_operator_work_queue('95100000-0000-4000-8000-000000000008'::uuid)::text, 'null');")"
+          echo "Revoked queue: $actual"
+          test "$actual" = "null"
