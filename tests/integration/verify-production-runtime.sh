@@ -93,7 +93,14 @@ BEGIN
      OR has_function_privilege('app_production_runtime', 'ledger.close_period(uuid,text)', 'EXECUTE')
      OR has_function_privilege('app_production_runtime', 'ledger.post_journal_entry(uuid,text)', 'EXECUTE')
      OR has_function_privilege('app_production_runtime', 'ledger.reopen_period(uuid,text,text)', 'EXECUTE')
-     OR has_function_privilege('app_production_runtime', 'public.show_db_tree()', 'EXECUTE') THEN
+     OR (
+       to_regprocedure('public.show_db_tree()') IS NOT NULL
+       AND has_function_privilege(
+         'app_production_runtime',
+         to_regprocedure('public.show_db_tree()'),
+         'EXECUTE'
+       )
+     ) THEN
     RAISE EXCEPTION 'production runtime role can execute an unreviewed privileged helper';
   END IF;
   IF NOT has_function_privilege('app_runtime', 'iam.resolve_browser_workspace(uuid)', 'EXECUTE') THEN
