@@ -34,11 +34,12 @@ jobs:
           node-version: '22.22.2'
           cache: npm
       - run: npm ci >/dev/null
-      - name: Build canonical database baseline
-        run: |
-          npm run verify:migrations >/dev/null
-          npm run verify:auth-migrations >/dev/null
-          npm run verify:persona-e2e >/dev/null
+      - name: Verify Wave 2 baseline
+        run: npm run verify:migrations
+      - name: Verify AUTH baseline
+        run: npm run verify:auth-migrations
+      - name: Verify persona baseline
+        run: npm run verify:persona-e2e
       - name: Apply production hardening baseline
         run: bash -x tests/integration/verify-production-runtime.sh
       - name: Diagnose operator work queues
