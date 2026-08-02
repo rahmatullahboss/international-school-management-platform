@@ -78,7 +78,7 @@ describe('production operator command browser client', () => {
         { status: 409, headers: { 'content-type': 'application/json' } },
       ),
     ];
-    const fetchMock = vi.fn().mockImplementation(async () => responses.shift());
+    const fetchMock = vi.fn().mockImplementation(() => responses.shift());
     vi.stubGlobal('fetch', fetchMock);
 
     await expect(submitProductionOperatorCommand(body, 'support:step-up-0001')).resolves.toEqual({
