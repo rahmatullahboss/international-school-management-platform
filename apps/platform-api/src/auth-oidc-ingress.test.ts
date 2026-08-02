@@ -21,7 +21,9 @@ describe('bounded OIDC ingress', () => {
     ).toEqual({ ok: false });
     expect(parseOidcLoginIngress(url('/auth/v1/login?redirect=%2Fadmin'))).toEqual({ ok: false });
     expect(
-      parseOidcLoginIngress(url(`/auth/v1/login?returnTo=${encodeURIComponent(`/${'a'.repeat(1024)}`)}`)),
+      parseOidcLoginIngress(
+        url(`/auth/v1/login?returnTo=${encodeURIComponent(`/${'a'.repeat(1024)}`)}`),
+      ),
     ).toEqual({ ok: false });
   });
 
@@ -80,7 +82,9 @@ describe('bounded OIDC ingress', () => {
       ),
     ).toEqual({ ok: false });
     expect(
-      parseOidcCallbackIngress(url(`/auth/v1/callback?code=${'a'.repeat(4096)}&state=${'b'.repeat(4096)}`)),
+      parseOidcCallbackIngress(
+        url(`/auth/v1/callback?code=${'a'.repeat(4096)}&state=${'b'.repeat(4096)}`),
+      ),
     ).toEqual({ ok: false });
   });
 });

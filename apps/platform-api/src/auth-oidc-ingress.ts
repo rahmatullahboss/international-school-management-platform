@@ -9,7 +9,8 @@ export interface OidcCallbackIngress {
   readonly error?: string;
 }
 
-export type OidcIngressResult<T> = { readonly ok: true; readonly value: T } | { readonly ok: false };
+export type OidcIngressResult<T> =
+  { readonly ok: true; readonly value: T } | { readonly ok: false };
 
 type OidcIngressRoute = 'login' | 'callback';
 

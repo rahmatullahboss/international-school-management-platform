@@ -74,9 +74,7 @@ describe('durable OIDC login routes', () => {
 
   it('rejects duplicate login parameters before runtime/provider resolution', async () => {
     const response = await handleAuthLoginRequest(
-      new Request(
-        'https://api.example.com/auth/v1/login?returnTo=%2Fadmin&returnTo=%2Fstudent',
-      ),
+      new Request('https://api.example.com/auth/v1/login?returnTo=%2Fadmin&returnTo=%2Fstudent'),
       configured,
     );
     expect(response?.status).toBe(400);
