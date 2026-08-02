@@ -20,7 +20,7 @@ export interface ProductionWorkspace {
   readonly role: ProductionRole;
   readonly path: string;
   readonly assurance: 'aal1' | 'aal2';
-  readonly expiresAt: number;
+  readonly expiresAt: string;
   readonly capabilities: readonly string[];
 }
 
@@ -45,6 +45,10 @@ function isProductionRole(value: unknown): value is ProductionRole {
   );
 }
 
+function isValidExpiry(value: unknown): value is string {
+  return typeof value === 'string' && Number.isFinite(Date.parse(value));
+}
+
 function isWorkspaceResponse(value: unknown): value is WorkspaceResponse {
   if (!isRecord(value) || value.schemaVersion !== 1 || !isRecord(value.workspace)) return false;
   return (
@@ -52,7 +56,7 @@ function isWorkspaceResponse(value: unknown): value is WorkspaceResponse {
     typeof value.workspace.path === 'string' &&
     value.workspace.path.startsWith('/') &&
     (value.workspace.assurance === 'aal1' || value.workspace.assurance === 'aal2') &&
-    typeof value.workspace.expiresAt === 'number' &&
+    isValidExpiry(value.workspace.expiresAt) &&
     Array.isArray(value.workspace.capabilities) &&
     value.workspace.capabilities.every((capability) => typeof capability === 'string')
   );
