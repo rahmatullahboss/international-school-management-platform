@@ -3,6 +3,9 @@
   "name": "international-school-platform-web",
   "main": "./src/web-worker.ts",
   "compatibility_date": "2026-07-29",
+  "vars": {
+    "APP_ENV": "development",
+  },
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
@@ -13,6 +16,9 @@
     "staging": {
       "name": "international-school-platform-web-staging",
       "workers_dev": true,
+      "vars": {
+        "APP_ENV": "staging",
+      },
       "services": [
         {
           "binding": "PLATFORM_API",
@@ -23,6 +29,9 @@
     "production": {
       "name": "international-school-platform-web-production",
       "workers_dev": true,
+      "vars": {
+        "APP_ENV": "production",
+      },
       "services": [
         {
           "binding": "PLATFORM_API",
