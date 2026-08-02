@@ -10,10 +10,10 @@ import {
   pilotTimestamp,
   schoolName,
 } from '../pilot-data';
+import { OperationalModuleSurface } from '../operational-module-surface';
 import { usePilotResource } from '../pilot-resource';
 import {
   PilotDataStatus,
-  PilotModuleSurface,
   UnknownRoute,
   resolvePageHeading,
   shellUtilityActions,
@@ -91,7 +91,7 @@ export default function AdminPortal(props: AdminPortalProps): ReactElement {
       ) : page === undefined ? (
         <UnknownRoute homeHref="/admin" />
       ) : (
-        <PilotModuleSurface page={page} />
+        <OperationalModuleSurface path={props.path} page={page} role="admin" />
       )}
     </AdminExperienceShell>
   );

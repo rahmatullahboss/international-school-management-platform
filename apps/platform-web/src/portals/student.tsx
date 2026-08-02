@@ -9,10 +9,10 @@ import {
   studentCapabilities,
   studentOverview,
 } from '../pilot-data';
+import { OperationalModuleSurface } from '../operational-module-surface';
 import { usePilotResource } from '../pilot-resource';
 import {
   PilotDataStatus,
-  PilotModuleSurface,
   UnknownRoute,
   resolvePageHeading,
   shellUtilityActions,
@@ -92,7 +92,7 @@ export default function StudentPortal(props: StudentPortalProps): ReactElement {
       ) : page === undefined ? (
         <UnknownRoute homeHref="/student" />
       ) : (
-        <PilotModuleSurface page={page} />
+        <OperationalModuleSurface path={props.path} page={page} role="student" />
       )}
     </StudentExperienceShell>
   );

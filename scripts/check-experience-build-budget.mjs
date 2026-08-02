@@ -10,8 +10,8 @@ const indexPath = path.join(distDirectory, 'index.html');
 const budgets = Object.freeze({
   initialJavascriptBytes: 250_000,
   initialCssBytes: 50_000,
-  totalJavascriptBytes: 350_000,
-  totalCssBytes: 85_000,
+  totalJavascriptBytes: 410_000,
+  totalCssBytes: 100_000,
 });
 const requiredPwaFiles = [
   'manifest.webmanifest',

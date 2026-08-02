@@ -71,7 +71,8 @@ async function issueSession(request: APIRequestContext, role: PilotOperatorRole)
 test('role chooser exposes all seven principal personas', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'Who are you working as?' })).toBeVisible();
-  await expect(page.locator('.pilot-role-card')).toHaveCount(7);
+  await expect(page.locator('.pilot-role-row')).toHaveCount(4);
+  await expect(page.locator('.pilot-operator-register a')).toHaveCount(3);
   await expect(page.getByRole('link', { name: /Go to admissions/u })).toBeVisible();
   await expect(page.getByRole('link', { name: /Go to finance/u })).toBeVisible();
   await expect(page.getByRole('link', { name: /Go to support/u })).toBeVisible();

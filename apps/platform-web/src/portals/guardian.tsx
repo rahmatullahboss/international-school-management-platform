@@ -9,10 +9,10 @@ import {
   pilotTimestamp,
   schoolName,
 } from '../pilot-data';
+import { OperationalModuleSurface } from '../operational-module-surface';
 import { usePilotResource } from '../pilot-resource';
 import {
   PilotDataStatus,
-  PilotModuleSurface,
   UnknownRoute,
   resolvePageHeading,
   shellUtilityActions,
@@ -90,7 +90,7 @@ export default function GuardianPortal(props: GuardianPortalProps): ReactElement
       ) : page === undefined ? (
         <UnknownRoute homeHref="/family" />
       ) : (
-        <PilotModuleSurface page={page} />
+        <OperationalModuleSurface path={props.path} page={page} role="guardian" />
       )}
     </GuardianExperienceShell>
   );
