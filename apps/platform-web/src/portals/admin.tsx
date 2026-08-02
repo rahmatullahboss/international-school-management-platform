@@ -11,9 +11,9 @@ import {
   schoolName,
 } from '../pilot-data';
 import { usePilotResource } from '../pilot-resource';
+import { AdminRouteWorkspace } from '../persona-route-workspace';
 import {
   PilotDataStatus,
-  PilotModuleSurface,
   UnknownRoute,
   resolvePageHeading,
   shellUtilityActions,
@@ -91,7 +91,7 @@ export default function AdminPortal(props: AdminPortalProps): ReactElement {
       ) : page === undefined ? (
         <UnknownRoute homeHref="/admin" />
       ) : (
-        <PilotModuleSurface page={page} />
+        <AdminRouteWorkspace path={props.path} overview={overview} />
       )}
     </AdminExperienceShell>
   );
