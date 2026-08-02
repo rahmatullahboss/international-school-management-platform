@@ -4,6 +4,7 @@ import type { PilotConnectivity, PilotRole } from './portal-shared';
 
 const PILOT_TENANT_ID = 'tenant-pilot-001';
 const PILOT_CAMPUS_ID = 'campus-main';
+const PRODUCTION_WEB_HOST = 'international-school-platform-web-production.rahmatullahzisan.workers.dev';
 const CACHE_VERSION = 1;
 const SESSION_VERSION = 1;
 const REFRESH_AFTER_MS = 60_000;
@@ -16,19 +17,19 @@ const subjectByRole: Readonly<Record<PilotRole, string>> = {
   student: 'student-1',
 };
 
-interface PilotSnapshotScope {
+interface ResourceSnapshotScope {
   readonly tenantId: string;
-  readonly campusId: string;
+  readonly campusId?: string;
   readonly role: PilotRole;
   readonly subjectId: string;
   readonly capabilities: readonly string[];
 }
 
-interface PilotSnapshotEnvelope<T> {
+interface ResourceSnapshotEnvelope<T> {
   readonly schemaVersion: 1;
   readonly sourceVersion: string;
   readonly generatedAt: string;
-  readonly scope: PilotSnapshotScope;
+  readonly scope: ResourceSnapshotScope;
   readonly data: T;
 }
 
@@ -36,7 +37,7 @@ interface StoredSnapshot<T> {
   readonly cacheVersion: 1;
   readonly etag: string | undefined;
   readonly receivedAt: number;
-  readonly envelope: PilotSnapshotEnvelope<T>;
+  readonly envelope: ResourceSnapshotEnvelope<T>;
 }
 
 interface PilotSessionEnvelope {
@@ -82,7 +83,13 @@ const inFlight = new Map<string, Promise<StoredSnapshot<unknown>>>();
 const sessionMemory = new Map<string, StoredSession>();
 const sessionInFlight = new Map<string, Promise<StoredSession>>();
 
+function productionRuntime(): boolean {
+  return window.location.hostname === PRODUCTION_WEB_HOST;
+}
+
 function resolveApiBase(): string | undefined {
+  if (productionRuntime()) return window.location.origin;
+
   const runtimeOverride = window.__PLATFORM_API_URL__?.trim();
   if (runtimeOverride !== undefined && runtimeOverride !== '')
     return runtimeOverride.replace(/\/$/u, '');
@@ -100,6 +107,7 @@ function resolveApiBase(): string | undefined {
 }
 
 function cacheKey(apiBase: string, role: PilotRole): string {
+  if (productionRuntime()) return [apiBase, 'production', role].join('|');
   return [apiBase, PILOT_TENANT_ID, PILOT_CAMPUS_ID, role, subjectByRole[role]].join('|');
 }
 
@@ -119,20 +127,36 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function isMatchingEnvelope<T>(value: unknown, role: PilotRole): value is PilotSnapshotEnvelope<T> {
+function validCapabilities(value: unknown): value is readonly string[] {
+  return Array.isArray(value) && value.every((capability) => typeof capability === 'string');
+}
+
+function isMatchingEnvelope<T>(
+  value: unknown,
+  role: PilotRole,
+): value is ResourceSnapshotEnvelope<T> {
   if (!isRecord(value) || value.schemaVersion !== 1 || typeof value.sourceVersion !== 'string') {
     return false;
   }
   if (typeof value.generatedAt !== 'string' || !isRecord(value.scope) || !isRecord(value.data)) {
     return false;
   }
+  if (
+    typeof value.scope.tenantId !== 'string' ||
+    value.scope.tenantId.trim() === '' ||
+    (value.scope.campusId !== undefined && typeof value.scope.campusId !== 'string') ||
+    value.scope.role !== role ||
+    typeof value.scope.subjectId !== 'string' ||
+    value.scope.subjectId.trim() === '' ||
+    !validCapabilities(value.scope.capabilities)
+  ) {
+    return false;
+  }
+  if (productionRuntime()) return true;
   return (
     value.scope.tenantId === PILOT_TENANT_ID &&
     value.scope.campusId === PILOT_CAMPUS_ID &&
-    value.scope.role === role &&
-    value.scope.subjectId === subjectByRole[role] &&
-    Array.isArray(value.scope.capabilities) &&
-    value.scope.capabilities.every((capability) => typeof capability === 'string')
+    value.scope.subjectId === subjectByRole[role]
   );
 }
 
@@ -295,6 +319,76 @@ async function requestSession(
   }
 }
 
+function databaseEnvelope<T>(value: unknown, role: PilotRole): ResourceSnapshotEnvelope<T> | undefined {
+  if (
+    !isRecord(value) ||
+    value.schemaVersion !== 1 ||
+    typeof value.revision !== 'number' ||
+    !Number.isSafeInteger(value.revision) ||
+    value.revision < 1 ||
+    typeof value.generatedAt !== 'string' ||
+    !isRecord(value.scope) ||
+    value.scope.persona !== role ||
+    typeof value.scope.tenantId !== 'string' ||
+    value.scope.tenantId.trim() === '' ||
+    (value.scope.campusId !== undefined && typeof value.scope.campusId !== 'string') ||
+    typeof value.scope.subjectRef !== 'string' ||
+    value.scope.subjectRef.trim() === '' ||
+    !validCapabilities(value.scope.capabilities) ||
+    !isRecord(value.data)
+  ) {
+    return undefined;
+  }
+  return {
+    schemaVersion: 1,
+    sourceVersion: `database-rm-${value.revision}`,
+    generatedAt: value.generatedAt,
+    scope: {
+      tenantId: value.scope.tenantId,
+      ...(value.scope.campusId === undefined ? {} : { campusId: value.scope.campusId }),
+      role,
+      subjectId: value.scope.subjectRef,
+      capabilities: value.scope.capabilities,
+    },
+    data: value.data as T,
+  };
+}
+
+async function requestProductionSnapshot<T>(
+  apiBase: string,
+  role: PilotRole,
+  key: string,
+  current: StoredSnapshot<T> | undefined,
+): Promise<StoredSnapshot<T>> {
+  const headers = new Headers();
+  if (current?.etag !== undefined) headers.set('if-none-match', current.etag);
+  const response = await fetch(`${apiBase}/auth/v1/snapshot`, {
+    method: 'GET',
+    headers,
+    credentials: 'include',
+    cache: 'no-store',
+  });
+  if (response.status === 304 && current !== undefined) {
+    const refreshed = { ...current, receivedAt: Date.now() };
+    storeSnapshot(key, refreshed);
+    return refreshed;
+  }
+  if (!response.ok) throw new Error(`Production read API returned ${response.status}.`);
+  const value: unknown = await response.json();
+  const envelope = databaseEnvelope<T>(value, role);
+  if (envelope === undefined) {
+    throw new Error('Production read API returned a snapshot outside the authenticated workspace.');
+  }
+  const stored: StoredSnapshot<T> = {
+    cacheVersion: CACHE_VERSION,
+    etag: response.headers.get('etag') ?? undefined,
+    receivedAt: Date.now(),
+    envelope,
+  };
+  storeSnapshot(key, stored);
+  return stored;
+}
+
 async function requestSnapshot<T>(
   apiBase: string,
   role: PilotRole,
@@ -305,8 +399,9 @@ async function requestSnapshot<T>(
   if (existing !== undefined) return existing as Promise<StoredSnapshot<T>>;
 
   const promise = (async (): Promise<StoredSnapshot<T>> => {
-    let session = await requestSession(apiBase, role);
+    if (productionRuntime()) return requestProductionSnapshot(apiBase, role, key, current);
 
+    let session = await requestSession(apiBase, role);
     for (let attempt = 0; attempt < 2; attempt += 1) {
       const headers = new Headers({ authorization: `Bearer ${session.accessToken}` });
       if (current?.etag !== undefined) headers.set('if-none-match', current.etag);
@@ -390,7 +485,11 @@ export function usePilotResource<T extends Readonly<Record<string, unknown>>>(
       .catch((error: unknown) => {
         setState('stale');
         setMessage(
-          error instanceof Error ? error.message : 'The staging read API could not be reached.',
+          error instanceof Error
+            ? error.message
+            : productionRuntime()
+              ? 'The production read API could not be reached.'
+              : 'The staging read API could not be reached.',
         );
       });
   }, [apiBase, connectivity, key, role, snapshot]);
