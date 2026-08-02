@@ -95,6 +95,10 @@ jobs:
           test -n "$DATABASE_URL"
           npm run test:neon
       - run: npm run build
+      - name: Validate production Cloudflare bundles
+        run: |
+          (cd apps/platform-api && npx wrangler deploy --dry-run --env production --outdir /tmp/platform-api-production)
+          (cd apps/platform-web && npx wrangler deploy --dry-run --env production --outdir /tmp/platform-web-production)
       - run: npm run check:experience-budget
       - run: npm audit --audit-level=high
       - run: npm run licenses:check
