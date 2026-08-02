@@ -53,6 +53,16 @@ function ProductionOperatorPortal(props: {
   const role = props.workspace.role as OperatorRole;
   const config = operatorConfig[role];
   const active = config.routes.find((route) => route.href === props.pathname);
+  const signOut = (): void => {
+    void fetch('/auth/v1/logout', {
+      method: 'POST',
+      credentials: 'include',
+      cache: 'no-store',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ scope: 'current' }),
+    }).finally(() => window.location.assign('/'));
+  };
+
   return (
     <div className="pilot-entry" data-role={role}>
       <header className="pilot-entry__masthead">
@@ -64,7 +74,7 @@ function ProductionOperatorPortal(props: {
         <div className="pilot-entry__status">
           <strong>{role}</strong>
           <span>{props.workspace.capabilities.length} current database capabilities</span>
-          <a href="/auth/v1/logout">Sign out</a>
+          <button type="button" onClick={signOut}>Sign out</button>
         </div>
       </header>
       <main className="pilot-entry__main" id="main-content" tabIndex={-1}>
