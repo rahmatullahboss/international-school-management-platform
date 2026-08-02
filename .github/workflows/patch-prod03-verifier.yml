@@ -1,0 +1,47 @@
+name: Patch PROD-03 Verifier
+
+on:
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.head_ref == 'prod/runtime-credential-boundary'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: prod/runtime-credential-boundary
+      - name: Patch production runtime verifier
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('tests/integration/verify-production-runtime.sh')
+          text = path.read_text()
+          text = text.replace("if (migrations.length !== 2) {", "if (migrations.length !== 3) {")
+          text = text.replace("expected two production migrations", "expected three production migrations")
+          text = text.replace("<> 55 THEN", "<> 56 THEN")
+          text = text.replace("expected 55 total migration ledger rows", "expected 56 total migration ledger rows")
+          text = text.replace("SET ROLE app_runtime;", "SET ROLE app_production_runtime;")
+
+          marker = """  IF to_regprocedure('platform.resolve_operator_work_queue(uuid)') IS NULL THEN\n    RAISE EXCEPTION 'operator work queue resolver is missing';\n  END IF;\n"""
+          addition = marker + """  IF NOT EXISTS (\n    SELECT 1\n    FROM pg_roles\n    WHERE rolname = 'app_production_runtime'\n      AND NOT rolcanlogin\n      AND NOT rolsuper\n      AND NOT rolcreatedb\n      AND NOT rolcreaterole\n      AND NOT rolreplication\n      AND NOT rolbypassrls\n  ) THEN\n    RAISE EXCEPTION 'production runtime capability role flags are invalid';\n  END IF;\n  IF pg_has_role('app_production_runtime', 'app_runtime', 'MEMBER') THEN\n    RAISE EXCEPTION 'production runtime role must not inherit app_runtime';\n  END IF;\n  IF EXISTS (\n    SELECT 1\n    FROM pg_class AS relation\n    JOIN pg_namespace AS namespace ON namespace.oid = relation.relnamespace\n    WHERE namespace.nspname NOT IN ('pg_catalog', 'information_schema', 'pg_toast')\n      AND namespace.nspname NOT LIKE 'pg_temp_%'\n      AND namespace.nspname NOT LIKE 'pg_toast_temp_%'\n      AND relation.relkind IN ('r', 'p', 'v', 'm', 'f')\n      AND (\n        has_table_privilege('app_production_runtime', relation.oid, 'SELECT')\n        OR has_table_privilege('app_production_runtime', relation.oid, 'INSERT')\n        OR has_table_privilege('app_production_runtime', relation.oid, 'UPDATE')\n        OR has_table_privilege('app_production_runtime', relation.oid, 'DELETE')\n      )\n  ) THEN\n    RAISE EXCEPTION 'production runtime role must not have application table CRUD';\n  END IF;\n  IF (\n    SELECT count(*)\n    FROM pg_proc AS function\n    JOIN pg_namespace AS namespace ON namespace.oid = function.pronamespace\n    WHERE function.prosecdef\n      AND namespace.nspname NOT IN ('pg_catalog', 'information_schema', 'pg_toast', 'public')\n      AND has_function_privilege('app_production_runtime', function.oid, 'EXECUTE')\n  ) <> 18 THEN\n    RAISE EXCEPTION 'production runtime SECURITY DEFINER allowlist is not exact';\n  END IF;\n  IF has_function_privilege('app_production_runtime', 'billing.allocate_document_number(uuid,text,text)', 'EXECUTE')\n     OR has_function_privilege('app_production_runtime', 'ledger.close_period(uuid,text)', 'EXECUTE')\n     OR has_function_privilege('app_production_runtime', 'ledger.post_journal_entry(uuid,text)', 'EXECUTE')\n     OR has_function_privilege('app_production_runtime', 'ledger.reopen_period(uuid,text,text)', 'EXECUTE')\n     OR has_function_privilege('app_production_runtime', 'public.show_db_tree()', 'EXECUTE') THEN\n    RAISE EXCEPTION 'production runtime role can execute an unreviewed privileged helper';\n  END IF;\n"""
+          if marker not in text:
+            raise SystemExit('verification marker not found')
+          text = text.replace(marker, addition, 1)
+          path.write_text(text)
+          PY
+      - name: Commit verifier patch
+        run: |
+          if git diff --quiet; then
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tests/integration/verify-production-runtime.sh
+          git commit -m 'test(prod): verify least-privilege runtime capability role'
+          git push origin HEAD:prod/runtime-credential-boundary
