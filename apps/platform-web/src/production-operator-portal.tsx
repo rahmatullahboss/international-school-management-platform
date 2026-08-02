@@ -85,6 +85,11 @@ const operatorConfig: Readonly<
   },
 };
 
+function formString(form: FormData, key: string): string {
+  const value = form.get(key);
+  return typeof value === 'string' ? value.trim() : '';
+}
+
 function resultMessage(result: ProductionOperatorCommandResult): ReactElement {
   if (result.state === 'accepted') {
     return (
@@ -157,29 +162,32 @@ function OperatorCommandPanel(props: {
     let body: ProductionOperatorCommandBody;
 
     if (command === 'admissions.application.review.record') {
-      const scoreValue = String(form.get('score') ?? '').trim();
-      const notesValue = String(form.get('notes') ?? '').trim();
+      const scoreValue = formString(form, 'score');
+      const notesValue = formString(form, 'notes');
       body = {
         command,
-        applicationId: String(form.get('applicationId') ?? '').trim(),
-        expectedVersion: Number(form.get('expectedVersion')),
-        recommendation: String(form.get('recommendation')) as
-          'admit' | 'waitlist' | 'decline' | 'more-information',
+        applicationId: formString(form, 'applicationId'),
+        expectedVersion: Number(formString(form, 'expectedVersion')),
+        recommendation: formString(form, 'recommendation') as
+          | 'admit'
+          | 'waitlist'
+          | 'decline'
+          | 'more-information',
         score: scoreValue === '' ? null : Number(scoreValue),
         notes: notesValue === '' ? null : notesValue,
       };
     } else if (command === 'finance.bank-line.reconcile') {
       body = {
         command,
-        bankStatementLineId: String(form.get('bankStatementLineId') ?? '').trim(),
-        paymentId: String(form.get('paymentId') ?? '').trim(),
-        reason: String(form.get('reason') ?? '').trim(),
+        bankStatementLineId: formString(form, 'bankStatementLineId'),
+        paymentId: formString(form, 'paymentId'),
+        reason: formString(form, 'reason'),
       };
     } else {
       body = {
         command,
-        reason: String(form.get('reason') ?? '').trim(),
-        requestedMinutes: Number(form.get('requestedMinutes')),
+        reason: formString(form, 'reason'),
+        requestedMinutes: Number(formString(form, 'requestedMinutes')),
       };
     }
 
