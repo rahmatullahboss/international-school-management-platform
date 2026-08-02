@@ -13,7 +13,13 @@ export async function readBoundedUtf8RequestBody(
   if (body === null) return '';
   if (!Number.isSafeInteger(maximumBytes) || maximumBytes < 0) return undefined;
 
-  const reader = body.getReader();
+  let reader: ReadableStreamDefaultReader<Uint8Array>;
+  try {
+    reader = body.getReader();
+  } catch {
+    return undefined;
+  }
+
   const decoder = new TextDecoder('utf-8', { fatal: true });
   let byteLength = 0;
   let text = '';
