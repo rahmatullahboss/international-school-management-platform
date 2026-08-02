@@ -104,11 +104,19 @@ describe('production operator work queue browser client', () => {
   it('bounds denied responses and transport failures', async () => {
     const responses = [
       new Response(
-        JSON.stringify({ error: { code: 'operator_work_queue_denied', message: 'No operator work queue is available.' } }),
+        JSON.stringify({
+          error: {
+            code: 'operator_work_queue_denied',
+            message: 'No operator work queue is available.',
+          },
+        }),
         { status: 403, headers: { 'content-type': 'application/json' } },
       ),
     ];
-    vi.stubGlobal('fetch', vi.fn().mockImplementation(() => responses.shift()));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation(() => responses.shift()),
+    );
     await expect(loadProductionOperatorWorkQueue()).resolves.toEqual({
       state: 'denied',
       message: 'No operator work queue is available.',

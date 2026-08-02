@@ -64,10 +64,7 @@ function validateAdmissionsCandidate(value: unknown): AdmissionsReviewCandidate 
     typeof version !== 'number' ||
     !Number.isSafeInteger(version) ||
     version < 1 ||
-    !(
-      submittedAt === null ||
-      (typeof submittedAt === 'string' && validIsoTimestamp(submittedAt))
-    )
+    !(submittedAt === null || (typeof submittedAt === 'string' && validIsoTimestamp(submittedAt)))
   ) {
     throw new Error('Operator work queue returned an invalid admissions candidate.');
   }
@@ -82,14 +79,8 @@ function validateAdmissionsCandidate(value: unknown): AdmissionsReviewCandidate 
 
 function validateFinanceCandidate(value: unknown): FinanceReconciliationCandidate {
   if (!isRecord(value)) throw new Error('Operator work queue returned an invalid candidate.');
-  const {
-    bankStatementLineId,
-    bookingDate,
-    amountMinor,
-    currency,
-    paymentId,
-    paymentReceivedAt,
-  } = value;
+  const { bankStatementLineId, bookingDate, amountMinor, currency, paymentId, paymentReceivedAt } =
+    value;
   if (
     typeof bankStatementLineId !== 'string' ||
     !UUID_PATTERN.test(bankStatementLineId) ||

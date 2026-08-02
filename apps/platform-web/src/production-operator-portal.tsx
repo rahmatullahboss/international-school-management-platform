@@ -312,8 +312,9 @@ function OperatorCommandPanel(props: {
               : 'Request privileged support access'}
         </h2>
         <span>
-          The browser cannot choose tenant, campus, account, session or correlation scope. Admissions
-          and Finance candidates are also loaded from the current server-owned database scope.
+          The browser cannot choose tenant, campus, account, session or correlation scope.
+          Admissions and Finance candidates are also loaded from the current server-owned database
+          scope.
         </span>
       </div>
       {needsWorkQueue && !queueReadyForCommand ? queueMessage(workQueue) : null}
@@ -329,7 +330,8 @@ function OperatorCommandPanel(props: {
                 {workQueue?.state === 'ready' && workQueue.role === 'admissions'
                   ? workQueue.items.map((candidate) => (
                       <option key={candidate.applicationId} value={candidate.applicationId}>
-                        {candidate.applicationNumber} · {candidate.status} · version {candidate.version}
+                        {candidate.applicationNumber} · {candidate.status} · version{' '}
+                        {candidate.version}
                       </option>
                     ))
                   : null}
@@ -367,7 +369,8 @@ function OperatorCommandPanel(props: {
                         key={`${candidate.bankStatementLineId}:${candidate.paymentId}`}
                         value={`${candidate.bankStatementLineId}:${candidate.paymentId}`}
                       >
-                        {candidate.bookingDate} · {candidate.currency} {candidate.amountMinor} minor units
+                        {candidate.bookingDate} · {candidate.currency} {candidate.amountMinor} minor
+                        units
                       </option>
                     ))
                   : null}

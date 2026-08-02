@@ -12,7 +12,8 @@ import {
 } from './production-operator-work-queue-api.js';
 
 interface WorkerEnvironment
-  extends PilotOperatorBindings,
+  extends
+    PilotOperatorBindings,
     AuthLoginBindings,
     ProductionOperatorCommandBindings,
     ProductionOperatorWorkQueueBindings {

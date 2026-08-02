@@ -83,7 +83,11 @@ describe('production operator work queue API', () => {
 
   it('requires GET and emits no-store responses', async () => {
     const deps = dependencies();
-    const response = await handleProductionOperatorWorkQueueRequest(request('POST'), environment, deps);
+    const response = await handleProductionOperatorWorkQueueRequest(
+      request('POST'),
+      environment,
+      deps,
+    );
     expect(response?.status).toBe(405);
     expect(response?.headers.get('cache-control')).toBe('no-store');
     expect(deps.resolveSession).not.toHaveBeenCalled();
