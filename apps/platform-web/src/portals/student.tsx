@@ -10,9 +10,9 @@ import {
   studentOverview,
 } from '../pilot-data';
 import { usePilotResource } from '../pilot-resource';
+import { StudentRouteWorkspace } from '../persona-route-workspace';
 import {
   PilotDataStatus,
-  PilotModuleSurface,
   UnknownRoute,
   resolvePageHeading,
   shellUtilityActions,
@@ -92,7 +92,7 @@ export default function StudentPortal(props: StudentPortalProps): ReactElement {
       ) : page === undefined ? (
         <UnknownRoute homeHref="/student" />
       ) : (
-        <PilotModuleSurface page={page} />
+        <StudentRouteWorkspace path={props.path} overview={overview} />
       )}
     </StudentExperienceShell>
   );
