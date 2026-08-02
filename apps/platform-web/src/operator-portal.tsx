@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useState, type ReactElement } from 're
 import { createRoot } from 'react-dom/client';
 
 import { OperatorRouteWorkspace } from './operator-route-workspace';
-import { PilotDataStatus, UnknownRoute, type PilotConnectivity } from './portal-shared';
+import './operator-route-workspace.css';
+import { PilotDataStatus, UnknownRoute } from './portal-shared';
 import './pilot.css';
 import './pilot-resource.css';
 import './pilot-ux.css';
@@ -293,10 +294,6 @@ function isMatchingSnapshot(value: unknown, role: OperatorRole): value is Operat
   );
 }
 
-function connectivityState(): PilotConnectivity {
-  return navigator.onLine ? 'online' : 'offline';
-}
-
 function useOperatorResource(role: OperatorRole) {
   const config = operatorConfigs[role];
   const apiBase = useMemo(resolveApiBase, []);
@@ -453,7 +450,7 @@ export function OperatorPortal(props: {
   const resource = useOperatorResource(props.role);
 
   return (
-    <div className="pilot-entry" data-role={props.role}>
+    <div className="pilot-entry operator-entry" data-role={props.role}>
       <a className="pilot-skip-link" href="#main-content">
         Skip to main content
       </a>
@@ -532,41 +529,4 @@ export function mountOperatorPortal(role: OperatorRole): void {
   createRoot(root).render(
     <OperatorPortal role={role} path={window.location.pathname.replace(/\/+$/u, '') || '/'} />,
   );
-}
-
-export function operatorLandingCards(): readonly {
-  readonly role: OperatorRole;
-  readonly href: string;
-  readonly title: string;
-  readonly detail: string;
-  readonly action: string;
-}[] {
-  return [
-    {
-      role: 'admissions',
-      href: '/admissions',
-      title: 'Admissions staff',
-      detail: 'Process enquiries, applications, interviews, offers and enrolment conversion.',
-      action: 'Go to admissions',
-    },
-    {
-      role: 'finance',
-      href: '/finance',
-      title: 'Finance or cashier',
-      detail:
-        'Handle invoices, receipts, cashier sessions and reconciliation with least privilege.',
-      action: 'Go to finance',
-    },
-    {
-      role: 'support',
-      href: '/support',
-      title: 'Platform support',
-      detail: 'Diagnose tenant and deployment health through explicit audited support scope.',
-      action: 'Go to support',
-    },
-  ] as const;
-}
-
-export function currentOperatorConnectivity(): PilotConnectivity {
-  return connectivityState();
 }
