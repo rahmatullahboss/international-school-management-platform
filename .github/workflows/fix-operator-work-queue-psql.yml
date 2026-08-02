@@ -1,0 +1,41 @@
+name: Fix Operator Work Queue Psql Capture
+
+on:
+  push:
+    branches:
+      - prod/operator-work-queue
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: prod/operator-work-queue
+      - name: Quiet psql command tags in captured assertions
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          for name in [
+              'tests/integration/verify-production-operator-work-queue.sh',
+              '.github/workflows/diagnose-operator-work-queue.yml',
+          ]:
+              path = Path(name)
+              text = path.read_text()
+              text = text.replace("-AtF '|' -c", "-AtqF '|' -c")
+              path.write_text(text)
+          PY
+      - name: Commit capture fix
+        run: |
+          if git diff --quiet; then
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tests/integration/verify-production-operator-work-queue.sh .github/workflows/diagnose-operator-work-queue.yml
+          git commit -m 'test(prod): quiet operator queue psql assertions'
+          git push origin HEAD:prod/operator-work-queue
