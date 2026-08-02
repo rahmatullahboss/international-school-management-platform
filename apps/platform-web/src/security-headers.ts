@@ -1,4 +1,4 @@
-export type WebSecurityEnvironment = 'development' | 'staging' | 'production' | string | undefined;
+export type WebSecurityEnvironment = string | undefined;
 
 const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
