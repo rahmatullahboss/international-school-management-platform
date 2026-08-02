@@ -1,9 +1,7 @@
 name: Fix Operator Work Queue Psql Capture
 
 on:
-  push:
-    branches:
-      - prod/operator-work-queue
+  pull_request:
 
 permissions:
   contents: write
@@ -11,6 +9,7 @@ permissions:
 # Temporary branch-only workflow. Remove after the canonical verifier edit is committed.
 jobs:
   fix:
+    if: github.head_ref == 'prod/operator-work-queue'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
