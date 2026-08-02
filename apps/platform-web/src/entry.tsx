@@ -1,7 +1,6 @@
 import { StrictMode, type ReactElement } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { mountOperatorPortal, operatorLandingCards, operatorRoleForPath } from './operator-portal';
 import {
   isProductionWebHost,
   mountProductionGate,
@@ -9,12 +8,34 @@ import {
   resolveProductionWorkspace,
 } from './production-gateway';
 import { mountProductionOperatorPortal } from './production-operator-portal';
-import './operator-route-workspace.css';
 import './pilot.css';
 import './styles.css';
 
 function FullPersonaLanding(): ReactElement {
-  const operatorCards = operatorLandingCards();
+  const operatorCards = [
+    {
+      role: 'admissions',
+      href: '/admissions',
+      title: 'Admissions staff',
+      detail: 'Process enquiries, applications, interviews, offers and enrolment conversion.',
+      action: 'Go to admissions',
+    },
+    {
+      role: 'finance',
+      href: '/finance',
+      title: 'Finance or cashier',
+      detail:
+        'Handle invoices, receipts, cashier sessions and reconciliation with least privilege.',
+      action: 'Go to finance',
+    },
+    {
+      role: 'support',
+      href: '/support',
+      title: 'Platform support',
+      detail: 'Diagnose tenant and deployment health through explicit audited support scope.',
+      action: 'Go to support',
+    },
+  ] as const;
   const coreCards = [
     {
       role: 'admin',
@@ -132,6 +153,13 @@ function FullPersonaLanding(): ReactElement {
 const normalizedPath =
   window.location.pathname === '/' ? '/' : window.location.pathname.replace(/\/+$/u, '');
 
+function operatorRoleForPath(pathname: string): 'admissions' | 'finance' | 'support' | undefined {
+  if (pathname === '/admissions' || pathname.startsWith('/admissions/')) return 'admissions';
+  if (pathname === '/finance' || pathname.startsWith('/finance/')) return 'finance';
+  if (pathname === '/support' || pathname.startsWith('/support/')) return 'support';
+  return undefined;
+}
+
 function installHomeNavigationHandler(): void {
   document.addEventListener(
     'click',
@@ -182,7 +210,9 @@ if (isProductionWebHost()) {
 } else {
   const operatorRole = operatorRoleForPath(normalizedPath);
   if (operatorRole !== undefined) {
-    mountOperatorPortal(operatorRole);
+    void import('./operator-portal').then(({ mountOperatorPortal }) =>
+      mountOperatorPortal(operatorRole),
+    );
   } else if (normalizedPath === '/') {
     const root = document.getElementById('root');
     if (root === null) throw new Error('Root element not found');
