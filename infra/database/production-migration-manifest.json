@@ -15,6 +15,12 @@
       "id": "202608020002_PROD-02_operator_work_queue",
       "stream": "PROD-02",
       "path": "infra/database/post-integration-migrations/202608020002_PROD-02_operator_work_queue.sql"
+    },
+    {
+      "order": 3,
+      "id": "202608020003_PROD-03_production_runtime_role",
+      "stream": "PROD-03",
+      "path": "infra/database/post-integration-migrations/202608020003_PROD-03_production_runtime_role.sql"
     }
   ]
 }
