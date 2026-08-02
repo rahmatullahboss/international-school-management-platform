@@ -17,12 +17,13 @@ if (manifest.baseManifest !== 'infra/database/post-integration-migration-manifes
   throw new Error('production manifest must extend the reviewed post-integration manifest');
 }
 const migrations = manifest.migrations ?? [];
-if (migrations.length !== 1) {
-  throw new Error(`expected one production migration, got ${migrations.length}`);
+if (migrations.length !== 2) {
+  throw new Error(`expected two production migrations, got ${migrations.length}`);
 }
 for (const [index, migration] of migrations.entries()) {
   if (migration.order !== index + 1) throw new Error('production migration orders are not contiguous');
-  if (migration.stream !== 'PROD-01') throw new Error(`unexpected stream: ${migration.stream}`);
+  const expectedStream = `PROD-${String(index + 1).padStart(2, '0')}`;
+  if (migration.stream !== expectedStream) throw new Error(`unexpected stream: ${migration.stream}`);
   if (!existsSync(migration.path)) throw new Error(`missing migration: ${migration.path}`);
   console.log(migration.path);
 }
@@ -36,19 +37,28 @@ done
 "${PSQL[@]}" <<'SQL'
 DO $verification$
 BEGIN
-  IF (SELECT count(*) FROM platform.schema_migration) <> 54 THEN
-    RAISE EXCEPTION 'expected 54 total migration ledger rows after production hardening';
+  IF (SELECT count(*) FROM platform.schema_migration) <> 55 THEN
+    RAISE EXCEPTION 'expected 55 total migration ledger rows after production hardening';
   END IF;
   IF to_regprocedure('iam.resolve_browser_workspace(uuid)') IS NULL THEN
     RAISE EXCEPTION 'browser workspace resolver is missing';
   END IF;
+  IF to_regprocedure('platform.resolve_operator_work_queue(uuid)') IS NULL THEN
+    RAISE EXCEPTION 'operator work queue resolver is missing';
+  END IF;
   IF NOT has_function_privilege('app_runtime', 'iam.resolve_browser_workspace(uuid)', 'EXECUTE') THEN
     RAISE EXCEPTION 'app_runtime must execute the workspace resolver';
   END IF;
+  IF NOT has_function_privilege('app_runtime', 'platform.resolve_operator_work_queue(uuid)', 'EXECUTE') THEN
+    RAISE EXCEPTION 'app_runtime must execute the operator work queue resolver';
+  END IF;
   IF has_table_privilege('app_runtime', 'iam.browser_session_registry', 'SELECT')
      OR has_table_privilege('app_runtime', 'iam.oidc_membership_binding', 'SELECT')
-     OR has_table_privilege('app_runtime', 'iam.oidc_membership_role_binding', 'SELECT') THEN
-    RAISE EXCEPTION 'app_runtime must not gain direct durable session table access';
+     OR has_table_privilege('app_runtime', 'iam.oidc_membership_role_binding', 'SELECT')
+     OR has_table_privilege('app_runtime', 'admissions.application', 'SELECT')
+     OR has_table_privilege('app_runtime', 'billing.bank_statement_line', 'SELECT')
+     OR has_table_privilege('app_runtime', 'billing.payment_record', 'SELECT') THEN
+    RAISE EXCEPTION 'app_runtime must not gain direct protected table access';
   END IF;
 END
 $verification$;
@@ -194,6 +204,12 @@ if [[ "$workspace" != "admin:production.workspace.read" ]]; then
   exit 1
 fi
 
+admin_queue="$("${PSQL[@]}" -Atqc "SET ROLE app_runtime; SELECT COALESCE(platform.resolve_operator_work_queue('95000000-0000-4000-8000-000000000008'::uuid)::text, 'null');")"
+if [[ "$admin_queue" != "null" ]]; then
+  echo 'Non-operator admin session unexpectedly resolved an operator work queue.' >&2
+  exit 1
+fi
+
 "${PSQL[@]}" -Atqc "SELECT iam.revoke_browser_session('95000000-0000-4000-8000-000000000008'::uuid, 'production workspace verification complete')" >/dev/null
 post_revoke="$("${PSQL[@]}" -Atqc "SET ROLE app_runtime; SELECT count(*) FROM iam.resolve_browser_workspace('95000000-0000-4000-8000-000000000008'::uuid);")"
 if [[ "$post_revoke" != "0" ]]; then
@@ -201,4 +217,4 @@ if [[ "$post_revoke" != "0" ]]; then
   exit 1
 fi
 
-echo 'Production runtime migration and function-only workspace verification passed.'
+echo 'Production runtime migrations and function-only workspace/work-queue verification passed.'
