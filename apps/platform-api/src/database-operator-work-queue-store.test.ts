@@ -72,31 +72,35 @@ describe('database operator work queue store', () => {
     await expect(store.resolve(sessionId)).resolves.toBeUndefined();
   });
 
-  it.each([
-    [],
-    [{ queue: { schemaVersion: 2, role: 'admissions', items: [] } }],
-    [{ queue: { schemaVersion: 1, role: 'support', items: [] } }],
-    [
-      {
-        queue: {
-          schemaVersion: 1,
-          role: 'finance',
-          items: [
-            {
-              bankStatementLineId: '98000000-0000-4000-8000-000000000003',
-              bookingDate: '2026-08-01',
-              amountMinor: 1500000,
-              currency: 'BDT',
-              paymentId: '98000000-0000-4000-8000-000000000004',
-              paymentReceivedAt: '2026-08-01T09:05:00.000Z',
-            },
-          ],
+  it('fails closed on malformed queue rows', async () => {
+    const malformedRows: unknown[][] = [
+      [],
+      [{ queue: { schemaVersion: 2, role: 'admissions', items: [] } }],
+      [{ queue: { schemaVersion: 1, role: 'support', items: [] } }],
+      [
+        {
+          queue: {
+            schemaVersion: 1,
+            role: 'finance',
+            items: [
+              {
+                bankStatementLineId: '98000000-0000-4000-8000-000000000003',
+                bookingDate: '2026-08-01',
+                amountMinor: 1500000,
+                currency: 'BDT',
+                paymentId: '98000000-0000-4000-8000-000000000004',
+                paymentReceivedAt: '2026-08-01T09:05:00.000Z',
+              },
+            ],
+          },
         },
-      },
-    ],
-  ])('fails closed on malformed queue rows', async (rows) => {
-    const store = new DatabaseOperatorWorkQueueStore(databaseWith(rows));
-    await expect(store.resolve(sessionId)).rejects.toThrow(/invalid/u);
+      ],
+    ];
+
+    for (const rows of malformedRows) {
+      const store = new DatabaseOperatorWorkQueueStore(databaseWith(rows));
+      await expect(store.resolve(sessionId)).rejects.toThrow(/invalid/u);
+    }
   });
 
   it('rejects malformed session identifiers before database access', async () => {
