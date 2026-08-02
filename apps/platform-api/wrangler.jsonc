@@ -32,7 +32,7 @@
       "vars": {
         "APP_ENV": "production",
         "APP_REGION": "global",
-        "OIDC_REDIRECT_URI": "https://international-school-platform-api-production.rahmatullahzisan.workers.dev/auth/v1/callback",
+        "OIDC_REDIRECT_URI": "https://international-school-platform-web-production.rahmatullahzisan.workers.dev/auth/v1/callback",
         "OIDC_PROVIDER_CACHE_SOURCE": "database",
         "OIDC_BACKCHANNEL_LOGOUT_SOURCE": "database",
         "AUTH_TRANSACTION_REPLAY_SOURCE": "database",
