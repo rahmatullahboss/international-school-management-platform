@@ -37,7 +37,10 @@ describe('bounded UTF-8 request body reader', () => {
     const cancelled = vi.fn();
     await expect(
       readBoundedUtf8RequestBody(
-        stream([encoder.encode('1234'), encoder.encode('5'), encoder.encode('never-read')], cancelled),
+        stream(
+          [encoder.encode('1234'), encoder.encode('5'), encoder.encode('never-read')],
+          cancelled,
+        ),
         4,
       ),
     ).resolves.toBeUndefined();
@@ -51,7 +54,9 @@ describe('bounded UTF-8 request body reader', () => {
   });
 
   it('rejects invalid internal limits', async () => {
-    await expect(readBoundedUtf8RequestBody(stream([encoder.encode('a')]), -1)).resolves.toBeUndefined();
+    await expect(
+      readBoundedUtf8RequestBody(stream([encoder.encode('a')]), -1),
+    ).resolves.toBeUndefined();
     await expect(
       readBoundedUtf8RequestBody(stream([encoder.encode('a')]), Number.POSITIVE_INFINITY),
     ).resolves.toBeUndefined();
