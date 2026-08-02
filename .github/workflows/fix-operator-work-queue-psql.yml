@@ -8,6 +8,7 @@ on:
 permissions:
   contents: write
 
+# Temporary branch-only workflow. Remove after the canonical verifier edit is committed.
 jobs:
   fix:
     runs-on: ubuntu-latest
