@@ -4,7 +4,8 @@ import type { PilotConnectivity, PilotRole } from './portal-shared';
 
 const PILOT_TENANT_ID = 'tenant-pilot-001';
 const PILOT_CAMPUS_ID = 'campus-main';
-const PRODUCTION_WEB_HOST = 'international-school-platform-web-production.rahmatullahzisan.workers.dev';
+const PRODUCTION_WEB_HOST =
+  'international-school-platform-web-production.rahmatullahzisan.workers.dev';
 const CACHE_VERSION = 1;
 const SESSION_VERSION = 1;
 const REFRESH_AFTER_MS = 60_000;
@@ -319,7 +320,10 @@ async function requestSession(
   }
 }
 
-function databaseEnvelope<T>(value: unknown, role: PilotRole): ResourceSnapshotEnvelope<T> | undefined {
+function databaseEnvelope<T>(
+  value: unknown,
+  role: PilotRole,
+): ResourceSnapshotEnvelope<T> | undefined {
   if (
     !isRecord(value) ||
     value.schemaVersion !== 1 ||

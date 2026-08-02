@@ -36,9 +36,12 @@ describe('production pilot boundary', () => {
 
   it('leaves pilot routes available outside production', () => {
     expect(
-      enforceProductionPilotBoundary(new Request('https://api.example.com/pilot/v1/sessions/admin'), {
-        APP_ENV: 'staging',
-      }),
+      enforceProductionPilotBoundary(
+        new Request('https://api.example.com/pilot/v1/sessions/admin'),
+        {
+          APP_ENV: 'staging',
+        },
+      ),
     ).toBeUndefined();
   });
 });

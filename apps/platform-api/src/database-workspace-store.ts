@@ -12,13 +12,7 @@ const WORKSPACE_ROLES = new Set([
 ]);
 
 export type DatabaseWorkspaceRole =
-  | 'admin'
-  | 'teacher'
-  | 'guardian'
-  | 'student'
-  | 'admissions'
-  | 'finance'
-  | 'support';
+  'admin' | 'teacher' | 'guardian' | 'student' | 'admissions' | 'finance' | 'support';
 
 export interface DatabaseBrowserWorkspace {
   readonly role: DatabaseWorkspaceRole;

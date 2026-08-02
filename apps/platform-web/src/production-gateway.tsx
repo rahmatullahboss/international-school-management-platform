@@ -8,13 +8,7 @@ export const PRODUCTION_WEB_HOST =
   'international-school-platform-web-production.rahmatullahzisan.workers.dev';
 
 type ProductionRole =
-  | 'admin'
-  | 'teacher'
-  | 'guardian'
-  | 'student'
-  | 'admissions'
-  | 'finance'
-  | 'support';
+  'admin' | 'teacher' | 'guardian' | 'student' | 'admissions' | 'finance' | 'support';
 
 export interface ProductionWorkspace {
   readonly role: ProductionRole;
