@@ -1,7 +1,7 @@
 import { createHttpDatabase, type HttpDatabase } from '@school/database';
 
 export interface ProductionDatabaseCredentialBindings {
-  readonly APP_ENV?: string;
+  readonly APP_ENV: string;
   readonly DATABASE_URL?: string;
 }
 
