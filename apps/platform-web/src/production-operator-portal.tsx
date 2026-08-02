@@ -169,10 +169,7 @@ function OperatorCommandPanel(props: {
         applicationId: formString(form, 'applicationId'),
         expectedVersion: Number(formString(form, 'expectedVersion')),
         recommendation: formString(form, 'recommendation') as
-          | 'admit'
-          | 'waitlist'
-          | 'decline'
-          | 'more-information',
+          'admit' | 'waitlist' | 'decline' | 'more-information',
         score: scoreValue === '' ? null : Number(scoreValue),
         notes: notesValue === '' ? null : notesValue,
       };
