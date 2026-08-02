@@ -17,7 +17,9 @@ Reviewed production-support checkpoints now on `main`:
 - PR #90: `d84d17fff38d27abc589703386e8395bba9f0746` — database-owned Admissions/Finance operator work queues;
 - PR #91: `63fe4e32eee398f49ace9954b9cc089e955cae1a` — least-privilege production runtime capability boundary;
 - PR #92: `3175c81aaa5359febe393bd7942fd4588adc9fd9` — fail-closed production database login credential self-check;
-- PR #93: `2810fc6f88f5178f70a6d548962672836f9be6cf` — fail-closed Cloudflare pre-authentication rate limiting.
+- PR #93: `2810fc6f88f5178f70a6d548962672836f9be6cf` — fail-closed Cloudflare pre-authentication rate limiting;
+- PR #94: `f4306a6b048a1170cebcc883ca0a20ec07d352a6` — bounded and de-ambiguous OIDC login/callback ingress;
+- PR #95: `6284d8243b8ddb451211d77a5f12e7203a0c8d1d` — true streaming body caps on sensitive production POST routes.
 
 Completed and verified:
 
@@ -38,9 +40,11 @@ Completed and verified:
 - `PROD-04` adds database-owned login-identity readiness through `platform.production_runtime_credential_ready()` and production `/auth/*` requests now fail closed when the bound `DATABASE_URL` uses an owner, broad or otherwise overprivileged credential;
 - the runtime credential readiness contract rejects direct application relation/sequence authority, broad `app_runtime` membership and Neon `neon_superuser` membership, while requiring a real LOGIN principal bound to `app_production_runtime`;
 - `/auth/v1/database-credential/readiness` exposes only redacted ready/not-ready diagnostics and the base `/auth/v1/readiness` remains available for configuration diagnosis;
-- production `/auth/v1/login` and `/auth/v1/callback` now use a Cloudflare Rate Limiting binding before database/provider work; the reviewed limit is 30 requests per 60 seconds per route/client key;
+- production `/auth/v1/login` and `/auth/v1/callback` use a Cloudflare Rate Limiting binding before database/provider work; the reviewed limit is 30 requests per 60 seconds per route/client key;
 - the pre-auth limiter derives the client actor from Cloudflare-provided client identity, stores only a SHA-256 route-scoped key, returns bounded `429`/`Retry-After` responses, and fails closed if the limiter or trusted client identity is unavailable;
-- canonical CI verifies production migrations/runtime boundaries, revoked-session denial, operator command validation, work-queue scope/precision, least-privilege role invariants, runtime login credential privilege-drift behavior, pre-auth limiter behavior, API/web builds and both Cloudflare production Wrangler dry-runs;
+- OIDC login/callback query ingress is bounded before database/provider work: total auth URL 8 KiB, bounded individual fields, exact allowlists and duplicate/unknown parameter rejection;
+- sensitive production POST bodies use streaming byte limits rather than post-buffer size checks: OIDC back-channel logout keeps its existing ~17 KiB envelope and operator commands keep their existing 4 KiB envelope, with immediate stream cancellation on overflow and fatal UTF-8 validation;
+- canonical CI verifies production migrations/runtime boundaries, revoked-session denial, operator command validation, work-queue scope/precision, least-privilege role invariants, runtime login credential privilege-drift behavior, pre-auth limiter behavior, bounded OIDC ingress, streaming body limits, API/web builds and both Cloudflare production Wrangler dry-runs;
 - the reviewed Neon integration branch contains the 53-migration pilot baseline plus `PROD-01` through `PROD-04`, for **57** ledger entries total;
 - live Neon verification shows zero application relations with CRUD authority for `app_production_runtime`, exactly **19** reviewed SECURITY DEFINER functions executable, no `app_runtime` inheritance, owner credential readiness `false` and all privileged helper denials active;
 - one Bangladesh demo tenant, one Dhaka campus, seven IAM roles/accounts/memberships and seven placeholder OIDC membership bindings are seeded;
@@ -119,13 +123,13 @@ The matrix must cover:
 
 ## 6. Security, privacy and operational readiness — open
 
-Code/config verification now covers pre-authentication rate limiting, bounded operator mutation bodies, reviewed origin checks, fail-closed database credential validation and redacted dependency failures. Deployed-environment verification is still required.
+Code/config verification now covers pre-authentication rate limiting, bounded and de-ambiguous OIDC query ingress, true streaming byte caps on sensitive request bodies, reviewed origin checks, fail-closed database credential validation and redacted dependency failures. Deployed-environment verification is still required.
 
 Before production authorization:
 
 - complete a targeted security review for identity, privileged support access, finance mutations and student/guardian data boundaries;
 - confirm log/trace redaction for tokens, payloads, digests, temporary files and sensitive identifiers;
-- verify the pre-auth rate limiter, bounded request bodies, CORS/origin controls and fail-closed dependency behavior through the deployed production-like environment;
+- verify the pre-auth rate limiter, OIDC ingress bounds, streaming body limits, CORS/origin controls and fail-closed dependency behavior through the deployed production-like environment;
 - establish alert ownership, escalation and on-call/runbook procedures for projection backlog, dead letters, stale sources and identity-provider failures;
 - verify backup retention, restore integrity and rollback procedures on an isolated recovery environment;
 - document incident response and evidence-retention requirements.
@@ -143,6 +147,6 @@ Production promotion remains blocked until:
 
 ## Current boundary
 
-`main` now contains the fail-closed production-support code, authenticated operator command/work-queue wiring, least-privilege production database capability role, database-login self-check and Cloudflare pre-authentication rate limiting. The reviewed Neon integration branch contains the demo-school baseline through PROD-04 with **57** migration ledger entries. This does **not** mean production is active.
+`main` now contains the fail-closed production-support code, authenticated operator command/work-queue wiring, least-privilege production database capability role, database-login self-check, Cloudflare pre-authentication rate limiting, bounded OIDC ingress and true streaming body caps for sensitive POST routes. The reviewed Neon integration branch contains the demo-school baseline through PROD-04 with **57** migration ledger entries. This does **not** mean production is active.
 
 Real provider login, real provider-subject mappings, production secrets, a password-bearing login principal bound only to `app_production_runtime`, production schedules/alerts, deployed seven-persona production-like E2E, recovery/security sign-off and explicit production authorization remain outstanding. Synthetic pilot identities and `/pilot/*` APIs remain unavailable in production by design.
