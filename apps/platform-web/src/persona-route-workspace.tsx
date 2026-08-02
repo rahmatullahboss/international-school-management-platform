@@ -1,6 +1,11 @@
 import { useMemo, useState, type ReactElement } from 'react';
 
-import { adminOverview, guardianOverview, studentOverview, teacherOverview } from './pilot-data';
+import type {
+  adminOverview,
+  guardianOverview,
+  studentOverview,
+  teacherOverview,
+} from './pilot-data';
 
 type AdminOverview = typeof adminOverview;
 type TeacherOverview = typeof teacherOverview;
