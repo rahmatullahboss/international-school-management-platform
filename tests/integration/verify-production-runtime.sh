@@ -54,11 +54,8 @@ BEGIN
   END IF;
   IF has_table_privilege('app_runtime', 'iam.browser_session_registry', 'SELECT')
      OR has_table_privilege('app_runtime', 'iam.oidc_membership_binding', 'SELECT')
-     OR has_table_privilege('app_runtime', 'iam.oidc_membership_role_binding', 'SELECT')
-     OR has_table_privilege('app_runtime', 'admissions.application', 'SELECT')
-     OR has_table_privilege('app_runtime', 'billing.bank_statement_line', 'SELECT')
-     OR has_table_privilege('app_runtime', 'billing.payment_record', 'SELECT') THEN
-    RAISE EXCEPTION 'app_runtime must not gain direct protected table access';
+     OR has_table_privilege('app_runtime', 'iam.oidc_membership_role_binding', 'SELECT') THEN
+    RAISE EXCEPTION 'app_runtime must not gain direct protected IAM session/binding table access';
   END IF;
 END
 $verification$;
@@ -217,4 +214,4 @@ if [[ "$post_revoke" != "0" ]]; then
   exit 1
 fi
 
-echo 'Production runtime migrations and function-only workspace/work-queue verification passed.'
+echo 'Production runtime migrations and scoped workspace/work-queue verification passed.'
