@@ -409,13 +409,13 @@ INSERT INTO billing.bank_statement_line (
 ON CONFLICT (tenant_id, legal_entity_id, bank_statement_line_id) DO NOTHING;
 SQL
 
-admissions_queue="$("${PSQL[@]}" -AtF '|' -c "SET ROLE app_runtime; WITH q AS (SELECT platform.resolve_operator_work_queue('95100000-0000-4000-8000-000000000008'::uuid) AS value) SELECT value->>'role', jsonb_array_length(value->'items'), value->'items'->0->>'applicationId', value->'items'->0->>'applicationNumber', value->'items'->0->>'version' FROM q;")"
+admissions_queue="$("${PSQL[@]}" -AtqF '|' -c "SET ROLE app_runtime; WITH q AS (SELECT platform.resolve_operator_work_queue('95100000-0000-4000-8000-000000000008'::uuid) AS value) SELECT value->>'role', jsonb_array_length(value->'items'), value->'items'->0->>'applicationId', value->'items'->0->>'applicationNumber', value->'items'->0->>'version' FROM q;")"
 if [[ "$admissions_queue" != "admissions|1|95100000-0000-4000-8000-000000000203|APP-PROD-QUEUE-001|1" ]]; then
   echo "Unexpected admissions work queue: $admissions_queue" >&2
   exit 1
 fi
 
-finance_queue="$("${PSQL[@]}" -AtF '|' -c "SET ROLE app_runtime; WITH q AS (SELECT platform.resolve_operator_work_queue('95200000-0000-4000-8000-000000000008'::uuid) AS value) SELECT value->>'role', jsonb_array_length(value->'items'), value->'items'->0->>'bankStatementLineId', value->'items'->0->>'paymentId', value->'items'->0->>'amountMinor', jsonb_typeof(value->'items'->0->'amountMinor') FROM q;")"
+finance_queue="$("${PSQL[@]}" -AtqF '|' -c "SET ROLE app_runtime; WITH q AS (SELECT platform.resolve_operator_work_queue('95200000-0000-4000-8000-000000000008'::uuid) AS value) SELECT value->>'role', jsonb_array_length(value->'items'), value->'items'->0->>'bankStatementLineId', value->'items'->0->>'paymentId', value->'items'->0->>'amountMinor', jsonb_typeof(value->'items'->0->'amountMinor') FROM q;")"
 if [[ "$finance_queue" != "finance|1|95200000-0000-4000-8000-000000000113|95200000-0000-4000-8000-000000000112|1500000|string" ]]; then
   echo "Unexpected finance work queue: $finance_queue" >&2
   exit 1
