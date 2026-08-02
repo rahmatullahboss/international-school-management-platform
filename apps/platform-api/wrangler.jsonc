@@ -28,7 +28,7 @@
     },
     "production": {
       "name": "international-school-platform-api-production",
-      "workers_dev": true,
+      "workers_dev": false,
       "ratelimits": [
         {
           "name": "AUTH_PRELOGIN_RATE_LIMITER",
