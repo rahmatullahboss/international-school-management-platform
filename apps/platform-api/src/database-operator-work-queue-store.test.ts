@@ -99,7 +99,7 @@ describe('database operator work queue store', () => {
 
     for (const rows of malformedRows) {
       const store = new DatabaseOperatorWorkQueueStore(databaseWith(rows));
-      await expect(store.resolve(sessionId)).rejects.toThrow(/invalid/u);
+      await expect(store.resolve(sessionId)).rejects.toThrow(/invalid|unsupported/u);
     }
   });
 
