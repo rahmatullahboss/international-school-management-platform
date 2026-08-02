@@ -153,7 +153,7 @@ BEGIN
         jsonb_build_object(
           'bankStatementLineId', line.bank_statement_line_id,
           'bookingDate', to_char(line.booking_date, 'YYYY-MM-DD'),
-          'amountMinor', line.amount_minor,
+          'amountMinor', line.amount_minor::text,
           'currency', line.currency,
           'paymentId', payment.payment_id,
           'paymentReceivedAt', to_char(
