@@ -72,6 +72,48 @@ describe('durable OIDC login routes', () => {
     });
   });
 
+  it('rejects duplicate login parameters before runtime/provider resolution', async () => {
+    const response = await handleAuthLoginRequest(
+      new Request(
+        'https://api.example.com/auth/v1/login?returnTo=%2Fadmin&returnTo=%2Fstudent',
+      ),
+      configured,
+    );
+    expect(response?.status).toBe(400);
+    await expect(response?.json()).resolves.toEqual({
+      error: {
+        code: 'oidc_request_invalid',
+        message: 'The OIDC request is invalid.',
+      },
+    });
+  });
+
+  it('rejects duplicate callback state before runtime/provider resolution', async () => {
+    const response = await handleAuthLoginRequest(
+      new Request('https://api.example.com/auth/v1/callback?code=c&state=one&state=two'),
+      configured,
+    );
+    expect(response?.status).toBe(400);
+    expect(response?.headers.get('cache-control')).toBe('no-store');
+    await expect(response?.json()).resolves.toEqual({
+      error: {
+        code: 'oidc_request_invalid',
+        message: 'The OIDC request is invalid.',
+      },
+    });
+  });
+
+  it('rejects oversized callback values before runtime/provider resolution', async () => {
+    const response = await handleAuthLoginRequest(
+      new Request(`https://api.example.com/auth/v1/callback?code=${'a'.repeat(4097)}&state=s`),
+      configured,
+    );
+    expect(response?.status).toBe(400);
+    await expect(response?.json()).resolves.toMatchObject({
+      error: { code: 'oidc_request_invalid' },
+    });
+  });
+
   it('rejects mutation methods on login and readiness routes', async () => {
     const login = await handleAuthLoginRequest(
       new Request('https://api.example.com/auth/v1/login', { method: 'POST' }),
