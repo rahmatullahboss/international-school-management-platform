@@ -91,10 +91,14 @@ describe('production operator command API', () => {
   it('does not expose the production command endpoint outside production', async () => {
     const deps = dependencies();
     await expect(
-      handleProductionOperatorCommandRequest(request(admissionsBody()), {
-        ...environment,
-        APP_ENV: 'staging',
-      }, deps.value),
+      handleProductionOperatorCommandRequest(
+        request(admissionsBody()),
+        {
+          ...environment,
+          APP_ENV: 'staging',
+        },
+        deps.value,
+      ),
     ).resolves.toBeUndefined();
     expect(deps.submit).not.toHaveBeenCalled();
   });
@@ -139,7 +143,11 @@ describe('production operator command API', () => {
       { ...admissionsBody(), campusId: activeSession.context.campusId },
       { ...admissionsBody(), correlationId },
     ]) {
-      const response = await handleProductionOperatorCommandRequest(request(body), environment, deps.value);
+      const response = await handleProductionOperatorCommandRequest(
+        request(body),
+        environment,
+        deps.value,
+      );
       expect(response?.status).toBe(400);
       await expect(response?.json()).resolves.toMatchObject({
         error: { code: 'operator_command_invalid' },

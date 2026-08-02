@@ -164,10 +164,7 @@ function OperatorCommandPanel(props: {
         applicationId: String(form.get('applicationId') ?? '').trim(),
         expectedVersion: Number(form.get('expectedVersion')),
         recommendation: String(form.get('recommendation')) as
-          | 'admit'
-          | 'waitlist'
-          | 'decline'
-          | 'more-information',
+          'admit' | 'waitlist' | 'decline' | 'more-information',
         score: scoreValue === '' ? null : Number(scoreValue),
         notes: notesValue === '' ? null : notesValue,
       };
@@ -188,7 +185,10 @@ function OperatorCommandPanel(props: {
 
     setPending(true);
     setResult(undefined);
-    const nextResult = await submitProductionOperatorCommand(body, newOperatorIdempotencyKey(command));
+    const nextResult = await submitProductionOperatorCommand(
+      body,
+      newOperatorIdempotencyKey(command),
+    );
     setResult(nextResult);
     setPending(false);
   };
@@ -218,7 +218,14 @@ function OperatorCommandPanel(props: {
             </label>
             <label>
               Expected version
-              <input name="expectedVersion" type="number" min="1" step="1" defaultValue="1" required />
+              <input
+                name="expectedVersion"
+                type="number"
+                min="1"
+                step="1"
+                defaultValue="1"
+                required
+              />
             </label>
             <label>
               Recommendation
@@ -261,7 +268,15 @@ function OperatorCommandPanel(props: {
             </label>
             <label>
               Requested minutes
-              <input name="requestedMinutes" type="number" min="5" max="30" step="1" defaultValue="15" required />
+              <input
+                name="requestedMinutes"
+                type="number"
+                min="5"
+                max="30"
+                step="1"
+                defaultValue="15"
+                required
+              />
             </label>
             <span>Support access remains pending and requires fresh AAL2 authorization.</span>
           </>

@@ -227,9 +227,17 @@ function resolutionResponse(resolution: OperatorDomainCommandResolution): Respon
     case 'invalid-command':
       return errorResponse('operator_command_invalid', 'The command request is invalid.', 400);
     case 'session-inactive':
-      return errorResponse('browser_session_revoked', 'The browser session is no longer active.', 401);
+      return errorResponse(
+        'browser_session_revoked',
+        'The browser session is no longer active.',
+        401,
+      );
     case 'permission-not-granted':
-      return errorResponse('operator_permission_denied', 'The requested action is not permitted.', 403);
+      return errorResponse(
+        'operator_permission_denied',
+        'The requested action is not permitted.',
+        403,
+      );
     case 'step-up-required':
       return errorResponse(
         'operator_step_up_required',
@@ -238,7 +246,11 @@ function resolutionResponse(resolution: OperatorDomainCommandResolution): Respon
         extra,
       );
     case 'scope-not-found':
-      return errorResponse('operator_scope_not_found', 'The requested scoped record was not found.', 404);
+      return errorResponse(
+        'operator_scope_not_found',
+        'The requested scoped record was not found.',
+        404,
+      );
     case 'idempotency-conflict':
       return errorResponse(
         'operator_idempotency_conflict',
@@ -260,7 +272,11 @@ function resolutionResponse(resolution: OperatorDomainCommandResolution): Respon
       );
     case 'command-disabled':
     case 'command-unavailable':
-      return errorResponse('operator_command_unavailable', 'The command service is unavailable.', 503);
+      return errorResponse(
+        'operator_command_unavailable',
+        'The command service is unavailable.',
+        503,
+      );
   }
 }
 
@@ -276,14 +292,14 @@ const defaultDependencies: ProductionOperatorCommandDependencies = {
       };
     }
     const store = new DurableAuthStore(createHttpDatabase(databaseUrl));
-    return resolveAuthenticatedBrowserSessionContext(
-      environment,
-      cookieHeader,
-      (sessionId) => store.isSessionActive(sessionId),
+    return resolveAuthenticatedBrowserSessionContext(environment, cookieHeader, (sessionId) =>
+      store.isSessionActive(sessionId),
     );
   },
   async resolveWorkspaceRole(databaseUrl, sessionId) {
-    const workspace = await new DatabaseWorkspaceStore(createHttpDatabase(databaseUrl)).resolve(sessionId);
+    const workspace = await new DatabaseWorkspaceStore(createHttpDatabase(databaseUrl)).resolve(
+      sessionId,
+    );
     return workspace?.role;
   },
   async submit(databaseUrl, input) {
@@ -310,7 +326,11 @@ export async function handleProductionOperatorCommandRequest(
 
   const databaseUrl = configured(environment);
   if (databaseUrl === undefined) {
-    return errorResponse('operator_command_unavailable', 'The command service is unavailable.', 503);
+    return errorResponse(
+      'operator_command_unavailable',
+      'The command service is unavailable.',
+      503,
+    );
   }
 
   if (
@@ -344,10 +364,18 @@ export async function handleProductionOperatorCommandRequest(
   try {
     workspaceRole = await dependencies.resolveWorkspaceRole(databaseUrl, session.context.sessionId);
   } catch {
-    return errorResponse('operator_command_unavailable', 'The command service is unavailable.', 503);
+    return errorResponse(
+      'operator_command_unavailable',
+      'The command service is unavailable.',
+      503,
+    );
   }
   if (workspaceRole !== roleForCommand(body.command)) {
-    return errorResponse('operator_permission_denied', 'The requested action is not permitted.', 403);
+    return errorResponse(
+      'operator_permission_denied',
+      'The requested action is not permitted.',
+      403,
+    );
   }
 
   const input = {
@@ -361,7 +389,11 @@ export async function handleProductionOperatorCommandRequest(
   try {
     resolution = await dependencies.submit(databaseUrl, input);
   } catch {
-    return errorResponse('operator_command_unavailable', 'The command service is unavailable.', 503);
+    return errorResponse(
+      'operator_command_unavailable',
+      'The command service is unavailable.',
+      503,
+    );
   }
   return resolutionResponse(resolution);
 }

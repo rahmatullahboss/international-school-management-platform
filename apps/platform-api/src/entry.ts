@@ -8,9 +8,7 @@ import {
 } from './production-operator-command-api.js';
 
 interface WorkerEnvironment
-  extends PilotOperatorBindings,
-    AuthLoginBindings,
-    ProductionOperatorCommandBindings {
+  extends PilotOperatorBindings, AuthLoginBindings, ProductionOperatorCommandBindings {
   readonly APP_REGION: string;
   readonly [key: string]: unknown;
 }

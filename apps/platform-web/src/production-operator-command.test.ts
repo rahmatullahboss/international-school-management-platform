@@ -30,7 +30,9 @@ describe('production operator command browser client', () => {
     );
     vi.stubGlobal('fetch', fetchMock);
 
-    await expect(submitProductionOperatorCommand(body, 'support:97000000-0000-4000-8000-000000000003')).resolves.toEqual({
+    await expect(
+      submitProductionOperatorCommand(body, 'support:97000000-0000-4000-8000-000000000003'),
+    ).resolves.toEqual({
       state: 'accepted',
       replayed: false,
       commandId: '97000000-0000-4000-8000-000000000001',
@@ -57,14 +59,20 @@ describe('production operator command browser client', () => {
     const responses = [
       new Response(
         JSON.stringify({
-          error: { code: 'operator_step_up_required', message: 'Fresh AAL2 authentication is required.' },
+          error: {
+            code: 'operator_step_up_required',
+            message: 'Fresh AAL2 authentication is required.',
+          },
           requiredAssurance: 'aal2',
         }),
         { status: 403, headers: { 'content-type': 'application/json' } },
       ),
       new Response(
         JSON.stringify({
-          error: { code: 'operator_revision_conflict', message: 'The record changed before this command was applied.' },
+          error: {
+            code: 'operator_revision_conflict',
+            message: 'The record changed before this command was applied.',
+          },
           currentVersion: 4,
         }),
         { status: 409, headers: { 'content-type': 'application/json' } },
@@ -91,10 +99,13 @@ describe('production operator command browser client', () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue(
-        new Response(JSON.stringify({ schemaVersion: 1, replayed: false, receipt: { commandId: 'secret' } }), {
-          status: 202,
-          headers: { 'content-type': 'application/json' },
-        }),
+        new Response(
+          JSON.stringify({ schemaVersion: 1, replayed: false, receipt: { commandId: 'secret' } }),
+          {
+            status: 202,
+            headers: { 'content-type': 'application/json' },
+          },
+        ),
       ),
     );
     await expect(submitProductionOperatorCommand(body, 'support:malformed-0001')).resolves.toEqual({

@@ -128,7 +128,9 @@ export async function submitProductionOperatorCommand(
   }
 }
 
-export function newOperatorIdempotencyKey(command: ProductionOperatorCommandBody['command']): string {
+export function newOperatorIdempotencyKey(
+  command: ProductionOperatorCommandBody['command'],
+): string {
   const prefix =
     command === 'admissions.application.review.record'
       ? 'admissions'
