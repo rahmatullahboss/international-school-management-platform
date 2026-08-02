@@ -65,8 +65,12 @@ jobs:
         if: github.event_name == 'pull_request' && github.head_ref == 'prod/demo-school-production-readiness'
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          TARGET_NEON_HOST: ep-green-term-ax3x5s01-pooler.c-4.us-east-2.aws.neon.tech
         run: |
           test -n "$DATABASE_URL"
+          test -n "$TARGET_NEON_HOST"
+          TARGET_DATABASE_URL="$(node -e "const url = new URL(process.env.DATABASE_URL); url.hostname = process.env.TARGET_NEON_HOST; process.stdout.write(url.toString());")"
+          export DATABASE_URL="$TARGET_DATABASE_URL"
           demo_roles="$(psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -Atqc "SELECT count(*) FROM iam.role WHERE tenant_id = '10000000-0000-4000-8000-000000000001'::uuid")"
           test "$demo_roles" = "7"
           bash scripts/apply-reviewed-post-integration-migrations.sh
