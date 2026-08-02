@@ -9,6 +9,12 @@ import {
   type AuthBindings,
 } from './auth-boundary.js';
 import { DurableAuthStore, DurableOidcProviderCacheStore } from './auth-durable-store.js';
+import {
+  parseOidcCallbackIngress,
+  parseOidcLoginIngress,
+  type OidcCallbackIngress,
+  type OidcLoginIngress,
+} from './auth-oidc-ingress.js';
 import { DatabaseWorkspaceStore, type DatabaseWorkspaceRole } from './database-workspace-store.js';
 
 export interface AuthLoginBindings extends AuthBindings {
@@ -193,11 +199,6 @@ async function workspaceResponse(
   );
 }
 
-function optionalQueryValue(url: URL, name: string): string | undefined {
-  const value = url.searchParams.get(name);
-  return value === null || value === '' ? undefined : value;
-}
-
 export async function handleAuthLoginRequest(
   request: Request,
   environment: AuthLoginBindings,
@@ -230,6 +231,23 @@ export async function handleAuthLoginRequest(
   if (request.method !== 'GET')
     return failureResponse('method_not_allowed', 'Method not allowed.', 405);
 
+  let ingress:
+    | { readonly route: 'login'; readonly value: OidcLoginIngress }
+    | { readonly route: 'callback'; readonly value: OidcCallbackIngress };
+  if (url.pathname === '/auth/v1/login') {
+    const parsed = parseOidcLoginIngress(url);
+    if (!parsed.ok) {
+      return failureResponse('oidc_request_invalid', 'The OIDC request is invalid.', 400);
+    }
+    ingress = { route: 'login', value: parsed.value };
+  } else {
+    const parsed = parseOidcCallbackIngress(url);
+    if (!parsed.ok) {
+      return failureResponse('oidc_request_invalid', 'The OIDC request is invalid.', 400);
+    }
+    ingress = { route: 'callback', value: parsed.value };
+  }
+
   const runtime = await resolveRuntime(environment);
   if (runtime instanceof Response) return runtime;
   const configuration = {
@@ -239,11 +257,10 @@ export async function handleAuthLoginRequest(
     sessionSecret: runtime.sessionSecret,
   };
 
-  if (url.pathname === '/auth/v1/login') {
-    const returnTo = optionalQueryValue(url, 'returnTo');
+  if (ingress.route === 'login') {
     const result = await beginOidcLogin({
       configuration,
-      ...(returnTo === undefined ? {} : { returnTo }),
+      ...(ingress.value.returnTo === undefined ? {} : { returnTo: ingress.value.returnTo }),
     });
     if (!result.ok) return failureResponse(result.code, result.message, result.status);
     const headers = new Headers({
@@ -254,18 +271,9 @@ export async function handleAuthLoginRequest(
     return new Response(null, { status: 302, headers });
   }
 
-  const code = optionalQueryValue(url, 'code');
-  const state = optionalQueryValue(url, 'state');
-  const issuer = optionalQueryValue(url, 'iss');
-  const error = optionalQueryValue(url, 'error');
   const result = await completeOidcLogin({
     configuration,
-    callback: {
-      ...(code === undefined ? {} : { code }),
-      ...(state === undefined ? {} : { state }),
-      ...(issuer === undefined ? {} : { issuer }),
-      ...(error === undefined ? {} : { error }),
-    },
+    callback: ingress.value,
     cookieHeader: request.headers.get('cookie') ?? undefined,
     dependencies: {
       consumeTransaction: (transactionId, providerIssuer, expiresAt) =>
