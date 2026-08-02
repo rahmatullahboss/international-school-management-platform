@@ -9,6 +9,7 @@ import {
   resolveProductionWorkspace,
 } from './production-gateway';
 import { mountProductionOperatorPortal } from './production-operator-portal';
+import './operator-route-workspace.css';
 import './pilot.css';
 import './styles.css';
 
