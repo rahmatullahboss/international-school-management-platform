@@ -9,6 +9,7 @@ import {
   type AuthBindings,
 } from './auth-boundary.js';
 import { DurableAuthStore, DurableOidcProviderCacheStore } from './auth-durable-store.js';
+import { DatabaseWorkspaceStore, type DatabaseWorkspaceRole } from './database-workspace-store.js';
 
 export interface AuthLoginBindings extends AuthBindings {
   readonly APP_ENV: string;
@@ -27,16 +28,7 @@ interface AuthLoginRuntime {
   readonly cache: OidcProviderCache;
 }
 
-interface WorkspaceRoleRow extends Record<string, unknown> {
-  readonly role_id: string;
-  readonly role_key: string;
-}
-
-interface WorkspaceCapabilityRow extends Record<string, unknown> {
-  readonly permission_key: string;
-}
-
-const workspaceByRole = {
+const workspaceByRole: Readonly<Record<DatabaseWorkspaceRole, string>> = {
   admin: '/admin',
   teacher: '/teacher',
   guardian: '/family',
@@ -44,9 +36,7 @@ const workspaceByRole = {
   admissions: '/admissions',
   finance: '/finance',
   support: '/support',
-} as const;
-
-type WorkspaceRole = keyof typeof workspaceByRole;
+};
 
 function configuredValue(value: string | undefined): string | undefined {
   const normalized = value?.trim();
@@ -55,10 +45,6 @@ function configuredValue(value: string | undefined): string | undefined {
 
 function strongSecret(value: string | undefined): value is string {
   return value !== undefined && value.length >= 32;
-}
-
-function isWorkspaceRole(value: string): value is WorkspaceRole {
-  return Object.prototype.hasOwnProperty.call(workspaceByRole, value);
 }
 
 function hasDurableLoginConfiguration(environment: AuthLoginBindings): boolean {
@@ -178,66 +164,29 @@ async function workspaceResponse(
   );
   if (!session.ok) return failureResponse(session.code, session.message, session.status);
 
-  let roles: readonly WorkspaceRoleRow[];
-  let capabilities: readonly WorkspaceCapabilityRow[];
+  let workspace;
   try {
-    roles = await database.query<WorkspaceRoleRow>(
-      `SELECT role.role_id::text AS role_id, role.role_key
-       FROM iam.membership_role AS membership_role
-       JOIN iam.role AS role
-         ON role.tenant_id = membership_role.tenant_id
-        AND role.role_id = membership_role.role_id
-       WHERE membership_role.tenant_id = $1::uuid
-         AND membership_role.membership_id = $2::uuid
-       ORDER BY role.role_id`,
-      [session.context.tenantId, session.context.membershipId],
-    );
-    capabilities = await database.query<WorkspaceCapabilityRow>(
-      `SELECT DISTINCT role_permission.permission_key
-       FROM iam.membership_role AS membership_role
-       JOIN iam.role_permission AS role_permission
-         ON role_permission.tenant_id = membership_role.tenant_id
-        AND role_permission.role_id = membership_role.role_id
-       WHERE membership_role.tenant_id = $1::uuid
-         AND membership_role.membership_id = $2::uuid
-       ORDER BY role_permission.permission_key`,
-      [session.context.tenantId, session.context.membershipId],
-    );
+    workspace = await new DatabaseWorkspaceStore(database).resolve(session.context.sessionId);
   } catch {
     return failureResponse('workspace_unavailable', 'The authenticated workspace is unavailable.');
   }
-
-  const currentRoleIds = roles.map((row) => row.role_id).sort();
-  const sessionRoleIds = [...session.context.roleIds].sort();
-  if (
-    currentRoleIds.length !== sessionRoleIds.length ||
-    currentRoleIds.some((roleId, index) => roleId !== sessionRoleIds[index])
-  ) {
-    return failureResponse('browser_session_revoked', 'The browser session is no longer active.', 401);
-  }
-
-  const workspaceRoles = [...new Set(roles.map((row) => row.role_key).filter(isWorkspaceRole))];
-  if (workspaceRoles.length !== 1) {
+  if (workspace === undefined) {
     return failureResponse(
       'workspace_role_ambiguous',
       'The authenticated account does not resolve to one workspace.',
       409,
     );
   }
-  const role = workspaceRoles[0];
-  if (role === undefined) {
-    return failureResponse('workspace_role_ambiguous', 'The authenticated workspace is unavailable.', 409);
-  }
 
   return jsonResponse(
     {
       schemaVersion: 1,
       workspace: {
-        role,
-        path: workspaceByRole[role],
+        role: workspace.role,
+        path: workspaceByRole[workspace.role],
         assurance: session.context.assurance,
         expiresAt: session.context.expiresAt,
-        capabilities: capabilities.map((row) => row.permission_key),
+        capabilities: workspace.capabilities,
       },
     },
     200,
