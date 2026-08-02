@@ -1,9 +1,7 @@
 name: Diagnose Operator Work Queue
 
 on:
-  push:
-    branches:
-      - prod/operator-work-queue
+  pull_request:
 
 permissions:
   contents: read
