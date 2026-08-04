@@ -12,7 +12,7 @@ jobs:
   refresh:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
@@ -24,17 +24,20 @@ jobs:
       - name: Refresh audited dependency lock
         run: |
           npm install --package-lock-only --save-dev 'wrangler@^4.118.0'
-          npm install --package-lock-only --workspace=@school/platform-api 'hono@^4.12.34'
+          npm install --package-lock-only --workspace=@school/platform-api 'hono@^4.13.0'
+          npm pkg set overrides.undici=7.29.0
+          npm install --package-lock-only
           npm audit fix --package-lock-only
+          npm ci
           npm audit --audit-level=high
-      - name: Commit deterministic dependency refresh
+          npm run typecheck
+          npm run build
+          npm run check:experience-budget
+      - name: Commit deterministic dependency refresh and remove helper
         run: |
-          if git diff --quiet -- package.json package-lock.json apps/platform-api/package.json; then
-            echo 'No dependency changes required.'
-            exit 0
-          fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/refresh-security-lock.yml
           git add package.json package-lock.json apps/platform-api/package.json
           git commit -m 'chore(deps): refresh audited npm lock'
           git push origin HEAD:ux/operational-school-erp-v1
