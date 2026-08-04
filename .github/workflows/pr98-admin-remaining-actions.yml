@@ -1,0 +1,93 @@
+name: PR98 remaining Admin action boundaries
+
+on:
+  push:
+    branches:
+      - ux/operational-school-erp-v1
+
+permissions:
+  contents: write
+
+jobs:
+  apply-verify:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ux/operational-school-erp-v1
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.2'
+          cache: npm
+      - run: npm ci
+      - name: Make remaining Admin actions explicit
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          source = Path('apps/platform-web/src/operational-module-surface.tsx')
+          text = source.read_text()
+          replacements = [
+            ("              'Review audience',", '              <PilotUnavailableAction key="a">Review audience</PilotUnavailableAction>,'),
+            ("              'Compare translations',", '              <PilotUnavailableAction key="a">Compare translations</PilotUnavailableAction>,'),
+            ("              'Call household',", '              <PilotUnavailableAction key="a">Call household</PilotUnavailableAction>,'),
+            ("              'Verify portal receipt',", '              <PilotUnavailableAction key="a">Verify portal receipt</PilotUnavailableAction>,'),
+            ("              'Rotate',", '              <PilotUnavailableAction key="a">Rotate</PilotUnavailableAction>,'),
+            ("                'View report',", '                <PilotUnavailableAction key="a">View report</PilotUnavailableAction>,'),
+            ("                'Safe retry',", '                <PilotUnavailableAction key="a">Safe retry</PilotUnavailableAction>,'),
+          ]
+          for old, new in replacements:
+            if text.count(old) != 1:
+              raise SystemExit(f'Expected exactly one marker for {old!r}, found {text.count(old)}')
+            text = text.replace(old, new, 1)
+
+          # Connector/report catalogue "Open" appears exactly six times across these two Admin sections.
+          open_marker = "              'Open',"
+          if text.count(open_marker) < 6:
+            raise SystemExit(f'Expected at least six Open action markers, found {text.count(open_marker)}')
+          # Replace the first three connector registry Open values after AdminIntegrations starts.
+          start = text.index('function AdminIntegrations')
+          end = text.index('function AdminReports')
+          before, section, after = text[:start], text[start:end], text[end:]
+          if section.count(open_marker) != 3:
+            raise SystemExit(f'Expected exactly three integration Open markers, found {section.count(open_marker)}')
+          section = section.replace(open_marker, '              <PilotUnavailableAction key="a">Open</PilotUnavailableAction>,')
+          text = before + section + after
+
+          # Replace the three report catalogue Open values only inside AdminReports.
+          start = text.index('function AdminReports')
+          end = text.index('function TeacherClasses')
+          before, section, after = text[:start], text[start:end], text[end:]
+          if section.count(open_marker) != 3:
+            raise SystemExit(f'Expected exactly three report Open markers, found {section.count(open_marker)}')
+          section = section.replace(open_marker, '              <PilotUnavailableAction key="a">Open</PilotUnavailableAction>,')
+          text = before + section + after
+          source.write_text(text)
+
+          test = Path('apps/platform-web/src/operational-module-surface.test.tsx')
+          test_text = test.read_text()
+          if 'keeps remaining Admin task cues explicit and disabled' in test_text:
+            raise SystemExit('Remaining Admin action regression test already exists')
+          insertion = '''\n\n  it.each([\n    ['/admin/communications', 'admin', ['Review audience', 'Compare translations', 'Call household', 'Verify portal receipt']],\n    ['/admin/integrations', 'admin', ['Open', 'Rotate', 'View report', 'Safe retry']],\n    ['/admin/reports', 'admin', ['Open']],\n  ] as const)(\n    'keeps remaining Admin task cues explicit and disabled on %s',\n    (path, role, labels) => {\n      const markup = renderRoute(path, role);\n\n      for (const label of labels) expect(markup).toContain(label);\n      expect(markup).toContain('disabled=""');\n      expect(markup).toContain('operational-pilot-action-boundary');\n    },\n  );'''
+          closing = test_text.rfind('\n});')
+          if closing < 0:
+            raise SystemExit('Test describe closing marker missing')
+          test.write_text(test_text[:closing] + insertion + test_text[closing:])
+          PY
+      - run: npx prettier --write apps/platform-web/src/operational-module-surface.tsx apps/platform-web/src/operational-module-surface.test.tsx
+      - run: npm run format:check
+      - run: npm run typecheck
+      - run: npx vitest run apps/platform-web/src/operational-module-surface.test.tsx
+      - run: npm run build
+      - run: npm run check:experience-budget
+      - name: Commit verified slice and remove helper
+        run: |
+          rm .github/workflows/pr98-admin-remaining-actions.yml
+          rm -f .github/pr98-admin-remaining-actions-trigger.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add apps/platform-web/src/operational-module-surface.tsx apps/platform-web/src/operational-module-surface.test.tsx .github/workflows/pr98-admin-remaining-actions.yml .github/pr98-admin-remaining-actions-trigger.txt
+          git commit -m 'fix(ux): make remaining admin task cues explicit'
+          git push origin HEAD:ux/operational-school-erp-v1
