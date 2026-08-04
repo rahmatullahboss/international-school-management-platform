@@ -1,0 +1,36 @@
+name: Refresh provenance evidence
+
+on:
+  push:
+    branches:
+      - ux/operational-school-erp-v1
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ux/operational-school-erp-v1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.2'
+          cache: npm
+      - name: Regenerate dependency provenance
+        run: |
+          npm ci
+          npm run provenance:generate
+          npm audit --audit-level=high
+      - name: Commit generated evidence and remove helper
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/refresh-provenance.yml
+          git add THIRD_PARTY_NOTICES.md artifacts/dependency-licenses.json artifacts/sbom.cdx.json
+          git commit -m 'chore(provenance): refresh dependency evidence'
+          git push origin HEAD:ux/operational-school-erp-v1
