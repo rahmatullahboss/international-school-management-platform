@@ -1,0 +1,40 @@
+name: PR98 format production operator
+
+on:
+  push:
+    branches:
+      - ux/operational-school-erp-v1
+
+permissions:
+  contents: write
+
+jobs:
+  format-verify:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ux/operational-school-erp-v1
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.2'
+          cache: npm
+      - run: npm ci
+      - run: npx prettier --write apps/platform-web/src/production-operator-portal.tsx apps/platform-web/src/production-operator-portal.test.tsx
+      - run: npm run format:check
+      - run: npm run typecheck
+      - run: npx vitest run apps/platform-web/src/production-operator-portal.test.tsx apps/platform-web/src/production-operator-work-queue.test.ts
+      - run: npm run build
+      - run: npm run check:experience-budget
+      - name: Commit verified formatting and remove helper
+        run: |
+          rm .github/workflows/pr98-format-production-operator.yml
+          rm -f .github/pr98-format-trigger.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add apps/platform-web/src/production-operator-portal.tsx apps/platform-web/src/production-operator-portal.test.tsx .github/workflows/pr98-format-production-operator.yml .github/pr98-format-trigger.txt
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'style(ux): format production operator workspace'
+          git push origin HEAD:ux/operational-school-erp-v1
