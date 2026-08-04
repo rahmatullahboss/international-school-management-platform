@@ -157,4 +157,22 @@ describe('OperationalModuleSurface', () => {
       expect(markup).toContain('operational-pilot-action-boundary');
     },
   );
+
+  it('wires Teacher class actions to real task routes and keeps unavailable class detail explicit', () => {
+    const markup = renderRoute('/teacher/classes', 'teacher');
+
+    expect(markup).toContain('href="/teacher/students"');
+    expect(markup).toContain('href="/teacher/resources"');
+    expect(markup).toContain('Open class');
+    expect(markup).toContain('disabled=""');
+  });
+
+  it('renders selectable permitted student context controls', () => {
+    const markup = renderRoute('/teacher/students', 'teacher');
+
+    expect(markup).toContain('Open Samira Noor permitted profile');
+    expect(markup).toContain('Open Riya Ahmed permitted profile');
+    expect(markup).toContain('Samira Noor · permitted context');
+    expect(markup).toContain('aria-pressed="true"');
+  });
 });

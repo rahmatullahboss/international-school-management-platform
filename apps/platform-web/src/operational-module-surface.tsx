@@ -1185,7 +1185,9 @@ function TeacherClasses(): ReactElement {
               '204',
               <Status key="s">Finalised</Status>,
               'Completed',
-              'Open roster',
+              <a href="/teacher/students" key="a">
+                Open roster
+              </a>,
             ],
             [
               '09:00–09:45',
@@ -1193,7 +1195,7 @@ function TeacherClasses(): ReactElement {
               'Lab 2 · changed from Lab 1',
               'Published',
               <Status key="s">Changed</Status>,
-              'Open class',
+              <PilotUnavailableAction key="a">Open class</PilotUnavailableAction>,
             ],
             [
               '10:00–10:45',
@@ -1201,7 +1203,9 @@ function TeacherClasses(): ReactElement {
               '204',
               <Status key="s">Not started</Status>,
               <Status key="l">Next</Status>,
-              'Prepare lesson',
+              <a href="/teacher/resources" key="a">
+                Prepare lesson
+              </a>,
             ],
           ]}
         />
@@ -1241,7 +1245,9 @@ function TeacherClasses(): ReactElement {
               'Completed',
               'Learning support · permitted',
               'Contact available',
-              'Open permitted profile',
+              <a href="/teacher/students" key="a">
+                Open permitted profile
+              </a>,
             ],
             [
               'Alexandrina Victoria Montgomery-Smith',
@@ -1250,7 +1256,7 @@ function TeacherClasses(): ReactElement {
               'In progress',
               'No current cue',
               'Contact available',
-              'Open permitted profile',
+              <PilotUnavailableAction key="a">Open permitted profile</PilotUnavailableAction>,
             ],
             [
               'Student record',
@@ -1461,6 +1467,52 @@ function TeacherGradebook(): ReactElement {
 }
 
 function TeacherStudents(): ReactElement {
+  const [selectedStudent, setSelectedStudent] = useState<'Samira Noor' | 'Riya Ahmed'>(
+    'Samira Noor',
+  );
+  const selectedTimeline =
+    selectedStudent === 'Samira Noor'
+      ? ([
+          {
+            time: '28 Jul',
+            title: 'Algebra checkpoint',
+            detail: 'A- · published feedback',
+            status: 'Published',
+          },
+          {
+            time: '29 Jul',
+            title: 'Learning adjustment',
+            detail: 'Adjusted task remains permitted for this class',
+            status: 'Current',
+          },
+          {
+            time: 'Next lesson',
+            title: 'Teacher action',
+            detail: 'Review adjusted task before class',
+            status: 'Next action',
+          },
+        ] as const)
+      : ([
+          {
+            time: '29 Jul',
+            title: 'Classwork',
+            detail: 'Steady progress · current teaching evidence',
+            status: 'Current',
+          },
+          {
+            time: 'Today',
+            title: 'Attendance',
+            detail: 'Present in the assigned class',
+            status: 'Current',
+          },
+          {
+            time: 'Next lesson',
+            title: 'Teacher action',
+            detail: 'No additional follow-up recorded',
+            status: 'Next action',
+          },
+        ] as const);
+
   return (
     <div className="operational-stack">
       <PriorityQueue page={routePage('/teacher/students')} currentPath="/teacher/students" />
@@ -1490,7 +1542,15 @@ function TeacherStudents(): ReactElement {
                 'Parent contact available',
                 'Review adjusted task · before next lesson',
                 'Algebra checkpoint · 28 Jul',
-                'Open permitted profile',
+                <button
+                  aria-label="Open Samira Noor permitted profile"
+                  aria-pressed={selectedStudent === 'Samira Noor'}
+                  key="a"
+                  onClick={() => setSelectedStudent('Samira Noor')}
+                  type="button"
+                >
+                  Open profile
+                </button>,
               ],
               [
                 'Riya Ahmed',
@@ -1500,7 +1560,15 @@ function TeacherStudents(): ReactElement {
                 'Contact available',
                 'None',
                 'Classwork · 29 Jul',
-                'Open permitted profile',
+                <button
+                  aria-label="Open Riya Ahmed permitted profile"
+                  aria-pressed={selectedStudent === 'Riya Ahmed'}
+                  key="a"
+                  onClick={() => setSelectedStudent('Riya Ahmed')}
+                  type="button"
+                >
+                  Open profile
+                </button>,
               ],
               [
                 'Student record',
@@ -1516,32 +1584,10 @@ function TeacherStudents(): ReactElement {
           />
         </Pane>
         <Pane
-          title="Samira Noor · permitted context"
+          title={`${selectedStudent} · permitted context`}
           description="Current teaching relationship · read-only evidence timeline."
         >
-          <Timeline
-            label="Samira learning evidence"
-            items={[
-              {
-                time: '28 Jul',
-                title: 'Algebra checkpoint',
-                detail: 'A- · published feedback',
-                status: 'Published',
-              },
-              {
-                time: '29 Jul',
-                title: 'Learning adjustment',
-                detail: 'Adjusted task remains permitted for this class',
-                status: 'Current',
-              },
-              {
-                time: 'Next lesson',
-                title: 'Teacher action',
-                detail: 'Review adjusted task before class',
-                status: 'Next action',
-              },
-            ]}
-          />
+          <Timeline label={`${selectedStudent} learning evidence`} items={selectedTimeline} />
           <Notice title="Context boundary" tone="warning">
             Consent context should be rechecked after the current review window. Restricted health,
             counselling and safeguarding records are not inferred or shown.
