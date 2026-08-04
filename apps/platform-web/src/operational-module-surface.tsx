@@ -2827,7 +2827,7 @@ export function OperationalModuleSurface(props: OperationalModuleSurfaceProps): 
         <time dateTime={pilotTimestamp}>Evidence current at {pilotTimestamp}</time>
       </header>
       <MetricStrip page={props.page} />
-      <ActionBar page={props.page} context={props.page.queue[0]?.title ?? props.page.title} />
+      <ActionBar page={props.page} />
       {bodyForPath(props.path)}
       <aside className="operational-pilot-note" id="operational-pilot-action-boundary">
         <strong>Pilot boundary</strong>

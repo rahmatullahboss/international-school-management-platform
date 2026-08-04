@@ -118,7 +118,7 @@ function FullPersonaLanding(): ReactElement {
                   <p>{card.detail}</p>
                 </div>
                 <small>Permission scoped</small>
-                <strong>Enter workspace</strong>
+                <strong>{card.action}</strong>
               </a>
             ))}
           </nav>
