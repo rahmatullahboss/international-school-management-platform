@@ -18,6 +18,7 @@ import {
   shellUtilityActions,
   type PilotConnectivity,
 } from '../portal-shared';
+import { hasTeacherRouteWorkspace, TeacherRouteWorkspace } from './teacher-route-workspace';
 
 export interface TeacherPortalProps {
   readonly path: string;
@@ -88,6 +89,8 @@ export default function TeacherPortal(props: TeacherPortalProps): ReactElement {
         />
       ) : page === undefined ? (
         <UnknownRoute homeHref="/teacher" />
+      ) : hasTeacherRouteWorkspace(props.path) ? (
+        <TeacherRouteWorkspace path={props.path} overview={overview} />
       ) : (
         <PilotModuleSurface page={page} />
       )}
