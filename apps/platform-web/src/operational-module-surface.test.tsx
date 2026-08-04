@@ -138,4 +138,23 @@ describe('OperationalModuleSurface', () => {
       expect(markup).toContain('operational-pilot-action-boundary');
     },
   );
+
+  it.each([
+    [
+      '/admin/communications',
+      'admin',
+      ['Review audience', 'Compare translations', 'Call household', 'Verify portal receipt'],
+    ],
+    ['/admin/integrations', 'admin', ['Open', 'Rotate', 'View report', 'Safe retry']],
+    ['/admin/reports', 'admin', ['Open']],
+  ] as const)(
+    'keeps remaining Admin task cues explicit and disabled on %s',
+    (path, role, labels) => {
+      const markup = renderRoute(path, role);
+
+      for (const label of labels) expect(markup).toContain(label);
+      expect(markup).toContain('disabled=""');
+      expect(markup).toContain('operational-pilot-action-boundary');
+    },
+  );
 });

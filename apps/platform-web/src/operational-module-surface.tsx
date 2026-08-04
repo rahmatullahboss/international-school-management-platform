@@ -844,7 +844,7 @@ function AdminCommunications(): ReactElement {
               'Today 14:00',
               'English ready · Arabic ready · French ready',
               <Status key="s">Draft</Status>,
-              'Review audience',
+              <PilotUnavailableAction key="a">Review audience</PilotUnavailableAction>,
             ],
             [
               'Term 3 welcome',
@@ -853,7 +853,7 @@ function AdminCommunications(): ReactElement {
               'Tomorrow 08:00',
               'English ready · Arabic in review',
               <Status key="s">Review</Status>,
-              'Compare translations',
+              <PilotUnavailableAction key="a">Compare translations</PilotUnavailableAction>,
             ],
           ]}
         />
@@ -885,7 +885,7 @@ function AdminCommunications(): ReactElement {
               'Invalid number',
               '2',
               'Phone call',
-              'Call household',
+              <PilotUnavailableAction key="a">Call household</PilotUnavailableAction>,
             ],
             [
               'Guardian · Samira Noor',
@@ -896,7 +896,7 @@ function AdminCommunications(): ReactElement {
               'Email bounced; SMS delivered',
               '1',
               'Portal',
-              'Verify portal receipt',
+              <PilotUnavailableAction key="a">Verify portal receipt</PilotUnavailableAction>,
             ],
             [
               'Staff cohort',
@@ -947,7 +947,7 @@ function AdminIntegrations(): ReactElement {
               <Status key="s">Healthy</Status>,
               '31 Aug',
               'Platform',
-              'Open',
+              <PilotUnavailableAction key="a">Open</PilotUnavailableAction>,
             ],
             [
               'School SSO',
@@ -958,7 +958,7 @@ function AdminIntegrations(): ReactElement {
               <Status key="s">Healthy</Status>,
               '12 Sep',
               'Identity',
-              'Open',
+              <PilotUnavailableAction key="a">Open</PilotUnavailableAction>,
             ],
             [
               'LTI gateway',
@@ -969,7 +969,7 @@ function AdminIntegrations(): ReactElement {
               <Status key="s">Healthy</Status>,
               '28 Aug',
               'Learning',
-              'Open',
+              <PilotUnavailableAction key="a">Open</PilotUnavailableAction>,
             ],
             [
               'Webhook gateway',
@@ -980,7 +980,7 @@ function AdminIntegrations(): ReactElement {
               <Status key="s">Partial</Status>,
               'Due soon',
               'Platform',
-              'Rotate',
+              <PilotUnavailableAction key="a">Rotate</PilotUnavailableAction>,
             ],
           ]}
         />
@@ -1036,7 +1036,7 @@ function AdminIntegrations(): ReactElement {
                 '2',
                 <Status key="s">Complete</Status>,
                 '08:55',
-                'View report',
+                <PilotUnavailableAction key="a">View report</PilotUnavailableAction>,
               ],
               [
                 'IMP-2402',
@@ -1046,7 +1046,7 @@ function AdminIntegrations(): ReactElement {
                 '3',
                 <Status key="s">Partial success</Status>,
                 '09:03',
-                'Safe retry',
+                <PilotUnavailableAction key="a">Safe retry</PilotUnavailableAction>,
               ],
             ]}
           />
@@ -1130,7 +1130,7 @@ function AdminReports(): ReactElement {
               'Current',
               'Leaders',
               'Governed',
-              'Open',
+              <PilotUnavailableAction key="a">Open</PilotUnavailableAction>,
             ],
             [
               'Finance reconciliation',
@@ -1142,7 +1142,7 @@ function AdminReports(): ReactElement {
               'Current',
               'Finance',
               'Restricted export',
-              'Open',
+              <PilotUnavailableAction key="a">Open</PilotUnavailableAction>,
             ],
             [
               'Enrolment',
@@ -1154,7 +1154,7 @@ function AdminReports(): ReactElement {
               'Current',
               'Leaders',
               'Governed',
-              'Open',
+              <PilotUnavailableAction key="a">Open</PilotUnavailableAction>,
             ],
           ]}
         />
