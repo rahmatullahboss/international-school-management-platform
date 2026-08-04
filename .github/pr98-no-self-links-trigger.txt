@@ -1,0 +1,1 @@
+One-shot trigger for PR #98 operational no-self-link verification. Removed by workflow.
