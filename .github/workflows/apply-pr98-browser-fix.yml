@@ -1,0 +1,55 @@
+name: Apply PR98 browser fix
+
+on:
+  push:
+    branches:
+      - ux/operational-school-erp-v1
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ux/operational-school-erp-v1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.2'
+          cache: npm
+      - name: Apply verified browser UX fixes
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('apps/platform-web/src/entry.tsx')
+          text = path.read_text()
+          old = '<strong>Enter workspace</strong>'
+          new = '<strong>{card.action}</strong>'
+          if old not in text:
+              raise SystemExit('entry CTA target not found')
+          path.write_text(text.replace(old, new, 1))
+
+          path = Path('apps/platform-web/src/operational-module-surface.tsx')
+          text = path.read_text()
+          old = '<ActionBar page={props.page} context={props.page.queue[0]?.title ?? props.page.title} />'
+          new = '<ActionBar page={props.page} />'
+          if old not in text:
+              raise SystemExit('ActionBar target not found')
+          path.write_text(text.replace(old, new, 1))
+          PY
+          npm ci
+          npm run format:check
+          npm run typecheck
+          npm run build --workspace=@school/platform-web
+      - name: Commit verified fixes and remove helper
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/apply-pr98-browser-fix.yml
+          git add apps/platform-web/src/entry.tsx apps/platform-web/src/operational-module-surface.tsx
+          git commit -m 'fix(ux): restore role CTAs and unique action context'
+          git push origin HEAD:ux/operational-school-erp-v1
