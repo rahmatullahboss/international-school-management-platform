@@ -1,0 +1,287 @@
+name: PR98 production operator UX refresh
+
+on:
+  push:
+    branches:
+      - ux/operational-school-erp-v1
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ux/operational-school-erp-v1
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.0'
+          cache: npm
+      - run: npm ci
+      - name: Apply production operator UX slice
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          portal = Path('apps/platform-web/src/production-operator-portal.tsx')
+          text = portal.read_text()
+
+          replacements = [
+              (
+                  "function ProductionOperatorPortal(props: {",
+                  "export function ProductionOperatorPortal(props: {",
+              ),
+              (
+                  "Ozzyl International Demo School · authenticated production QA",
+                  "Ozzyl International Demo School · Production workspace",
+              ),
+              (
+                  "{needsWorkQueue && !queueReadyForCommand ? queueMessage(workQueue) : null}\n      <form className=\"pilot-demo-note\" onSubmit={(event) => void submit(event)}>",
+                  "{needsWorkQueue && !queueReadyForCommand ? queueMessage(workQueue) : null}\n      {queueReadyForCommand ? workQueueList(workQueue) : null}\n      <form className=\"pilot-demo-note\" onSubmit={(event) => void submit(event)}>",
+              ),
+              (
+                  '''        <section className="pilot-coverage" aria-labelledby="capability-title">
+          <div className="pilot-section-heading">
+            <p>Current grants</p>
+            <h2 id="capability-title">Capabilities for this signed-in account</h2>
+          </div>
+          <div className="pilot-coverage__grid">
+            {props.workspace.capabilities.map((capability) => (
+              <article key={capability}>
+                <h3>{capability}</h3>
+              </article>
+            ))}
+          </div>
+        </section>''',
+                  '''        <details className="pilot-demo-note" data-secondary-context="true">
+          <summary>
+            <strong>Access & security</strong>
+            <span>
+              {props.workspace.assurance.toUpperCase()} · {props.workspace.capabilities.length}{' '}
+              current database grants
+            </span>
+          </summary>
+          <p>
+            Permission details are secondary context. Task controls above remain constrained by
+            the signed-in database role, current assurance and server-owned scope.
+          </p>
+          <ul aria-label="Current database grants">
+            {props.workspace.capabilities.map((capability) => (
+              <li key={capability}>{capability}</li>
+            ))}
+          </ul>
+        </details>''',
+              ),
+          ]
+          for old, new in replacements:
+              if old not in text:
+                  raise SystemExit(f'Expected production portal text not found: {old[:80]!r}')
+              text = text.replace(old, new, 1)
+
+          marker = "  return <></>;\n}\n\nfunction OperatorCommandPanel"
+          insertion = '''  return <></>;
+}
+
+function workQueueList(queue: ProductionOperatorWorkQueue | undefined): ReactElement | null {
+  if (queue?.state !== 'ready' || queue.items.length === 0) return null;
+  return (
+    <section className="pilot-work-queue" aria-labelledby="production-work-queue-title">
+      <div>
+        <p>Current database work</p>
+        <h3 id="production-work-queue-title">Work queue</h3>
+        <span>Only candidates returned for the signed-in tenant and campus are actionable.</span>
+      </div>
+      <ol>
+        {queue.role === 'admissions'
+          ? queue.items.map((candidate) => (
+              <li key={candidate.applicationId}>
+                <div>
+                  <strong>{candidate.applicationNumber}</strong>
+                  <span>
+                    {candidate.submittedAt === null
+                      ? 'Submission time unavailable'
+                      : `Submitted ${new Date(candidate.submittedAt).toLocaleString()}`}
+                  </span>
+                </div>
+                <span className="pilot-status">{candidate.status}</span>
+                <span>v{candidate.version}</span>
+              </li>
+            ))
+          : queue.items.map((candidate) => (
+              <li key={`${candidate.bankStatementLineId}:${candidate.paymentId}`}>
+                <div>
+                  <strong>{candidate.bookingDate}</strong>
+                  <span>Payment received {new Date(candidate.paymentReceivedAt).toLocaleString()}</span>
+                </div>
+                <span className="pilot-status">Ready to match</span>
+                <span>
+                  {candidate.currency} {candidate.amountMinor} minor units
+                </span>
+              </li>
+            ))}
+      </ol>
+    </section>
+  );
+}
+
+function OperatorCommandPanel'''
+          if marker not in text:
+              raise SystemExit('Expected work queue insertion marker not found')
+          text = text.replace(marker, insertion, 1)
+          portal.write_text(text)
+
+          css = Path('apps/platform-web/src/pilot.css')
+          css_text = css.read_text()
+          css_replacements = [
+              (
+                  '''.pilot-entry__masthead {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(15rem, 22rem);
+  gap: 2rem;
+  align-items: end;
+  padding: clamp(2rem, 6vw, 5.5rem) clamp(1.25rem, 7vw, 7rem) clamp(2rem, 4vw, 3rem);
+  color: white;
+  background: #102a43;
+  border-bottom: 0.4rem solid #0f766e;
+}''',
+                  '''.pilot-entry__masthead {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(13rem, 19rem);
+  gap: 1rem;
+  align-items: center;
+  padding: 1.25rem clamp(1rem, 4vw, 3rem);
+  color: white;
+  background: #102a43;
+  border-bottom: 0.25rem solid #0f766e;
+}''',
+              ),
+              (
+                  '''.pilot-entry__masthead h1 {
+  max-width: 15ch;
+  margin: 0;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(2.7rem, 7vw, 6.4rem);
+  font-weight: 500;
+  line-height: 0.94;
+  letter-spacing: -0.055em;
+}''',
+                  '''.pilot-entry__masthead h1 {
+  max-width: 26ch;
+  margin: 0;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(1.7rem, 3vw, 2.65rem);
+  font-weight: 500;
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}''',
+              ),
+              (
+                  '''.pilot-entry__masthead > div > p:last-child {
+  max-width: 52rem;
+  margin: 1.4rem 0 0;
+  color: #dce8ef;
+  font-size: clamp(1rem, 2vw, 1.3rem);
+  line-height: 1.55;
+}''',
+                  '''.pilot-entry__masthead > div > p:last-child {
+  max-width: 52rem;
+  margin: 0.55rem 0 0;
+  color: #dce8ef;
+  font-size: 0.94rem;
+  line-height: 1.45;
+}''',
+              ),
+              (
+                  '''.pilot-entry__main {
+  display: grid;
+  gap: 4rem;
+  padding: clamp(2rem, 5vw, 4.5rem) clamp(1.25rem, 7vw, 7rem) 5rem;
+}''',
+                  '''.pilot-entry__main {
+  display: grid;
+  gap: 1.5rem;
+  padding: 1.5rem clamp(1rem, 4vw, 3rem) 3rem;
+}''',
+              ),
+              (
+                  '''.pilot-section-heading h2 {
+  margin: 0;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(2rem, 4vw, 3.7rem);
+  font-weight: 500;
+  letter-spacing: -0.035em;
+}''',
+                  '''.pilot-section-heading h2 {
+  margin: 0;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(1.45rem, 2.5vw, 2.25rem);
+  font-weight: 500;
+  letter-spacing: -0.025em;
+}''',
+              ),
+          ]
+          for old, new in css_replacements:
+              if old not in css_text:
+                  raise SystemExit(f'Expected pilot CSS block not found: {old[:80]!r}')
+              css_text = css_text.replace(old, new, 1)
+          css.write_text(css_text)
+
+          test = Path('apps/platform-web/src/production-operator-portal.test.tsx')
+          test.write_text('''import { renderToStaticMarkup } from 'react-dom/server';
+import { describe, expect, it } from 'vitest';
+
+import type { ProductionWorkspace } from './production-gateway';
+import { ProductionOperatorPortal } from './production-operator-portal';
+
+const cases = [
+  ['admissions', '/admissions/applications', 'Applications', 'Record application review'],
+  ['finance', '/finance/reconciliation', 'Reconciliation', 'Reconcile bank statement line'],
+  ['support', '/support/access', 'Privileged access', 'Request privileged support access'],
+] as const satisfies readonly (readonly [ProductionWorkspace['role'], string, string, string])[];
+
+describe('ProductionOperatorPortal', () => {
+  it.each(cases)('keeps %s production work task-led', (role, path, heading, command) => {
+    const workspace: ProductionWorkspace = {
+      role,
+      path,
+      assurance: 'aal2',
+      expiresAt: '2099-01-01T00:00:00.000Z',
+      capabilities:
+        role === 'admissions'
+          ? ['admissions.application.review']
+          : role === 'finance'
+            ? ['finance.reconciliation.write']
+            : ['support.break-glass.request'],
+    };
+    const markup = renderToStaticMarkup(
+      <ProductionOperatorPortal workspace={workspace} pathname={path} />,
+    );
+
+    expect(markup).toContain('Production workspace');
+    expect(markup).toContain(`<h1>${heading}</h1>`);
+    expect(markup).toContain(command);
+    expect(markup).toContain('data-secondary-context="true"');
+    expect(markup).toContain('Access &amp; security');
+    expect(markup).not.toContain('Capabilities for this signed-in account');
+    expect(markup).not.toContain('authenticated production QA');
+  });
+});
+''')
+          PY
+      - run: npx prettier --write apps/platform-web/src/production-operator-portal.tsx apps/platform-web/src/production-operator-portal.test.tsx apps/platform-web/src/pilot.css
+      - run: npm run typecheck
+      - run: npx vitest run apps/platform-web/src/production-operator-portal.test.tsx apps/platform-web/src/production-operator-work-queue.test.ts
+      - run: npm run build
+      - run: npm run check:experience-budget
+      - name: Commit verified slice and remove helper
+        run: |
+          rm .github/workflows/pr98-production-operator-ux.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add apps/platform-web/src/production-operator-portal.tsx apps/platform-web/src/production-operator-portal.test.tsx apps/platform-web/src/pilot.css .github/workflows/pr98-production-operator-ux.yml
+          git commit -m 'feat(ux): operationalize production operator workspace'
+          git push origin HEAD:ux/operational-school-erp-v1
