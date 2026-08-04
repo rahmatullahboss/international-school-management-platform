@@ -2125,6 +2125,8 @@ function FamilyChildren(): ReactElement {
 }
 
 function AttendancePublished(props: { readonly student: boolean }): ReactElement {
+  const [selectedAttendance, setSelectedAttendance] = useState<'12 Jul' | '14 Jul'>('12 Jul');
+
   return (
     <div className="operational-stack">
       <Notice title="Offline snapshot">
@@ -2140,70 +2142,127 @@ function AttendancePublished(props: { readonly student: boolean }): ReactElement
             label="Published attendance record"
             headers={['Date', 'Published state', 'Detail', 'Revision / explanation', 'Action']}
             rows={[
-              ['15 Jul', <Status key="s">Present</Status>, 'Full day', '—', 'View'],
+              [
+                '15 Jul',
+                <Status key="s">Present</Status>,
+                'Full day',
+                '—',
+                <PilotUnavailableAction key="a">View</PilotUnavailableAction>,
+              ],
               [
                 '14 Jul',
                 <Status key="s">Present · Revised</Status>,
                 'Corrected by office',
                 'Previously late · history retained',
-                'View history',
+                <button
+                  aria-label="View 14 July revision history"
+                  aria-pressed={selectedAttendance === '14 Jul'}
+                  key="a"
+                  onClick={() => setSelectedAttendance('14 Jul')}
+                  type="button"
+                >
+                  View history
+                </button>,
               ],
               [
                 '12 Jul',
                 <Status key="s">Absent</Status>,
                 'Published 08:15',
                 'Explanation under review',
-                'Track explanation',
+                <button
+                  aria-label="Track 12 July explanation"
+                  aria-pressed={selectedAttendance === '12 Jul'}
+                  key="a"
+                  onClick={() => setSelectedAttendance('12 Jul')}
+                  type="button"
+                >
+                  Track explanation
+                </button>,
               ],
               [
                 '10 Jul',
                 <Status key="s">Late</Status>,
                 'Arrived 08:45',
                 'Published record',
-                'View',
+                <PilotUnavailableAction key="a">View</PilotUnavailableAction>,
               ],
-              ['09 Jul', <Status key="s">Present</Status>, 'Full day', '—', 'View'],
+              [
+                '09 Jul',
+                <Status key="s">Present</Status>,
+                'Full day',
+                '—',
+                <PilotUnavailableAction key="a">View</PilotUnavailableAction>,
+              ],
             ]}
           />
         </Pane>
         <Pane
-          title="12 July absence"
+          title={selectedAttendance === '12 Jul' ? '12 July absence' : '14 July revision history'}
           description={
-            props.student
-              ? 'Your family submitted an explanation.'
-              : 'Household explanation lifecycle.'
+            selectedAttendance === '12 Jul'
+              ? props.student
+                ? 'Your family submitted an explanation.'
+                : 'Household explanation lifecycle.'
+              : 'Published correction history; the prior state remains visible.'
           }
         >
           <Timeline
-            label="Absence explanation timeline"
-            items={[
-              {
-                time: '08:15',
-                title: 'Absence published',
-                detail: 'Main Campus attendance ledger',
-                status: 'Published',
-              },
-              {
-                time: '09:30',
-                title: 'Explanation submitted',
-                detail: props.student
-                  ? 'Your family submitted an explanation.'
-                  : 'Family explanation received and preserved.',
-                status: 'Submitted',
-              },
-              {
-                time: '10:00',
-                title: 'School reviewing',
-                detail: 'Assigned to attendance officer',
-                status: 'In review',
-              },
-              {
-                time: 'Next',
-                title: 'Decision',
-                detail: 'The published outcome will appear here.',
-                status: 'Pending',
-              },
-            ]}
+            label={
+              selectedAttendance === '12 Jul'
+                ? 'Absence explanation timeline'
+                : 'Attendance revision timeline'
+            }
+            items={
+              selectedAttendance === '12 Jul'
+                ? [
+                    {
+                      time: '08:15',
+                      title: 'Absence published',
+                      detail: 'Main Campus attendance ledger',
+                      status: 'Published',
+                    },
+                    {
+                      time: '09:30',
+                      title: 'Explanation submitted',
+                      detail: props.student
+                        ? 'Your family submitted an explanation.'
+                        : 'Family explanation received and preserved.',
+                      status: 'Submitted',
+                    },
+                    {
+                      time: '10:00',
+                      title: 'School reviewing',
+                      detail: 'Assigned to attendance officer',
+                      status: 'In review',
+                    },
+                    {
+                      time: 'Next',
+                      title: 'Decision',
+                      detail: 'The published outcome will appear here.',
+                      status: 'Pending',
+                    },
+                  ]
+                : [
+                    {
+                      time: '08:10',
+                      title: 'Original attendance published',
+                      detail: 'Late · original publication retained',
+                      status: 'Historical',
+                    },
+                    {
+                      time: '09:05',
+                      title: 'Office correction recorded',
+                      detail: 'Evidence reviewed by attendance office',
+                      status: 'Revised',
+                    },
+                    {
+                      time: '09:07',
+                      title: 'Present republished',
+                      detail: 'Current published state · prior version preserved',
+                      status: 'Current',
+                    },
+                  ]
+            }
           />
         </Pane>
       </div>

@@ -186,4 +186,16 @@ describe('OperationalModuleSurface', () => {
     expect(markup).toContain('disabled=""');
     expect(markup).toContain('Resource boundary');
   });
+
+  it.each([
+    ['/family/attendance', 'guardian'],
+    ['/student/attendance', 'student'],
+  ] as const)('renders published attendance record selectors on %s', (path, role) => {
+    const markup = renderRoute(path, role);
+
+    expect(markup).toContain('View 14 July revision history');
+    expect(markup).toContain('Track 12 July explanation');
+    expect(markup).toContain('12 July absence');
+    expect(markup).toContain('disabled=""');
+  });
 });

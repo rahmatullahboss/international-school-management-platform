@@ -40,3 +40,13 @@ test('switches Teacher resource edit context in place', async ({ page }) => {
   await expect(page.getByRole('textbox', { name: 'Title' })).toHaveValue('Calculus intro');
   await expect(page.getByRole('textbox', { name: 'Asset' })).toHaveValue('Broken link');
 });
+
+test('switches published attendance history in place', async ({ page }) => {
+  await page.goto('/family/attendance');
+  await expect(page.getByRole('heading', { name: '12 July absence' })).toBeVisible();
+  await page.getByRole('button', { name: 'View 14 July revision history' }).click();
+  await expect(page.getByRole('heading', { name: '14 July revision history' })).toBeVisible();
+  await expect(page.getByText('Original attendance published')).toBeVisible();
+  await page.getByRole('button', { name: 'Track 12 July explanation' }).click();
+  await expect(page.getByRole('heading', { name: '12 July absence' })).toBeVisible();
+});
