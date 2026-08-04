@@ -50,3 +50,15 @@ test('switches published attendance history in place', async ({ page }) => {
   await page.getByRole('button', { name: 'Track 12 July explanation' }).click();
   await expect(page.getByRole('heading', { name: '12 July absence' })).toBeVisible();
 });
+
+test('switches authorised document metadata in place', async ({ page }) => {
+  await page.goto('/family/documents');
+  await expect(page.getByRole('heading', { name: 'Term 2 progress report' })).toBeVisible();
+  await page.getByRole('button', { name: 'Welcome' }).click();
+  await expect(page.getByRole('heading', { name: 'School welcome letter' })).toBeVisible();
+  await expect(page.getByText('PDF · 340 KB')).toBeVisible();
+  await page.getByRole('button', { name: 'Term 2' }).click();
+  await expect(page.getByRole('heading', { name: 'Term 2 progress report' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Open authorised copy' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Download authorised copy' })).toBeDisabled();
+});

@@ -198,4 +198,19 @@ describe('OperationalModuleSurface', () => {
     expect(markup).toContain('12 July absence');
     expect(markup).toContain('disabled=""');
   });
+
+  it.each([
+    ['/family/documents', 'guardian'],
+    ['/student/documents', 'student'],
+  ] as const)('renders authorised document selectors on %s', (path, role) => {
+    const markup = renderRoute(path, role);
+
+    expect(markup).toContain('Term 2');
+    expect(markup).toContain('Welcome');
+    expect(markup).toContain('View current version');
+    expect(markup).toContain('Open cached copy');
+    expect(markup).toContain('Retry');
+    expect(markup).toContain('Not available in this scope');
+    expect(markup).toContain('disabled=""');
+  });
 });

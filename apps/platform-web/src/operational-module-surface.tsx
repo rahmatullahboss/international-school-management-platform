@@ -2515,6 +2515,8 @@ function FamilyForms(): ReactElement {
 }
 
 function DocumentsWorkspace(props: { readonly student: boolean }): ReactElement {
+  const [welcomeSelected, setWelcomeSelected] = useState(false);
+
   return (
     <div className="operational-stack">
       <Notice title="Authorised records only">
@@ -2542,7 +2544,9 @@ function DocumentsWorkspace(props: { readonly student: boolean }): ReactElement 
                 '28 Jul',
                 <Status key="s">New</Status>,
                 'Available',
-                'Open authorised copy',
+                <button key="a" onClick={() => setWelcomeSelected(false)} type="button">
+                  Term 2
+                </button>,
               ],
               [
                 'School welcome letter',
@@ -2551,7 +2555,9 @@ function DocumentsWorkspace(props: { readonly student: boolean }): ReactElement 
                 '1 Aug',
                 <Status key="s">Available</Status>,
                 'Available',
-                'Open',
+                <button key="a" onClick={() => setWelcomeSelected(true)} type="button">
+                  Welcome
+                </button>,
               ],
               [
                 'Enrolment confirmation',
@@ -2560,7 +2566,7 @@ function DocumentsWorkspace(props: { readonly student: boolean }): ReactElement 
                 '10 Sep 2021',
                 <Status key="s">Superseded</Status>,
                 'Current revision exists',
-                'View current version',
+                <PilotUnavailableAction key="a">View current version</PilotUnavailableAction>,
               ],
               ['Not available in this scope', '—', '—', '—', '—', '—', '—'],
               [
@@ -2570,7 +2576,7 @@ function DocumentsWorkspace(props: { readonly student: boolean }): ReactElement 
                 '12 Apr',
                 <Status key="s">Offline cached copy</Status>,
                 'Cached',
-                'Open cached copy',
+                <PilotUnavailableAction key="a">Open cached copy</PilotUnavailableAction>,
               ],
               [
                 'Annual report',
@@ -2579,40 +2585,28 @@ function DocumentsWorkspace(props: { readonly student: boolean }): ReactElement 
                 '15 Dec',
                 <Status key="s">Open error</Status>,
                 'Temporary error',
-                'Retry',
+                <PilotUnavailableAction key="a">Retry</PilotUnavailableAction>,
               ],
             ]}
           />
         </Pane>
-        <Pane title="Term 2 progress report" description="Selected authorised document metadata.">
+        <Pane
+          title={welcomeSelected ? 'School welcome letter' : 'Term 2 progress report'}
+          description="Document metadata."
+        >
           <DefinitionList
             label="Document metadata"
             items={[
-              { term: 'Category', value: 'Report card' },
-              { term: 'Published', value: '28 July · 15:00' },
-              { term: 'Version', value: 'v2.1' },
-              { term: 'File', value: 'PDF · 1.2 MB' },
-              { term: 'Publisher', value: 'Admin Office' },
+              { term: 'Category', value: welcomeSelected ? 'Letter' : 'Report card' },
+              { term: 'Published', value: welcomeSelected ? '1 Aug' : '28 Jul' },
+              { term: 'File', value: welcomeSelected ? 'PDF · 340 KB' : 'PDF · 1.2 MB' },
               {
                 term: 'Authorisation',
-                value: props.student ? 'Samira Noor only' : 'Primary guardian only',
-              },
-            ]}
-          />
-          <Timeline
-            label="Document version history"
-            items={[
-              {
-                time: 'v2.0',
-                title: 'Draft approved',
-                detail: 'Internal publication state',
-                status: 'Historical',
-              },
-              {
-                time: 'v2.1',
-                title: 'Final publication',
-                detail: 'Published 28 July',
-                status: 'Current',
+                value: props.student
+                  ? 'Samira Noor only'
+                  : welcomeSelected
+                    ? 'Verified household only'
+                    : 'Primary guardian only',
               },
             ]}
           />
