@@ -1,0 +1,1 @@
+One-shot trigger for PR #98 self-link safety verification. Removed by workflow.
