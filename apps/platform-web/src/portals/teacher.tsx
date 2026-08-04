@@ -9,16 +9,15 @@ import {
   teacherCapabilities,
   teacherOverview,
 } from '../pilot-data';
+import { OperationalModuleSurface } from '../operational-module-surface';
 import { usePilotResource } from '../pilot-resource';
 import {
   PilotDataStatus,
-  PilotModuleSurface,
   UnknownRoute,
   resolvePageHeading,
   shellUtilityActions,
   type PilotConnectivity,
 } from '../portal-shared';
-import { hasTeacherRouteWorkspace, TeacherRouteWorkspace } from './teacher-route-workspace';
 
 export interface TeacherPortalProps {
   readonly path: string;
@@ -89,10 +88,8 @@ export default function TeacherPortal(props: TeacherPortalProps): ReactElement {
         />
       ) : page === undefined ? (
         <UnknownRoute homeHref="/teacher" />
-      ) : hasTeacherRouteWorkspace(props.path) ? (
-        <TeacherRouteWorkspace path={props.path} overview={overview} />
       ) : (
-        <PilotModuleSurface page={page} />
+        <OperationalModuleSurface path={props.path} page={page} role="teacher" />
       )}
     </TeacherExperienceShell>
   );
