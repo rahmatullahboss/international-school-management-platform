@@ -211,7 +211,9 @@ function workQueueList(queue: ProductionOperatorWorkQueue | undefined): ReactEle
               <li key={`${candidate.bankStatementLineId}:${candidate.paymentId}`}>
                 <div>
                   <strong>{candidate.bookingDate}</strong>
-                  <span>Payment received {new Date(candidate.paymentReceivedAt).toLocaleString()}</span>
+                  <span>
+                    Payment received {new Date(candidate.paymentReceivedAt).toLocaleString()}
+                  </span>
                 </div>
                 <span className="pilot-status">Ready to match</span>
                 <span>
@@ -482,8 +484,8 @@ export function ProductionOperatorPortal(props: {
         <div className="pilot-entry__status">
           <strong>{role}</strong>
           <span>
-            {props.workspace.assurance.toUpperCase()} · {props.workspace.capabilities.length} current
-            grants
+            {props.workspace.assurance.toUpperCase()} · {props.workspace.capabilities.length}{' '}
+            current grants
           </span>
           <button type="button" onClick={signOut}>
             Sign out
@@ -523,8 +525,8 @@ export function ProductionOperatorPortal(props: {
             </span>
           </summary>
           <p>
-            Permission details are secondary context. Task controls above remain constrained by
-            the signed-in database role, current assurance and server-owned scope.
+            Permission details are secondary context. Task controls above remain constrained by the
+            signed-in database role, current assurance and server-owned scope.
           </p>
           <ul aria-label="Current database grants">
             {props.workspace.capabilities.map((capability) => (
