@@ -219,4 +219,12 @@ describe('OperationalModuleSurface', () => {
     expect((markup.match(/>Download<\/button>/gu) ?? []).length).toBe(3);
     expect(markup).toContain('operational-pilot-action-boundary');
   });
+
+  it('wires the family offline form draft to the local form and disables unloaded history', () => {
+    const markup = renderRoute('/family/forms', 'guardian');
+    expect(markup).toContain('href="#science-trip-consent"');
+    expect((markup.match(/>View response<\/button>/gu) ?? []).length).toBe(2);
+    expect(markup).toContain('>View history</button>');
+    expect(markup).toContain('disabled=""');
+  });
 });

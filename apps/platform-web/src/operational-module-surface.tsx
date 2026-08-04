@@ -2394,6 +2394,7 @@ function FamilyFinance(): ReactElement {
 }
 
 function FamilyForms(): ReactElement {
+  const unavailableResponse = <PilotUnavailableAction>View response</PilotUnavailableAction>;
   return (
     <div className="operational-stack">
       <PriorityQueue page={routePage('/family/forms')} currentPath="/family/forms" />
@@ -2401,7 +2402,7 @@ function FamilyForms(): ReactElement {
         title="Science trip consent"
         description="Samira Noor · Science Museum · 15 Oct · due 2 Aug."
       >
-        <form className="operational-form operational-form--wide">
+        <form className="operational-form operational-form--wide" id="science-trip-consent">
           <DefinitionList
             label="Trip details"
             items={[
@@ -2430,7 +2431,7 @@ function FamilyForms(): ReactElement {
             <input type="date" defaultValue="2026-08-01" />
           </label>
           <Notice title="Session expiry warning" tone="warning">
-            Refresh the verified session before final submission. Your draft answers are safe.
+            Refresh the verified session before submitting. Your draft is safe.
           </Notice>
           <div className="operational-inline-actions">
             <PilotUnavailableAction>Save for later</PilotUnavailableAction>
@@ -2449,7 +2450,7 @@ function FamilyForms(): ReactElement {
               '15 Jan',
               <Status key="s">Complete</Status>,
               'FORM-221',
-              'View response',
+              unavailableResponse,
             ],
             [
               'Term 1 field trip',
@@ -2457,7 +2458,7 @@ function FamilyForms(): ReactElement {
               '5 Feb',
               <Status key="s">Complete</Status>,
               'FORM-304',
-              'View response',
+              unavailableResponse,
             ],
             [
               'Previous medical confirmation',
@@ -2465,7 +2466,7 @@ function FamilyForms(): ReactElement {
               'Last year',
               <Status key="s">Expired · read only</Status>,
               'FORM-118',
-              'View history',
+              <PilotUnavailableAction>View history</PilotUnavailableAction>,
             ],
             [
               'Science trip consent',
@@ -2473,7 +2474,7 @@ function FamilyForms(): ReactElement {
               'Saved locally',
               <Status key="s">Offline draft</Status>,
               'Draft',
-              'Continue',
+              <a href="#science-trip-consent">Continue</a>,
             ],
           ]}
         />

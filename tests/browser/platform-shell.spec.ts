@@ -62,3 +62,12 @@ test('switches authorised document metadata in place', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Open authorised copy' })).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Download authorised copy' })).toBeDisabled();
 });
+
+test('continues the family offline form draft locally', async ({ page }) => {
+  await page.goto('/family/forms');
+  await page.getByRole('link', { name: 'Continue', exact: true }).click();
+  await expect(page).toHaveURL(/#science-trip-consent$/u);
+  await expect(page.locator('#science-trip-consent')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'View response' })).toHaveCount(2);
+  await expect(page.getByRole('button', { name: 'View history' })).toBeDisabled();
+});
