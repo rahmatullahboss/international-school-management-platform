@@ -102,4 +102,15 @@ describe('OperationalModuleSurface', () => {
     expect(markup).toContain('Not available in this scope');
     expect(markup).toContain('aria-pressed="false"');
   });
+
+  it.each([
+    ['/admin/sis', 'admin'],
+    ['/admin/academics', 'admin'],
+  ] as const)('does not expose same-route actions as working links on %s', (path, role) => {
+    const markup = renderRoute(path, role);
+
+    expect(markup).not.toContain(`href="${path}"`);
+    expect(markup).toContain('disabled=""');
+    expect(markup).toContain('operational-pilot-action-boundary');
+  });
 });

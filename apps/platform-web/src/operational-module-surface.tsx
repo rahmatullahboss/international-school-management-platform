@@ -72,6 +72,7 @@ function MetricStrip(props: { readonly page: PilotModulePage }): ReactElement {
 
 function ActionBar(props: {
   readonly page: PilotModulePage;
+  readonly currentPath: string;
   readonly context?: string;
 }): ReactElement {
   return (
@@ -80,16 +81,25 @@ function ActionBar(props: {
         <strong>{props.context ?? 'Current work'}</strong>
         <span>Actions remain scoped to this role, campus and verified session.</span>
       </div>
-      {props.page.actions.map((action, index) => (
-        <a data-primary={index === 0 ? 'true' : 'false'} href={action.href} key={action.label}>
-          {action.label}
-        </a>
-      ))}
+      {props.page.actions.map((action, index) =>
+        action.href === props.currentPath ? (
+          <PilotUnavailableAction key={action.label} primary={index === 0}>
+            {action.label}
+          </PilotUnavailableAction>
+        ) : (
+          <a data-primary={index === 0 ? 'true' : 'false'} href={action.href} key={action.label}>
+            {action.label}
+          </a>
+        ),
+      )}
     </nav>
   );
 }
 
-function PriorityQueue(props: { readonly page: PilotModulePage }): ReactElement {
+function PriorityQueue(props: {
+  readonly page: PilotModulePage;
+  readonly currentPath: string;
+}): ReactElement {
   return (
     <section className="operational-section" aria-labelledby="operational-priority-title">
       <header className="operational-section__heading">
@@ -107,7 +117,11 @@ function PriorityQueue(props: { readonly page: PilotModulePage }): ReactElement 
               <span>{item.detail}</span>
             </div>
             <Status>{item.status}</Status>
-            <a href={item.href}>Review</a>
+            {item.href === props.currentPath ? (
+              <PilotUnavailableAction>Review</PilotUnavailableAction>
+            ) : (
+              <a href={item.href}>Review</a>
+            )}
           </li>
         ))}
       </ol>
@@ -241,7 +255,7 @@ function PilotUnavailableAction(props: {
 function AdminSis(): ReactElement {
   return (
     <div className="operational-stack">
-      <PriorityQueue page={routePage('/admin/sis')} />
+      <PriorityQueue page={routePage('/admin/sis')} currentPath="/admin/sis" />
       <div className="operational-toolbar" aria-label="Applicant register filters">
         <label>
           Intake
@@ -297,9 +311,7 @@ function AdminSis(): ReactElement {
                 <Status key="evidence">Birth certificate missing</Status>,
                 'Admissions',
                 'Today 09:18',
-                <a href="/admin/sis" key="action">
-                  Review
-                </a>,
+                <PilotUnavailableAction key="action">Review</PilotUnavailableAction>,
               ],
               [
                 <strong key="samira">Samira Noor</strong>,
@@ -309,9 +321,7 @@ function AdminSis(): ReactElement {
                 'Complete',
                 'Records office',
                 'Today 09:42',
-                <a href="/admin/sis" key="action">
-                  Open profile
-                </a>,
+                <PilotUnavailableAction key="action">Open profile</PilotUnavailableAction>,
               ],
               [
                 'Alexandrina Victoria Montgomery-Smith',
@@ -321,9 +331,7 @@ function AdminSis(): ReactElement {
                 'Identity comparison required',
                 'Admissions',
                 'Yesterday 16:04',
-                <a href="/admin/sis" key="action">
-                  Compare
-                </a>,
+                <PilotUnavailableAction key="action">Compare</PilotUnavailableAction>,
               ],
             ]}
           />
@@ -351,7 +359,7 @@ function AdminSis(): ReactElement {
 function AdminAcademics(): ReactElement {
   return (
     <div className="operational-stack">
-      <PriorityQueue page={routePage('/admin/academics')} />
+      <PriorityQueue page={routePage('/admin/academics')} currentPath="/admin/academics" />
       <Pane
         title="Attendance cut-off control"
         description="Registers remain explicit through finalisation, offline sync and reconciliation."
@@ -390,9 +398,7 @@ function AdminAcademics(): ReactElement {
               <Status key="s">Open</Status>,
               'No local changes',
               '10:55',
-              <a href="/admin/academics" key="a">
-                Send reminder
-              </a>,
+              <PilotUnavailableAction key="a">Send reminder</PilotUnavailableAction>,
             ],
             [
               'Year 7C Science',
@@ -414,9 +420,7 @@ function AdminAcademics(): ReactElement {
               <Status key="s">Conflict</Status>,
               'Server/device mismatch',
               '09:45',
-              <a href="/admin/academics" key="a">
-                Reconcile
-              </a>,
+              <PilotUnavailableAction key="a">Reconcile</PilotUnavailableAction>,
             ],
           ]}
         />
@@ -436,9 +440,7 @@ function AdminAcademics(): ReactElement {
                 <Status key="s">Ready</Status>,
                 'Change evidence attached',
                 'A. Chowdhury',
-                <a href="/admin/academics" key="a">
-                  Approve
-                </a>,
+                <PilotUnavailableAction key="a">Approve</PilotUnavailableAction>,
               ],
               [
                 'Term 2 report card',
@@ -484,7 +486,7 @@ function AdminAcademics(): ReactElement {
 function AdminFinance(): ReactElement {
   return (
     <div className="operational-stack">
-      <PriorityQueue page={routePage('/admin/finance')} />
+      <PriorityQueue page={routePage('/admin/finance')} currentPath="/admin/finance" />
       <div className="operational-split operational-split--wide">
         <Pane
           title="Deposit reconciliation"
@@ -603,7 +605,7 @@ function AdminFinance(): ReactElement {
 function AdminOperations(): ReactElement {
   return (
     <div className="operational-stack">
-      <PriorityQueue page={routePage('/admin/operations')} />
+      <PriorityQueue page={routePage('/admin/operations')} currentPath="/admin/operations" />
       <div className="operational-split">
         <Pane
           title="Science lab requisition"
@@ -719,7 +721,10 @@ function AdminSupport(): ReactElement {
       <Notice title="Verified restricted-data session" tone="warning">
         Purpose and reason for access are recorded before any sensitive support record is opened.
       </Notice>
-      <PriorityQueue page={routePage('/admin/student-support')} />
+      <PriorityQueue
+        page={routePage('/admin/student-support')}
+        currentPath="/admin/student-support"
+      />
       <div className="operational-split operational-split--wide">
         <Pane
           title="Purpose-bound work queue"
@@ -812,7 +817,10 @@ function AdminSupport(): ReactElement {
 function AdminCommunications(): ReactElement {
   return (
     <div className="operational-stack">
-      <PriorityQueue page={routePage('/admin/communications')} />
+      <PriorityQueue
+        page={routePage('/admin/communications')}
+        currentPath="/admin/communications"
+      />
       <Pane
         title="Publication queue"
         description="Audience, translations, channels and approval state stay visible before release."
@@ -911,7 +919,7 @@ function AdminCommunications(): ReactElement {
 function AdminIntegrations(): ReactElement {
   return (
     <div className="operational-stack">
-      <PriorityQueue page={routePage('/admin/integrations')} />
+      <PriorityQueue page={routePage('/admin/integrations')} currentPath="/admin/integrations" />
       <Pane
         title="Connector registry"
         description="Credential material is never rendered in plaintext."
@@ -1051,7 +1059,7 @@ function AdminIntegrations(): ReactElement {
 function AdminReports(): ReactElement {
   return (
     <div className="operational-stack">
-      <PriorityQueue page={routePage('/admin/reports')} />
+      <PriorityQueue page={routePage('/admin/reports')} currentPath="/admin/reports" />
       <div className="operational-split operational-split--wide">
         <Pane
           title="Attendance definition update"
@@ -1158,7 +1166,7 @@ function AdminReports(): ReactElement {
 function TeacherClasses(): ReactElement {
   return (
     <div className="operational-stack">
-      <PriorityQueue page={routePage('/teacher/classes')} />
+      <PriorityQueue page={routePage('/teacher/classes')} currentPath="/teacher/classes" />
       <Pane title="Today’s teaching sequence">
         <DataTable
           label="Teacher class sequence"
@@ -1300,7 +1308,7 @@ function TeacherAttendance(): ReactElement {
         Last synced 10:42 · 0 conflicts detected. Offline changes stay on this device until a safe
         replay succeeds.
       </Notice>
-      <PriorityQueue page={routePage('/teacher/attendance')} />
+      <PriorityQueue page={routePage('/teacher/attendance')} currentPath="/teacher/attendance" />
       <div className="operational-register-selector" aria-label="Assigned registers">
         <button type="button" aria-pressed="true">
           <strong>Year 8A Mathematics</strong>
@@ -1364,7 +1372,7 @@ function TeacherAttendance(): ReactElement {
 function TeacherGradebook(): ReactElement {
   return (
     <div className="operational-stack">
-      <PriorityQueue page={routePage('/teacher/gradebook')} />
+      <PriorityQueue page={routePage('/teacher/gradebook')} currentPath="/teacher/gradebook" />
       <Pane
         title="Year 8A · Algebra checkpoint"
         description="Entry state and publication state remain separate."
@@ -1455,7 +1463,7 @@ function TeacherGradebook(): ReactElement {
 function TeacherStudents(): ReactElement {
   return (
     <div className="operational-stack">
-      <PriorityQueue page={routePage('/teacher/students')} />
+      <PriorityQueue page={routePage('/teacher/students')} currentPath="/teacher/students" />
       <div className="operational-split operational-split--wide">
         <Pane
           title="Assigned student register"
@@ -1730,7 +1738,7 @@ function isStudent(persona: 'teacher' | 'guardian' | 'student'): boolean {
 function TeacherResources(): ReactElement {
   return (
     <div className="operational-stack">
-      <PriorityQueue page={routePage('/teacher/resources')} />
+      <PriorityQueue page={routePage('/teacher/resources')} currentPath="/teacher/resources" />
       <div className="operational-split operational-split--wide">
         <Pane
           title="Resource register"
@@ -1844,7 +1852,7 @@ function TeacherResources(): ReactElement {
 function FamilyApplications(): ReactElement {
   return (
     <div className="operational-stack">
-      <PriorityQueue page={routePage('/family/applications')} />
+      <PriorityQueue page={routePage('/family/applications')} currentPath="/family/applications" />
       <Pane
         title="Nabil Noor · Year 3 · 2027 intake"
         description="Documents requested · the next household action is clear."
@@ -2256,7 +2264,7 @@ function FamilyFinance(): ReactElement {
 function FamilyForms(): ReactElement {
   return (
     <div className="operational-stack">
-      <PriorityQueue page={routePage('/family/forms')} />
+      <PriorityQueue page={routePage('/family/forms')} currentPath="/family/forms" />
       <Pane
         title="Science trip consent"
         description="Samira Noor · Science Museum · 15 Oct · due 2 Aug."
@@ -2539,7 +2547,7 @@ function StudentTimetable(): ReactElement {
 function StudentResources(): ReactElement {
   return (
     <div className="operational-stack">
-      <PriorityQueue page={routePage('/student/resources')} />
+      <PriorityQueue page={routePage('/student/resources')} currentPath="/student/resources" />
       <div className="operational-split operational-split--wide">
         <Pane title="Learning resource register">
           <DataTable
@@ -2827,7 +2835,7 @@ export function OperationalModuleSurface(props: OperationalModuleSurfaceProps): 
         <time dateTime={pilotTimestamp}>Evidence current at {pilotTimestamp}</time>
       </header>
       <MetricStrip page={props.page} />
-      <ActionBar page={props.page} />
+      <ActionBar page={props.page} currentPath={props.path} />
       {bodyForPath(props.path)}
       <aside className="operational-pilot-note" id="operational-pilot-action-boundary">
         <strong>Pilot boundary</strong>
