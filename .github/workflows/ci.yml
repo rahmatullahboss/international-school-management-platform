@@ -121,7 +121,7 @@ jobs:
       - run: npm ci
       - name: Guard exact PR head
         run: test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha }}"
-      - name: Wire compact authorised document selection
+      - name: Wire budget-neutral authorised document selection
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -130,7 +130,7 @@ jobs:
           text = source.read_text()
 
           old_start = '''function DocumentsWorkspace(props: { readonly student: boolean }): ReactElement {\n  return ('''
-          new_start = '''function DocumentsWorkspace(props: { readonly student: boolean }): ReactElement {\n  const [selectedDocument, setSelectedDocument] = useState<\n    'Term 2 progress report' | 'School welcome letter'\n  >('Term 2 progress report');\n  const welcomeSelected = selectedDocument === 'School welcome letter';\n\n  return ('''
+          new_start = '''function DocumentsWorkspace(props: { readonly student: boolean }): ReactElement {\n  const [welcomeSelected, setWelcomeSelected] = useState(false);\n\n  return ('''
           if text.count(old_start) != 1:
             raise SystemExit('DocumentsWorkspace function marker missing or duplicated')
           text = text.replace(old_start, new_start, 1)
@@ -139,8 +139,8 @@ jobs:
           end = text.index('function StudentTimetable')
           before, section, after = text[:start], text[start:end], text[end:]
           replacements = [
-            ("                'Open authorised copy',", '''                <button\n                  aria-label="Select Term 2 progress report"\n                  aria-pressed={!welcomeSelected}\n                  key="a"\n                  onClick={() => setSelectedDocument('Term 2 progress report')}\n                  type="button"\n                >\n                  View details\n                </button>,'''),
-            ("                'Open',", '''                <button\n                  aria-label="Select School welcome letter"\n                  aria-pressed={welcomeSelected}\n                  key="a"\n                  onClick={() => setSelectedDocument('School welcome letter')}\n                  type="button"\n                >\n                  View details\n                </button>,'''),
+            ("                'Open authorised copy',", '''                <button key="a" onClick={() => setWelcomeSelected(false)} type="button">\n                  Term 2 details\n                </button>,'''),
+            ("                'Open',", '''                <button key="a" onClick={() => setWelcomeSelected(true)} type="button">\n                  Welcome details\n                </button>,'''),
             ("                'View current version',", '                <PilotUnavailableAction key="a">View current version</PilotUnavailableAction>,'),
             ("                'Open cached copy',", '                <PilotUnavailableAction key="a">Open cached copy</PilotUnavailableAction>,'),
             ("                'Retry',", '                <PilotUnavailableAction key="a">Retry</PilotUnavailableAction>,'),
@@ -151,7 +151,7 @@ jobs:
             section = section.replace(old, new, 1)
 
           old_detail = '''        <Pane title="Term 2 progress report" description="Selected authorised document metadata.">\n          <DefinitionList\n            label="Document metadata"\n            items={[\n              { term: 'Category', value: 'Report card' },\n              { term: 'Published', value: '28 July · 15:00' },\n              { term: 'Version', value: 'v2.1' },\n              { term: 'File', value: 'PDF · 1.2 MB' },\n              { term: 'Publisher', value: 'Admin Office' },\n              {\n                term: 'Authorisation',\n                value: props.student ? 'Samira Noor only' : 'Primary guardian only',\n              },\n            ]}\n          />\n          <Timeline\n            label="Document version history"\n            items={[\n              {\n                time: 'v2.0',\n                title: 'Draft approved',\n                detail: 'Internal publication state',\n                status: 'Historical',\n              },\n              {\n                time: 'v2.1',\n                title: 'Final publication',\n                detail: 'Published 28 July',\n                status: 'Current',\n              },\n            ]}\n          />'''
-          new_detail = '''        <Pane title={selectedDocument} description="Selected authorised document metadata.">\n          <DefinitionList\n            label="Document metadata"\n            items={[\n              { term: 'Category', value: welcomeSelected ? 'Letter' : 'Report card' },\n              {\n                term: 'Published',\n                value: welcomeSelected ? '1 August · 09:00' : '28 July · 15:00',\n              },\n              { term: 'Version', value: welcomeSelected ? 'v1.0' : 'v2.1' },\n              { term: 'File', value: welcomeSelected ? 'PDF · 340 KB' : 'PDF · 1.2 MB' },\n              { term: 'Publisher', value: 'Admin Office' },\n              {\n                term: 'Authorisation',\n                value: props.student\n                  ? 'Samira Noor only'\n                  : welcomeSelected\n                    ? 'Verified household only'\n                    : 'Primary guardian only',\n              },\n            ]}\n          />\n          <small className="operational-evidence-line">\n            Published version metadata only · file open/download requires the reviewed document contract.\n          </small>'''
+          new_detail = '''        <Pane\n          title={welcomeSelected ? 'School welcome letter' : 'Term 2 progress report'}\n          description="Selected authorised document metadata."\n        >\n          <DefinitionList\n            label="Document metadata"\n            items={[\n              { term: 'Category', value: welcomeSelected ? 'Letter' : 'Report card' },\n              { term: 'Published', value: welcomeSelected ? '1 Aug' : '28 Jul' },\n              { term: 'File', value: welcomeSelected ? 'PDF · 340 KB' : 'PDF · 1.2 MB' },\n              {\n                term: 'Authorisation',\n                value: props.student\n                  ? 'Samira Noor only'\n                  : welcomeSelected\n                    ? 'Verified household only'\n                    : 'Primary guardian only',\n              },\n            ]}\n          />'''
           if old_detail not in section:
             raise SystemExit('DocumentsWorkspace detail pane marker missing')
           section = section.replace(old_detail, new_detail, 1)
@@ -161,7 +161,7 @@ jobs:
           unit_text = unit.read_text()
           if 'renders authorised document selectors' in unit_text:
             raise SystemExit('Document selector unit regression already exists')
-          insertion = '''\n\n  it.each([\n    ['/family/documents', 'guardian'],\n    ['/student/documents', 'student'],\n  ] as const)('renders authorised document selectors on %s', (path, role) => {\n    const markup = renderRoute(path, role);\n\n    expect(markup).toContain('Select Term 2 progress report');\n    expect(markup).toContain('Select School welcome letter');\n    expect(markup).toContain('View current version');\n    expect(markup).toContain('Open cached copy');\n    expect(markup).toContain('Retry');\n    expect(markup).toContain('Not available in this scope');\n    expect(markup).toContain('disabled=""');\n  });'''
+          insertion = '''\n\n  it.each([\n    ['/family/documents', 'guardian'],\n    ['/student/documents', 'student'],\n  ] as const)('renders authorised document selectors on %s', (path, role) => {\n    const markup = renderRoute(path, role);\n\n    expect(markup).toContain('Term 2 details');\n    expect(markup).toContain('Welcome details');\n    expect(markup).toContain('View current version');\n    expect(markup).toContain('Open cached copy');\n    expect(markup).toContain('Retry');\n    expect(markup).toContain('Not available in this scope');\n    expect(markup).toContain('disabled=""');\n  });'''
           closing = unit_text.rfind('\n});')
           if closing < 0:
             raise SystemExit('Unit test describe closing marker missing')
@@ -171,7 +171,7 @@ jobs:
           browser_text = browser.read_text()
           if 'switches authorised document metadata in place' in browser_text:
             raise SystemExit('Document selector browser regression already exists')
-          browser_text += '''\n\ntest('switches authorised document metadata in place', async ({ page }) => {\n  await page.goto('/family/documents');\n  await expect(page.getByRole('heading', { name: 'Term 2 progress report' })).toBeVisible();\n  await page.getByRole('button', { name: 'Select School welcome letter' }).click();\n  await expect(page.getByRole('heading', { name: 'School welcome letter' })).toBeVisible();\n  await expect(page.getByText('PDF · 340 KB')).toBeVisible();\n  await page.getByRole('button', { name: 'Select Term 2 progress report' }).click();\n  await expect(page.getByRole('heading', { name: 'Term 2 progress report' })).toBeVisible();\n  await expect(page.getByRole('button', { name: 'Open authorised copy' })).toBeDisabled();\n  await expect(page.getByRole('button', { name: 'Download authorised copy' })).toBeDisabled();\n});\n'''
+          browser_text += '''\n\ntest('switches authorised document metadata in place', async ({ page }) => {\n  await page.goto('/family/documents');\n  await expect(page.getByRole('heading', { name: 'Term 2 progress report' })).toBeVisible();\n  await page.getByRole('button', { name: 'Welcome details' }).click();\n  await expect(page.getByRole('heading', { name: 'School welcome letter' })).toBeVisible();\n  await expect(page.getByText('PDF · 340 KB')).toBeVisible();\n  await page.getByRole('button', { name: 'Term 2 details' }).click();\n  await expect(page.getByRole('heading', { name: 'Term 2 progress report' })).toBeVisible();\n  await expect(page.getByRole('button', { name: 'Open authorised copy' })).toBeDisabled();\n  await expect(page.getByRole('button', { name: 'Download authorised copy' })).toBeDisabled();\n});\n'''
           browser.write_text(browser_text)
           PY
       - run: npx prettier --write apps/platform-web/src/operational-module-surface.tsx apps/platform-web/src/operational-module-surface.test.tsx tests/browser/platform-shell.spec.ts
