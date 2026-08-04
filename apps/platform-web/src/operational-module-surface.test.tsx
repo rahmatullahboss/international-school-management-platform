@@ -113,4 +113,15 @@ describe('OperationalModuleSurface', () => {
     expect(markup).toContain('disabled=""');
     expect(markup).toContain('operational-pilot-action-boundary');
   });
+
+  it.each([
+    ['/family/grades', 'guardian', 'Review mathematics feedback'],
+    ['/student/timetable', 'student', 'Week view'],
+  ] as const)('keeps residual same-route preview actions disabled on %s', (path, role, label) => {
+    const markup = renderRoute(path, role);
+
+    expect(markup).not.toContain(`href="${path}"`);
+    expect(markup).toContain(label);
+    expect(markup).toContain('disabled=""');
+  });
 });

@@ -2131,7 +2131,7 @@ function ResultsPublished(props: { readonly student: boolean }): ReactElement {
             {props.student ? (
               <PilotUnavailableAction>Acknowledge feedback</PilotUnavailableAction>
             ) : (
-              <a href="/family/grades">Review mathematics feedback</a>
+              <PilotUnavailableAction>Review mathematics feedback</PilotUnavailableAction>
             )}
           </div>
         </div>
@@ -2484,7 +2484,7 @@ function StudentTimetable(): ReactElement {
         <button aria-describedby="student-timetable-preview-boundary" disabled type="button">
           Fri
         </button>
-        <a href="/student/timetable">Week view</a>
+        <PilotUnavailableAction>Week view</PilotUnavailableAction>
       </div>
       <small className="operational-evidence-line" id="student-timetable-preview-boundary">
         Only Wednesday’s synthetic schedule is loaded in this pilot fixture.

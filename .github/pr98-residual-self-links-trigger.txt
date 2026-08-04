@@ -1,1 +1,0 @@
-One-shot trigger for PR #98 residual self-link verification.
