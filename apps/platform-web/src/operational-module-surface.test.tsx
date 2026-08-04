@@ -213,4 +213,10 @@ describe('OperationalModuleSurface', () => {
     expect(markup).toContain('Not available in this scope');
     expect(markup).toContain('disabled=""');
   });
+
+  it('keeps family receipt downloads unavailable until a reviewed file contract exists', () => {
+    const markup = renderRoute('/family/finance', 'guardian');
+    expect((markup.match(/>Download<\/button>/gu) ?? []).length).toBe(3);
+    expect(markup).toContain('operational-pilot-action-boundary');
+  });
 });

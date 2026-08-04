@@ -2310,6 +2310,7 @@ function ResultsPublished(props: { readonly student: boolean }): ReactElement {
 }
 
 function FamilyFinance(): ReactElement {
+  const unavailableDownload = <PilotUnavailableAction>Download</PilotUnavailableAction>;
   return (
     <div className="operational-stack">
       <Pane
@@ -2340,8 +2341,7 @@ function FamilyFinance(): ReactElement {
             <li>Approved payment provider</li>
           </ul>
           <Notice title="Uncertain provider response" tone="warning">
-            If a payment response is unclear, use “Check payment status” rather than submitting
-            again.
+            If payment status is unclear, check status instead of submitting again.
           </Notice>
           <PilotUnavailableAction>Check payment status</PilotUnavailableAction>
         </Pane>
@@ -2365,7 +2365,7 @@ function FamilyFinance(): ReactElement {
                 'Bank transfer',
                 'June tuition',
                 <Status key="s">Verified</Status>,
-                'Download',
+                unavailableDownload,
               ],
               [
                 'RCPT-47802',
@@ -2374,7 +2374,7 @@ function FamilyFinance(): ReactElement {
                 'Bank transfer',
                 'July tuition',
                 <Status key="s">Verified</Status>,
-                'Download',
+                unavailableDownload,
               ],
               [
                 'RCPT-48100',
@@ -2383,7 +2383,7 @@ function FamilyFinance(): ReactElement {
                 'Cash',
                 'Activity fee',
                 <Status key="s">Verified</Status>,
-                'Download',
+                unavailableDownload,
               ],
             ]}
           />
