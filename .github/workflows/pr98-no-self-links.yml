@@ -1,0 +1,153 @@
+name: PR98 remove fake self links
+
+on:
+  push:
+    branches:
+      - ux/operational-school-erp-v1
+
+permissions:
+  contents: write
+
+jobs:
+  apply-verify:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ux/operational-school-erp-v1
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.2'
+          cache: npm
+      - run: npm ci
+      - name: Apply self-link safety fix
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          source = Path('apps/platform-web/src/operational-module-surface.tsx')
+          text = source.read_text()
+
+          old = '''function ActionBar(props: {
+            readonly page: PilotModulePage;
+            readonly context?: string;
+          }): ReactElement {'''.replace('          ', '')
+          new = '''function ActionBar(props: {
+            readonly page: PilotModulePage;
+            readonly currentPath: string;
+            readonly context?: string;
+          }): ReactElement {'''.replace('          ', '')
+          if old not in text:
+            raise SystemExit('ActionBar signature marker missing')
+          text = text.replace(old, new, 1)
+
+          old = '''      {props.page.actions.map((action, index) => (
+                <a data-primary={index === 0 ? 'true' : 'false'} href={action.href} key={action.label}>
+                  {action.label}
+                </a>
+              ))}'''.replace('      ', '')
+          new = '''      {props.page.actions.map((action, index) =>
+                action.href === props.currentPath ? (
+                  <PilotUnavailableAction key={action.label} primary={index === 0}>
+                    {action.label}
+                  </PilotUnavailableAction>
+                ) : (
+                  <a data-primary={index === 0 ? 'true' : 'false'} href={action.href} key={action.label}>
+                    {action.label}
+                  </a>
+                ),
+              )}'''.replace('      ', '')
+          if old not in text:
+            raise SystemExit('ActionBar actions marker missing')
+          text = text.replace(old, new, 1)
+
+          old = 'function PriorityQueue(props: { readonly page: PilotModulePage }): ReactElement {'
+          new = '''function PriorityQueue(props: {
+            readonly page: PilotModulePage;
+            readonly currentPath: string;
+          }): ReactElement {'''.replace('          ', '')
+          if old not in text:
+            raise SystemExit('PriorityQueue signature marker missing')
+          text = text.replace(old, new, 1)
+
+          old = '            <a href={item.href}>Review</a>'
+          new = '''            {item.href === props.currentPath ? (
+              <PilotUnavailableAction>Review</PilotUnavailableAction>
+            ) : (
+              <a href={item.href}>Review</a>
+            )}'''
+          if old not in text:
+            raise SystemExit('PriorityQueue link marker missing')
+          text = text.replace(old, new, 1)
+
+          text, count = re.subn(
+              r"<PriorityQueue page=\{routePage\('([^']+)'\)\} />",
+              lambda match: f'''<PriorityQueue
+            page={{routePage('{match.group(1)}')}}
+            currentPath="{match.group(1)}"
+          />'''.replace('          ', ''),
+              text,
+          )
+          if count < 1:
+            raise SystemExit('No PriorityQueue calls updated')
+
+          if '<ActionBar page={props.page} />' not in text:
+            raise SystemExit('Operational ActionBar call marker missing')
+          text = text.replace(
+              '<ActionBar page={props.page} />',
+              '<ActionBar page={props.page} currentPath={props.path} />',
+              1,
+          )
+
+          pattern = re.compile(
+              r'<a href="(/admin/(?:sis|academics))" key="([^"]+)">\s*([^<]+?)\s*</a>',
+              re.MULTILINE,
+          )
+          text, replaced = pattern.subn(
+              lambda match: (
+                  f'<PilotUnavailableAction key="{match.group(2)}">'
+                  f'{match.group(3).strip()}'
+                  '</PilotUnavailableAction>'
+              ),
+              text,
+          )
+          if replaced < 1:
+            raise SystemExit('No admin SIS/academics self links replaced')
+          source.write_text(text)
+
+          test = Path('apps/platform-web/src/operational-module-surface.test.tsx')
+          test_text = test.read_text()
+          insertion = '''
+
+  it.each([
+    ['/admin/sis', 'admin'],
+    ['/admin/academics', 'admin'],
+  ] as const)('does not render fake self-reloading actions on %s', (path, role) => {
+    const markup = renderRoute(path, role);
+
+    expect(markup).not.toContain(`href="${path}"`);
+    expect(markup).toContain('disabled=""');
+  });'''
+          closing = test_text.rfind('\n});')
+          if closing < 0:
+            raise SystemExit('Test describe closing marker missing')
+          test.write_text(test_text[:closing] + insertion + test_text[closing:])
+          PY
+      - run: npx prettier --write apps/platform-web/src/operational-module-surface.tsx apps/platform-web/src/operational-module-surface.test.tsx
+      - run: npm run format:check
+      - run: npm run typecheck
+      - run: npx vitest run apps/platform-web/src/operational-module-surface.test.tsx
+      - run: npm run build
+      - run: npm run check:experience-budget
+      - name: Commit verified fix and remove helper
+        run: |
+          rm .github/workflows/pr98-no-self-links.yml
+          rm -f .github/pr98-no-self-links-trigger.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add apps/platform-web/src/operational-module-surface.tsx apps/platform-web/src/operational-module-surface.test.tsx .github/workflows/pr98-no-self-links.yml .github/pr98-no-self-links-trigger.txt
+          git commit -m 'fix(ux): stop fake self-reloading task actions'
+          git push origin HEAD:ux/operational-school-erp-v1
