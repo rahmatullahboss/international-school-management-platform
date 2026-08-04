@@ -124,4 +124,18 @@ describe('OperationalModuleSurface', () => {
     expect(markup).toContain(label);
     expect(markup).toContain('disabled=""');
   });
+
+  it.each([
+    ['/admin/finance', 'admin', ['Approve refund', 'View entry']],
+    ['/admin/operations', 'admin', ['Review PO', 'Contact supplier', 'Assign cover']],
+  ] as const)(
+    'renders unsupported Admin record actions as disabled controls on %s',
+    (path, role, labels) => {
+      const markup = renderRoute(path, role);
+
+      for (const label of labels) expect(markup).toContain(label);
+      expect((markup.match(/disabled=""/gu) ?? []).length).toBeGreaterThanOrEqual(labels.length);
+      expect(markup).toContain('operational-pilot-action-boundary');
+    },
+  );
 });

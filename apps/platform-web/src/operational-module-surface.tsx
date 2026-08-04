@@ -584,7 +584,7 @@ function AdminFinance(): ReactElement {
               'INV-8821',
               <Status key="s">Approval</Status>,
               'AAL2 required',
-              'Approve refund',
+              <PilotUnavailableAction key="a">Approve refund</PilotUnavailableAction>,
             ],
             [
               'Journal',
@@ -593,7 +593,7 @@ function AdminFinance(): ReactElement {
               'Tuition allocation',
               <Status key="s">Posted</Status>,
               'Immutable',
-              'View entry',
+              <PilotUnavailableAction key="a">View entry</PilotUnavailableAction>,
             ],
           ]}
         />
@@ -676,7 +676,7 @@ function AdminOperations(): ReactElement {
               'Lab Supplies BD',
               '2 Aug',
               <Status key="s">Low stock</Status>,
-              'Review PO',
+              <PilotUnavailableAction key="a">Review PO</PilotUnavailableAction>,
             ],
             [
               'Microscope slides',
@@ -686,7 +686,7 @@ function AdminOperations(): ReactElement {
               'EduLab',
               '30 Jul',
               <Status key="s">Partial success</Status>,
-              'Contact supplier',
+              <PilotUnavailableAction key="a">Contact supplier</PilotUnavailableAction>,
             ],
             [
               'Year 8 cover',
@@ -696,7 +696,7 @@ function AdminOperations(): ReactElement {
               'HR desk',
               'Today 11:15',
               <Status key="s">Attention</Status>,
-              'Assign cover',
+              <PilotUnavailableAction key="a">Assign cover</PilotUnavailableAction>,
             ],
             [
               'Catering details',
