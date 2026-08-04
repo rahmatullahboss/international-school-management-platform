@@ -1,0 +1,72 @@
+name: PR98 residual self-link safety
+
+on:
+  push:
+    branches:
+      - ux/operational-school-erp-v1
+
+permissions:
+  contents: write
+
+jobs:
+  apply-verify:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ux/operational-school-erp-v1
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.2'
+          cache: npm
+      - run: npm ci
+      - name: Disable residual same-route links
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          source = Path('apps/platform-web/src/operational-module-surface.tsx')
+          text = source.read_text()
+          replacements = [
+            (
+              '''              <a href="/family/grades">Review mathematics feedback</a>''',
+              '''              <PilotUnavailableAction>Review mathematics feedback</PilotUnavailableAction>''',
+            ),
+            (
+              '''        <a href="/student/timetable">Week view</a>''',
+              '''        <PilotUnavailableAction>Week view</PilotUnavailableAction>''',
+            ),
+          ]
+          for old, new in replacements:
+            if old not in text:
+              raise SystemExit(f'Missing residual self-link marker: {old!r}')
+            text = text.replace(old, new, 1)
+          source.write_text(text)
+
+          test = Path('apps/platform-web/src/operational-module-surface.test.tsx')
+          test_text = test.read_text()
+          if 'keeps residual same-route preview actions disabled' in test_text:
+            raise SystemExit('Residual self-link regression test already exists')
+          insertion = '''\n\n  it.each([\n    ['/family/grades', 'guardian', 'Review mathematics feedback'],\n    ['/student/timetable', 'student', 'Week view'],\n  ] as const)(\n    'keeps residual same-route preview actions disabled on %s',\n    (path, role, label) => {\n      const markup = renderRoute(path, role);\n\n      expect(markup).not.toContain(`href="${path}"`);\n      expect(markup).toContain(label);\n      expect(markup).toContain('disabled=""');\n    },\n  );'''
+          closing = test_text.rfind('\n});')
+          if closing < 0:
+            raise SystemExit('Test describe closing marker missing')
+          test.write_text(test_text[:closing] + insertion + test_text[closing:])
+          PY
+      - run: npx prettier --write apps/platform-web/src/operational-module-surface.tsx apps/platform-web/src/operational-module-surface.test.tsx
+      - run: npm run format:check
+      - run: npm run typecheck
+      - run: npx vitest run apps/platform-web/src/operational-module-surface.test.tsx
+      - run: npm run build
+      - run: npm run check:experience-budget
+      - name: Commit verified residual fix and remove helper
+        run: |
+          rm .github/workflows/pr98-residual-self-links.yml
+          rm -f .github/pr98-residual-self-links-trigger.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add apps/platform-web/src/operational-module-surface.tsx apps/platform-web/src/operational-module-surface.test.tsx .github/workflows/pr98-residual-self-links.yml .github/pr98-residual-self-links-trigger.txt
+          git commit -m 'fix(ux): disable residual same-route preview links'
+          git push origin HEAD:ux/operational-school-erp-v1
