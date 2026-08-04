@@ -11,8 +11,18 @@ import { mountProductionOperatorPortal } from './production-operator-portal';
 import './pilot.css';
 import './styles.css';
 
+type OperatorLandingRole = 'admissions' | 'finance' | 'support';
+
+interface OperatorLandingCard {
+  readonly role: OperatorLandingRole;
+  readonly href: string;
+  readonly title: string;
+  readonly detail: string;
+  readonly action: string;
+}
+
 function FullPersonaLanding(): ReactElement {
-  const operatorCards = [
+  const operatorCards: readonly OperatorLandingCard[] = [
     {
       role: 'admissions',
       href: '/admissions',
@@ -35,7 +45,7 @@ function FullPersonaLanding(): ReactElement {
       detail: 'Diagnose tenant and deployment health through explicit audited support scope.',
       action: 'Go to support',
     },
-  ] as const;
+  ];
   const coreCards = [
     {
       role: 'admin',
@@ -99,24 +109,43 @@ function FullPersonaLanding(): ReactElement {
             <h2 id="pilot-role-title">Who are you working as?</h2>
             <span>Open the workspace that matches the job you need to complete.</span>
           </div>
-          <nav className="pilot-role-grid" aria-label="Primary navigation">
+          <nav className="pilot-role-register" aria-label="Primary role navigation">
             {coreCards.map((card) => (
-              <a className="pilot-role-card" data-role={card.role} href={card.href} key={card.role}>
-                <span className="pilot-role-card__number">{card.number}</span>
-                <h3>{card.title}</h3>
-                <p>{card.detail}</p>
-                <strong>{card.action}</strong>
-              </a>
-            ))}
-            {operatorCards.map((card, index) => (
-              <a className="pilot-role-card" data-role={card.role} href={card.href} key={card.role}>
-                <span className="pilot-role-card__number">0{index + 5}</span>
-                <h3>{card.title}</h3>
-                <p>{card.detail}</p>
-                <strong>{card.action}</strong>
+              <a className="pilot-role-row" data-role={card.role} href={card.href} key={card.role}>
+                <span className="pilot-role-row__number">{card.number}</span>
+                <div>
+                  <h3>{card.title}</h3>
+                  <p>{card.detail}</p>
+                </div>
+                <small>Permission scoped</small>
+                <strong>Enter workspace</strong>
               </a>
             ))}
           </nav>
+
+          {operatorCards.length === 0 ? null : (
+            <section className="pilot-operator-workspaces" aria-labelledby="pilot-operator-title">
+              <header>
+                <h3 id="pilot-operator-title">Specialist operator workspaces</h3>
+                <p>
+                  Time-bound operational roles remain separate from the four primary school
+                  personas.
+                </p>
+              </header>
+              <nav className="pilot-operator-register" aria-label="Specialist operator navigation">
+                {operatorCards.map((card, index) => (
+                  <a href={card.href} key={card.role}>
+                    <span>0{index + 5}</span>
+                    <div>
+                      <strong>{card.title}</strong>
+                      <small>{card.detail}</small>
+                    </div>
+                    <b>{card.action}</b>
+                  </a>
+                ))}
+              </nav>
+            </section>
+          )}
         </section>
 
         <section className="pilot-coverage" aria-labelledby="pilot-coverage-title">
@@ -124,7 +153,7 @@ function FullPersonaLanding(): ReactElement {
             <p>What the platform covers</p>
             <h2 id="pilot-coverage-title">Common school work, clearly organised</h2>
           </div>
-          <div className="pilot-coverage__grid">
+          <dl className="pilot-platform-index">
             {[
               ['Students and admissions', 'People, households, applications and enrolment'],
               ['Teaching and learning', 'Curriculum, timetable, attendance, grades and records'],
@@ -138,12 +167,12 @@ function FullPersonaLanding(): ReactElement {
                 'Permissions, audit history, isolation and recovery evidence',
               ],
             ].map(([title, detail]) => (
-              <article key={title}>
-                <h3>{title}</h3>
-                <p>{detail}</p>
-              </article>
+              <div key={title}>
+                <dt>{title}</dt>
+                <dd>{detail}</dd>
+              </div>
             ))}
-          </div>
+          </dl>
         </section>
       </main>
     </div>
@@ -153,7 +182,7 @@ function FullPersonaLanding(): ReactElement {
 const normalizedPath =
   window.location.pathname === '/' ? '/' : window.location.pathname.replace(/\/+$/u, '');
 
-function operatorRoleForPath(pathname: string): 'admissions' | 'finance' | 'support' | undefined {
+function operatorRoleForPath(pathname: string): OperatorLandingRole | undefined {
   if (pathname === '/admissions' || pathname.startsWith('/admissions/')) return 'admissions';
   if (pathname === '/finance' || pathname.startsWith('/finance/')) return 'finance';
   if (pathname === '/support' || pathname.startsWith('/support/')) return 'support';
