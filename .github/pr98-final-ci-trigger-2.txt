@@ -1,1 +1,0 @@
-Transient full-CI trigger after residual self-link safety commit.
