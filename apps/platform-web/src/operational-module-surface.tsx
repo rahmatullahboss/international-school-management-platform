@@ -1782,6 +1782,41 @@ function isStudent(persona: 'teacher' | 'guardian' | 'student'): boolean {
 }
 
 function TeacherResources(): ReactElement {
+  type EditableResource = 'Multi-step equations practice' | 'Geometry quiz' | 'Calculus intro';
+  const [selectedResource, setSelectedResource] = useState<EditableResource>(
+    'Multi-step equations practice',
+  );
+  const selectedResourceDetail =
+    selectedResource === 'Multi-step equations practice'
+      ? {
+          title: 'Multi-step equations practice',
+          description: 'Practice set for tomorrow’s lesson.',
+          classScope: 'Year 8A',
+          asset: 'equations_v1.pdf',
+          accessibility: 'Printable algebra practice with typed equations',
+          warning:
+            'A prior file has the same filename. Saving creates a new version rather than overwriting it.',
+        }
+      : selectedResource === 'Geometry quiz'
+        ? {
+            title: 'Geometry quiz',
+            description: 'Geometry checkpoint quiz for the current Year 8A unit.',
+            classScope: 'Year 8A',
+            asset: 'geometry.pdf',
+            accessibility: 'Printable geometry quiz with diagram descriptions',
+            warning:
+              'This resource is near its current availability end date. Publishing creates a new version.',
+          }
+        : {
+            title: 'Calculus intro',
+            description: 'Introductory calculus resource link requires repair before republishing.',
+            classScope: 'Year 12C',
+            asset: 'Broken link',
+            accessibility: 'External calculus introduction resource',
+            warning:
+              'The current authorised link is unavailable. Repair remains a draft-only preview until a production write contract is connected.',
+          };
+
   return (
     <div className="operational-stack">
       <PriorityQueue page={routePage('/teacher/resources')} currentPath="/teacher/resources" />
@@ -1813,7 +1848,15 @@ function TeacherResources(): ReactElement {
                 'equations_v1.pdf',
                 'N. Rahman',
                 'Saved locally',
-                'Edit',
+                <button
+                  aria-label="Edit Multi-step equations practice"
+                  aria-pressed={selectedResource === 'Multi-step equations practice'}
+                  key="a"
+                  onClick={() => setSelectedResource('Multi-step equations practice')}
+                  type="button"
+                >
+                  Edit
+                </button>,
               ],
               [
                 'Algebra fundamentals',
@@ -1824,7 +1867,7 @@ function TeacherResources(): ReactElement {
                 'Authorised link',
                 'N. Rahman',
                 '28 Jul',
-                'Preview',
+                <PilotUnavailableAction key="a">Preview</PilotUnavailableAction>,
               ],
               [
                 'Geometry quiz',
@@ -1835,7 +1878,15 @@ function TeacherResources(): ReactElement {
                 'geometry.pdf',
                 'N. Rahman',
                 '27 Jul',
-                'Edit',
+                <button
+                  aria-label="Edit Geometry quiz"
+                  aria-pressed={selectedResource === 'Geometry quiz'}
+                  key="a"
+                  onClick={() => setSelectedResource('Geometry quiz')}
+                  type="button"
+                >
+                  Edit
+                </button>,
               ],
               [
                 'Calculus intro',
@@ -1846,42 +1897,50 @@ function TeacherResources(): ReactElement {
                 'Broken link',
                 'N. Rahman',
                 '26 Jul',
-                'Repair',
+                <button
+                  aria-label="Repair Calculus intro"
+                  aria-pressed={selectedResource === 'Calculus intro'}
+                  key="a"
+                  onClick={() => setSelectedResource('Calculus intro')}
+                  type="button"
+                >
+                  Repair
+                </button>,
               ],
             ]}
           />
         </Pane>
         <Pane
-          title="Edit resource"
+          title={selectedResource === 'Calculus intro' ? 'Repair resource' : 'Edit resource'}
           description="Revisions create a new version; published history is not overwritten."
         >
-          <form className="operational-form">
+          <form className="operational-form" key={selectedResource}>
             <label>
               Title
-              <input defaultValue="Multi-step equations practice" />
+              <input defaultValue={selectedResourceDetail.title} />
             </label>
             <label>
               Description
-              <textarea rows={4} defaultValue="Practice set for tomorrow’s lesson." />
+              <textarea rows={4} defaultValue={selectedResourceDetail.description} />
             </label>
             <label>
               Class scope
-              <select multiple defaultValue={['Year 8A']}>
+              <select multiple defaultValue={[selectedResourceDetail.classScope]}>
                 <option>Year 8A</option>
                 <option>Year 9B</option>
+                <option>Year 12C</option>
               </select>
             </label>
             <label>
-              File
-              <input readOnly value="equations_v1.pdf" />
+              Asset
+              <input readOnly value={selectedResourceDetail.asset} />
             </label>
             <label>
               Accessibility description
-              <input defaultValue="Printable algebra practice with typed equations" />
+              <input defaultValue={selectedResourceDetail.accessibility} />
             </label>
-            <Notice title="Duplicate upload warning" tone="warning">
-              A prior file has the same filename. Saving creates a new version rather than
-              overwriting it.
+            <Notice title="Resource boundary" tone="warning">
+              {selectedResourceDetail.warning}
             </Notice>
             <div className="operational-inline-actions">
               <PilotUnavailableAction>Save draft</PilotUnavailableAction>

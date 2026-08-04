@@ -175,4 +175,15 @@ describe('OperationalModuleSurface', () => {
     expect(markup).toContain('Samira Noor · permitted context');
     expect(markup).toContain('aria-pressed="true"');
   });
+
+  it('renders Teacher resource selection controls without exposing unsupported preview as working', () => {
+    const markup = renderRoute('/teacher/resources', 'teacher');
+
+    expect(markup).toContain('Edit Multi-step equations practice');
+    expect(markup).toContain('Edit Geometry quiz');
+    expect(markup).toContain('Repair Calculus intro');
+    expect(markup).toContain('Preview');
+    expect(markup).toContain('disabled=""');
+    expect(markup).toContain('Resource boundary');
+  });
 });

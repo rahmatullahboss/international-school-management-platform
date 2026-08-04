@@ -26,3 +26,17 @@ test('switches Teacher permitted student context in place', async ({ page }) => 
   await expect(page.getByRole('heading', { name: 'Riya Ahmed · permitted context' })).toBeVisible();
   await expect(page.getByText('Present in the assigned class')).toBeVisible();
 });
+
+test('switches Teacher resource edit context in place', async ({ page }) => {
+  await page.goto('/teacher/resources');
+  await expect(page.getByRole('textbox', { name: 'Title' })).toHaveValue(
+    'Multi-step equations practice',
+  );
+  await page.getByRole('button', { name: 'Edit Geometry quiz' }).click();
+  await expect(page.getByRole('textbox', { name: 'Title' })).toHaveValue('Geometry quiz');
+  await expect(page.getByRole('textbox', { name: 'Asset' })).toHaveValue('geometry.pdf');
+  await page.getByRole('button', { name: 'Repair Calculus intro' }).click();
+  await expect(page.getByRole('heading', { name: 'Repair resource' })).toBeVisible();
+  await expect(page.getByRole('textbox', { name: 'Title' })).toHaveValue('Calculus intro');
+  await expect(page.getByRole('textbox', { name: 'Asset' })).toHaveValue('Broken link');
+});
