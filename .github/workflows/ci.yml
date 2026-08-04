@@ -39,7 +39,16 @@ jobs:
       - run: npm run lint
       - run: npm run check:boundaries
       - run: npm run typecheck
-      - run: npm run test
+      - name: Run application tests with runtime coverage
+        run: npm run test:coverage
+      - name: Upload runtime coverage evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-coverage
+          path: coverage/
+          if-no-files-found: warn
+          retention-days: 7
       - name: Verify all Wave 2 migrations on fresh PostgreSQL
         env:
           PGHOST: 127.0.0.1

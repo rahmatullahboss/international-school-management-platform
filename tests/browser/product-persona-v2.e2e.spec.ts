@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 
 import type { PilotOperatorRole } from '../../apps/platform-api/src/pilot-operator-models.js';
@@ -67,6 +69,27 @@ async function issueSession(request: APIRequestContext, role: PilotOperatorRole)
   expect(body.accessToken.length).toBeGreaterThan(32);
   return body.accessToken;
 }
+
+test('operator route E2E matrix exactly matches production published routes', () => {
+  const source = readFileSync('apps/platform-web/src/operator-portal.tsx', 'utf8');
+  const productionRoots = [
+    ...source.matchAll(/^\s{4}root: '(\/(?:admissions|finance|support))',$/gmu),
+  ].map((match) => match[1]);
+  const productionPages = [
+    ...source.matchAll(/^\s{6}'(\/(?:admissions|finance|support)\/[^']+)': \{$/gmu),
+  ].map((match) => match[1]);
+  const productionPaths = [...productionRoots, ...productionPages].sort();
+  const coveredPaths = (
+    Object.values(routeMatrix) as readonly (readonly { readonly path: string }[])[]
+  )
+    .flatMap((routes) => routes.map((route) => route.path))
+    .sort();
+
+  expect(productionRoots).toHaveLength(3);
+  expect(productionPages).toHaveLength(9);
+  expect(coveredPaths).toEqual(productionPaths);
+  expect(new Set(coveredPaths).size).toBe(productionPaths.length);
+});
 
 test('role chooser exposes all seven principal personas', async ({ page }) => {
   await page.goto('/');
