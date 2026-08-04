@@ -14,38 +14,10 @@ type Tone = 'neutral' | 'success' | 'warning' | 'error' | 'info';
 
 function toneForStatus(status: string): Tone {
   const normalized = status.toLowerCase();
-  if (
-    normalized.includes('error') ||
-    normalized.includes('failed') ||
-    normalized.includes('conflict') ||
-    normalized.includes('restricted') ||
-    normalized.includes('declined')
-  ) {
-    return 'error';
-  }
-  if (
-    normalized.includes('due') ||
-    normalized.includes('attention') ||
-    normalized.includes('review') ||
-    normalized.includes('partial') ||
-    normalized.includes('draft')
-  ) {
-    return 'warning';
-  }
-  if (
-    normalized.includes('ready') ||
-    normalized.includes('available') ||
-    normalized.includes('published') ||
-    normalized.includes('complete') ||
-    normalized.includes('synced') ||
-    normalized.includes('present')
-  ) {
-    return 'success';
-  }
-  if (normalized.includes('new') || normalized.includes('next') || normalized.includes('live')) {
-    return 'info';
-  }
-  return 'neutral';
+  if (/error|failed|conflict|restricted|declined/u.test(normalized)) return 'error';
+  if (/due|attention|review|partial|draft/u.test(normalized)) return 'warning';
+  if (/ready|available|published|complete|synced|present/u.test(normalized)) return 'success';
+  return /new|next|live/u.test(normalized) ? 'info' : 'neutral';
 }
 
 function Status(props: { readonly children: string; readonly tone?: Tone }): ReactElement {
@@ -87,7 +59,7 @@ function ActionBar(props: {
             {action.label}
           </PilotUnavailableAction>
         ) : (
-          <a data-primary={index === 0 ? 'true' : 'false'} href={action.href} key={action.label}>
+          <a data-primary={index === 0} href={action.href} key={action.label}>
             {action.label}
           </a>
         ),
@@ -149,9 +121,9 @@ function DataTable(props: {
         </thead>
         <tbody>
           {props.rows.map((row, rowIndex) => (
-            <tr key={`${props.label}-${rowIndex}`}>
+            <tr key={rowIndex}>
               {row.map((cell, cellIndex) => (
-                <td key={`${props.label}-${rowIndex}-${cellIndex}`}>{cell}</td>
+                <td key={cellIndex}>{cell}</td>
               ))}
             </tr>
           ))}
@@ -179,7 +151,7 @@ function Timeline(props: {
             <strong>{item.title}</strong>
             <span>{item.detail}</span>
           </div>
-          {item.status === undefined ? null : <Status>{item.status}</Status>}
+          {item.status ? <Status>{item.status}</Status> : null}
         </li>
       ))}
     </ol>
@@ -200,7 +172,7 @@ function DefinitionList(props: {
         <div key={item.term}>
           <dt>{item.term}</dt>
           <dd>{item.value}</dd>
-          {item.note === undefined ? null : <span>{item.note}</span>}
+          {item.note ? <span>{item.note}</span> : null}
         </div>
       ))}
     </dl>
@@ -216,7 +188,7 @@ function Pane(props: {
     <section className="operational-pane">
       <header>
         <h3>{props.title}</h3>
-        {props.description === undefined ? null : <p>{props.description}</p>}
+        {props.description ? <p>{props.description}</p> : null}
       </header>
       {props.children}
     </section>
@@ -243,7 +215,7 @@ function PilotUnavailableAction(props: {
   return (
     <button
       aria-describedby="operational-pilot-action-boundary"
-      className={props.primary === true ? 'operational-primary' : undefined}
+      className={props.primary ? 'operational-primary' : undefined}
       disabled
       type="button"
     >
@@ -1696,7 +1668,7 @@ function MessageWorkspace(props: {
               <time>Yesterday · 19:30</time>
             </header>
             <p>
-              {isStudent(props.persona)
+              {props.persona === 'student'
                 ? 'Please review the trip preparation notes before science tomorrow.'
                 : 'I have shared the class resource and the published guidance for the next lesson.'}
             </p>
@@ -1775,10 +1747,6 @@ function MessageWorkspace(props: {
       </Pane>
     </div>
   );
-}
-
-function isStudent(persona: 'teacher' | 'guardian' | 'student'): boolean {
-  return persona === 'student';
 }
 
 function TeacherResources(): ReactElement {
@@ -2539,7 +2507,7 @@ function DocumentsWorkspace(props: { readonly student: boolean }): ReactElement 
             rows={[
               [
                 'Term 2 progress report',
-                props.student ? 'Samira Noor' : 'Samira Noor',
+                'Samira Noor',
                 'Report card',
                 '28 Jul',
                 <Status key="s">New</Status>,
