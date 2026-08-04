@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { PilotDataStatus, UnknownRoute, type PilotConnectivity } from './portal-shared';
+import { OperatorRouteWorkspace } from './operator-route-workspace';
+import './operator-route-workspace.css';
+import { PilotDataStatus, UnknownRoute } from './portal-shared';
 import './pilot.css';
 import './pilot-resource.css';
 import './pilot-ux.css';
@@ -292,10 +294,6 @@ function isMatchingSnapshot(value: unknown, role: OperatorRole): value is Operat
   );
 }
 
-function connectivityState(): PilotConnectivity {
-  return navigator.onLine ? 'online' : 'offline';
-}
-
 function useOperatorResource(role: OperatorRole) {
   const config = operatorConfigs[role];
   const apiBase = useMemo(resolveApiBase, []);
@@ -397,20 +395,62 @@ export function operatorRoleForPath(pathname: string): OperatorRole | undefined 
   )?.[0];
 }
 
+function OperatorHome(props: {
+  readonly role: OperatorRole;
+  readonly data: OperatorData;
+}): ReactElement {
+  return (
+    <>
+      <section
+        className="pilot-metrics"
+        aria-label={`${operatorConfigs[props.role].title} summary`}
+      >
+        {props.data.metrics.map((metric) => (
+          <article key={metric.label}>
+            <span>{metric.label}</span>
+            <strong>{metric.value}</strong>
+            <p>{metric.detail}</p>
+          </article>
+        ))}
+      </section>
+
+      <section className="pilot-work-queue" aria-labelledby={`${props.role}-work-title`}>
+        <div>
+          <p>Permission-scoped work</p>
+          <h2 id={`${props.role}-work-title`}>Priority work</h2>
+          <span>Only actions granted to this persona are shown.</span>
+        </div>
+        <ol>
+          {props.data.workItems.map((item) => (
+            <li key={item.id}>
+              <div>
+                <strong>{item.title}</strong>
+                <span>{item.detail}</span>
+              </div>
+              <span className="pilot-status">{item.status}</span>
+              <a href={item.href}>Open task</a>
+            </li>
+          ))}
+        </ol>
+      </section>
+    </>
+  );
+}
+
 export function OperatorPortal(props: {
   readonly role: OperatorRole;
   readonly path: string;
 }): ReactElement {
   const config = operatorConfigs[props.role];
   const page = config.pages[props.path];
-  const known = props.path === config.root || page !== undefined;
-  const title = props.path === config.root ? config.title : (page?.title ?? config.title);
-  const description =
-    props.path === config.root ? config.description : (page?.description ?? config.description);
+  const isHome = props.path === config.root;
+  const known = isHome || page !== undefined;
+  const title = isHome ? config.title : (page?.title ?? config.title);
+  const description = isHome ? config.description : (page?.description ?? config.description);
   const resource = useOperatorResource(props.role);
 
   return (
-    <div className="pilot-entry" data-role={props.role}>
+    <div className="pilot-entry operator-entry" data-role={props.role}>
       <a className="pilot-skip-link" href="#main-content">
         Skip to main content
       </a>
@@ -441,60 +481,41 @@ export function OperatorPortal(props: {
         ) : (
           <>
             <nav className="pilot-actions" aria-label={`${config.title} navigation`}>
+              <a href={config.root} aria-current={isHome ? 'page' : undefined}>
+                Overview
+              </a>
               {Object.entries(config.pages).map(([href, route]) => (
-                <a href={href} key={href}>
+                <a href={href} key={href} aria-current={href === props.path ? 'page' : undefined}>
                   {route.title}
                 </a>
               ))}
             </nav>
 
-            <section className="pilot-metrics" aria-label={`${title} summary`}>
-              {resource.data.metrics.map((metric) => (
-                <article key={metric.label}>
-                  <span>{metric.label}</span>
-                  <strong>{metric.value}</strong>
-                  <p>{metric.detail}</p>
-                </article>
-              ))}
-            </section>
+            {isHome ? (
+              <OperatorHome role={props.role} data={resource.data} />
+            ) : (
+              <OperatorRouteWorkspace role={props.role} path={props.path} />
+            )}
 
-            <section className="pilot-work-queue" aria-labelledby={`${props.role}-work-title`}>
-              <div>
-                <p>Permission-scoped work</p>
-                <h2 id={`${props.role}-work-title`}>Priority work</h2>
-                <span>Only actions granted to this persona are shown.</span>
-              </div>
-              <ol>
-                {resource.data.workItems.map((item) => (
-                  <li key={item.id}>
-                    <div>
-                      <strong>{item.title}</strong>
-                      <span>{item.detail}</span>
-                    </div>
-                    <span className="pilot-status">{item.status}</span>
-                    <a href={item.href}>Review</a>
-                  </li>
-                ))}
-              </ol>
-            </section>
-
-            <section className="pilot-demo-note" aria-label="Controlled pilot mutation">
-              <strong>Audited controlled action</strong>
-              <span>
-                Records non-production evidence only; live financial or student records are not
-                changed.
-              </span>
-              <button
-                type="button"
-                onClick={resource.submitControlledAction}
-                disabled={resource.apiBase === undefined}
-              >
-                {config.commandLabel}
-              </button>
-              {resource.commandStatus === undefined ? null : (
-                <p role="status">{resource.commandStatus}</p>
-              )}
-            </section>
+            {isHome ? (
+              <section className="pilot-demo-note" aria-label="Controlled pilot mutation">
+                <strong>Audited pilot evidence</strong>
+                <span>
+                  This control records non-production evidence only. It does not change live
+                  financial or student records.
+                </span>
+                <button
+                  type="button"
+                  onClick={resource.submitControlledAction}
+                  disabled={resource.apiBase === undefined}
+                >
+                  {config.commandLabel}
+                </button>
+                {resource.commandStatus === undefined ? null : (
+                  <p role="status">{resource.commandStatus}</p>
+                )}
+              </section>
+            ) : null}
           </>
         )}
       </main>
@@ -508,41 +529,4 @@ export function mountOperatorPortal(role: OperatorRole): void {
   createRoot(root).render(
     <OperatorPortal role={role} path={window.location.pathname.replace(/\/+$/u, '') || '/'} />,
   );
-}
-
-export function operatorLandingCards(): readonly {
-  readonly role: OperatorRole;
-  readonly href: string;
-  readonly title: string;
-  readonly detail: string;
-  readonly action: string;
-}[] {
-  return [
-    {
-      role: 'admissions',
-      href: '/admissions',
-      title: 'Admissions staff',
-      detail: 'Process enquiries, applications, interviews, offers and enrolment conversion.',
-      action: 'Go to admissions',
-    },
-    {
-      role: 'finance',
-      href: '/finance',
-      title: 'Finance or cashier',
-      detail:
-        'Handle invoices, receipts, cashier sessions and reconciliation with least privilege.',
-      action: 'Go to finance',
-    },
-    {
-      role: 'support',
-      href: '/support',
-      title: 'Platform support',
-      detail: 'Diagnose tenant and deployment health through explicit audited support scope.',
-      action: 'Go to support',
-    },
-  ] as const;
-}
-
-export function currentOperatorConnectivity(): PilotConnectivity {
-  return connectivityState();
 }
