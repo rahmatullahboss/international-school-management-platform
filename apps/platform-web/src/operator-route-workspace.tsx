@@ -84,14 +84,14 @@ const definitions: Readonly<Record<string, RegisterDefinition>> = {
     ],
   },
   '/finance/invoices': {
-    title: 'Invoices and statements',
+    title: 'Invoice register',
     description: 'Search household invoices and inspect current balance state.',
     columns: ['Invoice', 'Household', 'Due date', 'Amount', 'Status'],
     noun: 'invoice',
     rows: [['INV-2026-0842', 'Noor family', '10 Aug 2026', 'BDT 18,500', 'Due']],
   },
   '/finance/cashier': {
-    title: 'Cashier session',
+    title: 'Receipt register',
     description: 'Inspect receipt activity without losing balancing context.',
     columns: ['Receipt', 'Household', 'Method', 'Amount', 'Status'],
     noun: 'receipt',
@@ -117,7 +117,7 @@ const definitions: Readonly<Record<string, RegisterDefinition>> = {
     rows: [['Ozzyl International Demo School', 'ap-south', '2', 'Just now', 'Healthy']],
   },
   '/support/health': {
-    title: 'Deployment health',
+    title: 'Health signal register',
     description: 'Approved health signals for the selected tenant.',
     columns: ['Surface', 'Region', 'Last check', 'Latency', 'Status'],
     noun: 'signal',
