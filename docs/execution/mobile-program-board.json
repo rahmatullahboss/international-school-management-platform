@@ -1,0 +1,156 @@
+{
+  "program": "international-school-mobile-v1",
+  "status": "documentation-proposed",
+  "documentation_base_sha": "3ddfcf22a237fe3025c4c456005812641b4397af",
+  "backend_dependency": {
+    "stream": "EXP-01",
+    "current_status": "active",
+    "rule": "Mobile consumes reviewed versioned application contracts, never database tables."
+  },
+  "gates": [
+    {
+      "id": "GATE-MOBILE-DOCS-APPROVED",
+      "status": "pending_review"
+    },
+    {
+      "id": "GATE-EXP-CONTRACTS-STABLE",
+      "status": "pending",
+      "scope": "Per contract family; not one all-or-nothing gate."
+    },
+    {
+      "id": "GATE-MOBILE-FOUNDATION-READY",
+      "status": "blocked"
+    },
+    {
+      "id": "GATE-FAMILY-APP-READY",
+      "status": "blocked"
+    },
+    {
+      "id": "GATE-STAFF-APP-READY",
+      "status": "blocked"
+    },
+    {
+      "id": "GATE-MOBILE-INTEGRATED",
+      "status": "blocked"
+    },
+    {
+      "id": "GATE-MOBILE-PILOT-READY",
+      "status": "blocked"
+    }
+  ],
+  "streams": [
+    {
+      "id": "MOB-00",
+      "name": "Mobile documentation and coordination",
+      "wave": 0,
+      "branch": "docs/mobile-architecture-v1",
+      "worktree": ".worktrees/mob-00-docs",
+      "depends_on": [],
+      "parallel_with": [
+        "EXP-01"
+      ],
+      "owns": [
+        "docs/mobile/**",
+        "docs/adr/ADR-007-flutter-mobile-product-strategy.md",
+        "docs/execution/mobile-*",
+        "docs/execution/MOB-01-MOBILE-FOUNDATION-ONE-SHOT-PROMPT.md"
+      ],
+      "status": "active",
+      "completion_gate": "GATE-MOBILE-DOCS-APPROVED"
+    },
+    {
+      "id": "MOB-01",
+      "name": "Mobile shared foundation",
+      "wave": 1,
+      "branch": "program/mobile-foundation-v1",
+      "worktree": ".worktrees/mob-01-foundation",
+      "depends_on": [
+        "GATE-MOBILE-DOCS-APPROVED"
+      ],
+      "parallel_with": [
+        "EXP-01"
+      ],
+      "owns": [
+        "mobile/pubspec.yaml",
+        "mobile/analysis_options.yaml",
+        "mobile/tool/**",
+        "mobile/packages/core_*/**",
+        "mobile/packages/design_system/**",
+        "mobile/packages/testing_support/**",
+        "mobile/apps/*/platform-bootstrap/**",
+        ".github/workflows/mobile-*"
+      ],
+      "status": "blocked",
+      "completion_gate": "GATE-MOBILE-FOUNDATION-READY"
+    },
+    {
+      "id": "MOB-02",
+      "name": "Family application",
+      "wave": 2,
+      "branch": "module/mobile-family-v1",
+      "worktree": ".worktrees/mob-02-family",
+      "depends_on": [
+        "GATE-MOBILE-FOUNDATION-READY",
+        "family-contract-family checkpoint"
+      ],
+      "parallel_with": [
+        "MOB-03"
+      ],
+      "owns": [
+        "mobile/apps/family_app/**",
+        "mobile/packages/family_*/**",
+        "docs/mobile/modules/family/**"
+      ],
+      "status": "blocked",
+      "completion_gate": "GATE-FAMILY-APP-READY"
+    },
+    {
+      "id": "MOB-03",
+      "name": "Staff application",
+      "wave": 2,
+      "branch": "module/mobile-staff-v1",
+      "worktree": ".worktrees/mob-03-staff",
+      "depends_on": [
+        "GATE-MOBILE-FOUNDATION-READY",
+        "staff-contract-family checkpoint"
+      ],
+      "parallel_with": [
+        "MOB-02"
+      ],
+      "owns": [
+        "mobile/apps/staff_app/**",
+        "mobile/packages/staff_*/**",
+        "docs/mobile/modules/staff/**"
+      ],
+      "status": "blocked",
+      "completion_gate": "GATE-STAFF-APP-READY"
+    },
+    {
+      "id": "MOB-INTEG",
+      "name": "Mobile serial integration and release",
+      "wave": 3,
+      "branch": "integration/mobile-v1",
+      "worktree": ".worktrees/mob-integ",
+      "depends_on": [
+        "GATE-FAMILY-APP-READY",
+        "GATE-STAFF-APP-READY",
+        "reviewed platform integration contract snapshot"
+      ],
+      "parallel_with": [],
+      "owns": [
+        "mobile/integration_test/**",
+        "mobile/release/**",
+        "mobile/generated/approved-contracts/**",
+        "docs/mobile/releases/**",
+        "coordinator-approved integration wiring"
+      ],
+      "status": "blocked",
+      "completion_gate": "GATE-MOBILE-INTEGRATED"
+    }
+  ],
+  "parallelism": {
+    "max_implementation_streams": 2,
+    "rule": "Family and Staff may run together only after the shared foundation is reviewed and frozen. Integration is serial."
+  },
+  "production_policy": "No production deployment, real student data, store publication or destructive mutation without separate authorization."
+}
