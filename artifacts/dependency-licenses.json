@@ -207,51 +207,51 @@
     },
     {
       "name": "@cloudflare/workerd-darwin-64",
-      "version": "1.20260722.1",
+      "version": "1.20260730.1",
       "license": "Apache-2.0",
       "development": true,
       "optional": true,
-      "purl": "pkg:npm/%40cloudflare/workerd-darwin-64@1.20260722.1"
+      "purl": "pkg:npm/%40cloudflare/workerd-darwin-64@1.20260730.1"
     },
     {
       "name": "@cloudflare/workerd-darwin-arm64",
-      "version": "1.20260722.1",
+      "version": "1.20260730.1",
       "license": "Apache-2.0",
       "development": true,
       "optional": true,
-      "purl": "pkg:npm/%40cloudflare/workerd-darwin-arm64@1.20260722.1"
+      "purl": "pkg:npm/%40cloudflare/workerd-darwin-arm64@1.20260730.1"
     },
     {
       "name": "@cloudflare/workerd-linux-64",
-      "version": "1.20260722.1",
+      "version": "1.20260730.1",
       "license": "Apache-2.0",
       "development": true,
       "optional": true,
-      "purl": "pkg:npm/%40cloudflare/workerd-linux-64@1.20260722.1"
+      "purl": "pkg:npm/%40cloudflare/workerd-linux-64@1.20260730.1"
     },
     {
       "name": "@cloudflare/workerd-linux-arm64",
-      "version": "1.20260722.1",
+      "version": "1.20260730.1",
       "license": "Apache-2.0",
       "development": true,
       "optional": true,
-      "purl": "pkg:npm/%40cloudflare/workerd-linux-arm64@1.20260722.1"
+      "purl": "pkg:npm/%40cloudflare/workerd-linux-arm64@1.20260730.1"
     },
     {
       "name": "@cloudflare/workerd-windows-64",
-      "version": "1.20260722.1",
+      "version": "1.20260730.1",
       "license": "Apache-2.0",
       "development": true,
       "optional": true,
-      "purl": "pkg:npm/%40cloudflare/workerd-windows-64@1.20260722.1"
+      "purl": "pkg:npm/%40cloudflare/workerd-windows-64@1.20260730.1"
     },
     {
       "name": "@cloudflare/workers-types",
-      "version": "5.20260727.1",
+      "version": "5.20260804.1",
       "license": "MIT OR Apache-2.0",
       "development": true,
       "optional": false,
-      "purl": "pkg:npm/%40cloudflare/workers-types@5.20260727.1"
+      "purl": "pkg:npm/%40cloudflare/workers-types@5.20260804.1"
     },
     {
       "name": "@cspotcode/source-map-support",
@@ -854,6 +854,14 @@
       "purl": "pkg:npm/%40jridgewell/resolve-uri@3.1.2"
     },
     {
+      "name": "@jridgewell/source-map",
+      "version": "0.3.11",
+      "license": "MIT",
+      "development": true,
+      "optional": true,
+      "purl": "pkg:npm/%40jridgewell/source-map@0.3.11"
+    },
+    {
       "name": "@jridgewell/sourcemap-codec",
       "version": "1.5.5",
       "license": "MIT",
@@ -1271,11 +1279,11 @@
     },
     {
       "name": "@speed-highlight/core",
-      "version": "1.2.17",
+      "version": "1.2.23",
       "license": "CC0-1.0",
       "development": true,
       "optional": false,
-      "purl": "pkg:npm/%40speed-highlight/core@1.2.17"
+      "purl": "pkg:npm/%40speed-highlight/core@1.2.23"
     },
     {
       "name": "@standard-schema/spec",
@@ -1615,11 +1623,11 @@
     },
     {
       "name": "brace-expansion",
-      "version": "5.0.8",
+      "version": "5.0.9",
       "license": "MIT",
       "development": true,
       "optional": false,
-      "purl": "pkg:npm/brace-expansion@5.0.8"
+      "purl": "pkg:npm/brace-expansion@5.0.9"
     },
     {
       "name": "browserslist",
@@ -1628,6 +1636,14 @@
       "development": true,
       "optional": false,
       "purl": "pkg:npm/browserslist@4.28.7"
+    },
+    {
+      "name": "buffer-from",
+      "version": "1.1.2",
+      "license": "MIT",
+      "development": true,
+      "optional": true,
+      "purl": "pkg:npm/buffer-from@1.1.2"
     },
     {
       "name": "caniuse-lite",
@@ -1644,6 +1660,14 @@
       "development": true,
       "optional": false,
       "purl": "pkg:npm/chai@6.2.2"
+    },
+    {
+      "name": "commander",
+      "version": "2.20.3",
+      "license": "MIT",
+      "development": true,
+      "optional": true,
+      "purl": "pkg:npm/commander@2.20.3"
     },
     {
       "name": "convert-source-map",
@@ -1927,11 +1951,11 @@
     },
     {
       "name": "hono",
-      "version": "4.12.32",
+      "version": "4.13.0",
       "license": "MIT",
       "development": false,
       "optional": false,
-      "purl": "pkg:npm/hono@4.12.32"
+      "purl": "pkg:npm/hono@4.13.0"
     },
     {
       "name": "html-escaper",
@@ -2215,11 +2239,11 @@
     },
     {
       "name": "miniflare",
-      "version": "4.20260722.0",
+      "version": "5.20260730.0-alpha",
       "license": "MIT",
       "development": true,
       "optional": false,
-      "purl": "pkg:npm/miniflare@4.20260722.0"
+      "purl": "pkg:npm/miniflare@5.20260730.0-alpha"
     },
     {
       "name": "minimatch",
@@ -2486,12 +2510,28 @@
       "purl": "pkg:npm/siginfo@2.0.0"
     },
     {
+      "name": "source-map",
+      "version": "0.6.1",
+      "license": "BSD-3-Clause",
+      "development": true,
+      "optional": true,
+      "purl": "pkg:npm/source-map@0.6.1"
+    },
+    {
       "name": "source-map-js",
       "version": "1.2.1",
       "license": "BSD-3-Clause",
       "development": true,
       "optional": false,
       "purl": "pkg:npm/source-map-js@1.2.1"
+    },
+    {
+      "name": "source-map-support",
+      "version": "0.5.21",
+      "license": "MIT",
+      "development": true,
+      "optional": true,
+      "purl": "pkg:npm/source-map-support@0.5.21"
     },
     {
       "name": "stackback",
@@ -2516,6 +2556,14 @@
       "development": true,
       "optional": false,
       "purl": "pkg:npm/supports-color@7.2.0"
+    },
+    {
+      "name": "terser",
+      "version": "5.49.0",
+      "license": "BSD-2-Clause",
+      "development": true,
+      "optional": true,
+      "purl": "pkg:npm/terser@5.49.0"
     },
     {
       "name": "tinybench",
@@ -2591,11 +2639,11 @@
     },
     {
       "name": "undici",
-      "version": "7.28.0",
+      "version": "7.29.0",
       "license": "MIT",
       "development": true,
       "optional": false,
-      "purl": "pkg:npm/undici@7.28.0"
+      "purl": "pkg:npm/undici@7.29.0"
     },
     {
       "name": "undici-types",
@@ -2679,19 +2727,19 @@
     },
     {
       "name": "workerd",
-      "version": "1.20260722.1",
+      "version": "1.20260730.1",
       "license": "Apache-2.0",
       "development": true,
       "optional": false,
-      "purl": "pkg:npm/workerd@1.20260722.1"
+      "purl": "pkg:npm/workerd@1.20260730.1"
     },
     {
       "name": "wrangler",
-      "version": "4.114.0",
+      "version": "4.118.0",
       "license": "MIT OR Apache-2.0",
       "development": true,
       "optional": false,
-      "purl": "pkg:npm/wrangler@4.114.0"
+      "purl": "pkg:npm/wrangler@4.118.0"
     },
     {
       "name": "wrangler/node_modules/fsevents",

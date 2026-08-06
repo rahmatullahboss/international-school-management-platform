@@ -1,0 +1,32 @@
+{
+  "program": "international-school-platform-v1",
+  "gate": "GATE-PRODUCTION-DEMO-RUNTIME-V1",
+  "baseManifest": "infra/database/post-integration-migration-manifest.json",
+  "orderingRule": "apply the reviewed 53-migration pilot manifest first, then production hardening migrations in contiguous order",
+  "migrations": [
+    {
+      "order": 1,
+      "id": "202608020001_PROD-01_browser_workspace_resolution",
+      "stream": "PROD-01",
+      "path": "infra/database/post-integration-migrations/202608020001_PROD-01_browser_workspace_resolution.sql"
+    },
+    {
+      "order": 2,
+      "id": "202608020002_PROD-02_operator_work_queue",
+      "stream": "PROD-02",
+      "path": "infra/database/post-integration-migrations/202608020002_PROD-02_operator_work_queue.sql"
+    },
+    {
+      "order": 3,
+      "id": "202608020003_PROD-03_production_runtime_role",
+      "stream": "PROD-03",
+      "path": "infra/database/post-integration-migrations/202608020003_PROD-03_production_runtime_role.sql"
+    },
+    {
+      "order": 4,
+      "id": "202608020004_PROD-04_runtime_credential_readiness",
+      "stream": "PROD-04",
+      "path": "infra/database/post-integration-migrations/202608020004_PROD-04_runtime_credential_readiness.sql"
+    }
+  ]
+}

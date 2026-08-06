@@ -109,11 +109,15 @@ Current production limits are:
 
 - total initial platform-web JavaScript: 250,000 bytes;
 - total initial platform-web CSS: 50,000 bytes;
+- aggregate lazy-route JavaScript: 410,000 bytes;
+- aggregate lazy-route CSS: 100,000 bytes;
 - low-bandwidth page size: 20 records;
 - first contentful paint target: 2,500 ms;
 - interaction latency target: 200 ms.
 
-Review dependency growth, eager imports, optional media and duplicate CSS before changing a budget. A budget increase requires reviewed product and performance evidence.
+The August 3, 2026 Operational Ledger review expanded the governed platform to 34 primary routes. The verified production build remained inside the unchanged initial-load limits at 239,673 bytes of JavaScript and 21,952 bytes of CSS, while aggregate lazy-route output measured 398,310 bytes of JavaScript and 95,697 bytes of CSS. The service worker precaches only the shell and initial HTML-linked assets; additional `/assets/` route chunks are cached on demand. The aggregate caps were therefore narrowly recalibrated while the user-facing initial-load caps stayed unchanged.
+
+Review dependency growth, eager imports, optional media and duplicate CSS before changing a budget. A future budget increase still requires reviewed product and performance evidence.
 
 ## Telemetry policy
 

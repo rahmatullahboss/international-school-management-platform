@@ -13,6 +13,10 @@
     "@school/documents-experience": "*",
     "@school/platform": "*",
     "@school/ui": "*",
+    "@school/web-admin": "*",
+    "@school/web-family": "*",
+    "@school/web-student": "*",
+    "@school/web-teacher": "*",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

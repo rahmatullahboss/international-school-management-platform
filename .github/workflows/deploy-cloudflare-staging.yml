@@ -1,0 +1,404 @@
+name: Deploy Cloudflare Staging
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-staging-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify-deploy-smoke:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.head_ref == 'deploy/cloudflare-staging-pilot' ||
+      github.head_ref == 'pilot/runtime-portal-composition' ||
+      github.head_ref == 'ux/smooth-operational-experience-v1' ||
+      github.head_ref == 'pilot/permission-aware-read-api-v1' ||
+      github.head_ref == 'pilot/signed-session-context-v1' ||
+      github.head_ref == 'pilot/oidc-trust-boundary-v1' ||
+      github.head_ref == 'pilot/oidc-pkce-flow-v1' ||
+      github.head_ref == 'pilot/auth-durable-context-v1' ||
+      github.head_ref == 'pilot/auth-session-termination-v1' ||
+      github.head_ref == 'pilot/oidc-key-rotation-v1' ||
+      github.head_ref == 'auth/provider-backchannel-stepup-v1' ||
+      github.head_ref == 'auth/backchannel-logout-v1' ||
+      github.head_ref == 'auth/database-permission-evaluation-v1' ||
+      github.head_ref == 'pilot/database-read-models-v1' ||
+      github.head_ref == 'pilot/safe-mutation-envelope-v1' ||
+      github.head_ref == 'pilot/runtime-projection-worker-v1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: cloudflare-staging
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.2'
+          cache: npm
+
+      - name: Require staging credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          test -n "$CLOUDFLARE_API_TOKEN"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify repository
+        run: npm run verify
+
+      - name: Deploy staging API Worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          secret_file=$(mktemp)
+          trap 'rm -f "$secret_file"' EXIT
+          umask 077
+          printf 'PILOT_SESSION_SECRET=%s\n' "$(openssl rand -hex 32)" > "$secret_file"
+          set +e
+          npx wrangler deploy --config apps/platform-api/wrangler.jsonc --env staging --secrets-file "$secret_file" 2>&1 | tee api-deploy.log
+          deploy_status=${PIPESTATUS[0]}
+          set -e
+          api_url=$(grep -Eo 'https://[A-Za-z0-9.-]+\.workers\.dev' api-deploy.log | tail -1)
+          test -n "$api_url"
+          if [[ "$deploy_status" != '0' ]]; then
+            if grep -Fq 'Some triggers failed to deploy' api-deploy.log \
+              && grep -Fq '/schedules) failed' api-deploy.log; then
+              echo 'STAGING_CRON_TRIGGER_STATE=unavailable' >> "$GITHUB_ENV"
+              echo '::warning::Cloudflare Worker deployed, but the current API token cannot publish the staging Cron Trigger.'
+            else
+              exit "$deploy_status"
+            fi
+          else
+            echo 'STAGING_CRON_TRIGGER_STATE=deployed' >> "$GITHUB_ENV"
+          fi
+          echo "API_URL=$api_url" >> "$GITHUB_ENV"
+
+      - name: Build and deploy staging web Worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          VITE_PLATFORM_API_URL="$API_URL" npm run build --workspace=@school/platform-web
+          npx wrangler deploy --config apps/platform-web/wrangler.jsonc --env staging 2>&1 | tee web-deploy.log
+          web_url=$(grep -Eo 'https://[A-Za-z0-9.-]+\.workers\.dev' web-deploy.log | tail -1)
+          test -n "$web_url"
+          echo "WEB_URL=$web_url" >> "$GITHUB_ENV"
+
+      - name: Smoke test live staging services
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          fetch_with_retry() {
+            local url="$1"
+            local output="$2"
+            local label="$3"
+            shift 3
+            for attempt in {1..12}; do
+              if curl --location --fail --silent --show-error "$@" "$url" --output "$output"; then
+                return 0
+              fi
+              if [[ "$attempt" == '12' ]]; then
+                echo "$label did not become ready: $url" >&2
+                return 1
+              fi
+              sleep 5
+            done
+          }
+
+          staging_origin='https://international-school-platform-web-staging.rahmatullahzisan.workers.dev'
+
+          fetch_with_retry "$API_URL/health" api-health.json 'API health endpoint'
+          fetch_with_retry "$API_URL/auth/v1/readiness" auth-readiness.json 'OIDC readiness endpoint'
+
+          projection_worker_status=$(curl --silent --show-error \
+            --dump-header projection-worker-headers.txt \
+            --output projection-worker-readiness.json \
+            --write-out '%{http_code}' \
+            "$API_URL/auth/v1/runtime-projection-worker/readiness")
+          test "$projection_worker_status" = '200'
+
+          session_status=$(curl --silent --show-error \
+            --dump-header session-headers.txt \
+            --output auth-session-error.json \
+            --write-out '%{http_code}' \
+            "$API_URL/auth/v1/session")
+          test "$session_status" = '503'
+
+          authorize_status=$(curl --silent --show-error \
+            --dump-header authorize-headers.txt \
+            --output auth-authorize-error.json \
+            --write-out '%{http_code}' \
+            --request POST \
+            -H "Origin: $staging_origin" \
+            -H 'Content-Type: application/json' \
+            --data '{"permission":"finance.read"}' \
+            "$API_URL/auth/v1/authorize")
+          test "$authorize_status" = '503'
+
+          snapshot_status=$(curl --silent --show-error \
+            --dump-header snapshot-headers.txt \
+            --output auth-snapshot-error.json \
+            --write-out '%{http_code}' \
+            -H "Origin: $staging_origin" \
+            "$API_URL/auth/v1/snapshot")
+          test "$snapshot_status" = '503'
+
+          mutation_status=$(curl --silent --show-error \
+            --dump-header mutation-headers.txt \
+            --output auth-mutation-error.json \
+            --write-out '%{http_code}' \
+            --request POST \
+            -H "Origin: $staging_origin" \
+            -H 'Content-Type: application/json' \
+            -H 'Idempotency-Key: refresh-admin-home-0001' \
+            --data '{"expectedRevision":7,"reason":"Approved staging fail-closed probe."}' \
+            "$API_URL/auth/v1/commands/runtime.snapshot.refresh")
+          test "$mutation_status" = '503'
+
+          logout_status=$(curl --silent --show-error \
+            --dump-header logout-headers.txt \
+            --output auth-logout-error.json \
+            --write-out '%{http_code}' \
+            --request POST \
+            -H "Origin: $staging_origin" \
+            -H 'Content-Type: application/json' \
+            --data '{"scope":"current"}' \
+            "$API_URL/auth/v1/logout")
+          test "$logout_status" = '503'
+
+          backchannel_status=$(curl --silent --show-error \
+            --dump-header backchannel-headers.txt \
+            --output auth-backchannel-error.json \
+            --write-out '%{http_code}' \
+            --request POST \
+            -H 'Content-Type: application/x-www-form-urlencoded' \
+            --data 'logout_token=header.claims.signature' \
+            "$API_URL/auth/v1/backchannel-logout")
+          test "$backchannel_status" = '503'
+
+          pilot_pair_ready=false
+          for attempt in {1..12}; do
+            if curl --fail --silent --show-error \
+              --request POST \
+              -H "Origin: $staging_origin" \
+              "$API_URL/pilot/v1/sessions/admin" \
+              --output admin-session.json; then
+              admin_token=$(python3 - <<'PY' || true
+          import json
+          from pathlib import Path
+          try:
+              payload = json.loads(Path('admin-session.json').read_text(encoding='utf-8'))
+              token = payload.get('accessToken')
+              if isinstance(token, str) and len(token) > 32:
+                  print(token)
+          except (OSError, ValueError):
+              pass
+          PY
+              )
+              if [[ -n "$admin_token" ]] && curl --fail --silent --show-error \
+                -H "Origin: $staging_origin" \
+                -H "Authorization: Bearer $admin_token" \
+                "$API_URL/pilot/v1/snapshots/admin" \
+                --output admin-snapshot.json; then
+                pilot_pair_ready=true
+                break
+              fi
+            fi
+            if [[ "$attempt" == '12' ]]; then
+              echo 'Signed pilot session/snapshot pair did not stabilize after deployment.' >&2
+              exit 1
+            fi
+            sleep 5
+          done
+          test "$pilot_pair_ready" = 'true'
+
+          fetch_with_retry "$WEB_URL/" web-index.html 'Pilot role chooser'
+          fetch_with_retry "$WEB_URL/admin" web-admin.html 'Admin portal'
+          fetch_with_retry "$WEB_URL/teacher" web-teacher.html 'Teacher portal'
+          fetch_with_retry "$WEB_URL/family" web-family.html 'Guardian portal'
+          fetch_with_retry "$WEB_URL/student" web-student.html 'Student portal'
+          fetch_with_retry "$WEB_URL/manifest.webmanifest" web-manifest.json 'PWA manifest'
+          fetch_with_retry "$WEB_URL/offline.html" web-offline.html 'Offline page'
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          def load(path: str):
+              return json.loads(Path(path).read_text(encoding='utf-8'))
+
+          def headers(path: str) -> str:
+              return Path(path).read_text(encoding='utf-8').lower()
+
+          health = load('api-health.json')
+          assert health.get('status') == 'ok', health
+          assert health.get('environment') == 'staging', health
+
+          readiness = load('auth-readiness.json')
+          assert readiness.get('schemaVersion') == 1, readiness
+          assert readiness.get('mode') == 'oidc-bff', readiness
+          assert readiness.get('state') == 'disabled', readiness
+          assert readiness.get('loginEnabled') is False, readiness
+
+          required_controls = [
+              'authorizationCode', 'pkceS256', 'highEntropyStateNonceVerifier',
+              'browserBoundTransactionCookie', 'transactionReplayProtection',
+              'durableReplayLedger', 'authorizationResponseIssuerValidation',
+              'confidentialClientAuthentication', 'serverSideTokenExchange',
+              'providerDiscoveryValidation', 'conditionalDiscoveryRevalidation',
+              'boundedJwksCache', 'boundedStaleIfError', 'unknownKidSingleRefresh',
+              'retiredKeyOverlap', 'kidReuseDenied', 'providerEndpointOriginPins',
+              'providerEndpointChangeReview', 'issuerValidation', 'audienceValidation',
+              'jwksSignatureValidation', 'nonceValidation', 'membershipResolution',
+              'databaseMembershipProjection', 'httpOnlyHostCookie',
+              'browserSessionRegistry', 'sessionRevocation', 'originCheckedLogout',
+              'accountWideLogout', 'secureCookieDeletion',
+              'providerTokensWithheldFromBrowser', 'stepUpAssurance',
+              'forcedReauthentication', 'boundedFreshAuthentication', 'reviewedAcrValues',
+              'backChannelLogout', 'typedLogoutTokens', 'logoutTokenReplayProtection',
+              'providerSessionRevocation', 'durableProviderCache',
+              'databasePermissionEvaluation', 'currentRoleRevalidation',
+              'assuranceAwarePermissionDecision', 'serverOwnedAuthorizationScope',
+              'databaseReadModels', 'tenantSafeReadModelScope', 'revisionBoundEtags',
+              'boundedServerSnapshotCache', 'currentGrantSnapshotRevalidation',
+              'safeDatabaseMutations', 'idempotentMutationReceipts',
+              'optimisticMutationConcurrency', 'atomicMutationAuditOutbox',
+              'aal2MutationAuthorization',
+              'databaseNativeProjectionProcessing', 'exactProjectionEventAllowlist',
+              'concurrentProjectionClaims', 'appliedProjectionCommandDeduplication',
+              'boundedProjectionRetryBackoff', 'projectionDeadLetterIsolation',
+              'projectionSourceIntegrity',
+          ]
+          controls = readiness.get('controls', {})
+          for control in required_controls:
+              assert controls.get(control) is True, (control, readiness)
+
+          assert readiness.get('missingConfiguration') == [
+              'provider-metadata', 'provider-endpoint-origins', 'provider-cache-source',
+              'backchannel-logout-source', 'provider-client-credential',
+              'transaction-signing-key', 'transaction-replay-source',
+              'session-signing-key', 'session-registry-source',
+              'membership-source', 'permission-source', 'runtime-read-model-source',
+              'runtime-mutation-source', 'runtime-projection-worker-source',
+              'allowed-web-origins',
+          ], readiness
+
+          worker_readiness = load('projection-worker-readiness.json')
+          assert worker_readiness == {
+              'schemaVersion': 1,
+              'state': 'disabled',
+              'controls': {
+                  'databaseNativeProcessing': True,
+                  'exactEventAllowlist': True,
+                  'concurrentSkipLockedClaims': True,
+                  'appliedCommandDeduplication': True,
+                  'boundedRetryBackoff': True,
+                  'deadLetterIsolation': True,
+                  'sourceProjectionIntegrity': True,
+              },
+              'missingConfiguration': [
+                  'database-url', 'runtime-projection-worker-source',
+              ],
+          }, worker_readiness
+          worker_headers = headers('projection-worker-headers.txt')
+          assert 'cache-control: no-store' in worker_headers, worker_headers
+          assert 'set-cookie:' not in worker_headers, worker_headers
+          assert 'access-control-allow-origin:' not in worker_headers, worker_headers
+
+          serialized = json.dumps(readiness).lower()
+          for forbidden in ['oidc_', 'auth_', 'secret-value', 'client-secret-value']:
+              assert forbidden not in serialized, (forbidden, readiness)
+
+          expected_errors = {
+              'auth-session-error.json': 'browser_session_configuration_invalid',
+              'auth-authorize-error.json': 'permission_configuration_invalid',
+              'auth-snapshot-error.json': 'runtime_read_model_configuration_invalid',
+              'auth-mutation-error.json': 'runtime_mutation_configuration_invalid',
+              'auth-logout-error.json': 'logout_configuration_invalid',
+              'auth-backchannel-error.json': 'backchannel_logout_configuration_invalid',
+          }
+          for file_name, code in expected_errors.items():
+              payload = load(file_name)
+              assert payload.get('error', {}).get('code') == code, (file_name, payload)
+
+          for file_name in [
+              'session-headers.txt', 'authorize-headers.txt', 'snapshot-headers.txt',
+              'mutation-headers.txt', 'logout-headers.txt', 'backchannel-headers.txt',
+          ]:
+              text = headers(file_name)
+              assert 'cache-control: no-store' in text, (file_name, text)
+              assert 'set-cookie:' not in text, (file_name, text)
+
+          assert 'access-control-allow-origin:' not in headers('authorize-headers.txt')
+          assert 'access-control-allow-origin:' not in headers('snapshot-headers.txt')
+          assert 'access-control-allow-origin:' not in headers('mutation-headers.txt')
+          assert 'access-control-allow-origin:' not in headers('backchannel-headers.txt')
+
+          session = load('admin-session.json')
+          assert session.get('schemaVersion') == 1, session
+          assert session.get('tokenType') == 'Bearer', session
+          assert session.get('scope', {}).get('tenantId') == 'tenant-pilot-001', session
+          assert session.get('scope', {}).get('campusId') == 'campus-main', session
+          assert session.get('scope', {}).get('role') == 'admin', session
+          assert session.get('scope', {}).get('subjectId') == 'principal-1', session
+
+          snapshot = load('admin-snapshot.json')
+          assert snapshot.get('schemaVersion') == 1, snapshot
+          assert snapshot.get('scope', {}).get('tenantId') == 'tenant-pilot-001', snapshot
+          assert snapshot.get('scope', {}).get('campusId') == 'campus-main', snapshot
+          assert snapshot.get('scope', {}).get('role') == 'admin', snapshot
+          assert snapshot.get('scope', {}).get('subjectId') == 'principal-1', snapshot
+          assert 'finance.read' in snapshot.get('scope', {}).get('capabilities', []), snapshot
+          assert snapshot.get('data', {}).get('metrics'), snapshot
+
+          assert 'International School Platform' in Path('web-index.html').read_text(encoding='utf-8')
+          assert 'School Platform' in Path('web-manifest.json').read_text(encoding='utf-8')
+          assert 'You are offline' in Path('web-offline.html').read_text(encoding='utf-8')
+          for file_name in ['web-admin.html', 'web-teacher.html', 'web-family.html', 'web-student.html']:
+              assert 'International School Platform' in Path(file_name).read_text(encoding='utf-8')
+          PY
+
+      - name: Publish staging URLs
+        shell: bash
+        run: |
+          {
+            echo '## Cloudflare staging deployment'
+            echo
+            echo "- Role chooser: $WEB_URL/"
+            echo "- Admin: $WEB_URL/admin"
+            echo "- Teacher: $WEB_URL/teacher"
+            echo "- Guardian: $WEB_URL/family"
+            echo "- Student: $WEB_URL/student"
+            echo "- API health: $API_URL/health"
+            echo "- OIDC readiness: $API_URL/auth/v1/readiness"
+            echo "- Projection worker readiness: $API_URL/auth/v1/runtime-projection-worker/readiness"
+            echo "- Staging Cron Trigger publication: $STAGING_CRON_TRIGGER_STATE"
+            echo "- Browser session introspection: $API_URL/auth/v1/session"
+            echo "- Database permission decision: $API_URL/auth/v1/authorize"
+            echo "- Database runtime snapshot: $API_URL/auth/v1/snapshot"
+            echo "- Safe runtime mutation: $API_URL/auth/v1/commands/runtime.snapshot.refresh"
+            echo "- Browser logout: $API_URL/auth/v1/logout"
+            echo "- Provider back-channel logout: $API_URL/auth/v1/backchannel-logout"
+            echo "- Signed pilot session: $API_URL/pilot/v1/sessions/admin"
+            echo "- Signed scoped admin snapshot: $API_URL/pilot/v1/snapshots/admin"
+            echo '- Scope: tenant-safe reads, one allowlisted AAL2 refresh command and a database-native scheduled projection processor are verified with current-grant authorization, exact revisions, idempotent receipts, atomic audit/outbox persistence, SKIP LOCKED batches, retries and dead letters. The staging Cron Trigger is configured and this run records whether the current account token published it; the handler remains fail closed because database/source bindings are intentionally absent. Real provider login, production projection population and production promotion remain disabled until explicitly authorized.'
+          } >> "$GITHUB_STEP_SUMMARY"

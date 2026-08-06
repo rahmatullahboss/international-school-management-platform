@@ -1,0 +1,827 @@
+:root {
+  color-scheme: light;
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+  background: #eef3f5;
+  color: #132238;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.pilot-entry {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top right, rgb(14 116 144 / 14%), transparent 34rem),
+    linear-gradient(180deg, #f8fbfc 0%, #edf3f5 100%);
+}
+
+.pilot-entry__masthead {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(15rem, 22rem);
+  gap: 2rem;
+  align-items: end;
+  padding: clamp(2rem, 6vw, 5.5rem) clamp(1.25rem, 7vw, 7rem) clamp(2rem, 4vw, 3rem);
+  color: white;
+  background: #102a43;
+  border-bottom: 0.4rem solid #0f766e;
+}
+
+.pilot-entry__masthead h1 {
+  max-width: 15ch;
+  margin: 0;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(2.7rem, 7vw, 6.4rem);
+  font-weight: 500;
+  line-height: 0.94;
+  letter-spacing: -0.055em;
+}
+
+.pilot-entry__masthead > div > p:last-child {
+  max-width: 52rem;
+  margin: 1.4rem 0 0;
+  color: #dce8ef;
+  font-size: clamp(1rem, 2vw, 1.3rem);
+  line-height: 1.55;
+}
+
+.pilot-kicker,
+.pilot-section-heading > p,
+.pilot-module__heading > p,
+.pilot-work-queue > div > p {
+  margin: 0 0 0.65rem;
+  color: #0f766e;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.pilot-entry__masthead .pilot-kicker {
+  color: #7dd3c7;
+}
+
+.pilot-entry__status {
+  display: grid;
+  gap: 0.35rem;
+  align-self: stretch;
+  align-content: end;
+  padding: 1.25rem;
+  border: 1px solid rgb(255 255 255 / 25%);
+  border-radius: 1rem;
+  background: rgb(255 255 255 / 8%);
+}
+
+.pilot-entry__status strong {
+  font-size: 1.1rem;
+}
+
+.pilot-entry__status span {
+  color: #c8d9e4;
+}
+
+.pilot-entry__status a {
+  margin-top: 0.65rem;
+  color: white;
+  font-weight: 750;
+}
+
+.pilot-entry__main {
+  display: grid;
+  gap: 4rem;
+  padding: clamp(2rem, 5vw, 4.5rem) clamp(1.25rem, 7vw, 7rem) 5rem;
+}
+
+.pilot-section-heading {
+  max-width: 46rem;
+  margin-bottom: 1.6rem;
+}
+
+.pilot-section-heading h2 {
+  margin: 0;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(2rem, 4vw, 3.7rem);
+  font-weight: 500;
+  letter-spacing: -0.035em;
+}
+
+.pilot-section-heading span {
+  display: block;
+  margin-top: 0.55rem;
+  color: #53677a;
+  line-height: 1.55;
+}
+
+.pilot-role-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border: 1px solid #cad7df;
+  border-radius: 1.2rem;
+  overflow: hidden;
+  background: white;
+  box-shadow: 0 1.5rem 4rem rgb(32 58 74 / 10%);
+}
+
+.pilot-role-card {
+  display: flex;
+  min-height: 19rem;
+  flex-direction: column;
+  padding: 1.5rem;
+  color: inherit;
+  text-decoration: none;
+  border-right: 1px solid #d9e2e8;
+  transition:
+    transform 160ms ease,
+    background 160ms ease;
+}
+
+.pilot-role-card:last-child {
+  border-right: 0;
+}
+
+.pilot-role-card:hover,
+.pilot-role-card:focus-visible {
+  position: relative;
+  z-index: 1;
+  background: #f4fbfa;
+  transform: translateY(-0.25rem);
+}
+
+.pilot-role-card:focus-visible {
+  outline: 3px solid #0b63ce;
+  outline-offset: -3px;
+}
+
+.pilot-role-card > span {
+  color: #74899a;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+}
+
+.pilot-role-card h3 {
+  margin: 2.6rem 0 0.75rem;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.65rem;
+  font-weight: 500;
+}
+
+.pilot-role-card p {
+  margin: 0;
+  color: #53677a;
+  line-height: 1.55;
+}
+
+.pilot-role-card strong {
+  margin-top: auto;
+  padding-top: 2rem;
+  color: #075e57;
+}
+
+.pilot-role-card[data-role='admin'] {
+  border-top: 0.3rem solid #0f766e;
+}
+
+.pilot-role-card[data-role='teacher'] {
+  border-top: 0.3rem solid #1d4ed8;
+}
+
+.pilot-role-card[data-role='guardian'] {
+  border-top: 0.3rem solid #a16207;
+}
+
+.pilot-role-card[data-role='student'] {
+  border-top: 0.3rem solid #7e22ce;
+}
+
+.pilot-coverage__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.pilot-coverage article {
+  min-height: 10rem;
+  padding: 1.2rem;
+  border: 1px solid #cad7df;
+  border-radius: 0.8rem;
+  background: rgb(255 255 255 / 72%);
+}
+
+.pilot-coverage h3 {
+  margin: 0 0 0.65rem;
+  font-size: 1rem;
+}
+
+.pilot-coverage p {
+  margin: 0;
+  color: #53677a;
+  line-height: 1.5;
+}
+
+.pilot-module {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.pilot-module__heading {
+  max-width: 52rem;
+  padding-bottom: 1.4rem;
+  border-bottom: 1px solid #cad7df;
+}
+
+.pilot-module__heading h2 {
+  margin: 0;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  font-weight: 500;
+  letter-spacing: -0.035em;
+}
+
+.pilot-module__heading span {
+  display: block;
+  margin-top: 0.6rem;
+  color: #53677a;
+  font-size: 1.05rem;
+  line-height: 1.55;
+}
+
+.pilot-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid #cad7df;
+  border-radius: 0.9rem;
+  overflow: hidden;
+  background: white;
+}
+
+.pilot-metrics article {
+  display: grid;
+  gap: 0.45rem;
+  padding: 1.25rem;
+  border-right: 1px solid #d9e2e8;
+}
+
+.pilot-metrics article:last-child {
+  border-right: 0;
+}
+
+.pilot-metrics span {
+  color: #53677a;
+  font-size: 0.84rem;
+  font-weight: 750;
+}
+
+.pilot-metrics strong {
+  color: #102a43;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(1.7rem, 3vw, 2.6rem);
+  font-weight: 500;
+}
+
+.pilot-metrics p {
+  margin: 0;
+  color: #617587;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.pilot-work-queue {
+  display: grid;
+  grid-template-columns: minmax(11rem, 0.36fr) minmax(0, 1fr);
+  gap: 1.5rem;
+  padding: 1.3rem;
+  border: 1px solid #cad7df;
+  border-radius: 0.9rem;
+  background: #f8fbfc;
+}
+
+.pilot-work-queue h3 {
+  margin: 0;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.8rem;
+  font-weight: 500;
+}
+
+.pilot-work-queue ol {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pilot-work-queue li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem;
+  border: 1px solid #d9e2e8;
+  border-radius: 0.7rem;
+  background: white;
+}
+
+.pilot-work-queue li > div {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.pilot-work-queue li > div span {
+  color: #617587;
+  font-size: 0.9rem;
+}
+
+.pilot-work-queue li > a,
+.pilot-actions a {
+  color: #075e57;
+  font-weight: 800;
+  text-underline-offset: 0.2em;
+}
+
+.pilot-status {
+  padding: 0.35rem 0.55rem;
+  color: #6b4f00;
+  font-size: 0.78rem;
+  font-weight: 800;
+  border: 1px solid #e5c76b;
+  border-radius: 999px;
+  background: #fff7d6;
+}
+
+.pilot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.pilot-actions a {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  padding: 0.6rem 0.9rem;
+  text-decoration: none;
+  border: 1px solid #0f766e;
+  border-radius: 0.55rem;
+  background: white;
+}
+
+.pilot-actions a:first-child {
+  color: white;
+  background: #0f766e;
+}
+
+.pilot-demo-note {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.8rem;
+  padding: 1rem;
+  color: #31475a;
+  border-left: 0.3rem solid #0f766e;
+  background: #e9f7f5;
+}
+
+.pilot-demo-note span {
+  line-height: 1.5;
+}
+
+.pilot-unknown {
+  padding: 2rem;
+  border: 1px solid #d9a7a3;
+  border-radius: 0.9rem;
+  background: #fff7f6;
+}
+
+.pilot-unknown p {
+  margin: 0;
+  color: #9b2c2c;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.pilot-unknown h2 {
+  margin: 0.55rem 0 1rem;
+}
+
+.pilot-unknown a {
+  color: #075e57;
+  font-weight: 800;
+}
+
+@media (max-width: 70rem) {
+  .pilot-role-grid,
+  .pilot-coverage__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pilot-role-card:nth-child(2) {
+    border-right: 0;
+  }
+
+  .pilot-role-card:nth-child(-n + 2) {
+    border-bottom: 1px solid #d9e2e8;
+  }
+}
+
+@media (max-width: 48rem) {
+  .pilot-entry__masthead,
+  .pilot-work-queue {
+    grid-template-columns: 1fr;
+  }
+
+  .pilot-role-grid,
+  .pilot-coverage__grid,
+  .pilot-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .pilot-role-card {
+    min-height: 14rem;
+    border-right: 0;
+    border-bottom: 1px solid #d9e2e8;
+  }
+
+  .pilot-role-card:last-child,
+  .pilot-metrics article:last-child {
+    border-bottom: 0;
+  }
+
+  .pilot-metrics article {
+    border-right: 0;
+    border-bottom: 1px solid #d9e2e8;
+  }
+
+  .pilot-work-queue li {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .pilot-demo-note {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pilot-role-card {
+    transition: none;
+  }
+}
+
+.pilot-skip-link {
+  position: absolute;
+  z-index: 20;
+  inset-block-start: -5rem;
+  inset-inline-start: 1rem;
+  padding: 0.75rem 1rem;
+  color: white;
+  font-weight: 800;
+  border-radius: 0.5rem;
+  background: #0b63ce;
+}
+
+.pilot-skip-link:focus {
+  inset-block-start: 1rem;
+}
+
+.pilot-loading {
+  min-height: 100vh;
+  display: grid;
+  align-content: center;
+  gap: 0.4rem;
+  padding: clamp(1.5rem, 7vw, 7rem);
+  background: #f3f7f9;
+}
+
+.pilot-loading p {
+  margin: 0;
+  color: #0f766e;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.pilot-loading h1 {
+  margin: 0;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+  font-size: clamp(2rem, 5vw, 4rem);
+  font-weight: 700;
+}
+
+/* Operational Ledger role chooser */
+.pilot-entry {
+  background: #f3f6f8;
+  color: #12263a;
+}
+
+.pilot-entry__masthead {
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 24rem);
+  align-items: center;
+  color: #12263a;
+  background: #ffffff;
+  border-block-end: 1px solid #cbd6de;
+  border-bottom-width: 1px;
+}
+
+.pilot-entry__masthead h1,
+.pilot-section-heading h2 {
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.pilot-entry__masthead h1 {
+  max-inline-size: 18ch;
+  font-size: clamp(2.5rem, 6vw, 5.5rem);
+  line-height: 0.98;
+}
+
+.pilot-entry__masthead > div > p:last-child {
+  color: #4c6275;
+}
+
+.pilot-entry__masthead .pilot-kicker,
+.pilot-kicker,
+.pilot-section-heading > p {
+  color: #006d77;
+}
+
+.pilot-entry__status {
+  border: 1px solid #cbd6de;
+  border-radius: 0.75rem;
+  background: #f7fafb;
+}
+
+.pilot-entry__status strong {
+  color: #12263a;
+}
+
+.pilot-entry__status span {
+  color: #4c6275;
+}
+
+.pilot-entry__status a {
+  color: #004f57;
+}
+
+.pilot-entry__main {
+  gap: 3.5rem;
+}
+
+.pilot-section-heading h2 {
+  font-size: clamp(1.8rem, 3vw, 2.8rem);
+}
+
+.pilot-role-register,
+.pilot-operator-register {
+  border-block: 1px solid #cbd6de;
+  background: #ffffff;
+}
+
+.pilot-role-row {
+  min-block-size: 7.25rem;
+  display: grid;
+  grid-template-columns: 3.5rem minmax(0, 1fr) minmax(8rem, auto) minmax(10rem, auto);
+  gap: 1.25rem;
+  align-items: center;
+  padding: 1rem 1.2rem;
+  color: #12263a;
+  text-decoration: none;
+  border-block-end: 1px solid #cbd6de;
+}
+
+.pilot-role-row:last-child {
+  border-block-end: 0;
+}
+
+.pilot-role-row:hover,
+.pilot-role-row:focus-visible {
+  background: #eef8f7;
+}
+
+.pilot-role-row:focus-visible,
+.pilot-operator-register a:focus-visible {
+  outline: 3px solid #0b63ce;
+  outline-offset: -3px;
+}
+
+.pilot-role-row__number {
+  display: inline-grid;
+  inline-size: 2.6rem;
+  block-size: 2.6rem;
+  place-items: center;
+  border: 1px solid #cbd6de;
+  border-radius: 0.5rem;
+  color: #4c6275;
+  background: #f7fafb;
+  font-variant-numeric: tabular-nums;
+  font-weight: 750;
+}
+
+.pilot-role-row h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  letter-spacing: -0.01em;
+}
+
+.pilot-role-row p {
+  max-inline-size: 68ch;
+  margin: 0.35rem 0 0;
+  color: #4c6275;
+  line-height: 1.5;
+}
+
+.pilot-role-row small {
+  color: #4c6275;
+  font-weight: 650;
+}
+
+.pilot-role-row strong {
+  min-block-size: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid #006d77;
+  border-radius: 0.5rem;
+  color: #ffffff;
+  background: #006d77;
+}
+
+.pilot-operator-workspaces {
+  margin-block-start: 2rem;
+}
+
+.pilot-operator-workspaces > header {
+  display: flex;
+  gap: 1rem;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-block-end: 0.75rem;
+}
+
+.pilot-operator-workspaces h3,
+.pilot-operator-workspaces p {
+  margin: 0;
+}
+
+.pilot-operator-workspaces p {
+  color: #4c6275;
+  font-size: 0.85rem;
+}
+
+.pilot-operator-register a {
+  min-block-size: 4.75rem;
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  color: #12263a;
+  text-decoration: none;
+  border-block-end: 1px solid #cbd6de;
+}
+
+.pilot-operator-register a:last-child {
+  border-block-end: 0;
+}
+
+.pilot-operator-register a:hover {
+  background: #f7fafb;
+}
+
+.pilot-operator-register a > span {
+  color: #4c6275;
+  font-weight: 750;
+}
+
+.pilot-operator-register a > div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.pilot-operator-register small {
+  color: #4c6275;
+}
+
+.pilot-operator-register b {
+  color: #004f57;
+  font-size: 0.85rem;
+}
+
+.pilot-platform-index {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+  border-block: 1px solid #cbd6de;
+  background: #ffffff;
+}
+
+.pilot-platform-index > div {
+  min-block-size: 6rem;
+  display: grid;
+  gap: 0.35rem;
+  align-content: center;
+  padding: 1rem 1.1rem;
+  border-block-end: 1px solid #cbd6de;
+}
+
+.pilot-platform-index > div:nth-child(odd) {
+  border-inline-end: 1px solid #cbd6de;
+}
+
+.pilot-platform-index > div:nth-last-child(-n + 2) {
+  border-block-end: 0;
+}
+
+.pilot-platform-index dt {
+  color: #12263a;
+  font-weight: 750;
+}
+
+.pilot-platform-index dd {
+  margin: 0;
+  color: #4c6275;
+  line-height: 1.45;
+}
+
+@media (max-width: 58rem) {
+  .pilot-entry__masthead {
+    grid-template-columns: 1fr;
+  }
+
+  .pilot-role-row {
+    grid-template-columns: 3.25rem minmax(0, 1fr);
+  }
+
+  .pilot-role-row small,
+  .pilot-role-row strong {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .pilot-operator-workspaces > header {
+    align-items: start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 42rem) {
+  .pilot-platform-index {
+    grid-template-columns: 1fr;
+  }
+
+  .pilot-platform-index > div:nth-child(odd) {
+    border-inline-end: 0;
+  }
+
+  .pilot-platform-index > div:nth-last-child(-n + 2) {
+    border-block-end: 1px solid #cbd6de;
+  }
+
+  .pilot-platform-index > div:last-child {
+    border-block-end: 0;
+  }
+
+  .pilot-role-row {
+    grid-template-columns: 2.75rem minmax(0, 1fr);
+    padding-inline: 0.75rem;
+  }
+
+  .pilot-role-row__number {
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+  }
+
+  .pilot-operator-register a {
+    grid-template-columns: 2.5rem minmax(0, 1fr);
+  }
+
+  .pilot-operator-register b {
+    grid-column: 2;
+  }
+}
