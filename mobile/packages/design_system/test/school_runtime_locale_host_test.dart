@@ -29,7 +29,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Count 1'), findsOneWidget);
 
-      await tester.tap(find.text('বাংলা'));
+      await tester.tap(find.byKey(const ValueKey('school-locale-control')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('school-locale-choice-ar')));
       await tester.pumpAndSettle();
 
       expect(store.languageCode, 'ar');
