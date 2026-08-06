@@ -1,10 +1,6 @@
 import type { ReactElement } from 'react';
 
-import {
-  selectStudentItems,
-  StudentDailyWorkspace,
-  StudentExperienceShell,
-} from '@school/web-student/experience';
+import { StudentDailyWorkspace, StudentExperienceShell } from '@school/web-student/experience';
 
 import {
   modulePages,
@@ -22,29 +18,6 @@ import {
   shellUtilityActions,
   type PilotConnectivity,
 } from '../portal-shared';
-
-interface DrilldownItem {
-  readonly studentId: string;
-  readonly requiredCapability?: string;
-  readonly id: string;
-  readonly title: string;
-  readonly description: string;
-  readonly nextAction?: string;
-}
-
-function StudentDrilldown(props: { readonly items: readonly DrilldownItem[] }): ReactElement {
-  return (
-    <div>
-      {props.items.map((item) => (
-        <details key={item.id}>
-          <summary>{item.title}</summary>
-          {item.description}
-          {item.nextAction === undefined ? null : ` Next: ${item.nextAction}`}
-        </details>
-      ))}
-    </div>
-  );
-}
 
 export interface StudentPortalProps {
   readonly path: string;
@@ -68,13 +41,6 @@ export default function StudentPortal(props: StudentPortalProps): ReactElement {
     props.connectivity,
   );
   const overview = resource.data;
-  const studentId = 'student-1';
-  const drilldownItems: readonly DrilldownItem[] | undefined =
-    props.path === '/student/resources'
-      ? overview.resources
-      : props.path === '/student/requests'
-        ? overview.requests
-        : undefined;
 
   return (
     <StudentExperienceShell
@@ -105,9 +71,11 @@ export default function StudentPortal(props: StudentPortalProps): ReactElement {
         message={resource.message}
         onRefresh={resource.refresh}
       />
-      {props.path === '/student' ? (
+      {props.path === '/student' ||
+      props.path === '/student/resources' ||
+      props.path === '/student/requests' ? (
         <StudentDailyWorkspace
-          studentId={studentId}
+          studentId="student-1"
           studentName="Samira Noor"
           schoolName={schoolName}
           yearLabel="Year 8"
@@ -123,16 +91,10 @@ export default function StudentPortal(props: StudentPortalProps): ReactElement {
           documents={overview.documents}
           conversations={overview.conversations}
         />
-      ) : drilldownItems === undefined ? (
-        page === undefined ? (
-          <UnknownRoute homeHref="/student" />
-        ) : (
-          <OperationalModuleSurface path={props.path} page={page} role="student" />
-        )
+      ) : page === undefined ? (
+        <UnknownRoute homeHref="/student" />
       ) : (
-        <StudentDrilldown
-          items={selectStudentItems(drilldownItems, studentId, resource.capabilities)}
-        />
+        <OperationalModuleSurface path={props.path} page={page} role="student" />
       )}
     </StudentExperienceShell>
   );
