@@ -84,7 +84,7 @@ test('renders the scoped Student resource read model on its route', async ({ pag
 
 test('renders the scoped Student request read model on its route', async ({ page }) => {
   await page.goto('/student/requests');
-  await expect(page.getByRole('heading', { name: 'My requests' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'My requests', level: 1 })).toBeVisible();
   await expect(page.getByText('Locker key replacement', { exact: true })).toHaveCount(0);
   await expect(page.getByText('Library book renewal', { exact: true })).toBeVisible();
   await expect(page.getByText('Request another seven days for the current loan.')).toBeVisible();
