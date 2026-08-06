@@ -69,7 +69,7 @@ export default function StudentPortal(props: StudentPortalProps): ReactElement {
   );
   const overview = resource.data;
   const studentId = 'student-1';
-  const drilldownItems =
+  const drilldownItems: readonly DrilldownItem[] | undefined =
     props.path === '/student/resources'
       ? overview.resources
       : props.path === '/student/requests'
