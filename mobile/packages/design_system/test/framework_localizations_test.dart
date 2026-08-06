@@ -7,6 +7,8 @@ void main() {
   testWidgets('loads reviewed Flutter framework translations for Bangla and Arabic', (
     tester,
   ) async {
+    const probeKey = Key('framework-localization-probe');
+
     for (final locale in const [Locale('bn', 'BD'), Locale('ar', 'SA')]) {
       MaterialLocalizations? material;
       CupertinoLocalizations? cupertino;
@@ -23,7 +25,7 @@ void main() {
             builder: (context) {
               material = MaterialLocalizations.of(context);
               cupertino = CupertinoLocalizations.of(context);
-              return const SizedBox.shrink();
+              return const SizedBox(key: probeKey);
             },
           ),
         ),
@@ -35,7 +37,7 @@ void main() {
       expect(material, isNot(isA<DefaultMaterialLocalizations>()));
       expect(cupertino, isNot(isA<DefaultCupertinoLocalizations>()));
       expect(
-        WidgetsLocalizations.of(tester.element(find.byType(SizedBox))).textDirection,
+        WidgetsLocalizations.of(tester.element(find.byKey(probeKey))).textDirection,
         SchoolLocalePolicy.textDirectionFor(locale),
       );
     }
