@@ -24,6 +24,8 @@ import {
 } from '../portal-shared';
 
 interface DrilldownItem {
+  readonly studentId: string;
+  readonly requiredCapability?: string;
   readonly id: string;
   readonly title: string;
   readonly description: string;
@@ -32,21 +34,15 @@ interface DrilldownItem {
 
 function StudentDrilldown(props: { readonly items: readonly DrilldownItem[] }): ReactElement {
   return (
-    <section className="student-workspace student-workspace__section">
-      <ul className="student-workspace__tasks">
-        {props.items.map((item) => (
-          <li key={item.id}>
-            <details>
-              <summary>
-                <strong>{item.title}</strong>
-              </summary>
-              <p>{item.description}</p>
-              {item.nextAction === undefined ? null : <small>Next: {item.nextAction}</small>}
-            </details>
-          </li>
-        ))}
-      </ul>
-    </section>
+    <div className="student-workspace">
+      {props.items.map((item) => (
+        <details key={item.id}>
+          <summary>{item.title}</summary>
+          <p>{item.description}</p>
+          {item.nextAction === undefined ? null : <small>Next: {item.nextAction}</small>}
+        </details>
+      ))}
+    </div>
   );
 }
 
@@ -73,6 +69,12 @@ export default function StudentPortal(props: StudentPortalProps): ReactElement {
   );
   const overview = resource.data;
   const studentId = 'student-1';
+  const drilldownItems =
+    props.path === '/student/resources'
+      ? overview.resources
+      : props.path === '/student/requests'
+        ? overview.requests
+        : undefined;
 
   return (
     <StudentExperienceShell
@@ -121,18 +123,16 @@ export default function StudentPortal(props: StudentPortalProps): ReactElement {
           documents={overview.documents}
           conversations={overview.conversations}
         />
-      ) : props.path === '/student/resources' ? (
-        <StudentDrilldown
-          items={selectStudentItems(overview.resources, studentId, resource.capabilities)}
-        />
-      ) : props.path === '/student/requests' ? (
-        <StudentDrilldown
-          items={selectStudentItems(overview.requests, studentId, resource.capabilities)}
-        />
-      ) : page === undefined ? (
-        <UnknownRoute homeHref="/student" />
+      ) : drilldownItems === undefined ? (
+        page === undefined ? (
+          <UnknownRoute homeHref="/student" />
+        ) : (
+          <OperationalModuleSurface path={props.path} page={page} role="student" />
+        )
       ) : (
-        <OperationalModuleSurface path={props.path} page={page} role="student" />
+        <StudentDrilldown
+          items={selectStudentItems(drilldownItems, studentId, resource.capabilities)}
+        />
       )}
     </StudentExperienceShell>
   );
