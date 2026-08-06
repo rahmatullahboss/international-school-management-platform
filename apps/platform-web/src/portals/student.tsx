@@ -1,6 +1,12 @@
 import type { ReactElement } from 'react';
 
-import { StudentDailyWorkspace, StudentExperienceShell } from '@school/web-student/experience';
+import {
+  selectStudentItems,
+  StudentDailyWorkspace,
+  StudentExperienceShell,
+  StudentRequestsWorkspace,
+  StudentResourcesWorkspace,
+} from '@school/web-student/experience';
 
 import {
   modulePages,
@@ -41,6 +47,7 @@ export default function StudentPortal(props: StudentPortalProps): ReactElement {
     props.connectivity,
   );
   const overview = resource.data;
+  const studentId = 'student-1';
 
   return (
     <StudentExperienceShell
@@ -73,7 +80,7 @@ export default function StudentPortal(props: StudentPortalProps): ReactElement {
       />
       {props.path === '/student' ? (
         <StudentDailyWorkspace
-          studentId="student-1"
+          studentId={studentId}
           studentName="Samira Noor"
           schoolName={schoolName}
           yearLabel="Year 8"
@@ -89,6 +96,18 @@ export default function StudentPortal(props: StudentPortalProps): ReactElement {
           documents={overview.documents}
           conversations={overview.conversations}
         />
+      ) : props.path === '/student/resources' ? (
+        <div className="student-workspace" data-age-band="secondary">
+          <StudentResourcesWorkspace
+            resources={selectStudentItems(overview.resources, studentId, resource.capabilities)}
+          />
+        </div>
+      ) : props.path === '/student/requests' ? (
+        <div className="student-workspace" data-age-band="secondary">
+          <StudentRequestsWorkspace
+            requests={selectStudentItems(overview.requests, studentId, resource.capabilities)}
+          />
+        </div>
       ) : page === undefined ? (
         <UnknownRoute homeHref="/student" />
       ) : (
