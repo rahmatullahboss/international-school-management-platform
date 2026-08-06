@@ -4,8 +4,6 @@ import {
   selectStudentItems,
   StudentDailyWorkspace,
   StudentExperienceShell,
-  StudentRequestsWorkspace,
-  StudentResourcesWorkspace,
 } from '@school/web-student/experience';
 
 import {
@@ -24,6 +22,33 @@ import {
   shellUtilityActions,
   type PilotConnectivity,
 } from '../portal-shared';
+
+interface DrilldownItem {
+  readonly id: string;
+  readonly title: string;
+  readonly description: string;
+  readonly nextAction?: string;
+}
+
+function StudentDrilldown(props: { readonly items: readonly DrilldownItem[] }): ReactElement {
+  return (
+    <section className="student-workspace student-workspace__section">
+      <ul className="student-workspace__tasks">
+        {props.items.map((item) => (
+          <li key={item.id}>
+            <details>
+              <summary>
+                <strong>{item.title}</strong>
+              </summary>
+              <p>{item.description}</p>
+              {item.nextAction === undefined ? null : <small>Next: {item.nextAction}</small>}
+            </details>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
 
 export interface StudentPortalProps {
   readonly path: string;
@@ -97,17 +122,13 @@ export default function StudentPortal(props: StudentPortalProps): ReactElement {
           conversations={overview.conversations}
         />
       ) : props.path === '/student/resources' ? (
-        <div className="student-workspace" data-age-band="secondary">
-          <StudentResourcesWorkspace
-            resources={selectStudentItems(overview.resources, studentId, resource.capabilities)}
-          />
-        </div>
+        <StudentDrilldown
+          items={selectStudentItems(overview.resources, studentId, resource.capabilities)}
+        />
       ) : props.path === '/student/requests' ? (
-        <div className="student-workspace" data-age-band="secondary">
-          <StudentRequestsWorkspace
-            requests={selectStudentItems(overview.requests, studentId, resource.capabilities)}
-          />
-        </div>
+        <StudentDrilldown
+          items={selectStudentItems(overview.requests, studentId, resource.capabilities)}
+        />
       ) : page === undefined ? (
         <UnknownRoute homeHref="/student" />
       ) : (

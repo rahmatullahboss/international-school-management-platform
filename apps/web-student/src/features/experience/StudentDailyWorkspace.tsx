@@ -177,88 +177,6 @@ function EmptyState(props: { readonly title: string; readonly detail: string }):
   );
 }
 
-export function StudentResourcesWorkspace(props: {
-  readonly resources: readonly StudentResource[];
-}): ReactElement {
-  return (
-    <section className="student-workspace__section" aria-labelledby="student-resources-heading">
-      <header>
-        <h3 id="student-resources-heading">Class resources</h3>
-        <p>Materials are limited to your current classes and authorised records.</p>
-      </header>
-      {props.resources.length === 0 ? (
-        <EmptyState
-          title="No class resources"
-          detail="No authorised resource is available in this scope."
-        />
-      ) : (
-        <ul className="student-workspace__resources">
-          {props.resources.map((resource) => (
-            <li key={resource.id} data-type={resource.resourceType}>
-              <details>
-                <summary>
-                  <strong>{resource.title}</strong>{' '}
-                  <span>
-                    {resource.subjectLabel} · {resource.resourceType}
-                  </span>
-                </summary>
-                <p>{resource.description}</p>
-                {resource.availableUntil === undefined ? null : (
-                  <small>
-                    Available until{' '}
-                    <time dateTime={resource.availableUntil}>{resource.availableUntil}</time>
-                  </small>
-                )}
-              </details>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
-  );
-}
-
-export function StudentRequestsWorkspace(props: {
-  readonly requests: readonly StudentRequest[];
-}): ReactElement {
-  return (
-    <section className="student-workspace__section" aria-labelledby="student-requests-heading">
-      <header>
-        <h3 id="student-requests-heading">My requests</h3>
-        <p>Track only the requests available for your age and role.</p>
-      </header>
-      {props.requests.length === 0 ? (
-        <EmptyState
-          title="No student requests"
-          detail="No request is available in your current scope."
-        />
-      ) : (
-        <ol className="student-workspace__tasks">
-          {props.requests.map((request) => (
-            <li key={request.id} data-state={request.state}>
-              <details>
-                <summary>
-                  <strong>{request.title}</strong> <span>{request.state.replace('-', ' ')}</span>
-                </summary>
-                <p>{request.description}</p>
-                {request.submittedAt === undefined ? null : (
-                  <time dateTime={request.submittedAt}>{request.submittedAt}</time>
-                )}
-                {request.nextAction === undefined ? null : (
-                  <small>Next: {request.nextAction}</small>
-                )}
-                <a href={request.href}>
-                  {request.state === 'draft' ? 'Continue request' : 'View request'}
-                </a>
-              </details>
-            </li>
-          ))}
-        </ol>
-      )}
-    </section>
-  );
-}
-
 function pageIntroduction(ageBand: StudentDailyWorkspaceProps['ageBand']): string {
   if (ageBand === 'primary') return 'See what is next, what is ready and where to ask for help.';
   if (ageBand === 'senior')
@@ -459,10 +377,76 @@ export function StudentDailyWorkspace(props: StudentDailyWorkspaceProps): ReactE
         </section>
       </div>
 
-      <StudentResourcesWorkspace resources={resources} />
+      <section className="student-workspace__section" aria-labelledby="student-resources-heading">
+        <header>
+          <h3 id="student-resources-heading">Class resources</h3>
+          <p>Materials are limited to your current classes and authorised links.</p>
+        </header>
+        {resources.length === 0 ? (
+          <EmptyState
+            title="No class resources"
+            detail="No authorised resource is available in this scope."
+          />
+        ) : (
+          <ul className="student-workspace__resources">
+            {resources.map((resource) => (
+              <li key={resource.id} data-type={resource.resourceType}>
+                <div>
+                  <strong>{resource.title}</strong>
+                  <span>
+                    {resource.subjectLabel} · {resource.resourceType}
+                  </span>
+                </div>
+                <p>{resource.description}</p>
+                {resource.availableUntil === undefined ? null : (
+                  <small>
+                    Available until{' '}
+                    <time dateTime={resource.availableUntil}>{resource.availableUntil}</time>
+                  </small>
+                )}
+                <a href={resource.href}>Open resource</a>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <div className="student-workspace__split">
-        <StudentRequestsWorkspace requests={requests} />
+        <section className="student-workspace__section" aria-labelledby="student-requests-heading">
+          <header>
+            <h3 id="student-requests-heading">My requests</h3>
+            <p>Submit and track only the requests available for your age and role.</p>
+          </header>
+          {requests.length === 0 ? (
+            <EmptyState
+              title="No student requests"
+              detail="No request is available in your current scope."
+            />
+          ) : (
+            <ol className="student-workspace__tasks">
+              {requests.map((request) => (
+                <li key={request.id} data-state={request.state}>
+                  <div>
+                    <strong>{request.title}</strong>
+                    <span>{request.description}</span>
+                    <small>{request.state.replace('-', ' ')}</small>
+                    {request.submittedAt === undefined ? null : (
+                      <time dateTime={request.submittedAt}>{request.submittedAt}</time>
+                    )}
+                    {request.nextAction === undefined ? null : (
+                      <small>Next: {request.nextAction}</small>
+                    )}
+                  </div>
+                  <a href={request.href}>
+                    {request.state === 'draft' || request.state === 'declined'
+                      ? 'Continue request'
+                      : 'View request'}
+                  </a>
+                </li>
+              ))}
+            </ol>
+          )}
+        </section>
 
         <section className="student-workspace__section" aria-labelledby="student-documents-heading">
           <header>
