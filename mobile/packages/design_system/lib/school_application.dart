@@ -149,6 +149,16 @@ final class SchoolLocaleController extends ChangeNotifier {
     return 'Language preference: $current. Activate to use $next.';
   }
 
+  String get preferenceSemanticLabel {
+    final current = switch (_locale?.languageCode) {
+      'en' => 'English',
+      'bn' => 'Bangla',
+      'ar' => 'Arabic',
+      _ => 'device language',
+    };
+    return 'Language preference. Current: $current. Activate to choose language.';
+  }
+
   Future<void> initialize() async {
     if (_isInitialized) return;
     final store = _preferenceStore;
@@ -265,7 +275,7 @@ final class SchoolLocaleController extends ChangeNotifier {
 }
 
 /// Rebuilds application composition when the persisted presentation locale
-/// changes and exposes a minimum-size cycle control without opening a route.
+/// changes and exposes an explicit presentation-language selector.
 ///
 /// The builder must return a new application widget instance. Stateful
 /// application elements remain update-compatible, so authorization/session
@@ -280,6 +290,9 @@ final class SchoolLocalePreferenceHost extends StatelessWidget {
 
   final SchoolLocaleApplicationBuilder appBuilder;
   final SchoolLocaleController controller;
+
+  /// Retained for source compatibility; the control now opens explicit choices
+  /// instead of cycling presentation locales.
   final bool showCycleControl;
 
   @override
@@ -296,7 +309,7 @@ final class SchoolLocalePreferenceHost extends StatelessWidget {
             Positioned(
               bottom: padding.bottom + 80,
               right: 12,
-              child: _SchoolLocaleCycleControl(controller: controller),
+              child: _SchoolLocalePreferenceControl(controller: controller),
             ),
         ],
       );
@@ -304,10 +317,21 @@ final class SchoolLocalePreferenceHost extends StatelessWidget {
   );
 }
 
-final class _SchoolLocaleCycleControl extends StatelessWidget {
-  const _SchoolLocaleCycleControl({required this.controller});
+final class _SchoolLocalePreferenceControl extends StatefulWidget {
+  const _SchoolLocalePreferenceControl({required this.controller});
 
   final SchoolLocaleController controller;
+
+  @override
+  State<_SchoolLocalePreferenceControl> createState() =>
+      _SchoolLocalePreferenceControlState();
+}
+
+final class _SchoolLocalePreferenceControlState
+    extends State<_SchoolLocalePreferenceControl> {
+  bool _isOpen = false;
+
+  SchoolLocaleController get controller => widget.controller;
 
   @override
   Widget build(BuildContext context) {
@@ -316,60 +340,219 @@ final class _SchoolLocaleCycleControl extends StatelessWidget {
       textDirection: TextDirection.ltr,
       child: Theme(
         data: SchoolTheme.light(),
-        child: Semantics(
-          button: true,
-          enabled: !controller.isBusy,
-          label: controller.cycleSemanticLabel,
-          liveRegion: hasError,
-          value: hasError
-              ? 'Preference was not saved.'
-              : controller.compactLabel,
-          child: Material(
-            clipBehavior: Clip.antiAlias,
-            color: SchoolColors.paper,
-            elevation: 6,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(28),
-              side: BorderSide(
-                color: hasError
-                    ? SchoolColors.errorText
-                    : SchoolColors.structuralRule,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            if (_isOpen) ...[
+              _SchoolLocalePreferenceMenu(
+                controller: controller,
+                onSelected: _select,
               ),
-            ),
-            child: InkWell(
-              onTap: controller.isBusy
-                  ? null
-                  : () => unawaited(controller.cycleAndPersist()),
-              child: SizedBox.square(
-                dimension: 56,
-                child: Center(
-                  child: controller.isBusy
-                      ? const SizedBox.square(
-                          dimension: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.language, size: 20),
-                            Text(
-                              controller.compactLabel,
-                              maxLines: 1,
-                              style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                              ),
+              const SizedBox(height: 8),
+            ],
+            Semantics(
+              button: true,
+              enabled: !controller.isBusy,
+              label: controller.preferenceSemanticLabel,
+              liveRegion: hasError,
+              value: hasError
+                  ? 'Preference was not saved.'
+                  : controller.compactLabel,
+              child: Material(
+                clipBehavior: Clip.antiAlias,
+                color: SchoolColors.paper,
+                elevation: 6,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28),
+                  side: BorderSide(
+                    color: hasError
+                        ? SchoolColors.errorText
+                        : SchoolColors.structuralRule,
+                  ),
+                ),
+                child: InkWell(
+                  key: const ValueKey('school-locale-control'),
+                  onTap: controller.isBusy
+                      ? null
+                      : () => setState(() => _isOpen = !_isOpen),
+                  child: SizedBox.square(
+                    dimension: 56,
+                    child: Center(
+                      child: controller.isBusy
+                          ? const SizedBox.square(
+                              dimension: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.language, size: 20),
+                                Text(
+                                  controller.compactLabel,
+                                  maxLines: 1,
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
   }
+
+  Future<void> _select(Locale? locale) async {
+    if (locale == null) {
+      await controller.followDeviceLocaleAndPersist();
+    } else {
+      await controller.selectLocaleAndPersist(locale);
+    }
+    if (!mounted || controller.lastErrorCode != null) return;
+    setState(() => _isOpen = false);
+  }
+}
+
+final class _SchoolLocalePreferenceMenu extends StatelessWidget {
+  const _SchoolLocalePreferenceMenu({
+    required this.controller,
+    required this.onSelected,
+  });
+
+  final SchoolLocaleController controller;
+  final Future<void> Function(Locale? locale) onSelected;
+
+  @override
+  Widget build(BuildContext context) => Material(
+    color: SchoolColors.paper,
+    elevation: 8,
+    clipBehavior: Clip.antiAlias,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16),
+      side: const BorderSide(color: SchoolColors.structuralRule),
+    ),
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 300),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 8, 16, 4),
+              child: Text(
+                'Language',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Text(
+                'Display language only. Account, school and permissions stay unchanged.',
+              ),
+            ),
+            _SchoolLocalePreferenceOption(
+              key: const ValueKey('school-locale-choice-device'),
+              title: 'Device language',
+              subtitle: 'Use device settings',
+              selected: controller.followsDeviceLocale,
+              enabled: !controller.isBusy,
+              onTap: () => unawaited(onSelected(null)),
+            ),
+            _SchoolLocalePreferenceOption(
+              key: const ValueKey('school-locale-choice-en'),
+              title: 'English',
+              selected: controller.locale?.languageCode == 'en',
+              enabled: !controller.isBusy,
+              onTap: () => unawaited(onSelected(const Locale('en'))),
+            ),
+            _SchoolLocalePreferenceOption(
+              key: const ValueKey('school-locale-choice-bn'),
+              title: 'বাংলা',
+              selected: controller.locale?.languageCode == 'bn',
+              enabled: !controller.isBusy,
+              onTap: () => unawaited(onSelected(const Locale('bn'))),
+            ),
+            _SchoolLocalePreferenceOption(
+              key: const ValueKey('school-locale-choice-ar'),
+              title: 'العربية',
+              selected: controller.locale?.languageCode == 'ar',
+              enabled: !controller.isBusy,
+              onTap: () => unawaited(onSelected(const Locale('ar'))),
+            ),
+            if (controller.lastErrorCode != null)
+              const Padding(
+                padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
+                child: Text(
+                  'Language preference was not saved. Your previous setting is still active.',
+                  style: TextStyle(color: SchoolColors.errorText),
+                ),
+              ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+final class _SchoolLocalePreferenceOption extends StatelessWidget {
+  const _SchoolLocalePreferenceOption({
+    required this.title,
+    required this.selected,
+    required this.enabled,
+    required this.onTap,
+    this.subtitle,
+    super.key,
+  });
+
+  final String title;
+  final String? subtitle;
+  final bool selected;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    enabled: enabled,
+    selected: selected,
+    child: InkWell(
+      onTap: enabled ? onTap : null,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 56),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title),
+                    if (subtitle != null)
+                      Text(
+                        subtitle!,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                  ],
+                ),
+              ),
+              if (selected) const Icon(Icons.check, size: 20),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
 }
 
 /// Shared production composition for localized Material applications.

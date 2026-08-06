@@ -128,7 +128,7 @@ void main() {
   });
 
   testWidgets(
-    'preference host cycles locale and preserves an accessible target',
+    'preference host explicitly selects and persists presentation language',
     (tester) async {
       final store = MemorySchoolLocalePreferenceStore(languageCode: 'bn');
       final controller = SchoolLocaleController(preferenceStore: store);
@@ -155,18 +155,41 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('হোম'), findsOneWidget);
-      expect(find.text('বাংলা'), findsOneWidget);
-      expect(tester.getSize(find.text('বাংলা').first).height, lessThan(56));
+      final launcher = find.byKey(const ValueKey('school-locale-control'));
+      expect(tester.getSize(launcher).width, greaterThanOrEqualTo(48));
+      expect(tester.getSize(launcher).height, greaterThanOrEqualTo(48));
 
-      await tester.tap(find.text('বাংলা'));
+      await tester.tap(launcher);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Language'), findsOneWidget);
+      expect(
+        find.text(
+          'Display language only. Account, school and permissions stay unchanged.',
+        ),
+        findsOneWidget,
+      );
+      for (final key in const [
+        'school-locale-choice-device',
+        'school-locale-choice-en',
+        'school-locale-choice-bn',
+        'school-locale-choice-ar',
+      ]) {
+        final option = find.byKey(ValueKey(key));
+        expect(option, findsOneWidget);
+        expect(tester.getSize(option).height, greaterThanOrEqualTo(48));
+      }
+
+      await tester.tap(find.byKey(const ValueKey('school-locale-choice-ar')));
       await tester.pumpAndSettle();
 
       expect(store.languageCode, 'ar');
+      expect(controller.locale, const Locale('ar'));
       expect(find.text('الرئيسية'), findsOneWidget);
-      expect(find.text('ع'), findsOneWidget);
+      expect(find.text('Language'), findsNothing);
 
       const semanticLabel =
-          'Language preference: Arabic. Activate to use device language.';
+          'Language preference. Current: Arabic. Activate to choose language.';
       final control = find.byWidgetPredicate(
         (widget) =>
             widget is Semantics && widget.properties.label == semanticLabel,
@@ -176,8 +199,57 @@ void main() {
       expect(semantics.properties.button, isTrue);
       expect(semantics.properties.enabled, isTrue);
       expect(semantics.properties.value, 'ع');
-      expect(tester.getSize(control).width, greaterThanOrEqualTo(48));
-      expect(tester.getSize(control).height, greaterThanOrEqualTo(48));
+
+      await tester.tap(launcher);
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const ValueKey('school-locale-choice-device')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(store.languageCode, isNull);
+      expect(controller.followsDeviceLocale, isTrue);
+    },
+  );
+
+  testWidgets(
+    'failed explicit locale write keeps picker open and prior locale active',
+    (tester) async {
+      final controller = SchoolLocaleController(
+        initialLocale: const Locale('en'),
+        preferenceStore: _FailingLocalePreferenceStore(),
+      );
+
+      await tester.pumpWidget(
+        SchoolLocalePreferenceHost(
+          controller: controller,
+          appBuilder: (context, localeController) => MaterialApp(
+            locale: localeController.locale,
+            localeListResolutionCallback:
+                SchoolLocalizationConfiguration.localeListResolutionCallback,
+            localizationsDelegates:
+                SchoolLocalizationConfiguration.localizationsDelegates,
+            supportedLocales: SchoolLocalizationConfiguration.supportedLocales,
+            home: const Scaffold(body: SizedBox()),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const ValueKey('school-locale-control')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('school-locale-choice-bn')));
+      await tester.pumpAndSettle();
+
+      expect(controller.locale, const Locale('en'));
+      expect(controller.lastErrorCode, 'MOBILE_LOCALE_PREFERENCE_WRITE_FAILED');
+      expect(find.text('Language'), findsOneWidget);
+      expect(
+        find.text(
+          'Language preference was not saved. Your previous setting is still active.',
+        ),
+        findsOneWidget,
+      );
     },
   );
 }
