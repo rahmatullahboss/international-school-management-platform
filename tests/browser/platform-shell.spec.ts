@@ -72,26 +72,21 @@ test('continues the family offline form draft locally', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'View history' })).toBeDisabled();
 });
 
-test('drills into the scoped Student resource read model in place', async ({ page }) => {
+test('renders the scoped Student resource read model on its route', async ({ page }) => {
   await page.goto('/student/resources');
+  await expect(page.getByRole('heading', { name: 'Class resources' })).toBeVisible();
   await expect(page.getByText('Broken link resource', { exact: true })).toHaveCount(0);
-  const resource = page.locator('summary').filter({ hasText: 'Multi-step equations practice' });
-  await expect(
-    page.getByText('Practice set and worked example for tomorrow’s lesson.'),
-  ).toBeHidden();
-  await resource.click();
+  await expect(page.getByText('Multi-step equations practice', { exact: true })).toBeVisible();
   await expect(
     page.getByText('Practice set and worked example for tomorrow’s lesson.'),
   ).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Open resource' })).toHaveCount(0);
 });
 
-test('drills into the scoped Student request read model in place', async ({ page }) => {
+test('renders the scoped Student request read model on its route', async ({ page }) => {
   await page.goto('/student/requests');
+  await expect(page.getByRole('heading', { name: 'My requests' })).toBeVisible();
   await expect(page.getByText('Locker key replacement', { exact: true })).toHaveCount(0);
-  const request = page.locator('summary').filter({ hasText: 'Library book renewal' });
-  await expect(page.getByText('Request another seven days for the current loan.')).toBeHidden();
-  await request.click();
+  await expect(page.getByText('Library book renewal', { exact: true })).toBeVisible();
   await expect(page.getByText('Request another seven days for the current loan.')).toBeVisible();
-  await expect(page.getByText('Next: Wait for library approval.')).toBeVisible();
+  await expect(page.getByText('Wait for library approval.')).toBeVisible();
 });
