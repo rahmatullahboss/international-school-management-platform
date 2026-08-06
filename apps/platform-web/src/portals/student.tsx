@@ -34,12 +34,12 @@ interface DrilldownItem {
 
 function StudentDrilldown(props: { readonly items: readonly DrilldownItem[] }): ReactElement {
   return (
-    <div className="student-workspace">
+    <div>
       {props.items.map((item) => (
         <details key={item.id}>
           <summary>{item.title}</summary>
-          <p>{item.description}</p>
-          {item.nextAction === undefined ? null : <small>Next: {item.nextAction}</small>}
+          {item.description}
+          {item.nextAction === undefined ? null : ` Next: ${item.nextAction}`}
         </details>
       ))}
     </div>
