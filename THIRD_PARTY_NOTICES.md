@@ -12,13 +12,13 @@ Package source distributions remain the authoritative location for full licence 
 | Apache-2.0 AND LGPL-3.0-or-later | 3 |
 | Apache-2.0 AND LGPL-3.0-or-later AND MIT | 1 |
 | BlueOak-1.0.0 | 1 |
-| BSD-2-Clause | 6 |
-| BSD-3-Clause | 5 |
+| BSD-2-Clause | 7 |
+| BSD-3-Clause | 6 |
 | CC-BY-4.0 | 1 |
 | CC0-1.0 | 1 |
 | ISC | 12 |
 | LGPL-3.0-or-later | 10 |
-| MIT | 247 |
+| MIT | 251 |
 | MIT OR Apache-2.0 | 4 |
 | MPL-2.0 | 12 |
 
@@ -51,12 +51,12 @@ Package source distributions remain the authoritative location for full licence 
 | @bcoe/v8-coverage | 1.0.2 | MIT | yes | no |
 | @cloudflare/kv-asset-handler | 0.5.0 | MIT OR Apache-2.0 | yes | no |
 | @cloudflare/unenv-preset | 2.16.1 | MIT OR Apache-2.0 | yes | no |
-| @cloudflare/workerd-darwin-64 | 1.20260722.1 | Apache-2.0 | yes | yes |
-| @cloudflare/workerd-darwin-arm64 | 1.20260722.1 | Apache-2.0 | yes | yes |
-| @cloudflare/workerd-linux-64 | 1.20260722.1 | Apache-2.0 | yes | yes |
-| @cloudflare/workerd-linux-arm64 | 1.20260722.1 | Apache-2.0 | yes | yes |
-| @cloudflare/workerd-windows-64 | 1.20260722.1 | Apache-2.0 | yes | yes |
-| @cloudflare/workers-types | 5.20260727.1 | MIT OR Apache-2.0 | yes | no |
+| @cloudflare/workerd-darwin-64 | 1.20260730.1 | Apache-2.0 | yes | yes |
+| @cloudflare/workerd-darwin-arm64 | 1.20260730.1 | Apache-2.0 | yes | yes |
+| @cloudflare/workerd-linux-64 | 1.20260730.1 | Apache-2.0 | yes | yes |
+| @cloudflare/workerd-linux-arm64 | 1.20260730.1 | Apache-2.0 | yes | yes |
+| @cloudflare/workerd-windows-64 | 1.20260730.1 | Apache-2.0 | yes | yes |
+| @cloudflare/workers-types | 5.20260804.1 | MIT OR Apache-2.0 | yes | no |
 | @cspotcode/source-map-support | 0.8.1 | MIT | yes | no |
 | @cspotcode/source-map-support/node_modules/@jridgewell/trace-mapping | 0.3.9 | MIT | yes | no |
 | @emnapi/core | 1.11.1 | MIT | yes | yes |
@@ -132,6 +132,7 @@ Package source distributions remain the authoritative location for full licence 
 | @jridgewell/gen-mapping | 0.3.13 | MIT | yes | no |
 | @jridgewell/remapping | 2.3.5 | MIT | yes | no |
 | @jridgewell/resolve-uri | 3.1.2 | MIT | yes | no |
+| @jridgewell/source-map | 0.3.11 | MIT | yes | yes |
 | @jridgewell/sourcemap-codec | 1.5.5 | MIT | yes | no |
 | @jridgewell/trace-mapping | 0.3.31 | MIT | yes | no |
 | @napi-rs/wasm-runtime | 1.1.6 | MIT | yes | yes |
@@ -184,7 +185,7 @@ Package source distributions remain the authoritative location for full licence 
 | @rollup/rollup-win32-x64-gnu | 4.62.3 | MIT | yes | yes |
 | @rollup/rollup-win32-x64-msvc | 4.62.3 | MIT | yes | yes |
 | @sindresorhus/is | 7.2.0 | MIT | yes | no |
-| @speed-highlight/core | 1.2.17 | CC0-1.0 | yes | no |
+| @speed-highlight/core | 1.2.23 | CC0-1.0 | yes | no |
 | @standard-schema/spec | 1.1.0 | MIT | yes | no |
 | @tybys/wasm-util | 0.10.3 | MIT | yes | yes |
 | @types/babel__core | 7.20.5 | MIT | yes | no |
@@ -227,10 +228,12 @@ Package source distributions remain the authoritative location for full licence 
 | balanced-match | 4.0.4 | MIT | yes | no |
 | baseline-browser-mapping | 2.11.5 | Apache-2.0 | yes | no |
 | blake3-wasm | 2.1.5 | MIT | yes | no |
-| brace-expansion | 5.0.8 | MIT | yes | no |
+| brace-expansion | 5.0.9 | MIT | yes | no |
 | browserslist | 4.28.7 | MIT | yes | no |
+| buffer-from | 1.1.2 | MIT | yes | yes |
 | caniuse-lite | 1.0.30001806 | CC-BY-4.0 | yes | no |
 | chai | 6.2.2 | MIT | yes | no |
+| commander | 2.20.3 | MIT | yes | yes |
 | convert-source-map | 2.0.0 | MIT | yes | no |
 | cookie | 1.1.1 | MIT | yes | no |
 | cross-spawn | 7.0.6 | MIT | yes | no |
@@ -266,7 +269,7 @@ Package source distributions remain the authoritative location for full licence 
 | gensync | 1.0.0-beta.2 | MIT | yes | no |
 | glob-parent | 6.0.2 | ISC | yes | no |
 | has-flag | 4.0.0 | MIT | yes | no |
-| hono | 4.12.32 | MIT | no | no |
+| hono | 4.13.0 | MIT | no | no |
 | html-escaper | 2.0.2 | MIT | yes | no |
 | ignore | 5.3.2 | MIT | yes | no |
 | imurmurhash | 0.1.4 | MIT | yes | no |
@@ -302,7 +305,7 @@ Package source distributions remain the authoritative location for full licence 
 | magic-string | 0.30.21 | MIT | yes | no |
 | magicast | 0.5.3 | MIT | yes | no |
 | make-dir | 4.0.0 | MIT | yes | no |
-| miniflare | 4.20260722.0 | MIT | yes | no |
+| miniflare | 5.20260730.0-alpha | MIT | yes | no |
 | minimatch | 10.2.6 | BlueOak-1.0.0 | yes | no |
 | ms | 2.1.3 | MIT | yes | no |
 | nanoid | 3.3.16 | MIT | yes | no |
@@ -336,10 +339,13 @@ Package source distributions remain the authoritative location for full licence 
 | shebang-command | 2.0.0 | MIT | yes | no |
 | shebang-regex | 3.0.0 | MIT | yes | no |
 | siginfo | 2.0.0 | ISC | yes | no |
+| source-map | 0.6.1 | BSD-3-Clause | yes | yes |
 | source-map-js | 1.2.1 | BSD-3-Clause | yes | no |
+| source-map-support | 0.5.21 | MIT | yes | yes |
 | stackback | 0.0.2 | MIT | yes | no |
 | std-env | 4.2.0 | MIT | yes | no |
 | supports-color | 7.2.0 | MIT | yes | no |
+| terser | 5.49.0 | BSD-2-Clause | yes | yes |
 | tinybench | 2.9.0 | MIT | yes | no |
 | tinyexec | 1.2.4 | MIT | yes | no |
 | tinyglobby | 0.2.17 | MIT | yes | no |
@@ -349,7 +355,7 @@ Package source distributions remain the authoritative location for full licence 
 | type-check | 0.4.0 | MIT | yes | no |
 | typescript | 6.0.3 | Apache-2.0 | yes | no |
 | typescript-eslint | 8.65.0 | MIT | yes | no |
-| undici | 7.28.0 | MIT | yes | no |
+| undici | 7.29.0 | MIT | yes | no |
 | undici-types | 8.3.0 | MIT | yes | no |
 | unenv | 2.0.0-rc.24 | MIT | yes | no |
 | update-browserslist-db | 1.2.3 | MIT | yes | no |
@@ -360,8 +366,8 @@ Package source distributions remain the authoritative location for full licence 
 | which | 2.0.2 | ISC | yes | no |
 | why-is-node-running | 2.3.0 | MIT | yes | no |
 | word-wrap | 1.2.5 | MIT | yes | no |
-| workerd | 1.20260722.1 | Apache-2.0 | yes | no |
-| wrangler | 4.114.0 | MIT OR Apache-2.0 | yes | no |
+| workerd | 1.20260730.1 | Apache-2.0 | yes | no |
+| wrangler | 4.118.0 | MIT OR Apache-2.0 | yes | no |
 | wrangler/node_modules/fsevents | 2.3.3 | MIT | yes | yes |
 | ws | 8.21.0 | MIT | yes | no |
 | yallist | 3.1.1 | ISC | yes | no |

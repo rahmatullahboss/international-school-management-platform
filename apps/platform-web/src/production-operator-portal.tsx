@@ -182,6 +182,50 @@ function queueMessage(queue: ProductionOperatorWorkQueue | undefined): ReactElem
   return <></>;
 }
 
+function workQueueList(queue: ProductionOperatorWorkQueue | undefined): ReactElement | null {
+  if (queue?.state !== 'ready' || queue.items.length === 0) return null;
+  return (
+    <section className="pilot-work-queue" aria-labelledby="production-work-queue-title">
+      <div>
+        <p>Current database work</p>
+        <h3 id="production-work-queue-title">Work queue</h3>
+        <span>Only candidates returned for the signed-in tenant and campus are actionable.</span>
+      </div>
+      <ol>
+        {queue.role === 'admissions'
+          ? queue.items.map((candidate) => (
+              <li key={candidate.applicationId}>
+                <div>
+                  <strong>{candidate.applicationNumber}</strong>
+                  <span>
+                    {candidate.submittedAt === null
+                      ? 'Submission time unavailable'
+                      : `Submitted ${new Date(candidate.submittedAt).toLocaleString()}`}
+                  </span>
+                </div>
+                <span className="pilot-status">{candidate.status}</span>
+                <span>v{candidate.version}</span>
+              </li>
+            ))
+          : queue.items.map((candidate) => (
+              <li key={`${candidate.bankStatementLineId}:${candidate.paymentId}`}>
+                <div>
+                  <strong>{candidate.bookingDate}</strong>
+                  <span>
+                    Payment received {new Date(candidate.paymentReceivedAt).toLocaleString()}
+                  </span>
+                </div>
+                <span className="pilot-status">Ready to match</span>
+                <span>
+                  {candidate.currency} {candidate.amountMinor} minor units
+                </span>
+              </li>
+            ))}
+      </ol>
+    </section>
+  );
+}
+
 function OperatorCommandPanel(props: {
   readonly role: OperatorRole;
   readonly pathname: string;
@@ -318,6 +362,7 @@ function OperatorCommandPanel(props: {
         </span>
       </div>
       {needsWorkQueue && !queueReadyForCommand ? queueMessage(workQueue) : null}
+      {queueReadyForCommand ? workQueueList(workQueue) : null}
       <form className="pilot-demo-note" onSubmit={(event) => void submit(event)}>
         {command === 'admissions.application.review.record' ? (
           <>
@@ -411,7 +456,7 @@ function OperatorCommandPanel(props: {
   );
 }
 
-function ProductionOperatorPortal(props: {
+export function ProductionOperatorPortal(props: {
   readonly workspace: ProductionWorkspace;
   readonly pathname: string;
 }): ReactElement {
@@ -429,18 +474,19 @@ function ProductionOperatorPortal(props: {
   };
 
   return (
-    <div className="pilot-entry" data-role={role}>
+    <div className="pilot-entry operator-entry" data-role={role}>
       <header className="pilot-entry__masthead">
         <div>
-          <p className="pilot-kicker">
-            Ozzyl International Demo School · authenticated production QA
-          </p>
+          <p className="pilot-kicker">Ozzyl International Demo School · Production workspace</p>
           <h1>{active?.label ?? config.title}</h1>
           <p>{active?.detail ?? config.description}</p>
         </div>
         <div className="pilot-entry__status">
           <strong>{role}</strong>
-          <span>{props.workspace.capabilities.length} current database capabilities</span>
+          <span>
+            {props.workspace.assurance.toUpperCase()} · {props.workspace.capabilities.length}{' '}
+            current grants
+          </span>
           <button type="button" onClick={signOut}>
             Sign out
           </button>
@@ -461,8 +507,8 @@ function ProductionOperatorPortal(props: {
         <section className="pilot-demo-note">
           <strong>Database-authorized production surface</strong>
           <span>
-            Synthetic pilot sessions and synthetic operator metrics are disabled here. Approved
-            writes use durable database commands and database-owned current work queues.
+            Only current database-owned work is actionable here. Approved writes use durable
+            commands and server-owned scope; the browser cannot elevate its tenant, campus or role.
           </span>
         </section>
         <OperatorCommandPanel
@@ -470,19 +516,24 @@ function ProductionOperatorPortal(props: {
           pathname={props.pathname}
           capabilities={props.workspace.capabilities}
         />
-        <section className="pilot-coverage" aria-labelledby="capability-title">
-          <div className="pilot-section-heading">
-            <p>Current grants</p>
-            <h2 id="capability-title">Capabilities for this signed-in account</h2>
-          </div>
-          <div className="pilot-coverage__grid">
+        <details className="pilot-demo-note" data-secondary-context="true">
+          <summary>
+            <strong>Access & security</strong>
+            <span>
+              {props.workspace.assurance.toUpperCase()} · {props.workspace.capabilities.length}{' '}
+              current database grants
+            </span>
+          </summary>
+          <p>
+            Permission details are secondary context. Task controls above remain constrained by the
+            signed-in database role, current assurance and server-owned scope.
+          </p>
+          <ul aria-label="Current database grants">
             {props.workspace.capabilities.map((capability) => (
-              <article key={capability}>
-                <h3>{capability}</h3>
-              </article>
+              <li key={capability}>{capability}</li>
             ))}
-          </div>
-        </section>
+          </ul>
+        </details>
       </main>
     </div>
   );

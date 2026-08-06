@@ -12,6 +12,6 @@
     "@school/database": "*",
     "@school/platform": "*",
     "@school/policy": "*",
-    "hono": "^4.0.0"
+    "hono": "^4.13.0"
   }
 }

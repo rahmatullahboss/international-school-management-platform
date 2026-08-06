@@ -14,38 +14,10 @@ type Tone = 'neutral' | 'success' | 'warning' | 'error' | 'info';
 
 function toneForStatus(status: string): Tone {
   const normalized = status.toLowerCase();
-  if (
-    normalized.includes('error') ||
-    normalized.includes('failed') ||
-    normalized.includes('conflict') ||
-    normalized.includes('restricted') ||
-    normalized.includes('declined')
-  ) {
-    return 'error';
-  }
-  if (
-    normalized.includes('due') ||
-    normalized.includes('attention') ||
-    normalized.includes('review') ||
-    normalized.includes('partial') ||
-    normalized.includes('draft')
-  ) {
-    return 'warning';
-  }
-  if (
-    normalized.includes('ready') ||
-    normalized.includes('available') ||
-    normalized.includes('published') ||
-    normalized.includes('complete') ||
-    normalized.includes('synced') ||
-    normalized.includes('present')
-  ) {
-    return 'success';
-  }
-  if (normalized.includes('new') || normalized.includes('next') || normalized.includes('live')) {
-    return 'info';
-  }
-  return 'neutral';
+  if (/error|failed|conflict|restricted|declined/u.test(normalized)) return 'error';
+  if (/due|attention|review|partial|draft/u.test(normalized)) return 'warning';
+  if (/ready|available|published|complete|synced|present/u.test(normalized)) return 'success';
+  return /new|next|live/u.test(normalized) ? 'info' : 'neutral';
 }
 
 function Status(props: { readonly children: string; readonly tone?: Tone }): ReactElement {
@@ -72,6 +44,7 @@ function MetricStrip(props: { readonly page: PilotModulePage }): ReactElement {
 
 function ActionBar(props: {
   readonly page: PilotModulePage;
+  readonly currentPath: string;
   readonly context?: string;
 }): ReactElement {
   return (
@@ -80,16 +53,25 @@ function ActionBar(props: {
         <strong>{props.context ?? 'Current work'}</strong>
         <span>Actions remain scoped to this role, campus and verified session.</span>
       </div>
-      {props.page.actions.map((action, index) => (
-        <a data-primary={index === 0 ? 'true' : 'false'} href={action.href} key={action.label}>
-          {action.label}
-        </a>
-      ))}
+      {props.page.actions.map((action, index) =>
+        action.href === props.currentPath ? (
+          <PilotUnavailableAction key={action.label} primary={index === 0}>
+            {action.label}
+          </PilotUnavailableAction>
+        ) : (
+          <a data-primary={index === 0} href={action.href} key={action.label}>
+            {action.label}
+          </a>
+        ),
+      )}
     </nav>
   );
 }
 
-function PriorityQueue(props: { readonly page: PilotModulePage }): ReactElement {
+function PriorityQueue(props: {
+  readonly page: PilotModulePage;
+  readonly currentPath: string;
+}): ReactElement {
   return (
     <section className="operational-section" aria-labelledby="operational-priority-title">
       <header className="operational-section__heading">
@@ -107,7 +89,11 @@ function PriorityQueue(props: { readonly page: PilotModulePage }): ReactElement 
               <span>{item.detail}</span>
             </div>
             <Status>{item.status}</Status>
-            <a href={item.href}>Review</a>
+            {item.href === props.currentPath ? (
+              <PilotUnavailableAction>Review</PilotUnavailableAction>
+            ) : (
+              <a href={item.href}>Review</a>
+            )}
           </li>
         ))}
       </ol>
@@ -135,9 +121,9 @@ function DataTable(props: {
         </thead>
         <tbody>
           {props.rows.map((row, rowIndex) => (
-            <tr key={`${props.label}-${rowIndex}`}>
+            <tr key={rowIndex}>
               {row.map((cell, cellIndex) => (
-                <td key={`${props.label}-${rowIndex}-${cellIndex}`}>{cell}</td>
+                <td key={cellIndex}>{cell}</td>
               ))}
             </tr>
           ))}
@@ -165,7 +151,7 @@ function Timeline(props: {
             <strong>{item.title}</strong>
             <span>{item.detail}</span>
           </div>
-          {item.status === undefined ? null : <Status>{item.status}</Status>}
+          {item.status ? <Status>{item.status}</Status> : null}
         </li>
       ))}
     </ol>
@@ -186,7 +172,7 @@ function DefinitionList(props: {
         <div key={item.term}>
           <dt>{item.term}</dt>
           <dd>{item.value}</dd>
-          {item.note === undefined ? null : <span>{item.note}</span>}
+          {item.note ? <span>{item.note}</span> : null}
         </div>
       ))}
     </dl>
@@ -202,7 +188,7 @@ function Pane(props: {
     <section className="operational-pane">
       <header>
         <h3>{props.title}</h3>
-        {props.description === undefined ? null : <p>{props.description}</p>}
+        {props.description ? <p>{props.description}</p> : null}
       </header>
       {props.children}
     </section>
@@ -229,7 +215,7 @@ function PilotUnavailableAction(props: {
   return (
     <button
       aria-describedby="operational-pilot-action-boundary"
-      className={props.primary === true ? 'operational-primary' : undefined}
+      className={props.primary ? 'operational-primary' : undefined}
       disabled
       type="button"
     >
@@ -241,7 +227,7 @@ function PilotUnavailableAction(props: {
 function AdminSis(): ReactElement {
   return (
     <div className="operational-stack">
-      <PriorityQueue page={routePage('/admin/sis')} />
+      <PriorityQueue page={routePage('/admin/sis')} currentPath="/admin/sis" />
       <div className="operational-toolbar" aria-label="Applicant register filters">
         <label>
           Intake
@@ -297,9 +283,7 @@ function AdminSis(): ReactElement {
                 <Status key="evidence">Birth certificate missing</Status>,
                 'Admissions',
                 'Today 09:18',
-                <a href="/admin/sis" key="action">
-                  Review
-                </a>,
+                <PilotUnavailableAction key="action">Review</PilotUnavailableAction>,
               ],
               [
                 <strong key="samira">Samira Noor</strong>,
@@ -309,9 +293,7 @@ function AdminSis(): ReactElement {
                 'Complete',
                 'Records office',
                 'Today 09:42',
-                <a href="/admin/sis" key="action">
-                  Open profile
-                </a>,
+                <PilotUnavailableAction key="action">Open profile</PilotUnavailableAction>,
               ],
               [
                 'Alexandrina Victoria Montgomery-Smith',
@@ -321,9 +303,7 @@ function AdminSis(): ReactElement {
                 'Identity comparison required',
                 'Admissions',
                 'Yesterday 16:04',
-                <a href="/admin/sis" key="action">
-                  Compare
-                </a>,
+                <PilotUnavailableAction key="action">Compare</PilotUnavailableAction>,
               ],
             ]}
           />
@@ -351,7 +331,7 @@ function AdminSis(): ReactElement {
 function AdminAcademics(): ReactElement {
   return (
     <div className="operational-stack">
-      <PriorityQueue page={routePage('/admin/academics')} />
+      <PriorityQueue page={routePage('/admin/academics')} currentPath="/admin/academics" />
       <Pane
         title="Attendance cut-off control"
         description="Registers remain explicit through finalisation, offline sync and reconciliation."
@@ -390,9 +370,7 @@ function AdminAcademics(): ReactElement {
               <Status key="s">Open</Status>,
               'No local changes',
               '10:55',
-              <a href="/admin/academics" key="a">
-                Send reminder
-              </a>,
+              <PilotUnavailableAction key="a">Send reminder</PilotUnavailableAction>,
             ],
             [
               'Year 7C Science',
@@ -414,9 +392,7 @@ function AdminAcademics(): ReactElement {
               <Status key="s">Conflict</Status>,
               'Server/device mismatch',
               '09:45',
-              <a href="/admin/academics" key="a">
-                Reconcile
-              </a>,
+              <PilotUnavailableAction key="a">Reconcile</PilotUnavailableAction>,
             ],
           ]}
         />
@@ -436,9 +412,7 @@ function AdminAcademics(): ReactElement {
                 <Status key="s">Ready</Status>,
                 'Change evidence attached',
                 'A. Chowdhury',
-                <a href="/admin/academics" key="a">
-                  Approve
-                </a>,
+                <PilotUnavailableAction key="a">Approve</PilotUnavailableAction>,
               ],
               [
                 'Term 2 report card',
@@ -484,7 +458,7 @@ function AdminAcademics(): ReactElement {
 function AdminFinance(): ReactElement {
   return (
     <div className="operational-stack">
-      <PriorityQueue page={routePage('/admin/finance')} />
+      <PriorityQueue page={routePage('/admin/finance')} currentPath="/admin/finance" />
       <div className="operational-split operational-split--wide">
         <Pane
           title="Deposit reconciliation"
@@ -582,7 +556,7 @@ function AdminFinance(): ReactElement {
               'INV-8821',
               <Status key="s">Approval</Status>,
               'AAL2 required',
-              'Approve refund',
+              <PilotUnavailableAction key="a">Approve refund</PilotUnavailableAction>,
             ],
             [
               'Journal',
@@ -591,7 +565,7 @@ function AdminFinance(): ReactElement {
               'Tuition allocation',
               <Status key="s">Posted</Status>,
               'Immutable',
-              'View entry',
+              <PilotUnavailableAction key="a">View entry</PilotUnavailableAction>,
             ],
           ]}
         />
@@ -603,7 +577,7 @@ function AdminFinance(): ReactElement {
 function AdminOperations(): ReactElement {
   return (
     <div className="operational-stack">
-      <PriorityQueue page={routePage('/admin/operations')} />
+      <PriorityQueue page={routePage('/admin/operations')} currentPath="/admin/operations" />
       <div className="operational-split">
         <Pane
           title="Science lab requisition"
@@ -674,7 +648,7 @@ function AdminOperations(): ReactElement {
               'Lab Supplies BD',
               '2 Aug',
               <Status key="s">Low stock</Status>,
-              'Review PO',
+              <PilotUnavailableAction key="a">Review PO</PilotUnavailableAction>,
             ],
             [
               'Microscope slides',
@@ -684,7 +658,7 @@ function AdminOperations(): ReactElement {
               'EduLab',
               '30 Jul',
               <Status key="s">Partial success</Status>,
-              'Contact supplier',
+              <PilotUnavailableAction key="a">Contact supplier</PilotUnavailableAction>,
             ],
             [
               'Year 8 cover',
@@ -694,7 +668,7 @@ function AdminOperations(): ReactElement {
               'HR desk',
               'Today 11:15',
               <Status key="s">Attention</Status>,
-              'Assign cover',
+              <PilotUnavailableAction key="a">Assign cover</PilotUnavailableAction>,
             ],
             [
               'Catering details',
@@ -719,7 +693,10 @@ function AdminSupport(): ReactElement {
       <Notice title="Verified restricted-data session" tone="warning">
         Purpose and reason for access are recorded before any sensitive support record is opened.
       </Notice>
-      <PriorityQueue page={routePage('/admin/student-support')} />
+      <PriorityQueue
+        page={routePage('/admin/student-support')}
+        currentPath="/admin/student-support"
+      />
       <div className="operational-split operational-split--wide">
         <Pane
           title="Purpose-bound work queue"
@@ -812,7 +789,10 @@ function AdminSupport(): ReactElement {
 function AdminCommunications(): ReactElement {
   return (
     <div className="operational-stack">
-      <PriorityQueue page={routePage('/admin/communications')} />
+      <PriorityQueue
+        page={routePage('/admin/communications')}
+        currentPath="/admin/communications"
+      />
       <Pane
         title="Publication queue"
         description="Audience, translations, channels and approval state stay visible before release."
@@ -836,7 +816,7 @@ function AdminCommunications(): ReactElement {
               'Today 14:00',
               'English ready · Arabic ready · French ready',
               <Status key="s">Draft</Status>,
-              'Review audience',
+              <PilotUnavailableAction key="a">Review audience</PilotUnavailableAction>,
             ],
             [
               'Term 3 welcome',
@@ -845,7 +825,7 @@ function AdminCommunications(): ReactElement {
               'Tomorrow 08:00',
               'English ready · Arabic in review',
               <Status key="s">Review</Status>,
-              'Compare translations',
+              <PilotUnavailableAction key="a">Compare translations</PilotUnavailableAction>,
             ],
           ]}
         />
@@ -877,7 +857,7 @@ function AdminCommunications(): ReactElement {
               'Invalid number',
               '2',
               'Phone call',
-              'Call household',
+              <PilotUnavailableAction key="a">Call household</PilotUnavailableAction>,
             ],
             [
               'Guardian · Samira Noor',
@@ -888,7 +868,7 @@ function AdminCommunications(): ReactElement {
               'Email bounced; SMS delivered',
               '1',
               'Portal',
-              'Verify portal receipt',
+              <PilotUnavailableAction key="a">Verify portal receipt</PilotUnavailableAction>,
             ],
             [
               'Staff cohort',
@@ -911,7 +891,7 @@ function AdminCommunications(): ReactElement {
 function AdminIntegrations(): ReactElement {
   return (
     <div className="operational-stack">
-      <PriorityQueue page={routePage('/admin/integrations')} />
+      <PriorityQueue page={routePage('/admin/integrations')} currentPath="/admin/integrations" />
       <Pane
         title="Connector registry"
         description="Credential material is never rendered in plaintext."
@@ -939,7 +919,7 @@ function AdminIntegrations(): ReactElement {
               <Status key="s">Healthy</Status>,
               '31 Aug',
               'Platform',
-              'Open',
+              <PilotUnavailableAction key="a">Open</PilotUnavailableAction>,
             ],
             [
               'School SSO',
@@ -950,7 +930,7 @@ function AdminIntegrations(): ReactElement {
               <Status key="s">Healthy</Status>,
               '12 Sep',
               'Identity',
-              'Open',
+              <PilotUnavailableAction key="a">Open</PilotUnavailableAction>,
             ],
             [
               'LTI gateway',
@@ -961,7 +941,7 @@ function AdminIntegrations(): ReactElement {
               <Status key="s">Healthy</Status>,
               '28 Aug',
               'Learning',
-              'Open',
+              <PilotUnavailableAction key="a">Open</PilotUnavailableAction>,
             ],
             [
               'Webhook gateway',
@@ -972,7 +952,7 @@ function AdminIntegrations(): ReactElement {
               <Status key="s">Partial</Status>,
               'Due soon',
               'Platform',
-              'Rotate',
+              <PilotUnavailableAction key="a">Rotate</PilotUnavailableAction>,
             ],
           ]}
         />
@@ -1028,7 +1008,7 @@ function AdminIntegrations(): ReactElement {
                 '2',
                 <Status key="s">Complete</Status>,
                 '08:55',
-                'View report',
+                <PilotUnavailableAction key="a">View report</PilotUnavailableAction>,
               ],
               [
                 'IMP-2402',
@@ -1038,7 +1018,7 @@ function AdminIntegrations(): ReactElement {
                 '3',
                 <Status key="s">Partial success</Status>,
                 '09:03',
-                'Safe retry',
+                <PilotUnavailableAction key="a">Safe retry</PilotUnavailableAction>,
               ],
             ]}
           />
@@ -1051,7 +1031,7 @@ function AdminIntegrations(): ReactElement {
 function AdminReports(): ReactElement {
   return (
     <div className="operational-stack">
-      <PriorityQueue page={routePage('/admin/reports')} />
+      <PriorityQueue page={routePage('/admin/reports')} currentPath="/admin/reports" />
       <div className="operational-split operational-split--wide">
         <Pane
           title="Attendance definition update"
@@ -1122,7 +1102,7 @@ function AdminReports(): ReactElement {
               'Current',
               'Leaders',
               'Governed',
-              'Open',
+              <PilotUnavailableAction key="a">Open</PilotUnavailableAction>,
             ],
             [
               'Finance reconciliation',
@@ -1134,7 +1114,7 @@ function AdminReports(): ReactElement {
               'Current',
               'Finance',
               'Restricted export',
-              'Open',
+              <PilotUnavailableAction key="a">Open</PilotUnavailableAction>,
             ],
             [
               'Enrolment',
@@ -1146,7 +1126,7 @@ function AdminReports(): ReactElement {
               'Current',
               'Leaders',
               'Governed',
-              'Open',
+              <PilotUnavailableAction key="a">Open</PilotUnavailableAction>,
             ],
           ]}
         />
@@ -1158,7 +1138,7 @@ function AdminReports(): ReactElement {
 function TeacherClasses(): ReactElement {
   return (
     <div className="operational-stack">
-      <PriorityQueue page={routePage('/teacher/classes')} />
+      <PriorityQueue page={routePage('/teacher/classes')} currentPath="/teacher/classes" />
       <Pane title="Today’s teaching sequence">
         <DataTable
           label="Teacher class sequence"
@@ -1177,7 +1157,9 @@ function TeacherClasses(): ReactElement {
               '204',
               <Status key="s">Finalised</Status>,
               'Completed',
-              'Open roster',
+              <a href="/teacher/students" key="a">
+                Open roster
+              </a>,
             ],
             [
               '09:00–09:45',
@@ -1185,7 +1167,7 @@ function TeacherClasses(): ReactElement {
               'Lab 2 · changed from Lab 1',
               'Published',
               <Status key="s">Changed</Status>,
-              'Open class',
+              <PilotUnavailableAction key="a">Open class</PilotUnavailableAction>,
             ],
             [
               '10:00–10:45',
@@ -1193,7 +1175,9 @@ function TeacherClasses(): ReactElement {
               '204',
               <Status key="s">Not started</Status>,
               <Status key="l">Next</Status>,
-              'Prepare lesson',
+              <a href="/teacher/resources" key="a">
+                Prepare lesson
+              </a>,
             ],
           ]}
         />
@@ -1233,7 +1217,9 @@ function TeacherClasses(): ReactElement {
               'Completed',
               'Learning support · permitted',
               'Contact available',
-              'Open permitted profile',
+              <a href="/teacher/students" key="a">
+                Open permitted profile
+              </a>,
             ],
             [
               'Alexandrina Victoria Montgomery-Smith',
@@ -1242,7 +1228,7 @@ function TeacherClasses(): ReactElement {
               'In progress',
               'No current cue',
               'Contact available',
-              'Open permitted profile',
+              <PilotUnavailableAction key="a">Open permitted profile</PilotUnavailableAction>,
             ],
             [
               'Student record',
@@ -1300,7 +1286,7 @@ function TeacherAttendance(): ReactElement {
         Last synced 10:42 · 0 conflicts detected. Offline changes stay on this device until a safe
         replay succeeds.
       </Notice>
-      <PriorityQueue page={routePage('/teacher/attendance')} />
+      <PriorityQueue page={routePage('/teacher/attendance')} currentPath="/teacher/attendance" />
       <div className="operational-register-selector" aria-label="Assigned registers">
         <button type="button" aria-pressed="true">
           <strong>Year 8A Mathematics</strong>
@@ -1364,7 +1350,7 @@ function TeacherAttendance(): ReactElement {
 function TeacherGradebook(): ReactElement {
   return (
     <div className="operational-stack">
-      <PriorityQueue page={routePage('/teacher/gradebook')} />
+      <PriorityQueue page={routePage('/teacher/gradebook')} currentPath="/teacher/gradebook" />
       <Pane
         title="Year 8A · Algebra checkpoint"
         description="Entry state and publication state remain separate."
@@ -1453,9 +1439,55 @@ function TeacherGradebook(): ReactElement {
 }
 
 function TeacherStudents(): ReactElement {
+  const [selectedStudent, setSelectedStudent] = useState<'Samira Noor' | 'Riya Ahmed'>(
+    'Samira Noor',
+  );
+  const selectedTimeline =
+    selectedStudent === 'Samira Noor'
+      ? ([
+          {
+            time: '28 Jul',
+            title: 'Algebra checkpoint',
+            detail: 'A- · published feedback',
+            status: 'Published',
+          },
+          {
+            time: '29 Jul',
+            title: 'Learning adjustment',
+            detail: 'Adjusted task remains permitted for this class',
+            status: 'Current',
+          },
+          {
+            time: 'Next lesson',
+            title: 'Teacher action',
+            detail: 'Review adjusted task before class',
+            status: 'Next action',
+          },
+        ] as const)
+      : ([
+          {
+            time: '29 Jul',
+            title: 'Classwork',
+            detail: 'Steady progress · current teaching evidence',
+            status: 'Current',
+          },
+          {
+            time: 'Today',
+            title: 'Attendance',
+            detail: 'Present in the assigned class',
+            status: 'Current',
+          },
+          {
+            time: 'Next lesson',
+            title: 'Teacher action',
+            detail: 'No additional follow-up recorded',
+            status: 'Next action',
+          },
+        ] as const);
+
   return (
     <div className="operational-stack">
-      <PriorityQueue page={routePage('/teacher/students')} />
+      <PriorityQueue page={routePage('/teacher/students')} currentPath="/teacher/students" />
       <div className="operational-split operational-split--wide">
         <Pane
           title="Assigned student register"
@@ -1482,7 +1514,15 @@ function TeacherStudents(): ReactElement {
                 'Parent contact available',
                 'Review adjusted task · before next lesson',
                 'Algebra checkpoint · 28 Jul',
-                'Open permitted profile',
+                <button
+                  aria-label="Open Samira Noor permitted profile"
+                  aria-pressed={selectedStudent === 'Samira Noor'}
+                  key="a"
+                  onClick={() => setSelectedStudent('Samira Noor')}
+                  type="button"
+                >
+                  Open profile
+                </button>,
               ],
               [
                 'Riya Ahmed',
@@ -1492,7 +1532,15 @@ function TeacherStudents(): ReactElement {
                 'Contact available',
                 'None',
                 'Classwork · 29 Jul',
-                'Open permitted profile',
+                <button
+                  aria-label="Open Riya Ahmed permitted profile"
+                  aria-pressed={selectedStudent === 'Riya Ahmed'}
+                  key="a"
+                  onClick={() => setSelectedStudent('Riya Ahmed')}
+                  type="button"
+                >
+                  Open profile
+                </button>,
               ],
               [
                 'Student record',
@@ -1508,32 +1556,10 @@ function TeacherStudents(): ReactElement {
           />
         </Pane>
         <Pane
-          title="Samira Noor · permitted context"
+          title={`${selectedStudent} · permitted context`}
           description="Current teaching relationship · read-only evidence timeline."
         >
-          <Timeline
-            label="Samira learning evidence"
-            items={[
-              {
-                time: '28 Jul',
-                title: 'Algebra checkpoint',
-                detail: 'A- · published feedback',
-                status: 'Published',
-              },
-              {
-                time: '29 Jul',
-                title: 'Learning adjustment',
-                detail: 'Adjusted task remains permitted for this class',
-                status: 'Current',
-              },
-              {
-                time: 'Next lesson',
-                title: 'Teacher action',
-                detail: 'Review adjusted task before class',
-                status: 'Next action',
-              },
-            ]}
-          />
+          <Timeline label={`${selectedStudent} learning evidence`} items={selectedTimeline} />
           <Notice title="Context boundary" tone="warning">
             Consent context should be rechecked after the current review window. Restricted health,
             counselling and safeguarding records are not inferred or shown.
@@ -1642,7 +1668,7 @@ function MessageWorkspace(props: {
               <time>Yesterday · 19:30</time>
             </header>
             <p>
-              {isStudent(props.persona)
+              {props.persona === 'student'
                 ? 'Please review the trip preparation notes before science tomorrow.'
                 : 'I have shared the class resource and the published guidance for the next lesson.'}
             </p>
@@ -1723,14 +1749,45 @@ function MessageWorkspace(props: {
   );
 }
 
-function isStudent(persona: 'teacher' | 'guardian' | 'student'): boolean {
-  return persona === 'student';
-}
-
 function TeacherResources(): ReactElement {
+  type EditableResource = 'Multi-step equations practice' | 'Geometry quiz' | 'Calculus intro';
+  const [selectedResource, setSelectedResource] = useState<EditableResource>(
+    'Multi-step equations practice',
+  );
+  const selectedResourceDetail =
+    selectedResource === 'Multi-step equations practice'
+      ? {
+          title: 'Multi-step equations practice',
+          description: 'Practice set for tomorrow’s lesson.',
+          classScope: 'Year 8A',
+          asset: 'equations_v1.pdf',
+          accessibility: 'Printable algebra practice with typed equations',
+          warning:
+            'A prior file has the same filename. Saving creates a new version rather than overwriting it.',
+        }
+      : selectedResource === 'Geometry quiz'
+        ? {
+            title: 'Geometry quiz',
+            description: 'Geometry checkpoint quiz for the current Year 8A unit.',
+            classScope: 'Year 8A',
+            asset: 'geometry.pdf',
+            accessibility: 'Printable geometry quiz with diagram descriptions',
+            warning:
+              'This resource is near its current availability end date. Publishing creates a new version.',
+          }
+        : {
+            title: 'Calculus intro',
+            description: 'Introductory calculus resource link requires repair before republishing.',
+            classScope: 'Year 12C',
+            asset: 'Broken link',
+            accessibility: 'External calculus introduction resource',
+            warning:
+              'The current authorised link is unavailable. Repair remains a draft-only preview until a production write contract is connected.',
+          };
+
   return (
     <div className="operational-stack">
-      <PriorityQueue page={routePage('/teacher/resources')} />
+      <PriorityQueue page={routePage('/teacher/resources')} currentPath="/teacher/resources" />
       <div className="operational-split operational-split--wide">
         <Pane
           title="Resource register"
@@ -1759,7 +1816,15 @@ function TeacherResources(): ReactElement {
                 'equations_v1.pdf',
                 'N. Rahman',
                 'Saved locally',
-                'Edit',
+                <button
+                  aria-label="Edit Multi-step equations practice"
+                  aria-pressed={selectedResource === 'Multi-step equations practice'}
+                  key="a"
+                  onClick={() => setSelectedResource('Multi-step equations practice')}
+                  type="button"
+                >
+                  Edit
+                </button>,
               ],
               [
                 'Algebra fundamentals',
@@ -1770,7 +1835,7 @@ function TeacherResources(): ReactElement {
                 'Authorised link',
                 'N. Rahman',
                 '28 Jul',
-                'Preview',
+                <PilotUnavailableAction key="a">Preview</PilotUnavailableAction>,
               ],
               [
                 'Geometry quiz',
@@ -1781,7 +1846,15 @@ function TeacherResources(): ReactElement {
                 'geometry.pdf',
                 'N. Rahman',
                 '27 Jul',
-                'Edit',
+                <button
+                  aria-label="Edit Geometry quiz"
+                  aria-pressed={selectedResource === 'Geometry quiz'}
+                  key="a"
+                  onClick={() => setSelectedResource('Geometry quiz')}
+                  type="button"
+                >
+                  Edit
+                </button>,
               ],
               [
                 'Calculus intro',
@@ -1792,42 +1865,50 @@ function TeacherResources(): ReactElement {
                 'Broken link',
                 'N. Rahman',
                 '26 Jul',
-                'Repair',
+                <button
+                  aria-label="Repair Calculus intro"
+                  aria-pressed={selectedResource === 'Calculus intro'}
+                  key="a"
+                  onClick={() => setSelectedResource('Calculus intro')}
+                  type="button"
+                >
+                  Repair
+                </button>,
               ],
             ]}
           />
         </Pane>
         <Pane
-          title="Edit resource"
+          title={selectedResource === 'Calculus intro' ? 'Repair resource' : 'Edit resource'}
           description="Revisions create a new version; published history is not overwritten."
         >
-          <form className="operational-form">
+          <form className="operational-form" key={selectedResource}>
             <label>
               Title
-              <input defaultValue="Multi-step equations practice" />
+              <input defaultValue={selectedResourceDetail.title} />
             </label>
             <label>
               Description
-              <textarea rows={4} defaultValue="Practice set for tomorrow’s lesson." />
+              <textarea rows={4} defaultValue={selectedResourceDetail.description} />
             </label>
             <label>
               Class scope
-              <select multiple defaultValue={['Year 8A']}>
+              <select multiple defaultValue={[selectedResourceDetail.classScope]}>
                 <option>Year 8A</option>
                 <option>Year 9B</option>
+                <option>Year 12C</option>
               </select>
             </label>
             <label>
-              File
-              <input readOnly value="equations_v1.pdf" />
+              Asset
+              <input readOnly value={selectedResourceDetail.asset} />
             </label>
             <label>
               Accessibility description
-              <input defaultValue="Printable algebra practice with typed equations" />
+              <input defaultValue={selectedResourceDetail.accessibility} />
             </label>
-            <Notice title="Duplicate upload warning" tone="warning">
-              A prior file has the same filename. Saving creates a new version rather than
-              overwriting it.
+            <Notice title="Resource boundary" tone="warning">
+              {selectedResourceDetail.warning}
             </Notice>
             <div className="operational-inline-actions">
               <PilotUnavailableAction>Save draft</PilotUnavailableAction>
@@ -1844,7 +1925,7 @@ function TeacherResources(): ReactElement {
 function FamilyApplications(): ReactElement {
   return (
     <div className="operational-stack">
-      <PriorityQueue page={routePage('/family/applications')} />
+      <PriorityQueue page={routePage('/family/applications')} currentPath="/family/applications" />
       <Pane
         title="Nabil Noor · Year 3 · 2027 intake"
         description="Documents requested · the next household action is clear."
@@ -2012,6 +2093,8 @@ function FamilyChildren(): ReactElement {
 }
 
 function AttendancePublished(props: { readonly student: boolean }): ReactElement {
+  const [selectedAttendance, setSelectedAttendance] = useState<'12 Jul' | '14 Jul'>('12 Jul');
+
   return (
     <div className="operational-stack">
       <Notice title="Offline snapshot">
@@ -2027,70 +2110,127 @@ function AttendancePublished(props: { readonly student: boolean }): ReactElement
             label="Published attendance record"
             headers={['Date', 'Published state', 'Detail', 'Revision / explanation', 'Action']}
             rows={[
-              ['15 Jul', <Status key="s">Present</Status>, 'Full day', '—', 'View'],
+              [
+                '15 Jul',
+                <Status key="s">Present</Status>,
+                'Full day',
+                '—',
+                <PilotUnavailableAction key="a">View</PilotUnavailableAction>,
+              ],
               [
                 '14 Jul',
                 <Status key="s">Present · Revised</Status>,
                 'Corrected by office',
                 'Previously late · history retained',
-                'View history',
+                <button
+                  aria-label="View 14 July revision history"
+                  aria-pressed={selectedAttendance === '14 Jul'}
+                  key="a"
+                  onClick={() => setSelectedAttendance('14 Jul')}
+                  type="button"
+                >
+                  View history
+                </button>,
               ],
               [
                 '12 Jul',
                 <Status key="s">Absent</Status>,
                 'Published 08:15',
                 'Explanation under review',
-                'Track explanation',
+                <button
+                  aria-label="Track 12 July explanation"
+                  aria-pressed={selectedAttendance === '12 Jul'}
+                  key="a"
+                  onClick={() => setSelectedAttendance('12 Jul')}
+                  type="button"
+                >
+                  Track explanation
+                </button>,
               ],
               [
                 '10 Jul',
                 <Status key="s">Late</Status>,
                 'Arrived 08:45',
                 'Published record',
-                'View',
+                <PilotUnavailableAction key="a">View</PilotUnavailableAction>,
               ],
-              ['09 Jul', <Status key="s">Present</Status>, 'Full day', '—', 'View'],
+              [
+                '09 Jul',
+                <Status key="s">Present</Status>,
+                'Full day',
+                '—',
+                <PilotUnavailableAction key="a">View</PilotUnavailableAction>,
+              ],
             ]}
           />
         </Pane>
         <Pane
-          title="12 July absence"
+          title={selectedAttendance === '12 Jul' ? '12 July absence' : '14 July revision history'}
           description={
-            props.student
-              ? 'Your family submitted an explanation.'
-              : 'Household explanation lifecycle.'
+            selectedAttendance === '12 Jul'
+              ? props.student
+                ? 'Your family submitted an explanation.'
+                : 'Household explanation lifecycle.'
+              : 'Published correction history; the prior state remains visible.'
           }
         >
           <Timeline
-            label="Absence explanation timeline"
-            items={[
-              {
-                time: '08:15',
-                title: 'Absence published',
-                detail: 'Main Campus attendance ledger',
-                status: 'Published',
-              },
-              {
-                time: '09:30',
-                title: 'Explanation submitted',
-                detail: props.student
-                  ? 'Your family submitted an explanation.'
-                  : 'Family explanation received and preserved.',
-                status: 'Submitted',
-              },
-              {
-                time: '10:00',
-                title: 'School reviewing',
-                detail: 'Assigned to attendance officer',
-                status: 'In review',
-              },
-              {
-                time: 'Next',
-                title: 'Decision',
-                detail: 'The published outcome will appear here.',
-                status: 'Pending',
-              },
-            ]}
+            label={
+              selectedAttendance === '12 Jul'
+                ? 'Absence explanation timeline'
+                : 'Attendance revision timeline'
+            }
+            items={
+              selectedAttendance === '12 Jul'
+                ? [
+                    {
+                      time: '08:15',
+                      title: 'Absence published',
+                      detail: 'Main Campus attendance ledger',
+                      status: 'Published',
+                    },
+                    {
+                      time: '09:30',
+                      title: 'Explanation submitted',
+                      detail: props.student
+                        ? 'Your family submitted an explanation.'
+                        : 'Family explanation received and preserved.',
+                      status: 'Submitted',
+                    },
+                    {
+                      time: '10:00',
+                      title: 'School reviewing',
+                      detail: 'Assigned to attendance officer',
+                      status: 'In review',
+                    },
+                    {
+                      time: 'Next',
+                      title: 'Decision',
+                      detail: 'The published outcome will appear here.',
+                      status: 'Pending',
+                    },
+                  ]
+                : [
+                    {
+                      time: '08:10',
+                      title: 'Original attendance published',
+                      detail: 'Late · original publication retained',
+                      status: 'Historical',
+                    },
+                    {
+                      time: '09:05',
+                      title: 'Office correction recorded',
+                      detail: 'Evidence reviewed by attendance office',
+                      status: 'Revised',
+                    },
+                    {
+                      time: '09:07',
+                      title: 'Present republished',
+                      detail: 'Current published state · prior version preserved',
+                      status: 'Current',
+                    },
+                  ]
+            }
           />
         </Pane>
       </div>
@@ -2123,7 +2263,7 @@ function ResultsPublished(props: { readonly student: boolean }): ReactElement {
             {props.student ? (
               <PilotUnavailableAction>Acknowledge feedback</PilotUnavailableAction>
             ) : (
-              <a href="/family/grades">Review mathematics feedback</a>
+              <PilotUnavailableAction>Review mathematics feedback</PilotUnavailableAction>
             )}
           </div>
         </div>
@@ -2170,6 +2310,7 @@ function ResultsPublished(props: { readonly student: boolean }): ReactElement {
 }
 
 function FamilyFinance(): ReactElement {
+  const unavailableDownload = <PilotUnavailableAction>Download</PilotUnavailableAction>;
   return (
     <div className="operational-stack">
       <Pane
@@ -2200,8 +2341,7 @@ function FamilyFinance(): ReactElement {
             <li>Approved payment provider</li>
           </ul>
           <Notice title="Uncertain provider response" tone="warning">
-            If a payment response is unclear, use “Check payment status” rather than submitting
-            again.
+            If payment status is unclear, check status instead of submitting again.
           </Notice>
           <PilotUnavailableAction>Check payment status</PilotUnavailableAction>
         </Pane>
@@ -2225,7 +2365,7 @@ function FamilyFinance(): ReactElement {
                 'Bank transfer',
                 'June tuition',
                 <Status key="s">Verified</Status>,
-                'Download',
+                unavailableDownload,
               ],
               [
                 'RCPT-47802',
@@ -2234,7 +2374,7 @@ function FamilyFinance(): ReactElement {
                 'Bank transfer',
                 'July tuition',
                 <Status key="s">Verified</Status>,
-                'Download',
+                unavailableDownload,
               ],
               [
                 'RCPT-48100',
@@ -2243,7 +2383,7 @@ function FamilyFinance(): ReactElement {
                 'Cash',
                 'Activity fee',
                 <Status key="s">Verified</Status>,
-                'Download',
+                unavailableDownload,
               ],
             ]}
           />
@@ -2254,14 +2394,15 @@ function FamilyFinance(): ReactElement {
 }
 
 function FamilyForms(): ReactElement {
+  const unavailableResponse = <PilotUnavailableAction>View response</PilotUnavailableAction>;
   return (
     <div className="operational-stack">
-      <PriorityQueue page={routePage('/family/forms')} />
+      <PriorityQueue page={routePage('/family/forms')} currentPath="/family/forms" />
       <Pane
         title="Science trip consent"
         description="Samira Noor · Science Museum · 15 Oct · due 2 Aug."
       >
-        <form className="operational-form operational-form--wide">
+        <form className="operational-form operational-form--wide" id="science-trip-consent">
           <DefinitionList
             label="Trip details"
             items={[
@@ -2290,7 +2431,7 @@ function FamilyForms(): ReactElement {
             <input type="date" defaultValue="2026-08-01" />
           </label>
           <Notice title="Session expiry warning" tone="warning">
-            Refresh the verified session before final submission. Your draft answers are safe.
+            Refresh the verified session before submitting. Your draft is safe.
           </Notice>
           <div className="operational-inline-actions">
             <PilotUnavailableAction>Save for later</PilotUnavailableAction>
@@ -2309,7 +2450,7 @@ function FamilyForms(): ReactElement {
               '15 Jan',
               <Status key="s">Complete</Status>,
               'FORM-221',
-              'View response',
+              unavailableResponse,
             ],
             [
               'Term 1 field trip',
@@ -2317,7 +2458,7 @@ function FamilyForms(): ReactElement {
               '5 Feb',
               <Status key="s">Complete</Status>,
               'FORM-304',
-              'View response',
+              unavailableResponse,
             ],
             [
               'Previous medical confirmation',
@@ -2325,7 +2466,7 @@ function FamilyForms(): ReactElement {
               'Last year',
               <Status key="s">Expired · read only</Status>,
               'FORM-118',
-              'View history',
+              <PilotUnavailableAction>View history</PilotUnavailableAction>,
             ],
             [
               'Science trip consent',
@@ -2333,7 +2474,7 @@ function FamilyForms(): ReactElement {
               'Saved locally',
               <Status key="s">Offline draft</Status>,
               'Draft',
-              'Continue',
+              <a href="#science-trip-consent">Continue</a>,
             ],
           ]}
         />
@@ -2343,6 +2484,8 @@ function FamilyForms(): ReactElement {
 }
 
 function DocumentsWorkspace(props: { readonly student: boolean }): ReactElement {
+  const [welcomeSelected, setWelcomeSelected] = useState(false);
+
   return (
     <div className="operational-stack">
       <Notice title="Authorised records only">
@@ -2365,12 +2508,14 @@ function DocumentsWorkspace(props: { readonly student: boolean }): ReactElement 
             rows={[
               [
                 'Term 2 progress report',
-                props.student ? 'Samira Noor' : 'Samira Noor',
+                'Samira Noor',
                 'Report card',
                 '28 Jul',
                 <Status key="s">New</Status>,
                 'Available',
-                'Open authorised copy',
+                <button key="a" onClick={() => setWelcomeSelected(false)} type="button">
+                  Term 2
+                </button>,
               ],
               [
                 'School welcome letter',
@@ -2379,7 +2524,9 @@ function DocumentsWorkspace(props: { readonly student: boolean }): ReactElement 
                 '1 Aug',
                 <Status key="s">Available</Status>,
                 'Available',
-                'Open',
+                <button key="a" onClick={() => setWelcomeSelected(true)} type="button">
+                  Welcome
+                </button>,
               ],
               [
                 'Enrolment confirmation',
@@ -2388,7 +2535,7 @@ function DocumentsWorkspace(props: { readonly student: boolean }): ReactElement 
                 '10 Sep 2021',
                 <Status key="s">Superseded</Status>,
                 'Current revision exists',
-                'View current version',
+                <PilotUnavailableAction key="a">View current version</PilotUnavailableAction>,
               ],
               ['Not available in this scope', '—', '—', '—', '—', '—', '—'],
               [
@@ -2398,7 +2545,7 @@ function DocumentsWorkspace(props: { readonly student: boolean }): ReactElement 
                 '12 Apr',
                 <Status key="s">Offline cached copy</Status>,
                 'Cached',
-                'Open cached copy',
+                <PilotUnavailableAction key="a">Open cached copy</PilotUnavailableAction>,
               ],
               [
                 'Annual report',
@@ -2407,40 +2554,28 @@ function DocumentsWorkspace(props: { readonly student: boolean }): ReactElement 
                 '15 Dec',
                 <Status key="s">Open error</Status>,
                 'Temporary error',
-                'Retry',
+                <PilotUnavailableAction key="a">Retry</PilotUnavailableAction>,
               ],
             ]}
           />
         </Pane>
-        <Pane title="Term 2 progress report" description="Selected authorised document metadata.">
+        <Pane
+          title={welcomeSelected ? 'School welcome letter' : 'Term 2 progress report'}
+          description="Document metadata."
+        >
           <DefinitionList
             label="Document metadata"
             items={[
-              { term: 'Category', value: 'Report card' },
-              { term: 'Published', value: '28 July · 15:00' },
-              { term: 'Version', value: 'v2.1' },
-              { term: 'File', value: 'PDF · 1.2 MB' },
-              { term: 'Publisher', value: 'Admin Office' },
+              { term: 'Category', value: welcomeSelected ? 'Letter' : 'Report card' },
+              { term: 'Published', value: welcomeSelected ? '1 Aug' : '28 Jul' },
+              { term: 'File', value: welcomeSelected ? 'PDF · 340 KB' : 'PDF · 1.2 MB' },
               {
                 term: 'Authorisation',
-                value: props.student ? 'Samira Noor only' : 'Primary guardian only',
-              },
-            ]}
-          />
-          <Timeline
-            label="Document version history"
-            items={[
-              {
-                time: 'v2.0',
-                title: 'Draft approved',
-                detail: 'Internal publication state',
-                status: 'Historical',
-              },
-              {
-                time: 'v2.1',
-                title: 'Final publication',
-                detail: 'Published 28 July',
-                status: 'Current',
+                value: props.student
+                  ? 'Samira Noor only'
+                  : welcomeSelected
+                    ? 'Verified household only'
+                    : 'Primary guardian only',
               },
             ]}
           />
@@ -2476,7 +2611,7 @@ function StudentTimetable(): ReactElement {
         <button aria-describedby="student-timetable-preview-boundary" disabled type="button">
           Fri
         </button>
-        <a href="/student/timetable">Week view</a>
+        <PilotUnavailableAction>Week view</PilotUnavailableAction>
       </div>
       <small className="operational-evidence-line" id="student-timetable-preview-boundary">
         Only Wednesday’s synthetic schedule is loaded in this pilot fixture.
@@ -2539,7 +2674,7 @@ function StudentTimetable(): ReactElement {
 function StudentResources(): ReactElement {
   return (
     <div className="operational-stack">
-      <PriorityQueue page={routePage('/student/resources')} />
+      <PriorityQueue page={routePage('/student/resources')} currentPath="/student/resources" />
       <div className="operational-split operational-split--wide">
         <Pane title="Learning resource register">
           <DataTable
@@ -2827,7 +2962,7 @@ export function OperationalModuleSurface(props: OperationalModuleSurfaceProps): 
         <time dateTime={pilotTimestamp}>Evidence current at {pilotTimestamp}</time>
       </header>
       <MetricStrip page={props.page} />
-      <ActionBar page={props.page} context={props.page.queue[0]?.title ?? props.page.title} />
+      <ActionBar page={props.page} currentPath={props.path} />
       {bodyForPath(props.path)}
       <aside className="operational-pilot-note" id="operational-pilot-action-boundary">
         <strong>Pilot boundary</strong>

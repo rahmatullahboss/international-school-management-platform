@@ -489,9 +489,9 @@
     {
       "type": "library",
       "name": "@cloudflare/workerd-darwin-64",
-      "version": "1.20260722.1",
-      "purl": "pkg:npm/%40cloudflare/workerd-darwin-64@1.20260722.1",
-      "bom-ref": "pkg:npm/%40cloudflare/workerd-darwin-64@1.20260722.1",
+      "version": "1.20260730.1",
+      "purl": "pkg:npm/%40cloudflare/workerd-darwin-64@1.20260730.1",
+      "bom-ref": "pkg:npm/%40cloudflare/workerd-darwin-64@1.20260730.1",
       "scope": "optional",
       "licenses": [
         {
@@ -508,9 +508,9 @@
     {
       "type": "library",
       "name": "@cloudflare/workerd-darwin-arm64",
-      "version": "1.20260722.1",
-      "purl": "pkg:npm/%40cloudflare/workerd-darwin-arm64@1.20260722.1",
-      "bom-ref": "pkg:npm/%40cloudflare/workerd-darwin-arm64@1.20260722.1",
+      "version": "1.20260730.1",
+      "purl": "pkg:npm/%40cloudflare/workerd-darwin-arm64@1.20260730.1",
+      "bom-ref": "pkg:npm/%40cloudflare/workerd-darwin-arm64@1.20260730.1",
       "scope": "optional",
       "licenses": [
         {
@@ -527,9 +527,9 @@
     {
       "type": "library",
       "name": "@cloudflare/workerd-linux-64",
-      "version": "1.20260722.1",
-      "purl": "pkg:npm/%40cloudflare/workerd-linux-64@1.20260722.1",
-      "bom-ref": "pkg:npm/%40cloudflare/workerd-linux-64@1.20260722.1",
+      "version": "1.20260730.1",
+      "purl": "pkg:npm/%40cloudflare/workerd-linux-64@1.20260730.1",
+      "bom-ref": "pkg:npm/%40cloudflare/workerd-linux-64@1.20260730.1",
       "scope": "optional",
       "licenses": [
         {
@@ -546,9 +546,9 @@
     {
       "type": "library",
       "name": "@cloudflare/workerd-linux-arm64",
-      "version": "1.20260722.1",
-      "purl": "pkg:npm/%40cloudflare/workerd-linux-arm64@1.20260722.1",
-      "bom-ref": "pkg:npm/%40cloudflare/workerd-linux-arm64@1.20260722.1",
+      "version": "1.20260730.1",
+      "purl": "pkg:npm/%40cloudflare/workerd-linux-arm64@1.20260730.1",
+      "bom-ref": "pkg:npm/%40cloudflare/workerd-linux-arm64@1.20260730.1",
       "scope": "optional",
       "licenses": [
         {
@@ -565,9 +565,9 @@
     {
       "type": "library",
       "name": "@cloudflare/workerd-windows-64",
-      "version": "1.20260722.1",
-      "purl": "pkg:npm/%40cloudflare/workerd-windows-64@1.20260722.1",
-      "bom-ref": "pkg:npm/%40cloudflare/workerd-windows-64@1.20260722.1",
+      "version": "1.20260730.1",
+      "purl": "pkg:npm/%40cloudflare/workerd-windows-64@1.20260730.1",
+      "bom-ref": "pkg:npm/%40cloudflare/workerd-windows-64@1.20260730.1",
       "scope": "optional",
       "licenses": [
         {
@@ -584,9 +584,9 @@
     {
       "type": "library",
       "name": "@cloudflare/workers-types",
-      "version": "5.20260727.1",
-      "purl": "pkg:npm/%40cloudflare/workers-types@5.20260727.1",
-      "bom-ref": "pkg:npm/%40cloudflare/workers-types@5.20260727.1",
+      "version": "5.20260804.1",
+      "purl": "pkg:npm/%40cloudflare/workers-types@5.20260804.1",
+      "bom-ref": "pkg:npm/%40cloudflare/workers-types@5.20260804.1",
       "scope": "required",
       "licenses": [
         {
@@ -2027,6 +2027,25 @@
     },
     {
       "type": "library",
+      "name": "@jridgewell/source-map",
+      "version": "0.3.11",
+      "purl": "pkg:npm/%40jridgewell/source-map@0.3.11",
+      "bom-ref": "pkg:npm/%40jridgewell/source-map@0.3.11",
+      "scope": "optional",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "school:development-only",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "name": "@jridgewell/sourcemap-codec",
       "version": "1.5.5",
       "purl": "pkg:npm/%40jridgewell/sourcemap-codec@1.5.5",
@@ -3016,9 +3035,9 @@
     {
       "type": "library",
       "name": "@speed-highlight/core",
-      "version": "1.2.17",
-      "purl": "pkg:npm/%40speed-highlight/core@1.2.17",
-      "bom-ref": "pkg:npm/%40speed-highlight/core@1.2.17",
+      "version": "1.2.23",
+      "purl": "pkg:npm/%40speed-highlight/core@1.2.23",
+      "bom-ref": "pkg:npm/%40speed-highlight/core@1.2.23",
       "scope": "required",
       "licenses": [
         {
@@ -3833,9 +3852,9 @@
     {
       "type": "library",
       "name": "brace-expansion",
-      "version": "5.0.8",
-      "purl": "pkg:npm/brace-expansion@5.0.8",
-      "bom-ref": "pkg:npm/brace-expansion@5.0.8",
+      "version": "5.0.9",
+      "purl": "pkg:npm/brace-expansion@5.0.9",
+      "bom-ref": "pkg:npm/brace-expansion@5.0.9",
       "scope": "required",
       "licenses": [
         {
@@ -3856,6 +3875,25 @@
       "purl": "pkg:npm/browserslist@4.28.7",
       "bom-ref": "pkg:npm/browserslist@4.28.7",
       "scope": "required",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "school:development-only",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "buffer-from",
+      "version": "1.1.2",
+      "purl": "pkg:npm/buffer-from@1.1.2",
+      "bom-ref": "pkg:npm/buffer-from@1.1.2",
+      "scope": "optional",
       "licenses": [
         {
           "expression": "MIT"
@@ -3894,6 +3932,25 @@
       "purl": "pkg:npm/chai@6.2.2",
       "bom-ref": "pkg:npm/chai@6.2.2",
       "scope": "required",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "school:development-only",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "commander",
+      "version": "2.20.3",
+      "purl": "pkg:npm/commander@2.20.3",
+      "bom-ref": "pkg:npm/commander@2.20.3",
+      "scope": "optional",
       "licenses": [
         {
           "expression": "MIT"
@@ -4574,9 +4631,9 @@
     {
       "type": "library",
       "name": "hono",
-      "version": "4.12.32",
-      "purl": "pkg:npm/hono@4.12.32",
-      "bom-ref": "pkg:npm/hono@4.12.32",
+      "version": "4.13.0",
+      "purl": "pkg:npm/hono@4.13.0",
+      "bom-ref": "pkg:npm/hono@4.13.0",
       "scope": "required",
       "licenses": [
         {
@@ -5258,9 +5315,9 @@
     {
       "type": "library",
       "name": "miniflare",
-      "version": "4.20260722.0",
-      "purl": "pkg:npm/miniflare@4.20260722.0",
-      "bom-ref": "pkg:npm/miniflare@4.20260722.0",
+      "version": "5.20260730.0-alpha",
+      "purl": "pkg:npm/miniflare@5.20260730.0-alpha",
+      "bom-ref": "pkg:npm/miniflare@5.20260730.0-alpha",
       "scope": "required",
       "licenses": [
         {
@@ -5903,6 +5960,25 @@
     },
     {
       "type": "library",
+      "name": "source-map",
+      "version": "0.6.1",
+      "purl": "pkg:npm/source-map@0.6.1",
+      "bom-ref": "pkg:npm/source-map@0.6.1",
+      "scope": "optional",
+      "licenses": [
+        {
+          "expression": "BSD-3-Clause"
+        }
+      ],
+      "properties": [
+        {
+          "name": "school:development-only",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "name": "source-map-js",
       "version": "1.2.1",
       "purl": "pkg:npm/source-map-js@1.2.1",
@@ -5911,6 +5987,25 @@
       "licenses": [
         {
           "expression": "BSD-3-Clause"
+        }
+      ],
+      "properties": [
+        {
+          "name": "school:development-only",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "source-map-support",
+      "version": "0.5.21",
+      "purl": "pkg:npm/source-map-support@0.5.21",
+      "bom-ref": "pkg:npm/source-map-support@0.5.21",
+      "scope": "optional",
+      "licenses": [
+        {
+          "expression": "MIT"
         }
       ],
       "properties": [
@@ -5968,6 +6063,25 @@
       "licenses": [
         {
           "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "school:development-only",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "terser",
+      "version": "5.49.0",
+      "purl": "pkg:npm/terser@5.49.0",
+      "bom-ref": "pkg:npm/terser@5.49.0",
+      "scope": "optional",
+      "licenses": [
+        {
+          "expression": "BSD-2-Clause"
         }
       ],
       "properties": [
@@ -6151,9 +6265,9 @@
     {
       "type": "library",
       "name": "undici",
-      "version": "7.28.0",
-      "purl": "pkg:npm/undici@7.28.0",
-      "bom-ref": "pkg:npm/undici@7.28.0",
+      "version": "7.29.0",
+      "purl": "pkg:npm/undici@7.29.0",
+      "bom-ref": "pkg:npm/undici@7.29.0",
       "scope": "required",
       "licenses": [
         {
@@ -6360,9 +6474,9 @@
     {
       "type": "library",
       "name": "workerd",
-      "version": "1.20260722.1",
-      "purl": "pkg:npm/workerd@1.20260722.1",
-      "bom-ref": "pkg:npm/workerd@1.20260722.1",
+      "version": "1.20260730.1",
+      "purl": "pkg:npm/workerd@1.20260730.1",
+      "bom-ref": "pkg:npm/workerd@1.20260730.1",
       "scope": "required",
       "licenses": [
         {
@@ -6379,9 +6493,9 @@
     {
       "type": "library",
       "name": "wrangler",
-      "version": "4.114.0",
-      "purl": "pkg:npm/wrangler@4.114.0",
-      "bom-ref": "pkg:npm/wrangler@4.114.0",
+      "version": "4.118.0",
+      "purl": "pkg:npm/wrangler@4.118.0",
+      "bom-ref": "pkg:npm/wrangler@4.118.0",
       "scope": "required",
       "licenses": [
         {

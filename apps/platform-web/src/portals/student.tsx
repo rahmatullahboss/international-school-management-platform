@@ -71,7 +71,9 @@ export default function StudentPortal(props: StudentPortalProps): ReactElement {
         message={resource.message}
         onRefresh={resource.refresh}
       />
-      {props.path === '/student' ? (
+      {props.path === '/student' ||
+      props.path === '/student/resources' ||
+      props.path === '/student/requests' ? (
         <StudentDailyWorkspace
           studentId="student-1"
           studentName="Samira Noor"

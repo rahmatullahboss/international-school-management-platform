@@ -102,4 +102,129 @@ describe('OperationalModuleSurface', () => {
     expect(markup).toContain('Not available in this scope');
     expect(markup).toContain('aria-pressed="false"');
   });
+
+  it.each([
+    ['/admin/sis', 'admin'],
+    ['/admin/academics', 'admin'],
+  ] as const)('does not expose same-route actions as working links on %s', (path, role) => {
+    const markup = renderRoute(path, role);
+
+    expect(markup).not.toContain(`href="${path}"`);
+    expect(markup).toContain('disabled=""');
+    expect(markup).toContain('operational-pilot-action-boundary');
+  });
+
+  it.each([
+    ['/family/grades', 'guardian', 'Review mathematics feedback'],
+    ['/student/timetable', 'student', 'Week view'],
+  ] as const)('keeps residual same-route preview actions disabled on %s', (path, role, label) => {
+    const markup = renderRoute(path, role);
+
+    expect(markup).not.toContain(`href="${path}"`);
+    expect(markup).toContain(label);
+    expect(markup).toContain('disabled=""');
+  });
+
+  it.each([
+    ['/admin/finance', 'admin', ['Approve refund', 'View entry']],
+    ['/admin/operations', 'admin', ['Review PO', 'Contact supplier', 'Assign cover']],
+  ] as const)(
+    'renders unsupported Admin record actions as disabled controls on %s',
+    (path, role, labels) => {
+      const markup = renderRoute(path, role);
+
+      for (const label of labels) expect(markup).toContain(label);
+      expect((markup.match(/disabled=""/gu) ?? []).length).toBeGreaterThanOrEqual(labels.length);
+      expect(markup).toContain('operational-pilot-action-boundary');
+    },
+  );
+
+  it.each([
+    [
+      '/admin/communications',
+      'admin',
+      ['Review audience', 'Compare translations', 'Call household', 'Verify portal receipt'],
+    ],
+    ['/admin/integrations', 'admin', ['Open', 'Rotate', 'View report', 'Safe retry']],
+    ['/admin/reports', 'admin', ['Open']],
+  ] as const)(
+    'keeps remaining Admin task cues explicit and disabled on %s',
+    (path, role, labels) => {
+      const markup = renderRoute(path, role);
+
+      for (const label of labels) expect(markup).toContain(label);
+      expect(markup).toContain('disabled=""');
+      expect(markup).toContain('operational-pilot-action-boundary');
+    },
+  );
+
+  it('wires Teacher class actions to real task routes and keeps unavailable class detail explicit', () => {
+    const markup = renderRoute('/teacher/classes', 'teacher');
+
+    expect(markup).toContain('href="/teacher/students"');
+    expect(markup).toContain('href="/teacher/resources"');
+    expect(markup).toContain('Open class');
+    expect(markup).toContain('disabled=""');
+  });
+
+  it('renders selectable permitted student context controls', () => {
+    const markup = renderRoute('/teacher/students', 'teacher');
+
+    expect(markup).toContain('Open Samira Noor permitted profile');
+    expect(markup).toContain('Open Riya Ahmed permitted profile');
+    expect(markup).toContain('Samira Noor · permitted context');
+    expect(markup).toContain('aria-pressed="true"');
+  });
+
+  it('renders Teacher resource selection controls without exposing unsupported preview as working', () => {
+    const markup = renderRoute('/teacher/resources', 'teacher');
+
+    expect(markup).toContain('Edit Multi-step equations practice');
+    expect(markup).toContain('Edit Geometry quiz');
+    expect(markup).toContain('Repair Calculus intro');
+    expect(markup).toContain('Preview');
+    expect(markup).toContain('disabled=""');
+    expect(markup).toContain('Resource boundary');
+  });
+
+  it.each([
+    ['/family/attendance', 'guardian'],
+    ['/student/attendance', 'student'],
+  ] as const)('renders published attendance record selectors on %s', (path, role) => {
+    const markup = renderRoute(path, role);
+
+    expect(markup).toContain('View 14 July revision history');
+    expect(markup).toContain('Track 12 July explanation');
+    expect(markup).toContain('12 July absence');
+    expect(markup).toContain('disabled=""');
+  });
+
+  it.each([
+    ['/family/documents', 'guardian'],
+    ['/student/documents', 'student'],
+  ] as const)('renders authorised document selectors on %s', (path, role) => {
+    const markup = renderRoute(path, role);
+
+    expect(markup).toContain('Term 2');
+    expect(markup).toContain('Welcome');
+    expect(markup).toContain('View current version');
+    expect(markup).toContain('Open cached copy');
+    expect(markup).toContain('Retry');
+    expect(markup).toContain('Not available in this scope');
+    expect(markup).toContain('disabled=""');
+  });
+
+  it('keeps family receipt downloads unavailable until a reviewed file contract exists', () => {
+    const markup = renderRoute('/family/finance', 'guardian');
+    expect((markup.match(/>Download<\/button>/gu) ?? []).length).toBe(3);
+    expect(markup).toContain('operational-pilot-action-boundary');
+  });
+
+  it('wires the family offline form draft to the local form and disables unloaded history', () => {
+    const markup = renderRoute('/family/forms', 'guardian');
+    expect(markup).toContain('href="#science-trip-consent"');
+    expect((markup.match(/>View response<\/button>/gu) ?? []).length).toBe(2);
+    expect(markup).toContain('>View history</button>');
+    expect(markup).toContain('disabled=""');
+  });
 });
