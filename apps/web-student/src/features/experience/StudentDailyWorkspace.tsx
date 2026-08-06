@@ -238,8 +238,7 @@ export function StudentRequestsWorkspace(props: {
             <li key={request.id} data-state={request.state}>
               <details>
                 <summary>
-                  <strong>{request.title}</strong>{' '}
-                  <span>{request.state.replace('-', ' ')}</span>
+                  <strong>{request.title}</strong> <span>{request.state.replace('-', ' ')}</span>
                 </summary>
                 <p>{request.description}</p>
                 {request.submittedAt === undefined ? null : (
