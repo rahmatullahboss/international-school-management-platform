@@ -1,13 +1,92 @@
 import { expect, test } from '@playwright/test';
 
-test('renders an accessible foundation shell', async ({ page }) => {
+test('renders an accessible and task-led role chooser', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Dashboard');
-  await expect(page.getByRole('navigation', { name: 'Primary navigation' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+    'Run the school day from one place',
+  );
+  await expect(page.getByRole('navigation', { name: 'Primary role navigation' })).toBeVisible();
+  await expect(
+    page.getByRole('navigation', { name: 'Specialist operator navigation' }),
+  ).toBeVisible();
   await expect(page.getByRole('main')).toBeVisible();
   await expect(page.getByRole('link', { name: 'Skip to main content' })).toHaveAttribute(
     'href',
     '#main-content',
   );
-  await expect(page.getByText('sis', { exact: true })).toBeVisible();
+  await expect(page.getByText('Students and admissions', { exact: true })).toBeVisible();
+});
+
+test('switches Teacher permitted student context in place', async ({ page }) => {
+  await page.goto('/teacher/students');
+  await expect(
+    page.getByRole('heading', { name: 'Samira Noor · permitted context' }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Open Riya Ahmed permitted profile' }).click();
+  await expect(page.getByRole('heading', { name: 'Riya Ahmed · permitted context' })).toBeVisible();
+  await expect(page.getByText('Present in the assigned class')).toBeVisible();
+});
+
+test('switches Teacher resource edit context in place', async ({ page }) => {
+  await page.goto('/teacher/resources');
+  await expect(page.getByRole('textbox', { name: 'Title' })).toHaveValue(
+    'Multi-step equations practice',
+  );
+  await page.getByRole('button', { name: 'Edit Geometry quiz' }).click();
+  await expect(page.getByRole('textbox', { name: 'Title' })).toHaveValue('Geometry quiz');
+  await expect(page.getByRole('textbox', { name: 'Asset' })).toHaveValue('geometry.pdf');
+  await page.getByRole('button', { name: 'Repair Calculus intro' }).click();
+  await expect(page.getByRole('heading', { name: 'Repair resource' })).toBeVisible();
+  await expect(page.getByRole('textbox', { name: 'Title' })).toHaveValue('Calculus intro');
+  await expect(page.getByRole('textbox', { name: 'Asset' })).toHaveValue('Broken link');
+});
+
+test('switches published attendance history in place', async ({ page }) => {
+  await page.goto('/family/attendance');
+  await expect(page.getByRole('heading', { name: '12 July absence' })).toBeVisible();
+  await page.getByRole('button', { name: 'View 14 July revision history' }).click();
+  await expect(page.getByRole('heading', { name: '14 July revision history' })).toBeVisible();
+  await expect(page.getByText('Original attendance published')).toBeVisible();
+  await page.getByRole('button', { name: 'Track 12 July explanation' }).click();
+  await expect(page.getByRole('heading', { name: '12 July absence' })).toBeVisible();
+});
+
+test('switches authorised document metadata in place', async ({ page }) => {
+  await page.goto('/family/documents');
+  await expect(page.getByRole('heading', { name: 'Term 2 progress report' })).toBeVisible();
+  await page.getByRole('button', { name: 'Welcome' }).click();
+  await expect(page.getByRole('heading', { name: 'School welcome letter' })).toBeVisible();
+  await expect(page.getByText('PDF · 340 KB')).toBeVisible();
+  await page.getByRole('button', { name: 'Term 2' }).click();
+  await expect(page.getByRole('heading', { name: 'Term 2 progress report' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Open authorised copy' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Download authorised copy' })).toBeDisabled();
+});
+
+test('continues the family offline form draft locally', async ({ page }) => {
+  await page.goto('/family/forms');
+  await page.getByRole('link', { name: 'Continue', exact: true }).click();
+  await expect(page).toHaveURL(/#science-trip-consent$/u);
+  await expect(page.locator('#science-trip-consent')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'View response' })).toHaveCount(2);
+  await expect(page.getByRole('button', { name: 'View history' })).toBeDisabled();
+});
+
+test('renders the scoped Student resource read model on its route', async ({ page }) => {
+  await page.goto('/student/resources');
+  await expect(page.getByRole('heading', { name: 'Class resources' })).toBeVisible();
+  await expect(page.getByText('Broken link resource', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('Multi-step equations practice', { exact: true })).toBeVisible();
+  await expect(
+    page.getByText('Practice set and worked example for tomorrow’s lesson.'),
+  ).toBeVisible();
+});
+
+test('renders the scoped Student request read model on its route', async ({ page }) => {
+  await page.goto('/student/requests');
+  await expect(page.getByRole('heading', { name: 'My requests', level: 1 })).toBeVisible();
+  await expect(page.getByText('Locker key replacement', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('Library book renewal', { exact: true })).toBeVisible();
+  await expect(page.getByText('Request another seven days for the current loan.')).toBeVisible();
+  await expect(page.getByText('Wait for library approval.')).toBeVisible();
 });

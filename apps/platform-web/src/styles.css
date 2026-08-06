@@ -81,6 +81,154 @@ dl div {
   padding: 1rem;
 }
 
+/* Staff operator routes use a compact ERP console instead of the staging hero layout. */
+.operator-entry {
+  min-height: 100vh;
+  color: #12263a;
+  background: #f3f6f8;
+}
+
+.operator-entry .pilot-entry__masthead {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem 2rem;
+  align-items: center;
+  min-height: auto;
+  padding: 1rem clamp(1rem, 3vw, 2.25rem);
+  border-bottom: 1px solid #315067;
+  background: #12263a;
+}
+
+.operator-entry .pilot-entry__masthead h1 {
+  max-width: none;
+  margin: 0.15rem 0 0;
+  font-family: inherit;
+  font-size: clamp(1.4rem, 2vw, 1.9rem);
+  line-height: 1.15;
+}
+
+.operator-entry .pilot-entry__masthead > div > p:last-child {
+  max-width: 72ch;
+  margin: 0.35rem 0 0;
+  color: #d7e1e8;
+  font-size: 0.9rem;
+}
+
+.operator-entry .pilot-kicker {
+  margin: 0;
+  color: #a9c6d2;
+  font-size: 0.68rem;
+}
+
+.operator-entry .pilot-entry__status {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.2rem 1rem;
+  min-width: 16rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.operator-entry .pilot-entry__status strong {
+  grid-column: 1 / -1;
+}
+
+.operator-entry .pilot-entry__status span {
+  color: #bed0db;
+  font-size: 0.78rem;
+}
+
+.operator-entry .pilot-entry__status a {
+  color: #fff;
+  font-size: 0.8rem;
+}
+
+.operator-entry .pilot-entry__main {
+  display: grid;
+  gap: 1rem;
+  width: min(100%, 96rem);
+  margin-inline: auto;
+  padding: 1rem clamp(1rem, 3vw, 2.25rem) 2.5rem;
+}
+
+.operator-entry .pilot-actions {
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+  padding: 0;
+  border: 1px solid #cbd6de;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.operator-entry .pilot-actions a {
+  min-height: 2.7rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.65rem 0.9rem;
+  color: #365166;
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  border-inline-end: 1px solid #dce4e9;
+}
+
+.operator-entry .pilot-actions a[aria-current='page'] {
+  color: #004f57;
+  box-shadow: inset 0 -3px 0 #006d77;
+  background: #f7fbfb;
+}
+
+.operator-entry :is(.pilot-metrics, .pilot-work-queue, .pilot-demo-note, .pilot-coverage) {
+  border-color: #cbd6de;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.operator-entry .pilot-work-queue {
+  grid-template-columns: minmax(12rem, 0.28fr) minmax(0, 1fr);
+  padding: 1rem;
+  background: #fff;
+}
+
+.operator-entry .pilot-work-queue :is(h2, h3) {
+  font-family: inherit;
+}
+
+.operator-entry .pilot-work-queue li {
+  padding: 0.85rem 0;
+  border: 0;
+  border-top: 1px solid #dce4e9;
+  border-radius: 0;
+}
+
+.operator-entry .pilot-work-queue li:first-child {
+  border-top: 0;
+}
+
+.operator-entry .pilot-demo-note {
+  padding: 0.85rem 1rem;
+  background: #edf8f6;
+}
+
+.operator-entry :is(a, button, input, select, textarea):focus-visible {
+  outline: 3px solid #0b63ce;
+  outline-offset: 2px;
+}
+
+@media (max-width: 64rem) {
+  .operator-entry .pilot-entry__masthead,
+  .operator-entry .pilot-work-queue {
+    grid-template-columns: 1fr;
+  }
+
+  .operator-entry .pilot-entry__status {
+    min-width: 0;
+  }
+}
+
 @media (max-width: 48rem) {
   [data-app-shell='school-platform'] {
     display: block;
@@ -89,5 +237,10 @@ dl div {
   nav {
     border-inline-end: 0;
     border-bottom: 1px solid #d9deea;
+  }
+
+  .operator-entry .pilot-entry__masthead,
+  .operator-entry .pilot-entry__main {
+    padding-inline: 0.75rem;
   }
 }

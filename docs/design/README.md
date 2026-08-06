@@ -27,6 +27,7 @@ Impeccable separates product truth from visual truth:
 - `DESIGN.md` records the approved visual system: tokens, typography, colour, layout, depth, shapes, components and explicit design rules.
 - `.impeccable/design.json` and surface briefs may be generated when the selected workflow requires them.
 - `.impeccable/critique/*.md` stores committed design review evidence.
+- [`04-operational-ux-continuity-research.md`](04-operational-ux-continuity-research.md) records the reviewed interaction research, external skill comparison and project-specific continuity rules.
 
 `FND-01` must create `PRODUCT.md` through `$impeccable init` using the approved product documents and owner-confirmed facts. It must not invent commercial claims or visual direction.
 
@@ -73,6 +74,7 @@ Impeccable does not change the whole-module ownership rule.
 - `FND-01` owns `PRODUCT.md`, `DESIGN.md`, design tokens, shared UI primitives, accessibility baseline and design tooling.
 - Module agents may extend compatible feature patterns inside their owned paths.
 - `EXP-01` owns application composition, persona navigation and cross-module journeys, but cannot move domain rules into UI code.
+- `UX-01` may refine cross-persona navigation, loading infrastructure and task discovery without moving domain rules or weakening capability filtering.
 - Breaking shared design-system changes require a contract-change request.
 
 See [`03-agent-design-contract.md`](03-agent-design-contract.md).

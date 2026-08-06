@@ -1,0 +1,86 @@
+{
+  "program": "international-school-platform-v1",
+  "gate": "GATE-PILOT-OPERATOR-DOMAIN-COMMANDS-V1",
+  "baseManifest": "infra/database/migration-manifest.json",
+  "orderingRule": "apply the reviewed 40-migration Wave 2 manifest first, then all reviewed post-integration migrations in contiguous order",
+  "migrations": [
+    {
+      "order": 1,
+      "id": "202607300301_AUTH-03_durable_identity_context",
+      "stream": "AUTH-03",
+      "path": "infra/database/post-integration-migrations/202607300301_AUTH-03_durable_identity_context.sql"
+    },
+    {
+      "order": 2,
+      "id": "202607310701_AUTH-07_backchannel_logout",
+      "stream": "AUTH-07",
+      "path": "infra/database/post-integration-migrations/202607310701_AUTH-07_backchannel_logout.sql"
+    },
+    {
+      "order": 3,
+      "id": "202607310801_AUTH-08_database_permission_evaluation",
+      "stream": "AUTH-08",
+      "path": "infra/database/post-integration-migrations/202607310801_AUTH-08_database_permission_evaluation.sql"
+    },
+    {
+      "order": 4,
+      "id": "202607310901_PILOT-04_database_read_models",
+      "stream": "PILOT-04",
+      "path": "infra/database/post-integration-migrations/202607310901_PILOT-04_database_read_models.sql"
+    },
+    {
+      "order": 5,
+      "id": "202607311001_PILOT-05_safe_runtime_mutation",
+      "stream": "PILOT-05",
+      "path": "infra/database/post-integration-migrations/202607311001_PILOT-05_safe_runtime_mutation.sql"
+    },
+    {
+      "order": 6,
+      "id": "202607311101_PILOT-06_runtime_projection_worker",
+      "stream": "PILOT-06",
+      "path": "infra/database/post-integration-migrations/202607311101_PILOT-06_runtime_projection_worker.sql"
+    },
+    {
+      "order": 7,
+      "id": "202607311201_PILOT-07_runtime_projection_source_publisher",
+      "stream": "PILOT-07",
+      "path": "infra/database/post-integration-migrations/202607311201_PILOT-07_runtime_projection_source_publisher.sql"
+    },
+    {
+      "order": 8,
+      "id": "202607311301_PILOT-08_admin_runtime_projection_composer",
+      "stream": "PILOT-08",
+      "path": "infra/database/post-integration-migrations/202607311301_PILOT-08_admin_runtime_projection_composer.sql"
+    },
+    {
+      "order": 9,
+      "id": "202608010101_PILOT-09_teacher_runtime_projection_composer",
+      "stream": "PILOT-09",
+      "path": "infra/database/post-integration-migrations/202608010101_PILOT-09_teacher_runtime_projection_composer.sql"
+    },
+    {
+      "order": 10,
+      "id": "202608010201_PILOT-10_guardian_runtime_projection_composer",
+      "stream": "PILOT-10",
+      "path": "infra/database/post-integration-migrations/202608010201_PILOT-10_guardian_runtime_projection_composer.sql"
+    },
+    {
+      "order": 11,
+      "id": "202608010301_PILOT-11_student_runtime_projection_composer",
+      "stream": "PILOT-11",
+      "path": "infra/database/post-integration-migrations/202608010301_PILOT-11_student_runtime_projection_composer.sql"
+    },
+    {
+      "order": 12,
+      "id": "202608010401_PILOT-12_runtime_projection_operations_monitor",
+      "stream": "PILOT-12",
+      "path": "infra/database/post-integration-migrations/202608010401_PILOT-12_runtime_projection_operations_monitor.sql"
+    },
+    {
+      "order": 13,
+      "id": "202608010501_PILOT-13_operator_domain_commands",
+      "stream": "PILOT-13",
+      "path": "infra/database/post-integration-migrations/202608010501_PILOT-13_operator_domain_commands.sql"
+    }
+  ]
+}

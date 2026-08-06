@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "international-school-platform-api",
-  "main": "src/index.ts",
+  "main": "src/entry.ts",
   "compatibility_date": "2026-07-28",
   "compatibility_flags": ["nodejs_compat"],
   "observability": {
@@ -10,5 +10,53 @@
   "vars": {
     "APP_ENV": "development",
     "APP_REGION": "local",
+  },
+  "env": {
+    "staging": {
+      "name": "international-school-platform-api-staging",
+      "workers_dev": true,
+      "vars": {
+        "APP_ENV": "staging",
+        "APP_REGION": "global",
+        "RUNTIME_PROJECTION_WORKER_ID": "projection-worker-staging-01",
+        "RUNTIME_PROJECTION_WORKER_BATCH_SIZE": "20",
+        "RUNTIME_PROJECTION_WORKER_MAX_ATTEMPTS": "5",
+      },
+      "triggers": {
+        "crons": ["*/5 * * * *"],
+      },
+    },
+    "production": {
+      "name": "international-school-platform-api-production",
+      "workers_dev": true,
+      "ratelimits": [
+        {
+          "name": "AUTH_PRELOGIN_RATE_LIMITER",
+          "namespace_id": "2608021",
+          "simple": {
+            "limit": 30,
+            "period": 60,
+          },
+        },
+      ],
+      "vars": {
+        "APP_ENV": "production",
+        "APP_REGION": "global",
+        "OIDC_REDIRECT_URI": "https://international-school-platform-web-production.rahmatullahzisan.workers.dev/auth/v1/callback",
+        "OIDC_PROVIDER_CACHE_SOURCE": "database",
+        "OIDC_BACKCHANNEL_LOGOUT_SOURCE": "database",
+        "AUTH_TRANSACTION_REPLAY_SOURCE": "database",
+        "AUTH_SESSION_REGISTRY_SOURCE": "database",
+        "AUTH_MEMBERSHIP_SOURCE": "database",
+        "AUTH_PERMISSION_SOURCE": "database",
+        "RUNTIME_READ_MODEL_SOURCE": "database",
+        "RUNTIME_MUTATION_SOURCE": "database",
+        "RUNTIME_PROJECTION_WORKER_SOURCE": "database",
+        "AUTH_ALLOWED_WEB_ORIGINS": "https://international-school-platform-web-production.rahmatullahzisan.workers.dev",
+        "RUNTIME_PROJECTION_WORKER_ID": "projection-worker-production-01",
+        "RUNTIME_PROJECTION_WORKER_BATCH_SIZE": "20",
+        "RUNTIME_PROJECTION_WORKER_MAX_ATTEMPTS": "5",
+      },
+    },
   },
 }

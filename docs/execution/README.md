@@ -1,7 +1,7 @@
 # Whole-Module Multi-Agent Execution System
 
-**Status:** Active execution policy
-**Date:** 2026-07-28
+**Status:** Origin-checked browser logout and durable session termination verified; real login and production promotion gated  
+**Date:** 2026-07-30  
 **Operating rule:** one agent owns one complete large module; internal milestones are not separate agent assignments.
 
 ## 1. Purpose
@@ -20,7 +20,23 @@ Owner operating decision: separate agents are used only for complete module stre
 6. [Ownership and integration contracts](05-module-ownership-and-integration-contracts.md)
 7. [Open-source clean-room policy](06-open-source-clean-room-policy.md)
 8. [Artifact contract](artifact-contract.md)
-9. Validation script: `scripts/validate_execution_artifacts.py`
+9. [Final system release evidence](08-final-system-release-evidence.md)
+10. [PILOT-01 runtime composition](09-pilot-runtime-composition.md)
+11. [UX-01 smooth operational experience](10-ux-continuity-v1.md)
+12. [UX continuity release evidence](11-ux-continuity-release-evidence.md)
+13. [PILOT-02 scoped staging read API](12-pilot-read-api-v1.md)
+14. [PILOT-02 release evidence](13-pilot-read-api-release-evidence.md)
+15. [PILOT-03 signed staging session](14-pilot-signed-session-v1.md)
+16. [PILOT-03 release evidence](15-pilot-signed-session-release-evidence.md)
+17. [AUTH-01 OIDC trust boundary](16-oidc-trust-boundary-v1.md)
+18. [AUTH-01 release evidence](17-oidc-trust-boundary-release-evidence.md)
+19. [AUTH-02 Authorization Code + PKCE](18-oidc-pkce-flow-v1.md)
+20. [AUTH-02 release evidence](19-oidc-pkce-flow-release-evidence.md)
+21. [AUTH-03 durable identity context](20-auth-durable-context-v1.md)
+22. [AUTH-03 release evidence](21-auth-durable-context-release-evidence.md)
+23. [AUTH-04 browser session termination](22-auth-session-termination-v1.md)
+24. [AUTH-04 release evidence](23-auth-session-termination-release-evidence.md)
+25. Validation script: `scripts/validate_execution_artifacts.py`
 
 ## 3. Repository baseline
 
@@ -73,6 +89,17 @@ After the APIs/read models from the previous waves are stable:
 - `INTEG-01` — Reviews and integrates each completed wave, orders migrations, resolves contract mismatches without violating ownership, runs cross-module verification and prepares release evidence.
 
 `INTEG-01` is one continuous integration program. When a later wave is not yet complete, waiting for required reviewed SHAs is a documented gate, not permission to start unrelated work.
+
+### Post-integration pilot
+
+- `PILOT-01` — Composes reviewed persona packages into the Cloudflare staging runtime, adds synthetic acceptance data and records the boundary before production authentication/API work.
+- `UX-01` — Refines the staged runtime with continuous client navigation, background preparation, task-led information architecture and accessible loading-state rules.
+- `PILOT-02` — Connects role portals to private, scope-checked synthetic Worker snapshots with tenant/campus/role/subject cache isolation and non-blocking revalidation.
+- `PILOT-03` — Replaces browser-declared scope headers with short-lived HMAC-signed synthetic staging sessions that bind tenant, campus, role and subject before a snapshot is read.
+- `AUTH-01` — Establishes strict provider-neutral OIDC token verification, server-owned tenant/campus membership resolution and secure host-cookie browser-session contracts while real login remains disabled.
+- `AUTH-02` — Verifies browser-bound Authorization Code + PKCE transactions, provider discovery, bounded JWKS retrieval, confidential code exchange, replay protection and secure login orchestration while real provider routes remain disabled.
+- `AUTH-03` — Adds a durable OAuth replay ledger, database-owned identity membership projection, mandatory browser-session registration and session revocation while real provider routes remain disabled.
+- `AUTH-04` — Adds exact-origin JSON browser logout, current-session and account-wide registry revocation and secure host-cookie deletion while real provider routes remain disabled.
 
 ## 5. Whole-module completion boundary
 
@@ -140,6 +167,9 @@ All frontend work uses the repository-local Impeccable skill and the contracts u
 - UI-bearing checkpoints include shape/brief, critique, audit, detector, accessibility, responsive/RTL, hardening and polish evidence.
 - `EXP-01` composes cross-module experiences but does not move domain logic into presentation code.
 - `INTEG-01` rejects UI modules that lack the required design evidence.
+- `UX-01` may refine cross-persona navigation and loading infrastructure without moving domain rules or weakening capability filtering.
+- `PILOT-02` may add synthetic staging read infrastructure only when scope validation, cache isolation and current-view preservation are explicit and production endpoints remain disabled.
+- `PILOT-03` may add synthetic signed staging sessions only when expiry, signature, issuer/audience, role/subject binding, secret rotation and fail-closed production boundaries are executable and documented.
 
 ## 11. Hard stops
 

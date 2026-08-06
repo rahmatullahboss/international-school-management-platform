@@ -1,29 +1,44 @@
-import React, { useEffect, useState } from 'react';
-import { createRoot } from 'react-dom/client';
-
 import {
-  ExperienceResiliencePanel,
-  ExperienceTelemetryBuffer,
-  type BandwidthMode,
-  type ConnectivityState,
-} from '@school/documents-experience/resilience';
-import '@school/documents-experience/resilience.css';
-import { ModuleRegistry } from '@school/platform';
-import { AppShell } from '@school/ui';
+  StrictMode,
+  startTransition,
+  useCallback,
+  useEffect,
+  useReducer,
+  useRef,
+  useState,
+  type ComponentType,
+  type ReactElement,
+} from 'react';
+import { createRoot } from 'react-dom/client';
+import { flushSync } from 'react-dom';
 
-import { registerPlatformServiceWorker, resolveSavedBandwidthMode } from './pwa';
+import { registerPlatformServiceWorker } from './pwa';
+import {
+  PortalLoading,
+  roleDescriptions,
+  roleRoots,
+  type PilotConnectivity,
+  type PilotRole,
+} from './portal-shared';
+import './pilot.css';
 import './styles.css';
 
-const modules = new ModuleRegistry();
-modules.register({
-  moduleId: 'platform',
-  routes: ['/'],
-  capabilities: ['platform.dashboard.read'],
-});
-modules.register({ moduleId: 'sis', routes: ['/students'], capabilities: ['student.read'] });
+interface PortalProps {
+  readonly path: string;
+  readonly connectivity: PilotConnectivity;
+}
 
-const telemetry = new ExperienceTelemetryBuffer(100);
-const bandwidthStorageKey = 'school-platform:bandwidth-mode:v1';
+type PortalComponent = ComponentType<PortalProps>;
+type NavigationMode = 'push' | 'replace' | 'pop';
+
+const portalLoaders: Readonly<Record<PilotRole, () => Promise<{ default: PortalComponent }>>> = {
+  admin: () => import('./portals/admin'),
+  teacher: () => import('./portals/teacher'),
+  guardian: () => import('./portals/guardian'),
+  student: () => import('./portals/student'),
+};
+const portalCache: Partial<Record<PilotRole, PortalComponent>> = {};
+const portalPromises: Partial<Record<PilotRole, Promise<PortalComponent>>> = {};
 
 interface NavigatorWithConnection extends Navigator {
   readonly connection?: {
@@ -31,124 +46,335 @@ interface NavigatorWithConnection extends Navigator {
   };
 }
 
-function saveDataEnabled(): boolean {
-  return (navigator as NavigatorWithConnection).connection?.saveData === true;
+function normalisePath(pathname: string): string {
+  if (pathname === '/') return pathname;
+  return pathname.replace(/\/+$/u, '');
 }
 
-function initialBandwidthMode(): BandwidthMode {
-  return resolveSavedBandwidthMode(localStorage.getItem(bandwidthStorageKey), saveDataEnabled());
+function roleForPath(path: string): PilotRole | undefined {
+  return (Object.entries(roleRoots) as [PilotRole, string][]).find(
+    ([, root]) => path === root || path.startsWith(`${root}/`),
+  )?.[0];
 }
 
-function initialConnectivity(): ConnectivityState {
+function isApplicationPath(path: string): boolean {
+  return path === '/' || roleForPath(path) !== undefined;
+}
+
+function initialConnectivity(): PilotConnectivity {
   if (!navigator.onLine) return 'offline';
-  return saveDataEnabled() ? 'degraded' : 'online';
+  return (navigator as NavigatorWithConnection).connection?.saveData === true
+    ? 'degraded'
+    : 'online';
 }
 
-function FoundationDashboard(): React.JSX.Element {
-  const [bandwidthMode, setBandwidthMode] = useState<BandwidthMode>(initialBandwidthMode);
-  const [connectivity, setConnectivity] = useState<ConnectivityState>(initialConnectivity);
-  const [updateAvailable, setUpdateAvailable] = useState(false);
+function usePilotConnectivity(): PilotConnectivity {
+  const [connectivity, setConnectivity] = useState<PilotConnectivity>(initialConnectivity);
 
   useEffect(() => {
-    document.documentElement.dataset.bandwidth = bandwidthMode;
-    localStorage.setItem(bandwidthStorageKey, bandwidthMode);
-  }, [bandwidthMode]);
-
-  useEffect(() => {
-    const updateConnectivity = (): void => {
-      const next: ConnectivityState = navigator.onLine
-        ? bandwidthMode === 'low' || saveDataEnabled()
-          ? 'degraded'
-          : 'online'
-        : 'offline';
-      setConnectivity(next);
-      telemetry.record({
-        name: 'connectivity.changed',
-        timestamp: new Date().toISOString(),
-        outcome: next === 'offline' ? 'pending' : 'success',
-        routeTemplate: '/',
-        attributes: {
-          connectivity: next,
-          bandwidthMode,
-          persona: 'platform',
-        },
-      });
-    };
-
-    updateConnectivity();
-    window.addEventListener('online', updateConnectivity);
-    window.addEventListener('offline', updateConnectivity);
+    const update = (): void => setConnectivity(initialConnectivity());
+    window.addEventListener('online', update);
+    window.addEventListener('offline', update);
     return () => {
-      window.removeEventListener('online', updateConnectivity);
-      window.removeEventListener('offline', updateConnectivity);
+      window.removeEventListener('online', update);
+      window.removeEventListener('offline', update);
     };
-  }, [bandwidthMode]);
+  }, []);
+
+  return connectivity;
+}
+
+async function preloadPortal(role: PilotRole): Promise<PortalComponent> {
+  const cached = portalCache[role];
+  if (cached !== undefined) return cached;
+
+  const currentPromise = portalPromises[role];
+  if (currentPromise !== undefined) return currentPromise;
+
+  const promise = portalLoaders[role]().then((module) => {
+    portalCache[role] = module.default;
+    delete portalPromises[role];
+    return module.default;
+  });
+  portalPromises[role] = promise;
+  return promise;
+}
+
+function anchorFromTarget(target: EventTarget | null): HTMLAnchorElement | undefined {
+  if (!(target instanceof Element)) return undefined;
+  return target.closest<HTMLAnchorElement>('a[href]') ?? undefined;
+}
+
+function applicationPathForAnchor(anchor: HTMLAnchorElement): string | undefined {
+  if (anchor.hasAttribute('download')) return undefined;
+  if (anchor.target !== '' && anchor.target !== '_self') return undefined;
+
+  const target = new URL(anchor.href, window.location.href);
+  if (target.origin !== window.location.origin) return undefined;
+  if (target.pathname === '/offline.html') return undefined;
+
+  const path = normalisePath(target.pathname);
+  if (!isApplicationPath(path)) return undefined;
+  if (path === normalisePath(window.location.pathname) && target.hash !== '') return undefined;
+  return `${path}${target.search}`;
+}
+
+function focusCurrentTask(): void {
+  window.requestAnimationFrame(() => {
+    const target = document.querySelector<HTMLElement>('#experience-main, #main-content');
+    target?.focus({ preventScroll: true });
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  });
+}
+
+function PilotLanding(): ReactElement {
+  return (
+    <div className="pilot-entry">
+      <a className="pilot-skip-link" href="#main-content">
+        Skip to main content
+      </a>
+      <header className="pilot-entry__masthead">
+        <div>
+          <p className="pilot-kicker">Cloudflare staging · synthetic pilot data</p>
+          <h1>Run the school day from one place</h1>
+          <p>
+            Choose a role to see the work, records and decisions available to that person. Every
+            workspace is permission-scoped and designed around familiar school tasks.
+          </p>
+        </div>
+        <div className="pilot-entry__status" role="status">
+          <strong>Safe pilot environment</strong>
+          <span>No production data or live payments</span>
+          <a href="/offline.html">See offline support</a>
+        </div>
+      </header>
+
+      <main id="main-content" className="pilot-entry__main" tabIndex={-1}>
+        <section aria-labelledby="pilot-role-title">
+          <div className="pilot-section-heading">
+            <p>Start here</p>
+            <h2 id="pilot-role-title">Who are you working as?</h2>
+            <span>Open the workspace that matches the job you need to complete.</span>
+          </div>
+          <nav className="pilot-role-grid" aria-label="Primary navigation">
+            <a className="pilot-role-card" data-role="admin" href="/admin">
+              <span className="pilot-role-card__number">01</span>
+              <h3>School administrator</h3>
+              <p>Review admissions, attendance, fees, operations, reports and urgent exceptions.</p>
+              <strong>Go to administration</strong>
+            </a>
+            <a className="pilot-role-card" data-role="teacher" href="/teacher">
+              <span className="pilot-role-card__number">02</span>
+              <h3>Teacher</h3>
+              <p>See today’s classes, take attendance, update grades and contact families.</p>
+              <strong>Go to teacher workspace</strong>
+            </a>
+            <a className="pilot-role-card" data-role="guardian" href="/family">
+              <span className="pilot-role-card__number">03</span>
+              <h3>Parent or guardian</h3>
+              <p>Check children, attendance, results, fees, forms, documents and messages.</p>
+              <strong>Go to family portal</strong>
+            </a>
+            <a className="pilot-role-card" data-role="student" href="/student">
+              <span className="pilot-role-card__number">04</span>
+              <h3>Student</h3>
+              <p>View lessons, attendance, results, learning resources and school requests.</p>
+              <strong>Go to student portal</strong>
+            </a>
+          </nav>
+        </section>
+
+        <section className="pilot-coverage" aria-labelledby="pilot-coverage-title">
+          <div className="pilot-section-heading">
+            <p>What the platform covers</p>
+            <h2 id="pilot-coverage-title">Common school work, clearly organised</h2>
+          </div>
+          <div className="pilot-coverage__grid">
+            {[
+              ['Students and admissions', 'People, households, applications and enrolment'],
+              ['Teaching and learning', 'Curriculum, timetable, attendance, grades and records'],
+              ['Fees and accounting', 'Billing, payments, ledger, reconciliation and reports'],
+              ['School services', 'Staff, purchasing, assets, library, transport and activities'],
+              ['Student support', 'Health, wellbeing, safeguarding and learning support'],
+              ['Communication', 'Messages, announcements, forms, documents and notifications'],
+              ['Integrations', 'Imports, country settings, OneRoster, LTI, SSO and webhooks'],
+              [
+                'Trust and governance',
+                'Permissions, audit history, isolation and recovery evidence',
+              ],
+            ].map(([title, detail]) => (
+              <article key={title}>
+                <h3>{title}</h3>
+                <p>{detail}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+}
+
+function NavigationProgress(props: {
+  readonly pendingPath: string | undefined;
+}): ReactElement | null {
+  const role = props.pendingPath === undefined ? undefined : roleForPath(props.pendingPath);
+  if (props.pendingPath === undefined) return null;
+  const label = role === undefined ? 'role chooser' : roleDescriptions[role].title.toLowerCase();
+
+  return (
+    <div className="pilot-route-progress" role="status" aria-live="polite">
+      <span aria-hidden="true" />
+      <p>Opening {label}…</p>
+    </div>
+  );
+}
+
+function PilotApplication(): ReactElement {
+  const connectivity = usePilotConnectivity();
+  const [path, setPath] = useState(() => normalisePath(window.location.pathname));
+  const [pendingPath, setPendingPath] = useState<string>();
+  const [, refreshPortalCache] = useReducer((value: number) => value + 1, 0);
+  const navigationSequence = useRef(0);
+
+  const commitPath = useCallback((targetPath: string, mode: NavigationMode): void => {
+    const commit = (): void => {
+      if (mode === 'push') window.history.pushState({}, '', targetPath);
+      if (mode === 'replace') window.history.replaceState({}, '', targetPath);
+      setPath(normalisePath(new URL(targetPath, window.location.href).pathname));
+    };
+
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!reducedMotion && typeof document.startViewTransition === 'function') {
+      void document.startViewTransition(() => flushSync(commit)).finished.catch(() => undefined);
+    } else {
+      startTransition(commit);
+    }
+  }, []);
+
+  const navigate = useCallback(
+    async (targetPath: string, mode: NavigationMode = 'push'): Promise<void> => {
+      const targetUrl = new URL(targetPath, window.location.href);
+      const target = normalisePath(targetUrl.pathname);
+      const current = normalisePath(window.location.pathname);
+      if (target === current && mode !== 'pop') return;
+
+      const sequence = ++navigationSequence.current;
+      setPendingPath(target);
+      const role = roleForPath(target);
+
+      try {
+        if (role !== undefined) await preloadPortal(role);
+        if (sequence !== navigationSequence.current) return;
+        commitPath(`${target}${targetUrl.search}`, mode);
+        refreshPortalCache();
+        document.title = `${role === undefined ? 'Choose a role' : roleDescriptions[role].title} · International School Platform`;
+        focusCurrentTask();
+      } finally {
+        if (sequence === navigationSequence.current) setPendingPath(undefined);
+      }
+    },
+    [commitPath],
+  );
 
   useEffect(() => {
-    if (!import.meta.env.PROD) return undefined;
+    const role = roleForPath(path);
+    if (role === undefined || portalCache[role] !== undefined) return;
     let active = true;
-    void registerPlatformServiceWorker({
-      onUpdateAvailable: () => {
-        if (active) setUpdateAvailable(true);
-      },
-    }).then((result) => {
-      telemetry.record({
-        name: 'pwa.service_worker',
-        timestamp: new Date().toISOString(),
-        outcome: result.status === 'failed' ? 'failure' : 'success',
-        routeTemplate: '/',
-        attributes: {
-          reasonCode: result.status === 'failed' ? result.reasonCode.toLowerCase() : result.status,
-          persona: 'platform',
-        },
-      });
+    void preloadPortal(role).then(() => {
+      if (active) refreshPortalCache();
     });
     return () => {
       active = false;
     };
+  }, [path]);
+
+  useEffect(() => {
+    const handleClick = (event: MouseEvent): void => {
+      if (
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+      )
+        return;
+
+      const anchor = anchorFromTarget(event.target);
+      if (anchor === undefined) return;
+      const targetPath = applicationPathForAnchor(anchor);
+      if (targetPath === undefined) return;
+
+      event.preventDefault();
+      void navigate(targetPath);
+    };
+
+    const handleIntent = (event: Event): void => {
+      const anchor = anchorFromTarget(event.target);
+      if (anchor === undefined) return;
+      const targetPath = applicationPathForAnchor(anchor);
+      if (targetPath === undefined) return;
+      const role = roleForPath(new URL(targetPath, window.location.href).pathname);
+      if (role !== undefined) void preloadPortal(role);
+    };
+
+    const handlePopState = (): void => {
+      void navigate(`${window.location.pathname}${window.location.search}`, 'pop');
+    };
+
+    document.addEventListener('click', handleClick);
+    document.addEventListener('pointerover', handleIntent, { passive: true });
+    document.addEventListener('focusin', handleIntent);
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      document.removeEventListener('click', handleClick);
+      document.removeEventListener('pointerover', handleIntent);
+      document.removeEventListener('focusin', handleIntent);
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [navigate]);
+
+  useEffect(() => {
+    if (connectivity !== 'online') return;
+    if ((navigator as NavigatorWithConnection).connection?.saveData === true) return;
+
+    const preloadAll = (): void => {
+      for (const role of Object.keys(portalLoaders) as PilotRole[]) void preloadPortal(role);
+    };
+    if (typeof window.requestIdleCallback === 'function') {
+      const handle = window.requestIdleCallback(preloadAll, { timeout: 2500 });
+      return () => window.cancelIdleCallback(handle);
+    }
+    const handle = window.setTimeout(preloadAll, 1200);
+    return () => window.clearTimeout(handle);
+  }, [connectivity]);
+
+  useEffect(() => {
+    if (!import.meta.env.PROD) return;
+    void registerPlatformServiceWorker({ onUpdateAvailable: () => window.location.reload() });
   }, []);
 
+  const role = roleForPath(path);
+  const Portal = role === undefined ? undefined : portalCache[role];
+
   return (
-    <AppShell
-      title="International School Platform"
-      navigation={[
-        { label: 'Dashboard', href: '/' },
-        { label: 'Students', href: '/students' },
-      ]}
-    >
-      <ExperienceResiliencePanel
-        locale={navigator.language || 'en-GB'}
-        connectivity={connectivity}
-        bandwidthMode={bandwidthMode}
-        pendingActionCount={0}
-        updateAvailable={updateAvailable}
-        retryHref={connectivity === 'online' ? undefined : '/?retry-sync=1'}
-        supportHref="/offline.html"
-        onBandwidthModeChange={setBandwidthMode}
-      />
-      <h1>Dashboard</h1>
-      <p>Foundation workspace initialized with tenant-safe platform contracts.</p>
-      <dl>
-        <div>
-          <dt>Dashboard owner</dt>
-          <dd>{modules.ownerOfRoute('/')}</dd>
-        </div>
-        <div>
-          <dt>Student capability owner</dt>
-          <dd>{modules.ownerOfCapability('student.read')}</dd>
-        </div>
-      </dl>
-    </AppShell>
+    <>
+      <NavigationProgress pendingPath={pendingPath} />
+      {role === undefined ? <PilotLanding /> : null}
+      {role !== undefined && Portal === undefined ? <PortalLoading role={role} /> : null}
+      {role !== undefined && Portal !== undefined ? (
+        <Portal path={path} connectivity={connectivity} />
+      ) : null}
+    </>
   );
 }
 
 const root = document.getElementById('root');
-if (!root) {
-  throw new Error('Root element not found');
-}
+if (root === null) throw new Error('Root element not found');
 
 createRoot(root).render(
-  <React.StrictMode>
-    <FoundationDashboard />
-  </React.StrictMode>,
+  <StrictMode>
+    <PilotApplication />
+  </StrictMode>,
 );

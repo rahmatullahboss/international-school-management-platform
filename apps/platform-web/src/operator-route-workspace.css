@@ -1,0 +1,118 @@
+.operator-register {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid #cbd6de;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.operator-register__header {
+  display: flex;
+  gap: 1rem;
+  align-items: end;
+  justify-content: space-between;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #dce4e9;
+}
+
+.operator-register__header p {
+  margin: 0 0 0.25rem;
+  color: #4c6275;
+  font-size: 0.72rem;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.operator-register__header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.operator-register__header span {
+  display: block;
+  margin-top: 0.35rem;
+  color: #4c6275;
+  font-size: 0.9rem;
+}
+
+.operator-register__filters label {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.operator-register__filters input {
+  min-width: 12rem;
+  padding: 0.55rem 0.7rem;
+  font: inherit;
+  border: 1px solid #9eafbb;
+  border-radius: 8px;
+}
+
+.operator-register__table {
+  min-width: 0;
+  overflow: auto;
+  border: 1px solid #d5dee4;
+  border-radius: 8px;
+}
+
+.operator-register__table:focus-visible {
+  outline: 3px solid #0b63ce;
+}
+
+.operator-register table {
+  width: 100%;
+  min-width: 52rem;
+  border-collapse: collapse;
+}
+
+.operator-register th,
+.operator-register td {
+  padding: 0.75rem 0.85rem;
+  text-align: start;
+  border-bottom: 1px solid #e1e8ec;
+}
+
+.operator-register th {
+  color: #4c6275;
+  font-size: 0.72rem;
+  background: #f6f8f9;
+}
+
+.operator-register td {
+  font-size: 0.84rem;
+}
+
+.operator-register tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.operator-register__empty {
+  padding-block: 2rem !important;
+  text-align: center !important;
+}
+
+.operator-register__boundary {
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  color: #16445f;
+  font-size: 0.82rem;
+  border: 1px solid #bad7e5;
+  border-radius: 8px;
+  background: #eef7fb;
+}
+
+@media (max-width: 64rem) {
+  .operator-register__header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .operator-register__filters input {
+    width: 100%;
+    min-width: 0;
+  }
+}
