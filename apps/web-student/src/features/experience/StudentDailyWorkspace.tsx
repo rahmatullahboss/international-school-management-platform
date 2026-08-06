@@ -238,13 +238,16 @@ export function StudentRequestsWorkspace(props: {
             <li key={request.id} data-state={request.state}>
               <details>
                 <summary>
-                  <strong>{request.title}</strong> <span>{request.state.replace('-', ' ')}</span>
+                  <strong>{request.title}</strong>{' '}
+                  <span>{request.state.replace('-', ' ')}</span>
                 </summary>
                 <p>{request.description}</p>
                 {request.submittedAt === undefined ? null : (
                   <time dateTime={request.submittedAt}>{request.submittedAt}</time>
                 )}
-                {request.nextAction === undefined ? null : <small>Next: {request.nextAction}</small>}
+                {request.nextAction === undefined ? null : (
+                  <small>Next: {request.nextAction}</small>
+                )}
               </details>
             </li>
           ))}

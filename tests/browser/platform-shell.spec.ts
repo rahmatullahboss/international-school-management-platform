@@ -76,9 +76,13 @@ test('drills into the scoped Student resource read model in place', async ({ pag
   await page.goto('/student/resources');
   await expect(page.getByText('Broken link resource', { exact: true })).toHaveCount(0);
   const resource = page.locator('summary').filter({ hasText: 'Multi-step equations practice' });
-  await expect(page.getByText('Practice set and worked example for tomorrow’s lesson.')).toBeHidden();
+  await expect(
+    page.getByText('Practice set and worked example for tomorrow’s lesson.'),
+  ).toBeHidden();
   await resource.click();
-  await expect(page.getByText('Practice set and worked example for tomorrow’s lesson.')).toBeVisible();
+  await expect(
+    page.getByText('Practice set and worked example for tomorrow’s lesson.'),
+  ).toBeVisible();
   await expect(page.getByRole('link', { name: 'Open resource' })).toHaveCount(0);
 });
 
