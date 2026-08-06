@@ -247,6 +247,9 @@ export function StudentRequestsWorkspace(props: {
                 {request.nextAction === undefined ? null : (
                   <small>Next: {request.nextAction}</small>
                 )}
+                <a href={request.href}>
+                  {request.state === 'draft' ? 'Continue request' : 'View request'}
+                </a>
               </details>
             </li>
           ))}
