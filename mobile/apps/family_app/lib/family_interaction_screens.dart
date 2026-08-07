@@ -153,7 +153,9 @@ class _FamilyDocumentsScreen extends StatelessWidget {
                       if (interactions.documentsReasonCode != null)
                         SchoolStatusBanner(
                           label: strings.documentActionFailed,
-                          message: interactions.documentsReasonCode!,
+                          message: SchoolBidirectionalText.isolate(
+                            interactions.documentsReasonCode!,
+                          ),
                           tone: SchoolStatusTone.error,
                         ),
                       if (interactions.downloadGrant != null) ...[
@@ -193,7 +195,7 @@ class _FamilyDocumentsScreen extends StatelessWidget {
                               : interactions.openPreparedDocument,
                         ),
                         if (!interactions.secureDocumentExchangeAvailable)
-                          const Padding(
+                          Padding(
                             padding: EdgeInsets.only(top: SchoolSpacing.xs),
                             child: Text(
                               strings.securePresentationNotConfigured,
@@ -210,7 +212,7 @@ class _FamilyDocumentsScreen extends StatelessWidget {
                         const SizedBox(height: SchoolSpacing.md),
                       ],
                       if (interactions.documents.isEmpty)
-                        const Text(strings.noAuthorizedDocumentMetadata)
+                        Text(strings.noAuthorizedDocumentMetadata)
                       else
                         for (
                           var index = 0;
@@ -919,6 +921,9 @@ class _FamilyConversationScreenState extends State<_FamilyConversationScreen> {
       return AnimatedBuilder(
         animation: interactions,
         builder: (context, _) {
+          final strings = FamilyInteractionStrings.forLocale(
+            Localizations.localeOf(context),
+          );
           if (interactions.conversationsPhase ==
                   FamilyInteractionPhase.loading ||
               interactions.messagesPhase == FamilyInteractionPhase.loading &&
