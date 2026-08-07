@@ -1,6 +1,6 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 /// Languages approved for the first mobile localization verification tranche.
 enum SchoolLanguage { english, bangla, arabic }
@@ -241,9 +241,9 @@ final class _SchoolShellStringsDelegate
 
 /// Widgets-level localization that supplies the approved reading direction.
 ///
-/// Framework-provided control labels intentionally remain the default English
-/// values in this source tranche. Global Material/Cupertino translations remain
-/// a separate production-adoption checkpoint.
+/// Material and Cupertino framework labels are supplied separately by Flutter's
+/// global localization delegates. This delegate remains authoritative only for
+/// the approved reading direction and does not infer application scope.
 final class SchoolWidgetsLocalizations extends DefaultWidgetsLocalizations {
   const SchoolWidgetsLocalizations._(this.locale);
 
@@ -272,48 +272,18 @@ final class _SchoolWidgetsLocalizationsDelegate
   bool shouldReload(_SchoolWidgetsLocalizationsDelegate old) => false;
 }
 
-/// English framework labels exposed for every approved source-tranche locale.
-///
-/// This avoids an unsupported-locale runtime hole while keeping the limitation
-/// explicit: translated Material/Cupertino labels require the separately
-/// approved production localization package and translated review.
-final class _SchoolMaterialLocalizationsDelegate
-    extends LocalizationsDelegate<MaterialLocalizations> {
-  const _SchoolMaterialLocalizationsDelegate();
-
-  @override
-  bool isSupported(Locale locale) => SchoolLocalePolicy.isSupported(locale);
-
-  @override
-  Future<MaterialLocalizations> load(Locale locale) =>
-      SynchronousFuture(const DefaultMaterialLocalizations());
-
-  @override
-  bool shouldReload(_SchoolMaterialLocalizationsDelegate old) => false;
-}
-
-final class _SchoolCupertinoLocalizationsDelegate
-    extends LocalizationsDelegate<CupertinoLocalizations> {
-  const _SchoolCupertinoLocalizationsDelegate();
-
-  @override
-  bool isSupported(Locale locale) => SchoolLocalePolicy.isSupported(locale);
-
-  @override
-  Future<CupertinoLocalizations> load(Locale locale) =>
-      SynchronousFuture(const DefaultCupertinoLocalizations());
-
-  @override
-  bool shouldReload(_SchoolCupertinoLocalizationsDelegate old) => false;
-}
-
 /// Shared MaterialApp/WidgetsApp localization configuration.
+///
+/// Flutter's reviewed global Material and Cupertino delegates now provide the
+/// framework-owned labels for every approved locale. The School widgets
+/// delegate remains first-class so directionality stays bound to the explicit
+/// approved locale policy rather than any tenant or device authority decision.
 abstract final class SchoolLocalizationConfiguration {
   static const localizationsDelegates = <LocalizationsDelegate<dynamic>>[
     SchoolShellStrings.delegate,
     SchoolWidgetsLocalizations.delegate,
-    _SchoolMaterialLocalizationsDelegate(),
-    _SchoolCupertinoLocalizationsDelegate(),
+    GlobalMaterialLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
   ];
 
   static const supportedLocales = SchoolLocalePolicy.supportedLocales;
