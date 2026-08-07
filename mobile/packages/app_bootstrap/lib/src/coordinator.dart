@@ -8,7 +8,6 @@ import 'package:school_app_bootstrap/src/runtime_configuration.dart';
 import 'package:school_authentication/school_authentication.dart';
 import 'package:school_mobile_core/mobile_core.dart';
 
-
 typedef CorrelationIdFactory = String Function();
 typedef MobileLifecycleClock = DateTime Function();
 
@@ -262,12 +261,21 @@ final class MobileAppCoordinator extends ChangeNotifier
     );
 
     final processDetached = signal == MobilePlatformLifecycleSignal.detached;
-    if (restrictedContentVisible || processDetached) {
+    final backgroundBoundary =
+        signal == MobilePlatformLifecycleSignal.inactive ||
+        signal == MobilePlatformLifecycleSignal.hidden ||
+        signal == MobilePlatformLifecycleSignal.paused;
+    final refreshBoundary =
+        processDetached || (restrictedContentVisible && backgroundBoundary);
+
+    if (refreshBoundary) {
       _operationGeneration++;
       _resumeRefreshRequired = true;
     }
 
-    if (restrictedContentVisible) {
+    if (restrictedContentVisible && backgroundBoundary) {
+      _set(const MobileApplicationState.restoring());
+    } else if (restrictedContentVisible && processDetached) {
       _set(const MobileApplicationState.restoring());
     } else {
       notifyListeners();
