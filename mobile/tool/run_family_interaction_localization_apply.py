@@ -4,9 +4,9 @@ source_path = Path('mobile/tool/apply_family_interaction_localization.py')
 source = source_path.read_text()
 
 # The transform script contains Dart strings with a literal `\n`. When those
-# anchors are compiled as Python triple-quoted strings, the escape would become
-# a real newline and fail to match the Dart source. Patch only those transform
-# source anchors before executing it; do not alter the production Dart file.
+# anchors/replacements are compiled as Python triple-quoted strings, the escape
+# would become a real newline. Preserve the Dart escape in both match and
+# generated-output fragments before executing the transform source.
 def preserve_literal_newline(anchor: str, label: str) -> None:
     global source
     replacement = anchor.replace(r'\n', r'\\n')
@@ -18,11 +18,19 @@ def preserve_literal_newline(anchor: str, label: str) -> None:
 
 preserve_literal_newline(
     r"issued ${_familyDateLabel(context, document.issuedAt)}\n${document.classification.name}",
-    'document subtitle',
+    'document subtitle match',
+)
+preserve_literal_newline(
+    r"${FamilyInteractionStrings.issuedFor(locale, _familyDateLabel(context, document.issuedAt))}\n'",
+    'document subtitle output',
 )
 preserve_literal_newline(
     r"${_familyDateTimeLabel(context, message.sentAt)}\n${message.body}",
-    'message dynamic isolate',
+    'message dynamic isolate match',
+)
+preserve_literal_newline(
+    r"${_familyDateTimeLabel(context, message.sentAt)}\n'",
+    'message dynamic isolate output',
 )
 
 namespace = {
