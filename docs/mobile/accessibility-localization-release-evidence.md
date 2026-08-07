@@ -27,7 +27,8 @@ The shared design-system and mobile-core packages now contain:
 - accessibility targets of 200% text scaling and a minimum 48 logical-pixel interactive extent;
 - presentation-only preferences for bold text, high contrast, and reduced motion;
 - a platform-neutral privacy lifecycle policy covering backgrounding, process detachment, memory pressure, stale authorization, restricted-content obscuring, restricted-presentation cancellation, and transient-byte purge decisions;
-- production `MobileAppCoordinator` wiring from real Flutter lifecycle signals to restricted-content obscuring and OIDC restore/refresh before bootstrap capability state returns on resume.
+- production `MobileAppCoordinator` wiring from real Flutter lifecycle signals to restricted-content obscuring and OIDC restore/refresh before bootstrap capability state returns on resume;
+- native privacy composition with Android `FLAG_SECURE` on both application windows and iOS inactive/app-switcher covers on both SceneDelegates, guarded against source drift.
 
 The Family and Staff production compositions now adopt:
 
@@ -60,7 +61,7 @@ The source gates verify:
 - real Flutter lifecycle propagation into the shared coordinator, background/detach obscuring, resumed OIDC restore/refresh, AppAuth inactive continuity, and nonblocking memory pressure;
 - non-default Bangla/Arabic Material/Cupertino framework-localization implementations while preserving the explicit School reading direction.
 
-These checks do not mean the production applications are fully translated or device certified. Family and Staff now adopt secure persisted locale selection, reviewed global framework translations, translated shell labels, Family core read and interaction/document/form/consent/conversation copy, Staff teacher/sync-domain copy, and localized fail-closed Staff Gradebook/Messages server-boundary states. Any remaining untranslated domain surfaces, authoritative Staff assessment/conversation read models, authoritative currency fraction metadata, and representative TalkBack/VoiceOver/device journeys remain incomplete. Flutter lifecycle signals are now wired into the shared coordinator for restricted-content obscuring and resumed authorization/bootstrap refresh; Android/iOS app-switcher/privacy-overlay behavior, restricted-document presenter cancellation/transient-byte cleanup and device integration evidence remain pending.
+These checks do not mean the production applications are fully translated or device certified. Family and Staff now adopt secure persisted locale selection, reviewed global framework translations, translated shell labels, Family core read and interaction/document/form/consent/conversation copy, Staff teacher/sync-domain copy, and localized fail-closed Staff Gradebook/Messages server-boundary states. Any remaining untranslated domain surfaces, authoritative Staff assessment/conversation read models, authoritative currency fraction metadata, and representative TalkBack/VoiceOver/device journeys remain incomplete. Flutter lifecycle signals are wired into the shared coordinator, Android windows now use `FLAG_SECURE`, and iOS SceneDelegates now install inactive/app-switcher privacy covers. Device verification plus restricted-document presenter cancellation/transient-byte cleanup evidence remain pending.
 
 ## Evidence matrix
 
@@ -83,7 +84,7 @@ These checks do not mean the production applications are fully translated or dev
 | Keyboard/switch access | Material focus behavior only | Android switch access and iOS switch control | Pending |
 | Reduced motion | Presentation preference zeroes nonessential durations | Android/iOS platform setting verification | Source policy present; device pass pending |
 | Contrast | High-contrast preference available; approved design palette | Automated and device contrast evidence | Source policy present; device pass pending |
-| Background/privacy lifecycle | Fail-closed policy plus real Flutter lifecycle-to-coordinator wiring, background/detach obscuring and resumed OIDC restore/refresh tests | Android/iOS background, process death, recent-task/app-switcher and presenter-cleanup tests | Production coordinator wiring present; device/presenter integration pending |
+| Background/privacy lifecycle | Fail-closed policy, Flutter lifecycle-to-coordinator wiring, Android `FLAG_SECURE`, iOS inactive privacy covers and native drift guards | Android/iOS background, process death, screenshot/recent-task/app-switcher and presenter-cleanup tests | Native composition present; device/presenter verification pending |
 | Native document presentation | Presenter interface only | Secure viewer accessibility and privacy review | Blocked on platform owner |
 | Android integration | Source/widget/lifecycle tests and debug APK build | Emulator/device integration tests | Pending |
 | iOS integration | Static native project and lifecycle-policy checks | Simulator/device integration tests | Pending |
@@ -149,7 +150,7 @@ Each journey must be exercised in English, Bangla, and Arabic where translated c
 - Restricted-document exchange interruption, oversized response, digest failure, presentation failure, and guaranteed cleanup.
 - Android TalkBack, font size/display size, RTL, switch access, backup-disabled behavior, cleartext rejection, secure locale persistence, and recent-task privacy.
 - iOS VoiceOver, Dynamic Type accessibility sizes, RTL, switch control, Keychain lifecycle, secure locale persistence, file protection, and app-switcher privacy.
-- The wired Flutter coordinator must be exercised on Android/iOS for background/detach obscuring and resumed authorization refresh; presenter-specific restricted-presentation cancellation, transient-byte purge and app-switcher privacy still require native integration evidence.
+- The wired Flutter coordinator, Android `FLAG_SECURE`, and iOS inactive privacy cover must be exercised on representative Android/iOS devices for background/detach obscuring, resumed authorization refresh, screenshot/recent-task blocking and app-switcher privacy; presenter-specific restricted-presentation cancellation and transient-byte purge still require native integration evidence.
 - Low-storage and network-transition behavior without plaintext fallback.
 
 ## Store-release evidence required
@@ -172,7 +173,7 @@ The localization runtime, production shell composition, and secure persisted loc
 - authoritative currency fraction metadata and broader exact-money adoption across relevant read models;
 - production adoption of explicit-offset timestamp presentation;
 - broader bidi-isolation adoption where additional server/user-controlled mixed-script values are introduced;
-- Android/iOS device verification of the wired lifecycle coordinator plus native app-switcher/privacy-overlay and presenter-specific cancellation/transient-byte cleanup integration;
+- device verification of the wired lifecycle coordinator, Android `FLAG_SECURE` screenshot/recent-task protection and iOS inactive/app-switcher privacy cover, plus presenter-specific cancellation/transient-byte cleanup integration;
 - device-level TalkBack, VoiceOver, Dynamic Type, switch-control, contrast, reduced-motion, secure-storage and representative RTL evidence;
 - Android/iOS integration tests;
 - approved native restricted-document presenters;
