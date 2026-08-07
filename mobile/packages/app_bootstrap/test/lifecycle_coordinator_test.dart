@@ -39,10 +39,7 @@ void main() {
       coordinator.lastLifecycleDecision?.reasonCode,
       'MOBILE_LIFECYCLE_BACKGROUND_PRIVACY',
     );
-    expect(
-      coordinator.lastLifecycleDecision?.obscureRestrictedContent,
-      isTrue,
-    );
+    expect(coordinator.lastLifecycleDecision?.obscureRestrictedContent, isTrue);
 
     await coordinator.handlePlatformLifecycle(
       MobilePlatformLifecycleSignal.resumed,
