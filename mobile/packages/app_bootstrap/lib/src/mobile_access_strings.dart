@@ -14,7 +14,10 @@ final class MobileAccessStrings {
     required this.chooseGrantedAccess,
     required this.chooseSchoolAccess,
     required this.clearSessionAndSignOut,
+    required this.configurationFailurePrefix,
+    required this.configurationFailureSupportCode,
     required this.identityServiceDescription,
+    required this.languageCode,
     required this.loadingSchoolAccess,
     required this.noAppAccess,
     required this.openingSecureSignIn,
@@ -29,8 +32,6 @@ final class MobileAccessStrings {
     required this.tryAgain,
     required this.unableToContinue,
     required this.userCancelled,
-    required this.configurationFailurePrefix,
-    required this.configurationFailureSupportCode,
   });
 
   factory MobileAccessStrings.forLocale(Locale locale) =>
@@ -52,8 +53,12 @@ final class MobileAccessStrings {
               'এই অ্যাকাউন্টে অনুমোদিত একটি স্কুল, ক্যাম্পাস ও ভূমিকা বেছে নিন।',
           chooseSchoolAccess: 'আপনার স্কুল অ্যাক্সেস বেছে নিন',
           clearSessionAndSignOut: 'সেশন মুছে সাইন আউট করুন',
+          configurationFailurePrefix:
+              'এই বিল্ড নিরাপদভাবে সংযোগ করতে পারছে না।',
+          configurationFailureSupportCode: 'সহায়তা কোড',
           identityServiceDescription:
               'প্রমাণীকরণ স্কুলের পরিচয় সেবা ব্যবহার করে। এই অ্যাপ কখনো আপনার পাসওয়ার্ড পরিচালনা করে না।',
+          languageCode: 'bn',
           loadingSchoolAccess: 'স্কুল অ্যাক্সেস লোড করা হচ্ছে',
           noAppAccess:
               'এই অ্যাকাউন্টে বর্তমানে এই মোবাইল অ্যাপ ব্যবহারের অনুমতি নেই।',
@@ -71,9 +76,6 @@ final class MobileAccessStrings {
           unableToContinue: 'চালিয়ে যাওয়া যাচ্ছে না',
           userCancelled:
               'সাইন-ইন বাতিল করা হয়েছে। অ্যাকাউন্টে কোনো পরিবর্তন করা হয়নি।',
-          configurationFailurePrefix:
-              'এই বিল্ড নিরাপদভাবে সংযোগ করতে পারছে না।',
-          configurationFailureSupportCode: 'সহায়তা কোড',
         ),
         'ar' => const MobileAccessStrings._(
           accessCouldNotBeLoaded: 'تعذر تحميل صلاحيات الوصول',
@@ -92,8 +94,12 @@ final class MobileAccessStrings {
               'اختر مدرسة وحرمًا ودورًا واحدًا ممنوحًا لهذا الحساب.',
           chooseSchoolAccess: 'اختر صلاحية الوصول إلى مدرستك',
           clearSessionAndSignOut: 'مسح الجلسة وتسجيل الخروج',
+          configurationFailurePrefix:
+              'يتعذر على هذا الإصدار الاتصال بأمان.',
+          configurationFailureSupportCode: 'رمز الدعم',
           identityServiceDescription:
               'تستخدم المصادقة خدمة هوية المدرسة. لا يتعامل هذا التطبيق مع كلمة مرورك مطلقًا.',
+          languageCode: 'ar',
           loadingSchoolAccess: 'جارٍ تحميل صلاحيات المدرسة',
           noAppAccess:
               'لا يملك هذا الحساب حاليًا صلاحية الوصول إلى تطبيق الجوال هذا.',
@@ -111,9 +117,6 @@ final class MobileAccessStrings {
           unableToContinue: 'تعذر المتابعة',
           userCancelled:
               'تم إلغاء تسجيل الدخول. لم يتم إجراء أي تغييرات على الحساب.',
-          configurationFailurePrefix:
-              'يتعذر على هذا الإصدار الاتصال بأمان.',
-          configurationFailureSupportCode: 'رمز الدعم',
         ),
         _ => const MobileAccessStrings._(
           accessCouldNotBeLoaded: 'Access could not be loaded',
@@ -131,8 +134,11 @@ final class MobileAccessStrings {
               'Choose one school, campus and role granted to this account.',
           chooseSchoolAccess: 'Choose your school access',
           clearSessionAndSignOut: 'Clear session and sign out',
+          configurationFailurePrefix: 'This build cannot connect securely.',
+          configurationFailureSupportCode: 'Support code',
           identityServiceDescription:
               'Authentication uses the school identity service. Your password is never handled by this app.',
+          languageCode: 'en',
           loadingSchoolAccess: 'Loading school access',
           noAppAccess:
               'This account does not currently have access to this mobile application.',
@@ -150,23 +156,21 @@ final class MobileAccessStrings {
           unableToContinue: 'Unable to continue',
           userCancelled:
               'Sign-in was cancelled. No account changes were made.',
-          configurationFailurePrefix: 'This build cannot connect securely.',
-          configurationFailureSupportCode: 'Support code',
         ),
       };
 
   String personaLabel(SchoolPersona persona) => switch (persona) {
-    SchoolPersona.guardian => switch (_language) {
+    SchoolPersona.guardian => switch (languageCode) {
       'bn' => 'অভিভাবক',
       'ar' => 'ولي الأمر',
       _ => 'Guardian',
     },
-    SchoolPersona.student => switch (_language) {
+    SchoolPersona.student => switch (languageCode) {
       'bn' => 'শিক্ষার্থী',
       'ar' => 'الطالب',
       _ => 'Student',
     },
-    SchoolPersona.teacher => switch (_language) {
+    SchoolPersona.teacher => switch (languageCode) {
       'bn' => 'শিক্ষক',
       'ar' => 'المعلم',
       _ => 'Teacher',
@@ -188,19 +192,6 @@ final class MobileAccessStrings {
   String configurationFailure(String isolatedReasonCode) =>
       '$configurationFailurePrefix $configurationFailureSupportCode: $isolatedReasonCode';
 
-  String get _language {
-    if (identical(this, _banglaSentinel)) return 'bn';
-    if (identical(this, _arabicSentinel)) return 'ar';
-    return 'en';
-  }
-
-  // Sentinels are initialized through the same factory values below and only
-  // support persona-label selection without storing authority-bearing state.
-  static final MobileAccessStrings _banglaSentinel =
-      MobileAccessStrings.forLocale(const Locale('bn'));
-  static final MobileAccessStrings _arabicSentinel =
-      MobileAccessStrings.forLocale(const Locale('ar'));
-
   final String accessCouldNotBeLoaded;
   final String accessServiceUnavailable;
   final String accountVerificationDescription;
@@ -215,6 +206,7 @@ final class MobileAccessStrings {
   final String configurationFailurePrefix;
   final String configurationFailureSupportCode;
   final String identityServiceDescription;
+  final String languageCode;
   final String loadingSchoolAccess;
   final String noAppAccess;
   final String openingSecureSignIn;
