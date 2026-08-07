@@ -1,0 +1,38 @@
+name: Mobile Evidence Refresh 2
+
+on:
+  pull_request:
+    paths:
+      - 'docs/execution/09-mobile-stream-plan.md'
+      - 'docs/mobile/accessibility-localization-release-evidence.md'
+      - 'mobile/tool/apply_mob01_evidence_refresh_2.py'
+      - '.github/workflows/mobile-evidence-refresh-2.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+      - name: Apply bounded MOB-01 evidence refresh
+        run: python3 mobile/tool/apply_mob01_evidence_refresh_2.py
+      - name: Commit refreshed evidence
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo 'MOB-01 evidence already refreshed.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add \
+            docs/execution/09-mobile-stream-plan.md \
+            docs/mobile/accessibility-localization-release-evidence.md
+          git commit -m 'docs(mobile): record interaction and fixture-boundary evidence'
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
