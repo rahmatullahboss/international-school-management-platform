@@ -1,11 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:school_api_client/mobile_bootstrap_api.dart';
 import 'package:school_api_client/school_api_client.dart';
 import 'package:school_app_bootstrap/src/runtime_configuration.dart';
 import 'package:school_authentication/school_authentication.dart';
 import 'package:school_mobile_core/mobile_core.dart';
 
+
 typedef CorrelationIdFactory = String Function();
+typedef MobileLifecycleClock = DateTime Function();
 
 abstract interface class MobileBootstrapLoader {
   Future<MobileBootstrap> load({required String correlationId});
@@ -109,19 +114,27 @@ final class MobileApplicationState {
   bool get isReady => phase == MobileApplicationPhase.ready && session != null;
 }
 
-final class MobileAppCoordinator extends ChangeNotifier {
+final class MobileAppCoordinator extends ChangeNotifier
+    with WidgetsBindingObserver {
   MobileAppCoordinator({
     required Set<SchoolPersona> allowedPersonas,
     required AuthSessionManager authentication,
     required MobileBootstrapLoader bootstrapLoader,
     CorrelationIdFactory? correlationIdFactory,
+    MobileLifecycleClock? lifecycleClock,
     SchoolApiClient? ownedApiClient,
+    bool observePlatformLifecycle = true,
+    MobilePrivacyLifecyclePolicy? privacyLifecyclePolicy,
   }) : _allowedPersonas = Set<SchoolPersona>.unmodifiable(allowedPersonas),
        _authentication = authentication,
        _bootstrapLoader = bootstrapLoader,
        _correlationIdFactory =
            correlationIdFactory ?? _DefaultCorrelationIdFactory().next,
-       _ownedApiClient = ownedApiClient {
+       _lifecycleClock = lifecycleClock ?? DateTime.now,
+       _observePlatformLifecycle = observePlatformLifecycle,
+       _ownedApiClient = ownedApiClient,
+       _privacyLifecyclePolicy =
+           privacyLifecyclePolicy ?? MobilePrivacyLifecyclePolicy() {
     if (_allowedPersonas.isEmpty) {
       throw ArgumentError.value(
         allowedPersonas,
@@ -159,13 +172,21 @@ final class MobileAppCoordinator extends ChangeNotifier {
   final AuthSessionManager _authentication;
   final MobileBootstrapLoader _bootstrapLoader;
   final CorrelationIdFactory _correlationIdFactory;
+  final MobileLifecycleClock _lifecycleClock;
+  final bool _observePlatformLifecycle;
   final SchoolApiClient? _ownedApiClient;
+  final MobilePrivacyLifecyclePolicy _privacyLifecyclePolicy;
 
   MobileApplicationState _state = const MobileApplicationState.restoring();
+  MobilePrivacyLifecycleDecision? _lastLifecycleDecision;
   int _operationGeneration = 0;
   bool _disposed = false;
+  bool _lifecycleObserverRegistered = false;
+  bool _resumeRefreshRequired = false;
 
   MobileApplicationState get state => _state;
+  MobilePrivacyLifecycleDecision? get lastLifecycleDecision =>
+      _lastLifecycleDecision;
 
   /// Shared authenticated transport for app-owned repositories.
   ///
@@ -174,6 +195,7 @@ final class MobileAppCoordinator extends ChangeNotifier {
   SchoolApiClient? get apiClient => _ownedApiClient;
 
   Future<void> initialize() async {
+    _ensureLifecycleObserver();
     final operation = ++_operationGeneration;
     _set(const MobileApplicationState.restoring());
     try {
@@ -185,6 +207,7 @@ final class MobileAppCoordinator extends ChangeNotifier {
   }
 
   Future<void> signIn() async {
+    _ensureLifecycleObserver();
     final operation = ++_operationGeneration;
     _set(const MobileApplicationState.authenticating());
     try {
@@ -197,6 +220,7 @@ final class MobileAppCoordinator extends ChangeNotifier {
 
   Future<void> signOut() async {
     final operation = ++_operationGeneration;
+    _resumeRefreshRequired = false;
     _set(const MobileApplicationState.signingOut());
     try {
       final snapshot = await _authentication.signOut();
@@ -210,6 +234,63 @@ final class MobileAppCoordinator extends ChangeNotifier {
       }
       _set(MobileApplicationState.signedOut(reasonCode: _reasonCode(error)));
     }
+  }
+
+  /// Applies a platform lifecycle boundary without moving authorization policy
+  /// into the widget layer.
+  ///
+  /// Ready application data is hidden before the app is backgrounded. On
+  /// resume, the stored OIDC session is revalidated/refreshed before bootstrap
+  /// and capability state are loaded again. Authentication transitions are not
+  /// cancelled merely because AppAuth temporarily backgrounds the application.
+  Future<void> handlePlatformLifecycle(
+    MobilePlatformLifecycleSignal signal,
+  ) async {
+    if (_disposed) return;
+
+    if (signal == MobilePlatformLifecycleSignal.resumed) {
+      await _handleLifecycleResume();
+      return;
+    }
+
+    final restrictedContentVisible = _state.isReady;
+    _lastLifecycleDecision = _privacyLifecyclePolicy.handle(
+      signal,
+      now: _lifecycleClock(),
+      restrictedContentVisible: restrictedContentVisible,
+      transientBytesLeased: false,
+    );
+
+    final processDetached = signal == MobilePlatformLifecycleSignal.detached;
+    if (restrictedContentVisible || processDetached) {
+      _operationGeneration++;
+      _resumeRefreshRequired = true;
+    }
+
+    if (restrictedContentVisible) {
+      _set(const MobileApplicationState.restoring());
+    } else {
+      notifyListeners();
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final signal = switch (state) {
+      AppLifecycleState.resumed => MobilePlatformLifecycleSignal.resumed,
+      AppLifecycleState.inactive => MobilePlatformLifecycleSignal.inactive,
+      AppLifecycleState.hidden => MobilePlatformLifecycleSignal.hidden,
+      AppLifecycleState.paused => MobilePlatformLifecycleSignal.paused,
+      AppLifecycleState.detached => MobilePlatformLifecycleSignal.detached,
+    };
+    unawaited(handlePlatformLifecycle(signal));
+  }
+
+  @override
+  void didHaveMemoryPressure() {
+    unawaited(
+      handlePlatformLifecycle(MobilePlatformLifecycleSignal.memoryPressure),
+    );
   }
 
   void selectAccess(MobileAccessOption selected) {
@@ -249,6 +330,32 @@ final class MobileAppCoordinator extends ChangeNotifier {
         .firstOrNull;
     if (option != null) {
       selectAccess(option);
+    }
+  }
+
+  Future<void> _handleLifecycleResume() async {
+    if (!_resumeRefreshRequired && !_state.isReady) {
+      return;
+    }
+
+    final operation = ++_operationGeneration;
+    _set(const MobileApplicationState.restoring());
+    try {
+      final snapshot = await _authentication.restore();
+      if (!_isCurrent(operation)) return;
+
+      _lastLifecycleDecision = _privacyLifecyclePolicy.handle(
+        MobilePlatformLifecycleSignal.resumed,
+        now: _lifecycleClock(),
+        authorizationExpiresAt: snapshot.tokens?.accessTokenExpiresAt,
+        restrictedContentVisible: false,
+        transientBytesLeased: false,
+      );
+      _resumeRefreshRequired = false;
+      await _applyAuthenticationSnapshot(snapshot, operation);
+    } on Object catch (error) {
+      _resumeRefreshRequired = false;
+      _failIfCurrent(operation, error);
     }
   }
 
@@ -347,6 +454,14 @@ final class MobileAppCoordinator extends ChangeNotifier {
     }
   }
 
+  void _ensureLifecycleObserver() {
+    if (!_observePlatformLifecycle || _lifecycleObserverRegistered || _disposed) {
+      return;
+    }
+    WidgetsBinding.instance.addObserver(this);
+    _lifecycleObserverRegistered = true;
+  }
+
   void _failIfCurrent(int operation, Object error) {
     if (_isCurrent(operation)) {
       _set(MobileApplicationState.failed(_reasonCode(error)));
@@ -376,6 +491,10 @@ final class MobileAppCoordinator extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     _operationGeneration++;
+    if (_lifecycleObserverRegistered) {
+      WidgetsBinding.instance.removeObserver(this);
+      _lifecycleObserverRegistered = false;
+    }
     _ownedApiClient?.close();
     super.dispose();
   }
