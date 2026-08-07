@@ -1,0 +1,296 @@
+from pathlib import Path
+
+
+main_path = Path('mobile/apps/family_app/lib/main.dart')
+main = main_path.read_text()
+import_line = "import 'family_production_strings.dart';\n"
+if import_line not in main:
+    anchor = "import 'package:school_secure_documents/school_secure_documents.dart';\n"
+    if main.count(anchor) != 1:
+        raise SystemExit('family main import anchor drifted')
+    main = main.replace(anchor, anchor + import_line)
+    main_path.write_text(main)
+
+path = Path('mobile/apps/family_app/lib/production_app.dart')
+text = path.read_text()
+
+
+def replace_once(old: str, new: str) -> None:
+    global text
+    if new in text:
+        return
+    count = text.count(old)
+    if count != 1:
+        raise SystemExit(
+            f'expected one Family localization anchor, found {count}: {old[:80]!r}'
+        )
+    text = text.replace(old, new)
+
+
+replace_once(
+    '          status: _journeyStatus(journey.state),',
+    '          status: _journeyStatus(context, journey.state),',
+)
+
+replace_once(
+    """  Widget _journeyStatus(FamilyJourneyState state) => switch (state.phase) {
+    FamilyJourneyPhase.loading => const SchoolStatusBanner(
+      label: 'Loading published information',
+      message: 'The selected school profile is being refreshed.',
+      tone: SchoolStatusTone.information,
+    ),
+    FamilyJourneyPhase.ready => SchoolStatusBanner(
+      label: 'Published information',
+      message:
+          'Showing '
+          '${SchoolBidirectionalText.isolate(state.directory!.activeStudent.displayName)} · '
+          '${SchoolBidirectionalText.isolate(state.directory!.activeStudent.gradeLabel)}',
+      tone: SchoolStatusTone.success,
+    ),
+    FamilyJourneyPhase.failed => const SchoolStatusBanner(
+      label: 'Information unavailable',
+      message: 'No cached academic or financial values are being substituted.',
+      tone: SchoolStatusTone.error,
+    ),
+  };""",
+    """  Widget _journeyStatus(BuildContext context, FamilyJourneyState state) {
+    final strings = FamilyProductionStrings.forLocale(
+      Localizations.localeOf(context),
+    );
+    return switch (state.phase) {
+      FamilyJourneyPhase.loading => SchoolStatusBanner(
+        label: strings.loadingPublishedInformation,
+        message: strings.selectedProfileRefreshing,
+        tone: SchoolStatusTone.information,
+      ),
+      FamilyJourneyPhase.ready => SchoolStatusBanner(
+        label: strings.publishedInformation,
+        message:
+            '${SchoolBidirectionalText.isolate(state.directory!.activeStudent.displayName)} · '
+            '${SchoolBidirectionalText.isolate(state.directory!.activeStudent.gradeLabel)}',
+        tone: SchoolStatusTone.success,
+      ),
+      FamilyJourneyPhase.failed => SchoolStatusBanner(
+        label: strings.informationUnavailable,
+        message: strings.substituteValuesHiddenUntilVerified,
+        tone: SchoolStatusTone.error,
+      ),
+    };
+  }""",
+)
+
+replace_once(
+    """      final state = journey.state;
+      switch (state.phase) {""",
+    """      final state = journey.state;
+      final strings = FamilyProductionStrings.forLocale(
+        Localizations.localeOf(context),
+      );
+      switch (state.phase) {""",
+)
+replace_once(
+    """                description:
+                    'Published information could not be verified for this profile.',
+                title: 'Unable to load Family information',""",
+    """                description: strings.informationUnavailable,
+                title: strings.unableToLoadFamilyInformation,""",
+)
+replace_once(
+    """                      const SchoolStatusBanner(
+                        label: 'No substitute values shown',
+                        message:
+                            'Academic and financial values remain hidden until the authorized service responds.',
+                        tone: SchoolStatusTone.error,
+                      ),""",
+    """                      SchoolStatusBanner(
+                        label: strings.noSubstituteValuesShown,
+                        message: strings.substituteValuesHiddenUntilVerified,
+                        tone: SchoolStatusTone.error,
+                      ),""",
+)
+replace_once(
+    "label: const Text('Try again'),",
+    'label: Text(strings.tryAgain),',
+)
+
+replace_once(
+    """    builder: (context, directory, dashboard) {
+      final links = <Widget>[];""",
+    """    builder: (context, directory, dashboard) {
+      final strings = FamilyProductionStrings.forLocale(
+        Localizations.localeOf(context),
+      );
+      final countStrings = SchoolCountStrings.of(context);
+      final links = <Widget>[];""",
+)
+replace_once("          'Review attendance',", '          strings.reviewAttendance,')
+replace_once("          'View published results',", '          strings.viewPublishedResults,')
+replace_once(
+    "          '${dashboard.publishedResults.length} published result(s)',",
+    '          countStrings.publishedResults(dashboard.publishedResults.length),',
+)
+replace_once("          'Review fees and receipts',", '          strings.reviewFeesAndReceipts,')
+replace_once(
+    "          'Invoice ${SchoolBidirectionalText.isolate(dashboard.fees!.invoiceReference)}',",
+    "          '${strings.invoice} ${SchoolBidirectionalText.isolate(dashboard.fees!.invoiceReference)}',",
+)
+replace_once("          'Documents and forms',", '          strings.documentsAndForms,')
+replace_once(
+    "          'Capability-scoped Family services',",
+    '          strings.capabilityScopedFamilyServices,',
+)
+replace_once(
+    "          interactionsAvailable ? 'Open conversations' : 'Open messages',",
+    '          interactionsAvailable ? strings.openConversations : strings.openMessages,',
+)
+replace_once(
+    "          '${dashboard.messages!.unreadCount} unread message(s)',",
+    '          countStrings.unreadMessages(dashboard.messages!.unreadCount),',
+)
+replace_once("                    'Today’s timetable',", '                    strings.todaysTimetable,')
+replace_once(
+    "                    const Text('No published timetable items.')",
+    '                    Text(strings.noPublishedTimetableItems)',
+)
+
+replace_once(
+    """    builder: (context, directory, dashboard) {
+      final attendance = dashboard.attendance;""",
+    """    builder: (context, directory, dashboard) {
+      final strings = FamilyProductionStrings.forLocale(
+        Localizations.localeOf(context),
+      );
+      final countStrings = SchoolCountStrings.of(context);
+      final attendance = dashboard.attendance;""",
+)
+replace_once(
+    """            description:
+                'Published sessions only. Approved corrections may change these totals.',
+            title: session.activePersona == SchoolPersona.guardian
+                ? '${SchoolBidirectionalText.isolate(dashboard.student.displayName)} attendance'
+                : 'My attendance',""",
+    """            description: strings.publishedSessionsDescription,
+            title: session.activePersona == SchoolPersona.guardian
+                ? '${SchoolBidirectionalText.isolate(dashboard.student.displayName)} · ${SchoolShellStrings.of(context).attendance}'
+                : strings.myAttendance,""",
+)
+replace_once(
+    "                  ? const Text('No published attendance summary is available.')",
+    '                  ? Text(strings.noPublishedAttendanceSummary)',
+)
+replace_once("                          'Present',", '                          strings.present,')
+replace_once("                          'Late',", '                          strings.late,')
+replace_once("                          'Absent',", '                          strings.absent,')
+replace_once(
+    """                        Text(
+                          'Total finalized sessions · ${attendance.totalSessions}',
+                        ),""",
+    """                        Text(
+                          countStrings.finalizedSessions(attendance.totalSessions),
+                        ),""",
+)
+replace_once(
+    """    final category = SchoolCardinalPluralRules.categoryFor(
+      Localizations.localeOf(context),
+      count,
+    );
+    final noun = category == SchoolPluralCategory.one ? 'session' : 'sessions';
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(icon),
+      title: Text('$label · $count $noun'),
+    );""",
+    """    final sessions = SchoolCountStrings.of(context).finalizedSessions(count);
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(icon),
+      title: Text('$label · $sessions'),
+    );""",
+)
+
+replace_once(
+    """          description:
+              'Only results released by the academic publication workflow are shown.',
+          title:
+              '${SchoolBidirectionalText.isolate(dashboard.student.displayName)} · Published results',""",
+    """          description: FamilyProductionStrings.forLocale(
+            Localizations.localeOf(context),
+          ).publishedResultsDescription,
+          title:
+              '${SchoolBidirectionalText.isolate(dashboard.student.displayName)} · ${FamilyProductionStrings.forLocale(Localizations.localeOf(context)).publishedResults}',""",
+)
+replace_once(
+    "                ? const Text('No published results are available.')",
+    """                ? Text(
+                    FamilyProductionStrings.forLocale(
+                      Localizations.localeOf(context),
+                    ).noPublishedResults,
+                  )""",
+)
+
+replace_once(
+    """    builder: (context, directory, dashboard) {
+      final fees = dashboard.fees;""",
+    """    builder: (context, directory, dashboard) {
+      final strings = FamilyProductionStrings.forLocale(
+        Localizations.localeOf(context),
+      );
+      final fees = dashboard.fees;""",
+)
+replace_once(
+    """            description:
+                'Amounts come from issued invoices and allocated receipts.',
+            title: 'Fees and receipts',""",
+    """            description: strings.amountsFromIssuedInvoices,
+            title: strings.feesAndReceipts,""",
+)
+replace_once(
+    "                  ? const Text('No fee summary is available for this profile.')",
+    '                  ? Text(strings.noFeeSummary)',
+)
+replace_once(
+    "                          'Outstanding · ${_moneyLabel(context, fees.outstanding)}',",
+    "                          '${strings.outstanding} · ${_moneyLabel(context, fees.outstanding)}',",
+)
+replace_once(
+    "                          'Invoice ${SchoolBidirectionalText.isolate(fees.invoiceReference)}',",
+    "                          '${strings.invoice} ${SchoolBidirectionalText.isolate(fees.invoiceReference)}',",
+)
+replace_once(
+    "                              'Last receipt · ${_moneyLabel(context, fees.lastReceipt!)}',",
+    "                              '${strings.lastReceipt} · ${_moneyLabel(context, fees.lastReceipt!)}',",
+)
+
+replace_once(
+    """    builder: (context, directory, dashboard) {
+      final messages = dashboard.messages;""",
+    """    builder: (context, directory, dashboard) {
+      final strings = FamilyProductionStrings.forLocale(
+        Localizations.localeOf(context),
+      );
+      final countStrings = SchoolCountStrings.of(context);
+      final messages = dashboard.messages;""",
+)
+replace_once(
+    """            description:
+                'Conversation access follows school relationship permissions.',
+            title: 'Messages',""",
+    """            description: strings.conversationAccessDescription,
+            title: strings.messages,""",
+)
+replace_once(
+    "                  ? const Text('No message summary is available.')",
+    '                  ? Text(strings.noMessageSummary)',
+)
+replace_once(
+    "                      title: Text('${messages.unreadCount} unread message(s)'),",
+    '                      title: Text(countStrings.unreadMessages(messages.unreadCount)),',
+)
+replace_once(
+    """                      subtitle: const Text(
+                        'Open conversation data will be added through the server-owned messaging contract.',
+                      ),""",
+    '                      subtitle: Text(strings.openConversationDataPending),',
+)
+
+path.write_text(text)
