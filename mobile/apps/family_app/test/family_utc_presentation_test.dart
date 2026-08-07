@@ -28,14 +28,19 @@ void main() {
     expect(dateTimeLabel, 'Aug 7, 2026 · 7:30 PM · UTC');
   });
 
-  test('production Family interaction presentation never infers device timezone', () {
-    final screenSource = File(
-      'lib/family_interaction_screens.dart',
-    ).readAsStringSync();
-    final utcSource = File('lib/family_utc_presentation.dart').readAsStringSync();
+  test(
+    'production Family interaction presentation never infers device timezone',
+    () {
+      final screenSource = File(
+        'lib/family_interaction_screens.dart',
+      ).readAsStringSync();
+      final utcSource = File(
+        'lib/family_utc_presentation.dart',
+      ).readAsStringSync();
 
-    expect(screenSource, isNot(contains('.toLocal()')));
-    expect(utcSource, isNot(contains('.toLocal()')));
-    expect(utcSource, contains('.toUtc()'));
-  });
+      expect(screenSource, isNot(contains('.toLocal()')));
+      expect(utcSource, isNot(contains('.toLocal()')));
+      expect(utcSource, contains('.toUtc()'));
+    },
+  );
 }

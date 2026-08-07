@@ -1134,13 +1134,10 @@ void _afterFrame(FutureOr<void> Function() callback) {
 }
 
 String _familyDateLabel(BuildContext context, DateTime value) =>
-    MaterialLocalizations.of(context).formatMediumDate(value.toLocal());
+    FamilyUtcPresentation.date(context, value);
 
-String _familyDateTimeLabel(BuildContext context, DateTime value) {
-  final local = value.toLocal();
-  final localizations = MaterialLocalizations.of(context);
-  return '${localizations.formatMediumDate(local)} · ${localizations.formatTimeOfDay(TimeOfDay.fromDateTime(local))}';
-}
+String _familyDateTimeLabel(BuildContext context, DateTime value) =>
+    FamilyUtcPresentation.dateTime(context, value);
 
 String _fileSizeLabel(int bytes) {
   if (bytes < 1024) return '$bytes B';
