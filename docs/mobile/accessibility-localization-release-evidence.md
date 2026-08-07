@@ -37,9 +37,9 @@ The Family and Staff production compositions now adopt:
 - localized capability-scoped navigation and sign-out/profile actions without changing route or authorization decisions;
 - RTL-safe isolation for Family student/profile, timetable, result, invoice, receipt, and failure-reason text;
 - exact integer minor-unit money formatting in the Family fees/receipts read journey, preserving the existing two-fraction-digit contract until authoritative currency metadata is added to the server read model;
-- reviewed English/Bangla/Arabic domain copy for Family production status/Home/Attendance/Results/Fees/Messages and Staff shell/Today/roster/attendance/sync-journal states;
+- reviewed English/Bangla/Arabic domain copy for Family production status/Home/Attendance/Results/Fees/Messages plus Services/Documents/Forms/Guardian Consent/Conversations/Messages, and Staff shell/Today/roster/attendance/sync-journal states;
 - reviewed pluralized count sentences on completed Family and Staff production surfaces instead of English `(s)` placeholders;
-- bidi isolation for localized Staff teacher, subject, section, room, student and operation identifiers in addition to existing Family dynamic-value isolation.
+- bidi isolation for localized Staff teacher, subject, section, room, student and operation identifiers plus Family interaction student/document/form/consent/conversation/message dynamic values; Staff Gradebook/Messages show localized fail-closed server-boundary states instead of fixture data while authoritative read models are unavailable.
 
 The source gates verify:
 
@@ -60,7 +60,7 @@ The source gates verify:
 - real Flutter lifecycle propagation into the shared coordinator, background/detach obscuring, resumed OIDC restore/refresh, AppAuth inactive continuity, and nonblocking memory pressure;
 - non-default Bangla/Arabic Material/Cupertino framework-localization implementations while preserving the explicit School reading direction.
 
-These checks do not mean the production applications are fully translated or device certified. Family and Staff now adopt secure persisted locale selection, reviewed global framework translations, translated shell labels, Family core read-domain copy and Staff teacher/sync-domain copy. Remaining Family interaction/document and other untranslated domain surfaces, authoritative currency fraction metadata, and representative TalkBack/VoiceOver/device journeys remain incomplete. Flutter lifecycle signals are now wired into the shared coordinator for restricted-content obscuring and resumed authorization/bootstrap refresh; Android/iOS app-switcher/privacy-overlay behavior, restricted-document presenter cancellation/transient-byte cleanup and device integration evidence remain pending.
+These checks do not mean the production applications are fully translated or device certified. Family and Staff now adopt secure persisted locale selection, reviewed global framework translations, translated shell labels, Family core read and interaction/document/form/consent/conversation copy, Staff teacher/sync-domain copy, and localized fail-closed Staff Gradebook/Messages server-boundary states. Any remaining untranslated domain surfaces, authoritative Staff assessment/conversation read models, authoritative currency fraction metadata, and representative TalkBack/VoiceOver/device journeys remain incomplete. Flutter lifecycle signals are now wired into the shared coordinator for restricted-content obscuring and resumed authorization/bootstrap refresh; Android/iOS app-switcher/privacy-overlay behavior, restricted-document presenter cancellation/transient-byte cleanup and device integration evidence remain pending.
 
 ## Evidence matrix
 
@@ -70,11 +70,11 @@ These checks do not mean the production applications are fully translated or dev
 | 200% text scaling | Adaptive scaffold widget test with five destinations | Representative small/large Android and iOS devices | Source gate present; device pass pending |
 | Interactive target size | Theme assertions plus 56-pixel language-control test | Touch and switch-control validation | Source gate present; device pass pending |
 | RTL direction | Arabic locale runtime, production delegates, and RTL widget tests | Android/iOS Arabic device locale journeys | Production composition present; device pass pending |
-| Bangla/Arabic production copy | Shared shell catalog plus Family core read and Staff teacher/sync app-owned catalogs | Android/iOS translated-copy review | Core production adoption present; remaining interaction/domain translation pending |
+| Bangla/Arabic production copy | Shared shell catalog plus Family read/interaction, Staff teacher/sync and Staff server-boundary app-owned catalogs | Android/iOS translated-copy review | Family read/interaction and Staff teacher/sync/server-boundary production adoption present; remaining domains pending |
 | English fallback | Unsupported-locale and ordered-device-locale tests | Device locale fallback review | Source gate present; device pass pending |
 | Locale preference | Secure approved-code storage, invalid/read/write recovery, live recomposition, and separate Family/Staff keys | Cold restart, backup/restore, account removal, and platform secure-storage review | Production persistence present; device evidence pending |
 | Framework localization | Flutter 3.44.7 global Material/Cupertino delegates for `en`/`bn`/`ar` with widget verification | Android/iOS translated framework-control review | Global translated delegates adopted; device review pending |
-| Pluralized counts | Integer cardinal tests and reviewed `en`/`bn`/`ar` count catalogs used by Family read and Staff teacher/sync production surfaces | Screen-reader and translation review | Completed core surfaces no longer use English `(s)` placeholders; remaining domains pending |
+| Pluralized counts | Integer cardinal tests and reviewed `en`/`bn`/`ar` count catalogs used by Family read/interaction and Staff teacher/sync production surfaces | Screen-reader and translation review | Completed production surfaces no longer use English `(s)` placeholders where count copy is adopted; remaining domains pending |
 | Bidirectional isolation | Control-character sanitization plus Family and Staff production dynamic-identifier isolation | Representative mixed-script content review | Core Family/Staff production adoption present; broader/device pass pending |
 | Exact money presentation | Integer minor-unit formatter and Family fees/receipts adoption | Screen-reader and visual review for supported currencies | Family production adoption present; authoritative currency metadata/device review pending |
 | Date/time presentation | UTC instant plus explicit offset/timezone formatter tests | DST/locale/device review from authoritative read models | Source gate present; production adoption pending |
@@ -166,7 +166,8 @@ Each journey must be exercised in English, Bangla, and Arabic where translated c
 
 The localization runtime, production shell composition, and secure persisted locale selector are now adopted. The following remain incomplete and release blocking:
 
-- remaining untranslated Family interaction/document and other domain surfaces beyond the reviewed Family read and Staff teacher/sync production copy;
+- remaining untranslated domain surfaces beyond the reviewed Family read/interaction and Staff teacher/sync/server-boundary production copy;
+- authoritative Staff assessment-list and teacher-conversation read models before Gradebook/Messages can become data-bearing production surfaces;
 - remaining pluralized domain copy outside the completed production count sentences;
 - authoritative currency fraction metadata and broader exact-money adoption across relevant read models;
 - production adoption of explicit-offset timestamp presentation;
