@@ -27,7 +27,9 @@ class MobileAccessGate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final strings = MobileAccessStrings.forLocale(Localizations.localeOf(context));
+    final strings = MobileAccessStrings.forLocale(
+      Localizations.localeOf(context),
+    );
     return Scaffold(
       appBar: AppBar(title: Text(_applicationName(context))),
       body: SafeArea(
@@ -64,105 +66,105 @@ class MobileAccessGate extends StatelessWidget {
     MobileApplicationPhase.failed => strings.accessCouldNotBeLoaded,
   };
 
-  Widget _content(BuildContext context, MobileAccessStrings strings) =>
-      switch (state.phase) {
-        MobileApplicationPhase.restoring ||
-        MobileApplicationPhase.authenticating ||
-        MobileApplicationPhase.loadingAccess ||
-        MobileApplicationPhase.ready ||
-        MobileApplicationPhase.signingOut => SchoolPanel(
-          child: _ProgressBody(strings: strings),
-        ),
-        MobileApplicationPhase.signedOut => SchoolPanel(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SchoolStatusBanner(
-                label: strings.signedOut,
-                message: strings.identityServiceDescription,
-                tone: SchoolStatusTone.information,
-              ),
-              if (state.reasonCode != null) ...[
-                const SizedBox(height: SchoolSpacing.md),
-                Text(
-                  strings.safeReason(state.reasonCode!),
-                  key: const Key('mobile-auth-reason'),
-                ),
-              ],
-              const SizedBox(height: SchoolSpacing.md),
-              FilledButton.icon(
-                key: const Key('mobile-sign-in'),
-                icon: const Icon(Icons.login),
-                label: Text(strings.signInSecurely),
-                onPressed: () => unawaited(onSignIn()),
-              ),
-            ],
+  Widget _content(
+    BuildContext context,
+    MobileAccessStrings strings,
+  ) => switch (state.phase) {
+    MobileApplicationPhase.restoring ||
+    MobileApplicationPhase.authenticating ||
+    MobileApplicationPhase.loadingAccess ||
+    MobileApplicationPhase.ready ||
+    MobileApplicationPhase.signingOut => SchoolPanel(
+      child: _ProgressBody(strings: strings),
+    ),
+    MobileApplicationPhase.signedOut => SchoolPanel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SchoolStatusBanner(
+            label: strings.signedOut,
+            message: strings.identityServiceDescription,
+            tone: SchoolStatusTone.information,
           ),
-        ),
-        MobileApplicationPhase.choosingAccess => SchoolPanel(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SchoolStatusBanner(
-                label: strings.authorizedAccessOnly,
-                message: strings.chooseGrantedAccess,
-                tone: SchoolStatusTone.information,
-              ),
-              const SizedBox(height: SchoolSpacing.sm),
-              for (final option in state.accessOptions)
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  key: ValueKey(
-                    'access-${option.tenantId}-${option.campusId}-${option.persona.name}',
-                  ),
-                  leading: const Icon(Icons.domain_outlined),
-                  onTap: () => onSelectAccess(option),
-                  subtitle: Text(
-                    '${SchoolBidirectionalText.isolate(option.campusName)} · '
-                    '${strings.personaLabel(option.persona)}',
-                  ),
-                  title: Text(
-                    SchoolBidirectionalText.isolate(option.tenantName),
-                  ),
-                  trailing: const Icon(Icons.chevron_right),
-                ),
-              const Divider(),
-              TextButton.icon(
-                icon: const Icon(Icons.logout),
-                label: Text(strings.signOut),
-                onPressed: () => unawaited(onSignOut()),
-              ),
-            ],
+          if (state.reasonCode != null) ...[
+            const SizedBox(height: SchoolSpacing.md),
+            Text(
+              strings.safeReason(state.reasonCode!),
+              key: const Key('mobile-auth-reason'),
+            ),
+          ],
+          const SizedBox(height: SchoolSpacing.md),
+          FilledButton.icon(
+            key: const Key('mobile-sign-in'),
+            icon: const Icon(Icons.login),
+            label: Text(strings.signInSecurely),
+            onPressed: () => unawaited(onSignIn()),
           ),
-        ),
-        MobileApplicationPhase.failed => SchoolPanel(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SchoolStatusBanner(
-                label: strings.unableToContinue,
-                message: strings.safeReason(
-                  state.reasonCode ?? 'MOBILE_BOOTSTRAP_UNAVAILABLE',
-                ),
-                tone: SchoolStatusTone.error,
-              ),
-              const SizedBox(height: SchoolSpacing.md),
-              FilledButton.icon(
-                key: const Key('mobile-retry'),
-                icon: const Icon(Icons.refresh),
-                label: Text(strings.tryAgain),
-                onPressed: () => unawaited(onRetry()),
-              ),
-              const SizedBox(height: SchoolSpacing.xs),
-              TextButton.icon(
-                icon: const Icon(Icons.logout),
-                label: Text(strings.clearSessionAndSignOut),
-                onPressed: () => unawaited(onSignOut()),
-              ),
-            ],
+        ],
+      ),
+    ),
+    MobileApplicationPhase.choosingAccess => SchoolPanel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SchoolStatusBanner(
+            label: strings.authorizedAccessOnly,
+            message: strings.chooseGrantedAccess,
+            tone: SchoolStatusTone.information,
           ),
-        ),
-      };
+          const SizedBox(height: SchoolSpacing.sm),
+          for (final option in state.accessOptions)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              key: ValueKey(
+                'access-${option.tenantId}-${option.campusId}-${option.persona.name}',
+              ),
+              leading: const Icon(Icons.domain_outlined),
+              onTap: () => onSelectAccess(option),
+              subtitle: Text(
+                '${SchoolBidirectionalText.isolate(option.campusName)} · '
+                '${strings.personaLabel(option.persona)}',
+              ),
+              title: Text(SchoolBidirectionalText.isolate(option.tenantName)),
+              trailing: const Icon(Icons.chevron_right),
+            ),
+          const Divider(),
+          TextButton.icon(
+            icon: const Icon(Icons.logout),
+            label: Text(strings.signOut),
+            onPressed: () => unawaited(onSignOut()),
+          ),
+        ],
+      ),
+    ),
+    MobileApplicationPhase.failed => SchoolPanel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SchoolStatusBanner(
+            label: strings.unableToContinue,
+            message: strings.safeReason(
+              state.reasonCode ?? 'MOBILE_BOOTSTRAP_UNAVAILABLE',
+            ),
+            tone: SchoolStatusTone.error,
+          ),
+          const SizedBox(height: SchoolSpacing.md),
+          FilledButton.icon(
+            key: const Key('mobile-retry'),
+            icon: const Icon(Icons.refresh),
+            label: Text(strings.tryAgain),
+            onPressed: () => unawaited(onRetry()),
+          ),
+          const SizedBox(height: SchoolSpacing.xs),
+          TextButton.icon(
+            icon: const Icon(Icons.logout),
+            label: Text(strings.clearSessionAndSignOut),
+            onPressed: () => unawaited(onSignOut()),
+          ),
+        ],
+      ),
+    ),
+  };
 }
 
 class MobileConfigurationFailureScreen extends StatelessWidget {
@@ -177,7 +179,9 @@ class MobileConfigurationFailureScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final strings = MobileAccessStrings.forLocale(Localizations.localeOf(context));
+    final strings = MobileAccessStrings.forLocale(
+      Localizations.localeOf(context),
+    );
     final shell = SchoolShellStrings.of(context);
     final appName = switch (application) {
       MobileAccessApplication.family => shell.familyAppName,

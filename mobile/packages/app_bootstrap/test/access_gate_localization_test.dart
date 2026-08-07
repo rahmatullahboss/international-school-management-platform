@@ -48,7 +48,10 @@ void main() {
     expect(find.text('يلزم إعداد التطبيق'), oneWidget);
     expect(find.textContaining('رمز الدعم'), oneWidget);
     expect(find.textContaining('STAFF_CONFIGURATION_REQUIRED'), oneWidget);
-    expect(Directionality.of(tester.element(find.byType(Scaffold))), TextDirection.rtl);
+    expect(
+      Directionality.of(tester.element(find.byType(Scaffold))),
+      TextDirection.rtl,
+    );
   });
 
   testWidgets('access chooser localizes persona without changing authority', (
