@@ -35,6 +35,9 @@ class _FamilyServicesScreen extends StatelessWidget {
     interactions: interactions,
     journey: journey,
     builder: (context, directory) {
+      final strings = FamilyInteractionStrings.forLocale(
+        Localizations.localeOf(context),
+      );
       final services = <Widget>[];
       void addService(
         IconData icon,
@@ -58,23 +61,23 @@ class _FamilyServicesScreen extends StatelessWidget {
       if (session.can(SchoolCapability.documentsRead)) {
         addService(
           Icons.description_outlined,
-          'Documents',
-          'Review metadata and prepare short-lived secure download grants.',
+          strings.documents,
+          strings.documentsServiceDescription,
           '/documents',
         );
       }
       if (session.can(SchoolCapability.formsConsent)) {
         addService(
           Icons.assignment_outlined,
-          'Forms',
-          'Complete server-versioned forms without client-side authority.',
+          strings.forms,
+          strings.formsServiceDescription,
           '/forms',
         );
         if (session.activePersona == SchoolPersona.guardian) {
           addService(
             Icons.verified_user_outlined,
-            'Guardian consent',
-            'Review policy versions and submit explicit decisions.',
+            strings.guardianConsent,
+            strings.guardianConsentDescription,
             '/consents',
           );
         }
@@ -84,11 +87,12 @@ class _FamilyServicesScreen extends StatelessWidget {
         children: [
           SchoolPageSection(
             description:
-                '${directory.activeStudent.displayName} · capability-scoped services',
-            title: 'Documents and forms',
+                '${SchoolBidirectionalText.isolate(directory.activeStudent.displayName)} · '
+                '${strings.capabilityScopedServices}',
+            title: strings.documentsAndForms,
             child: SchoolPanel(
               child: services.isEmpty
-                  ? const Text('No interaction services are authorized.')
+                  ? Text(strings.noInteractionServicesAuthorized)
                   : Column(children: services),
             ),
           ),
@@ -119,6 +123,8 @@ class _FamilyDocumentsScreen extends StatelessWidget {
       return AnimatedBuilder(
         animation: interactions,
         builder: (context, _) {
+          final locale = Localizations.localeOf(context);
+          final strings = FamilyInteractionStrings.forLocale(locale);
           if (interactions.documentsPhase == FamilyInteractionPhase.loading &&
               interactions.documents.isEmpty) {
             return const Center(child: CircularProgressIndicator());
@@ -128,7 +134,7 @@ class _FamilyDocumentsScreen extends StatelessWidget {
             return _FamilyInteractionFailure(
               onRetry: () => interactions.loadDocuments(studentId),
               reasonCode: interactions.documentsReasonCode,
-              title: 'Documents unavailable',
+              title: strings.documentsUnavailable,
             );
           }
           final countCopy = FamilyProductionCountCopy.of(context);
@@ -137,25 +143,34 @@ class _FamilyDocumentsScreen extends StatelessWidget {
               SchoolPageSection(
                 description:
                     '${countCopy.documentsAvailable(interactions.documents.length)} · '
-                    'Only metadata is shown. Restricted files remain no-store and raw download credentials are never exposed.',
-                title: '${directory.activeStudent.displayName} documents',
+                    '${strings.documentsMetadataOnlyDescription}',
+                title:
+                    '${SchoolBidirectionalText.isolate(directory.activeStudent.displayName)} · ${strings.documents}',
                 child: SchoolPanel(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       if (interactions.documentsReasonCode != null)
                         SchoolStatusBanner(
-                          label: 'Document action failed',
-                          message: interactions.documentsReasonCode!,
+                          label: strings.documentActionFailed,
+                          message: SchoolBidirectionalText.isolate(
+                            interactions.documentsReasonCode!,
+                          ),
                           tone: SchoolStatusTone.error,
                         ),
                       if (interactions.downloadGrant != null) ...[
                         SchoolStatusBanner(
                           label: interactions.downloadGrant!.requiresStepUp
-                              ? 'Additional verification required'
-                              : 'Secure grant prepared',
-                          message:
-                              'The short-lived ${interactions.downloadGrant!.singleUse ? 'single-use ' : ''}grant expires ${_familyDateTimeLabel(context, interactions.downloadGrant!.expiresAt)}. No URL or credential is shown.',
+                              ? strings.additionalVerificationRequired
+                              : strings.secureGrantPrepared,
+                          message: FamilyInteractionStrings.grantExpiryFor(
+                            locale,
+                            _familyDateTimeLabel(
+                              context,
+                              interactions.downloadGrant!.expiresAt,
+                            ),
+                            singleUse: interactions.downloadGrant!.singleUse,
+                          ),
                           tone: SchoolStatusTone.success,
                         ),
                         const SizedBox(height: SchoolSpacing.sm),
@@ -170,8 +185,8 @@ class _FamilyDocumentsScreen extends StatelessWidget {
                               : const Icon(Icons.verified_user_outlined),
                           label: Text(
                             interactions.downloadGrant!.requiresStepUp
-                                ? 'Verify and open securely'
-                                : 'Open securely',
+                                ? strings.verifyAndOpenSecurely
+                                : strings.openSecurely,
                           ),
                           onPressed:
                               interactions.documentOpening ||
@@ -180,27 +195,24 @@ class _FamilyDocumentsScreen extends StatelessWidget {
                               : interactions.openPreparedDocument,
                         ),
                         if (!interactions.secureDocumentExchangeAvailable)
-                          const Padding(
+                          Padding(
                             padding: EdgeInsets.only(top: SchoolSpacing.xs),
                             child: Text(
-                              'Secure document presentation is not configured on this build.',
+                              strings.securePresentationNotConfigured,
                             ),
                           ),
                         const SizedBox(height: SchoolSpacing.md),
                       ],
                       if (interactions.documentReceipt != null) ...[
                         SchoolStatusBanner(
-                          label: 'Document closed securely',
-                          message:
-                              'The verified document was presented from a no-store lease and the temporary bytes were deleted.',
+                          label: strings.documentClosedSecurely,
+                          message: strings.documentClosedSecurelyMessage,
                           tone: SchoolStatusTone.success,
                         ),
                         const SizedBox(height: SchoolSpacing.md),
                       ],
                       if (interactions.documents.isEmpty)
-                        const Text(
-                          'No authorized document metadata is available.',
-                        )
+                        Text(strings.noAuthorizedDocumentMetadata)
                       else
                         for (
                           var index = 0;
@@ -224,7 +236,7 @@ class _FamilyDocumentsScreen extends StatelessWidget {
                         const SizedBox(height: SchoolSpacing.md),
                         OutlinedButton.icon(
                           icon: const Icon(Icons.expand_more),
-                          label: const Text('Load more documents'),
+                          label: Text(strings.loadMoreDocuments),
                           onPressed:
                               interactions.documentsPhase ==
                                   FamilyInteractionPhase.loading
@@ -259,29 +271,37 @@ class _FamilyDocumentTile extends StatelessWidget {
   final VoidCallback onPrepare;
 
   @override
-  Widget build(BuildContext context) => ListTile(
-    contentPadding: EdgeInsets.zero,
-    leading: Icon(
-      document.classification == FamilyDocumentClassification.restricted
-          ? Icons.lock_outline
-          : Icons.description_outlined,
-    ),
-    title: Text(document.title),
-    subtitle: Text(
-      '${document.fileName} · ${_fileSizeLabel(document.sizeBytes)} · issued ${_familyDateLabel(context, document.issuedAt)}\n${document.classification.name} · ${document.cachePolicy.name}',
-    ),
-    isThreeLine: true,
-    trailing: loading
-        ? const SizedBox.square(
-            dimension: 24,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          )
-        : IconButton(
-            icon: const Icon(Icons.download_for_offline_outlined),
-            onPressed: onPrepare,
-            tooltip: 'Prepare secure download',
-          ),
-  );
+  Widget build(BuildContext context) {
+    final locale = Localizations.localeOf(context);
+    final strings = FamilyInteractionStrings.forLocale(locale);
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(
+        document.classification == FamilyDocumentClassification.restricted
+            ? Icons.lock_outline
+            : Icons.description_outlined,
+      ),
+      title: Text(SchoolBidirectionalText.isolate(document.title)),
+      subtitle: Text(
+        '${SchoolBidirectionalText.isolate(document.fileName)} · '
+        '${_fileSizeLabel(document.sizeBytes)} · '
+        '${FamilyInteractionStrings.issuedFor(locale, _familyDateLabel(context, document.issuedAt))}\n'
+        '${FamilyInteractionStrings.documentClassificationFor(locale, document.classification)} · '
+        '${FamilyInteractionStrings.cachePolicyFor(locale, document.cachePolicy)}',
+      ),
+      isThreeLine: true,
+      trailing: loading
+          ? const SizedBox.square(
+              dimension: 24,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : IconButton(
+              icon: const Icon(Icons.download_for_offline_outlined),
+              onPressed: onPrepare,
+              tooltip: strings.prepareSecureDownload,
+            ),
+    );
+  }
 }
 
 class _FamilyFormsScreen extends StatelessWidget {
@@ -302,6 +322,8 @@ class _FamilyFormsScreen extends StatelessWidget {
       return AnimatedBuilder(
         animation: interactions,
         builder: (context, _) {
+          final locale = Localizations.localeOf(context);
+          final strings = FamilyInteractionStrings.forLocale(locale);
           if (interactions.formsPhase == FamilyInteractionPhase.loading &&
               interactions.forms.isEmpty) {
             return const Center(child: CircularProgressIndicator());
@@ -311,7 +333,7 @@ class _FamilyFormsScreen extends StatelessWidget {
             return _FamilyInteractionFailure(
               onRetry: () => interactions.loadForms(studentId),
               reasonCode: interactions.formsReasonCode,
-              title: 'Forms unavailable',
+              title: strings.formsUnavailable,
             );
           }
           final countCopy = FamilyProductionCountCopy.of(context);
@@ -323,11 +345,12 @@ class _FamilyFormsScreen extends StatelessWidget {
               SchoolPageSection(
                 description:
                     '${countCopy.formsAwaitingResponse(openFormCount)} · '
-                    'Submission uses the server-issued base and schema versions. The client does not infer a newer revision.',
-                title: '${directory.activeStudent.displayName} forms',
+                    '${strings.formsVersionDescription}',
+                title:
+                    '${SchoolBidirectionalText.isolate(directory.activeStudent.displayName)} · ${strings.forms}',
                 child: SchoolPanel(
                   child: interactions.forms.isEmpty
-                      ? const Text('No forms are available for this profile.')
+                      ? Text(strings.noForms)
                       : Column(
                           children: [
                             for (
@@ -351,9 +374,14 @@ class _FamilyFormsScreen extends StatelessWidget {
                                       )
                                     : null,
                                 subtitle: Text(
-                                  '${interactions.forms[index].status.name}${interactions.forms[index].dueAt == null ? '' : ' · due ${_familyDateLabel(context, interactions.forms[index].dueAt!)}'}',
+                                  '${FamilyInteractionStrings.formStatusFor(locale, interactions.forms[index].status)}'
+                                  '${interactions.forms[index].dueAt == null ? '' : ' · ${FamilyInteractionStrings.dueFor(locale, _familyDateLabel(context, interactions.forms[index].dueAt!))}'}',
                                 ),
-                                title: Text(interactions.forms[index].title),
+                                title: Text(
+                                  SchoolBidirectionalText.isolate(
+                                    interactions.forms[index].title,
+                                  ),
+                                ),
                                 trailing:
                                     interactions.forms[index].status ==
                                         FamilyFormStatus.open
@@ -408,6 +436,8 @@ class _FamilyFormScreenState extends State<_FamilyFormScreen> {
       return AnimatedBuilder(
         animation: interactions,
         builder: (context, _) {
+          final locale = Localizations.localeOf(context);
+          final strings = FamilyInteractionStrings.forLocale(locale);
           final active = interactions.activeForm;
           if (interactions.formPhase == FamilyInteractionPhase.loading ||
               active == null &&
@@ -420,7 +450,7 @@ class _FamilyFormScreenState extends State<_FamilyFormScreen> {
             return _FamilyInteractionFailure(
               onRetry: () => interactions.loadForm(widget.formId),
               reasonCode: interactions.formReasonCode,
-              title: 'Form unavailable',
+              title: strings.formUnavailable,
             );
           }
           final definitionKey =
@@ -432,26 +462,36 @@ class _FamilyFormScreenState extends State<_FamilyFormScreen> {
           return ListView(
             children: [
               SchoolPageSection(
-                description:
-                    'Base version ${active.baseVersion} · schema ${active.schemaVersion} · ${directory.activeStudent.displayName}',
-                title: active.title,
+                description: FamilyInteractionStrings.formDefinitionFor(
+                  locale,
+                  baseVersion: active.baseVersion,
+                  schemaVersion: active.schemaVersion,
+                  isolatedStudentName: SchoolBidirectionalText.isolate(
+                    directory.activeStudent.displayName,
+                  ),
+                ),
+                title: SchoolBidirectionalText.isolate(active.title),
                 child: SchoolPanel(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       if (interactions.formReasonCode != null) ...[
                         SchoolStatusBanner(
-                          label: 'Form not submitted',
-                          message: interactions.formReasonCode!,
+                          label: strings.formNotSubmitted,
+                          message: SchoolBidirectionalText.isolate(
+                            interactions.formReasonCode!,
+                          ),
                           tone: SchoolStatusTone.error,
                         ),
                         const SizedBox(height: SchoolSpacing.md),
                       ],
                       if (interactions.formAcceptedRevision != null) ...[
                         SchoolStatusBanner(
-                          label: 'Submission accepted',
-                          message:
-                              'The server accepted revision ${interactions.formAcceptedRevision}.',
+                          label: strings.submissionAccepted,
+                          message: FamilyInteractionStrings.acceptedRevisionFor(
+                            locale,
+                            interactions.formAcceptedRevision!,
+                          ),
                           tone: SchoolStatusTone.success,
                         ),
                         const SizedBox(height: SchoolSpacing.md),
@@ -474,7 +514,7 @@ class _FamilyFormScreenState extends State<_FamilyFormScreen> {
                       ],
                       FilledButton.icon(
                         icon: const Icon(Icons.send_outlined),
-                        label: const Text('Submit form'),
+                        label: Text(strings.submitForm),
                         onPressed:
                             interactions.formSubmitting ||
                                 active.status != FamilyFormStatus.open
@@ -505,37 +545,45 @@ class _FamilyFormField extends StatelessWidget {
   final Object? value;
 
   @override
-  Widget build(BuildContext context) => switch (field.type) {
-    FamilyFormFieldType.text => TextFormField(
-      initialValue: value as String?,
-      decoration: InputDecoration(
-        labelText: '${field.label}${field.required ? ' *' : ''}',
+  Widget build(BuildContext context) {
+    final displayLabel = SchoolBidirectionalText.isolate(field.label);
+    return switch (field.type) {
+      FamilyFormFieldType.text => TextFormField(
+        initialValue: value as String?,
+        decoration: InputDecoration(
+          labelText: '$displayLabel${field.required ? ' *' : ''}',
+        ),
+        maxLength: 4000,
+        onChanged: onChanged,
       ),
-      maxLength: 4000,
-      onChanged: onChanged,
-    ),
-    FamilyFormFieldType.boolean => CheckboxListTile(
-      contentPadding: EdgeInsets.zero,
-      title: Text('${field.label}${field.required ? ' *' : ''}'),
-      value: value as bool? ?? false,
-      onChanged: onChanged,
-    ),
-    FamilyFormFieldType.singleChoice => DropdownButtonFormField<String>(
-      initialValue: value as String?,
-      decoration: InputDecoration(
-        labelText: '${field.label}${field.required ? ' *' : ''}',
+      FamilyFormFieldType.boolean => CheckboxListTile(
+        contentPadding: EdgeInsets.zero,
+        title: Text('$displayLabel${field.required ? ' *' : ''}'),
+        value: value as bool? ?? false,
+        onChanged: onChanged,
       ),
-      items: field.options
-          .map((option) => DropdownMenuItem(value: option, child: Text(option)))
-          .toList(growable: false),
-      onChanged: onChanged,
-    ),
-    FamilyFormFieldType.date => _FamilyDateField(
-      label: '${field.label}${field.required ? ' *' : ''}',
-      onChanged: onChanged,
-      value: value as String?,
-    ),
-  };
+      FamilyFormFieldType.singleChoice => DropdownButtonFormField<String>(
+        initialValue: value as String?,
+        decoration: InputDecoration(
+          labelText: '$displayLabel${field.required ? ' *' : ''}',
+        ),
+        items: field.options
+            .map(
+              (option) => DropdownMenuItem(
+                value: option,
+                child: Text(SchoolBidirectionalText.isolate(option)),
+              ),
+            )
+            .toList(growable: false),
+        onChanged: onChanged,
+      ),
+      FamilyFormFieldType.date => _FamilyDateField(
+        label: '$displayLabel${field.required ? ' *' : ''}',
+        onChanged: onChanged,
+        value: value as String?,
+      ),
+    };
+  }
 }
 
 class _FamilyDateField extends StatelessWidget {
@@ -591,6 +639,8 @@ class _FamilyConsentsScreen extends StatelessWidget {
       return AnimatedBuilder(
         animation: interactions,
         builder: (context, _) {
+          final locale = Localizations.localeOf(context);
+          final strings = FamilyInteractionStrings.forLocale(locale);
           if (interactions.consentsPhase == FamilyInteractionPhase.loading &&
               interactions.consents.isEmpty) {
             return const Center(child: CircularProgressIndicator());
@@ -600,35 +650,39 @@ class _FamilyConsentsScreen extends StatelessWidget {
             return _FamilyInteractionFailure(
               onRetry: () => interactions.loadConsents(studentId),
               reasonCode: interactions.consentsReasonCode,
-              title: 'Consent requests unavailable',
+              title: strings.consentRequestsUnavailable,
             );
           }
           return ListView(
             children: [
               SchoolPageSection(
-                description:
-                    'Only a guardian persona with the consent capability can submit a decision.',
+                description: strings.guardianOnlyConsentDescription,
                 title:
-                    '${directory.activeStudent.displayName} consent requests',
+                    '${SchoolBidirectionalText.isolate(directory.activeStudent.displayName)} · ${strings.consentRequests}',
                 child: SchoolPanel(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       if (interactions.consentsReasonCode != null)
                         SchoolStatusBanner(
-                          label: 'Consent decision not accepted',
-                          message: interactions.consentsReasonCode!,
+                          label: strings.consentDecisionNotAccepted,
+                          message: SchoolBidirectionalText.isolate(
+                            interactions.consentsReasonCode!,
+                          ),
                           tone: SchoolStatusTone.error,
                         ),
                       if (interactions.consentAcceptedRevision != null)
                         SchoolStatusBanner(
-                          label: 'Decision accepted',
+                          label: strings.decisionAccepted,
                           message:
-                              'The server accepted revision ${interactions.consentAcceptedRevision}. Refresh to verify the published status.',
+                              FamilyInteractionStrings.acceptedConsentRevisionFor(
+                                locale,
+                                interactions.consentAcceptedRevision!,
+                              ),
                           tone: SchoolStatusTone.success,
                         ),
                       if (interactions.consents.isEmpty)
-                        const Text('No consent requests are available.')
+                        Text(strings.noConsentRequests)
                       else
                         for (
                           var index = 0;
@@ -673,40 +727,53 @@ class _FamilyConsentTile extends StatelessWidget {
   final ValueChanged<FamilyConsentDecision> onDecision;
 
   @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      ListTile(
-        contentPadding: EdgeInsets.zero,
-        leading: const Icon(Icons.verified_user_outlined),
-        subtitle: Text(
-          'Policy ${consent.policyVersion} · ${consent.status.name}${consent.dueAt == null ? '' : ' · due ${_familyDateLabel(context, consent.dueAt!)}'}',
-        ),
-        title: Text(consent.title),
-      ),
-      if (consent.status == FamilyConsentStatus.pending)
-        Wrap(
-          spacing: SchoolSpacing.sm,
-          runSpacing: SchoolSpacing.sm,
-          children: [
-            FilledButton.icon(
-              icon: const Icon(Icons.check),
-              label: const Text('Grant consent'),
-              onPressed: loading
+  Widget build(BuildContext context) {
+    final locale = Localizations.localeOf(context);
+    final strings = FamilyInteractionStrings.forLocale(locale);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.verified_user_outlined),
+          subtitle: Text(
+            FamilyInteractionStrings.policyStatusFor(
+              locale,
+              isolatedPolicyVersion: SchoolBidirectionalText.isolate(
+                consent.policyVersion,
+              ),
+              status: consent.status,
+              dueLabel: consent.dueAt == null
                   ? null
-                  : () => onDecision(FamilyConsentDecision.grant),
+                  : _familyDateLabel(context, consent.dueAt!),
             ),
-            OutlinedButton.icon(
-              icon: const Icon(Icons.close),
-              label: const Text('Decline'),
-              onPressed: loading
-                  ? null
-                  : () => onDecision(FamilyConsentDecision.decline),
-            ),
-          ],
+          ),
+          title: Text(SchoolBidirectionalText.isolate(consent.title)),
         ),
-    ],
-  );
+        if (consent.status == FamilyConsentStatus.pending)
+          Wrap(
+            spacing: SchoolSpacing.sm,
+            runSpacing: SchoolSpacing.sm,
+            children: [
+              FilledButton.icon(
+                icon: const Icon(Icons.check),
+                label: Text(strings.grantConsent),
+                onPressed: loading
+                    ? null
+                    : () => onDecision(FamilyConsentDecision.grant),
+              ),
+              OutlinedButton.icon(
+                icon: const Icon(Icons.close),
+                label: Text(strings.decline),
+                onPressed: loading
+                    ? null
+                    : () => onDecision(FamilyConsentDecision.decline),
+              ),
+            ],
+          ),
+      ],
+    );
+  }
 }
 
 class _FamilyConversationsScreen extends StatelessWidget {
@@ -730,6 +797,9 @@ class _FamilyConversationsScreen extends StatelessWidget {
       return AnimatedBuilder(
         animation: interactions,
         builder: (context, _) {
+          final strings = FamilyInteractionStrings.forLocale(
+            Localizations.localeOf(context),
+          );
           if (interactions.conversationsPhase ==
                   FamilyInteractionPhase.loading &&
               interactions.conversations.isEmpty) {
@@ -741,7 +811,7 @@ class _FamilyConversationsScreen extends StatelessWidget {
             return _FamilyInteractionFailure(
               onRetry: () => interactions.loadConversations(studentId),
               reasonCode: interactions.conversationsReasonCode,
-              title: 'Conversations unavailable',
+              title: strings.conversationsUnavailable,
             );
           }
           final countCopy = FamilyProductionCountCopy.of(context);
@@ -750,14 +820,15 @@ class _FamilyConversationsScreen extends StatelessWidget {
               SchoolPageSection(
                 description:
                     '${countCopy.openConversations(interactions.conversations.length)} · '
-                    'Conversation access follows the active school relationship and capability scope.',
-                title: '${directory.activeStudent.displayName} conversations',
+                    '${strings.conversationAccessDescription}',
+                title:
+                    '${SchoolBidirectionalText.isolate(directory.activeStudent.displayName)} · ${strings.conversations}',
                 child: SchoolPanel(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       if (interactions.conversations.isEmpty)
-                        const Text('No conversations are available.')
+                        Text(strings.noConversations)
                       else
                         for (
                           var index = 0;
@@ -774,7 +845,9 @@ class _FamilyConversationsScreen extends StatelessWidget {
                               '${countCopy.unreadMessages(interactions.conversations[index].unreadCount)} · ${_familyDateTimeLabel(context, interactions.conversations[index].latestMessageAt)}',
                             ),
                             title: Text(
-                              interactions.conversations[index].subject,
+                              SchoolBidirectionalText.isolate(
+                                interactions.conversations[index].subject,
+                              ),
                             ),
                             trailing: const Icon(Icons.chevron_right),
                           ),
@@ -785,7 +858,7 @@ class _FamilyConversationsScreen extends StatelessWidget {
                         const SizedBox(height: SchoolSpacing.md),
                         OutlinedButton.icon(
                           icon: const Icon(Icons.expand_more),
-                          label: const Text('Load more conversations'),
+                          label: Text(strings.loadMoreConversations),
                           onPressed:
                               interactions.conversationsPhase ==
                                   FamilyInteractionPhase.loading
@@ -848,6 +921,9 @@ class _FamilyConversationScreenState extends State<_FamilyConversationScreen> {
       return AnimatedBuilder(
         animation: interactions,
         builder: (context, _) {
+          final strings = FamilyInteractionStrings.forLocale(
+            Localizations.localeOf(context),
+          );
           if (interactions.conversationsPhase ==
                   FamilyInteractionPhase.loading ||
               interactions.messagesPhase == FamilyInteractionPhase.loading &&
@@ -870,43 +946,50 @@ class _FamilyConversationScreenState extends State<_FamilyConversationScreen> {
                 await interactions.openConversation(widget.conversationId);
               },
               reasonCode: interactions.messagesReasonCode,
-              title: 'Conversation unavailable',
+              title: strings.conversationUnavailable,
             );
           }
           return ListView(
             children: [
               SchoolPageSection(
                 description:
-                    '${directory.activeStudent.displayName} · authorized conversation',
-                title: conversation.subject,
+                    '${SchoolBidirectionalText.isolate(directory.activeStudent.displayName)} · ${strings.authorizedConversation}',
+                title: SchoolBidirectionalText.isolate(conversation.subject),
                 child: SchoolPanel(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       if (interactions.messagesReasonCode != null)
                         SchoolStatusBanner(
-                          label: 'Message action failed',
-                          message: interactions.messagesReasonCode!,
+                          label: strings.messageActionFailed,
+                          message: SchoolBidirectionalText.isolate(
+                            interactions.messagesReasonCode!,
+                          ),
                           tone: SchoolStatusTone.error,
                         ),
                       if (interactions.messages.isEmpty)
-                        const Text('No messages are available.')
+                        Text(strings.noMessages)
                       else
                         for (final message in interactions.messages)
                           ListTile(
                             contentPadding: EdgeInsets.zero,
                             leading: const Icon(Icons.account_circle_outlined),
                             subtitle: Text(
-                              '${_familyDateTimeLabel(context, message.sentAt)}\n${message.body}',
+                              '${_familyDateTimeLabel(context, message.sentAt)}\n'
+                              '${SchoolBidirectionalText.isolate(message.body)}',
                             ),
-                            title: Text(message.authorLabel),
+                            title: Text(
+                              SchoolBidirectionalText.isolate(
+                                message.authorLabel,
+                              ),
+                            ),
                             isThreeLine: true,
                             titleAlignment: ListTileTitleAlignment.top,
                           ),
                       if (interactions.messagesNextCursor != null)
                         OutlinedButton.icon(
                           icon: const Icon(Icons.expand_more),
-                          label: const Text('Load earlier messages'),
+                          label: Text(strings.loadEarlierMessages),
                           onPressed:
                               interactions.messagesPhase ==
                                   FamilyInteractionPhase.loading
@@ -919,8 +1002,8 @@ class _FamilyConversationScreenState extends State<_FamilyConversationScreen> {
                         const Divider(height: SchoolSpacing.lg),
                         TextField(
                           controller: _message,
-                          decoration: const InputDecoration(
-                            labelText: 'Message',
+                          decoration: InputDecoration(
+                            labelText: strings.message,
                           ),
                           maxLength: 4000,
                           maxLines: 5,
@@ -928,7 +1011,7 @@ class _FamilyConversationScreenState extends State<_FamilyConversationScreen> {
                         ),
                         FilledButton.icon(
                           icon: const Icon(Icons.send_outlined),
-                          label: const Text('Send message'),
+                          label: Text(strings.sendMessage),
                           onPressed: interactions.messageSending
                               ? null
                               : () async {
@@ -980,9 +1063,11 @@ class _FamilyInteractionJourneyGate extends StatelessWidget {
         return const Center(child: CircularProgressIndicator());
       }
       if (state.phase == FamilyJourneyPhase.failed || state.directory == null) {
-        return const _FamilyInteractionFailure(
+        return _FamilyInteractionFailure(
           reasonCode: 'FAMILY_PROFILE_DIRECTORY_UNAVAILABLE',
-          title: 'Family profile unavailable',
+          title: FamilyInteractionStrings.forLocale(
+            Localizations.localeOf(context),
+          ).familyProfileUnavailable,
         );
       }
       final directory = state.directory!;
@@ -1007,35 +1092,41 @@ class _FamilyInteractionFailure extends StatelessWidget {
   final String title;
 
   @override
-  Widget build(BuildContext context) => ListView(
-    children: [
-      SchoolPageSection(
-        description:
-            'No fixture or cached value is substituted when the authorized service cannot verify this interaction.',
-        title: title,
-        child: SchoolPanel(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SchoolStatusBanner(
-                label: 'Service unavailable',
-                message: reasonCode ?? 'FAMILY_INTERACTION_UNAVAILABLE',
-                tone: SchoolStatusTone.error,
-              ),
-              if (onRetry != null) ...[
-                const SizedBox(height: SchoolSpacing.md),
-                FilledButton.icon(
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Try again'),
-                  onPressed: () => onRetry!(),
+  Widget build(BuildContext context) {
+    final strings = FamilyInteractionStrings.forLocale(
+      Localizations.localeOf(context),
+    );
+    return ListView(
+      children: [
+        SchoolPageSection(
+          description: strings.noSubstituteInteractionValues,
+          title: title,
+          child: SchoolPanel(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SchoolStatusBanner(
+                  label: strings.serviceUnavailable,
+                  message: SchoolBidirectionalText.isolate(
+                    reasonCode ?? 'FAMILY_INTERACTION_UNAVAILABLE',
+                  ),
+                  tone: SchoolStatusTone.error,
                 ),
+                if (onRetry != null) ...[
+                  const SizedBox(height: SchoolSpacing.md),
+                  FilledButton.icon(
+                    icon: const Icon(Icons.refresh),
+                    label: Text(strings.tryAgain),
+                    onPressed: () => onRetry!(),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
-      ),
-    ],
-  );
+      ],
+    );
+  }
 }
 
 void _afterFrame(FutureOr<void> Function() callback) {
