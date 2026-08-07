@@ -38,6 +38,7 @@ The Family and Staff production compositions now adopt:
 - localized capability-scoped navigation and sign-out/profile actions without changing route or authorization decisions;
 - RTL-safe isolation for Family student/profile, timetable, result, invoice, receipt, and failure-reason text;
 - exact integer minor-unit money formatting in the Family fees/receipts read journey, preserving the existing two-fraction-digit contract until authoritative currency metadata is added to the server read model;
+- explicit UTC presentation for Family interaction dates/timestamps while authoritative school offset/timezone metadata is absent; device timezone is never inferred for those server instants;
 - reviewed English/Bangla/Arabic domain copy for Family production status/Home/Attendance/Results/Fees/Messages plus Services/Documents/Forms/Guardian Consent/Conversations/Messages, and Staff shell/Today/roster/attendance/sync-journal states;
 - reviewed pluralized count sentences on completed Family and Staff production surfaces instead of English `(s)` placeholders;
 - bidi isolation for localized Staff teacher, subject, section, room, student and operation identifiers plus Family interaction student/document/form/consent/conversation/message dynamic values; Staff Gradebook/Messages show localized fail-closed server-boundary states instead of fixture data while authoritative read models are unavailable.
@@ -56,12 +57,13 @@ The source gates verify:
 - minimum interactive control dimensions;
 - bidi override/isolate removal and safe re-isolation;
 - exact money and explicit-offset timestamp rendering in English, Bangla, and Arabic;
+- Family interaction UTC fallback converts current server instants with `toUtc()`, labels `UTC`, and source-level tests reject any return of `toLocal()`;
 - reduced-motion preference behavior without changing authorization or security decisions;
 - background, process-death, memory-pressure, stale-proof, and fresh-proof lifecycle decisions with redacted reason codes only;
 - real Flutter lifecycle propagation into the shared coordinator, background/detach obscuring, resumed OIDC restore/refresh, AppAuth inactive continuity, and nonblocking memory pressure;
 - non-default Bangla/Arabic Material/Cupertino framework-localization implementations while preserving the explicit School reading direction.
 
-These checks do not mean the production applications are fully translated or device certified. Family and Staff now adopt secure persisted locale selection, reviewed global framework translations, translated shell labels, Family core read and interaction/document/form/consent/conversation copy, Staff teacher/sync-domain copy, and localized fail-closed Staff Gradebook/Messages server-boundary states. Any remaining untranslated domain surfaces, authoritative Staff assessment/conversation read models, authoritative currency fraction metadata, and representative TalkBack/VoiceOver/device journeys remain incomplete. Flutter lifecycle signals are wired into the shared coordinator, Android windows now use `FLAG_SECURE`, and iOS SceneDelegates now install inactive/app-switcher privacy covers. Device verification plus restricted-document presenter cancellation/transient-byte cleanup evidence remain pending.
+These checks do not mean the production applications are fully translated or device certified. Family and Staff now adopt secure persisted locale selection, reviewed global framework translations, translated shell labels, Family core read and interaction/document/form/consent/conversation copy, Staff teacher/sync-domain copy, and localized fail-closed Staff Gradebook/Messages server-boundary states. Any remaining untranslated domain surfaces, authoritative Staff assessment/conversation read models, authoritative currency fraction metadata, and representative TalkBack/VoiceOver/device journeys remain incomplete. Family interaction timestamps now use an explicit UTC fallback rather than device timezone inference; school-local presentation remains blocked on authoritative offset/timezone metadata. Flutter lifecycle signals are wired into the shared coordinator, Android windows now use `FLAG_SECURE`, and iOS SceneDelegates now install inactive/app-switcher privacy covers. Device verification plus restricted-document presenter cancellation/transient-byte cleanup evidence remain pending.
 
 ## Evidence matrix
 
@@ -78,7 +80,7 @@ These checks do not mean the production applications are fully translated or dev
 | Pluralized counts | Integer cardinal tests and reviewed `en`/`bn`/`ar` count catalogs used by Family read/interaction and Staff teacher/sync production surfaces | Screen-reader and translation review | Completed production surfaces no longer use English `(s)` placeholders where count copy is adopted; remaining domains pending |
 | Bidirectional isolation | Control-character sanitization plus Family and Staff production dynamic-identifier isolation | Representative mixed-script content review | Core Family/Staff production adoption present; broader/device pass pending |
 | Exact money presentation | Integer minor-unit formatter and Family fees/receipts adoption | Screen-reader and visual review for supported currencies | Family production adoption present; authoritative currency metadata/device review pending |
-| Date/time presentation | UTC instant plus explicit offset/timezone formatter tests | DST/locale/device review from authoritative read models | Source gate present; production adoption pending |
+| Date/time presentation | UTC instant plus explicit offset/timezone formatter tests and Family explicit-UTC fallback tests | DST/locale/device review from authoritative school-local read models | Family interaction UTC fallback adopted; school-local explicit-offset presentation blocked on server timezone metadata |
 | Screen-reader navigation | Written semantics available in shared components and locale control | TalkBack traversal and VoiceOver rotor order | Pending device evidence |
 | Dynamic type | 200% source test | iOS Larger Accessibility Sizes | Pending |
 | Keyboard/switch access | Material focus behavior only | Android switch access and iOS switch control | Pending |
@@ -171,7 +173,7 @@ The localization runtime, production shell composition, and secure persisted loc
 - authoritative Staff assessment-list and teacher-conversation read models before Gradebook/Messages can become data-bearing production surfaces;
 - remaining pluralized domain copy outside the completed production count sentences;
 - authoritative currency fraction metadata and broader exact-money adoption across relevant read models;
-- production adoption of explicit-offset timestamp presentation;
+- authoritative school offset/timezone metadata and replacement of the current Family explicit UTC fallback with school-local explicit-offset presentation where those fields are supplied;
 - broader bidi-isolation adoption where additional server/user-controlled mixed-script values are introduced;
 - device verification of the wired lifecycle coordinator, Android `FLAG_SECURE` screenshot/recent-task protection and iOS inactive/app-switcher privacy cover, plus presenter-specific cancellation/transient-byte cleanup integration;
 - device-level TalkBack, VoiceOver, Dynamic Type, switch-control, contrast, reduced-motion, secure-storage and representative RTL evidence;
