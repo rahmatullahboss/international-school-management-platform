@@ -1,0 +1,54 @@
+name: Mobile Family Date-Only Localization
+
+on:
+  pull_request:
+    paths:
+      - 'mobile/apps/family_app/lib/main.dart'
+      - 'mobile/apps/family_app/lib/family_interaction_screens.dart'
+      - 'mobile/apps/family_app/lib/family_date_only_presentation.dart'
+      - 'mobile/apps/family_app/test/family_date_only_presentation_test.dart'
+      - 'mobile/tool/apply_family_date_only_localization.py'
+      - '.github/workflows/mobile-family-date-only-localization.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.44.7'
+          cache: true
+      - name: Apply bounded Family date-only localization
+        run: python3 mobile/tool/apply_family_date_only_localization.py
+      - name: Format changed Dart files
+        run: |
+          dart format \
+            mobile/apps/family_app/lib/main.dart \
+            mobile/apps/family_app/lib/family_interaction_screens.dart \
+            mobile/apps/family_app/lib/family_date_only_presentation.dart \
+            mobile/apps/family_app/test/family_date_only_presentation_test.dart
+      - name: Commit migrated date-only presentation
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo 'Family date-only localization already applied.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add \
+            mobile/apps/family_app/lib/main.dart \
+            mobile/apps/family_app/lib/family_interaction_screens.dart \
+            mobile/apps/family_app/lib/family_date_only_presentation.dart \
+            mobile/apps/family_app/test/family_date_only_presentation_test.dart
+          git commit -m 'feat(mobile): localize Family form date display'
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
