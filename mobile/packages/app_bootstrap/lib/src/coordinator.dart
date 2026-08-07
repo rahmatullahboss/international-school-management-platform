@@ -463,7 +463,9 @@ final class MobileAppCoordinator extends ChangeNotifier
   }
 
   void _ensureLifecycleObserver() {
-    if (!_observePlatformLifecycle || _lifecycleObserverRegistered || _disposed) {
+    if (!_observePlatformLifecycle ||
+        _lifecycleObserverRegistered ||
+        _disposed) {
       return;
     }
     WidgetsBinding.instance.addObserver(this);
