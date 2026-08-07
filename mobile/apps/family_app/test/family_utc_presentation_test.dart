@@ -7,14 +7,22 @@ import 'package:school_family_app/family_utc_presentation.dart';
 void main() {
   testWidgets('presents server instants explicitly as UTC', (tester) async {
     final source = DateTime.parse('2026-08-08T01:30:00+06:00');
+    final utc = source.toUtc();
     late String dateLabel;
     late String dateTimeLabel;
+    late String expectedDate;
+    late String expectedTime;
 
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('en', 'US'),
         home: Builder(
           builder: (context) {
+            final localizations = MaterialLocalizations.of(context);
+            expectedDate = localizations.formatMediumDate(utc);
+            expectedTime = localizations.formatTimeOfDay(
+              TimeOfDay(hour: utc.hour, minute: utc.minute),
+            );
             dateLabel = FamilyUtcPresentation.date(context, source);
             dateTimeLabel = FamilyUtcPresentation.dateTime(context, source);
             return const SizedBox();
@@ -23,9 +31,10 @@ void main() {
       ),
     );
 
-    expect(source.toUtc(), DateTime.utc(2026, 8, 7, 19, 30));
-    expect(dateLabel, 'Aug 7, 2026 · UTC');
-    expect(dateTimeLabel, 'Aug 7, 2026 · 7:30 PM · UTC');
+    expect(utc, DateTime.utc(2026, 8, 7, 19, 30));
+    expect(dateLabel, '$expectedDate · UTC');
+    expect(dateTimeLabel, '$expectedDate · $expectedTime · UTC');
+    expect(dateLabel, isNot(contains('Aug 8')));
   });
 
   test(
