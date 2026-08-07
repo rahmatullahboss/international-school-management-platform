@@ -128,6 +128,8 @@ def main() -> None:
             scene_delegate,
             "sceneWillResignActive",
             "sceneDidBecomeActive",
+            "super.sceneWillResignActive(scene)",
+            "super.sceneDidBecomeActive(scene)",
             "privacyCoverTag",
             "cover.backgroundColor = .systemBackground",
             "window.addSubview(cover)",
