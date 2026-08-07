@@ -17,6 +17,7 @@ import 'package:school_family_domain/school_family_domain.dart';
 import 'package:school_mobile_core/mobile_core.dart';
 import 'package:school_mobile_core/notification_routing.dart';
 import 'package:school_secure_documents/school_secure_documents.dart';
+import 'family_production_strings.dart';
 
 part 'family_interaction_controller.dart';
 part 'family_interaction_screens.dart';

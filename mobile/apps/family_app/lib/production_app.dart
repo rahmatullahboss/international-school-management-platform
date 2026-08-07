@@ -605,7 +605,7 @@ class _AuthorizedFamilyShell extends StatelessWidget {
               .indexOf(location)
               .clamp(0, paths.length - 1)
               .toInt(),
-          status: _journeyStatus(journey.state),
+          status: _journeyStatus(context, journey.state),
           title:
               '${strings.familyAppName} · '
               '${session.activePersona == SchoolPersona.guardian ? strings.guardianProfile : strings.studentProfile}',
@@ -614,26 +614,30 @@ class _AuthorizedFamilyShell extends StatelessWidget {
     );
   }
 
-  Widget _journeyStatus(FamilyJourneyState state) => switch (state.phase) {
-    FamilyJourneyPhase.loading => const SchoolStatusBanner(
-      label: 'Loading published information',
-      message: 'The selected school profile is being refreshed.',
-      tone: SchoolStatusTone.information,
-    ),
-    FamilyJourneyPhase.ready => SchoolStatusBanner(
-      label: 'Published information',
-      message:
-          'Showing '
-          '${SchoolBidirectionalText.isolate(state.directory!.activeStudent.displayName)} · '
-          '${SchoolBidirectionalText.isolate(state.directory!.activeStudent.gradeLabel)}',
-      tone: SchoolStatusTone.success,
-    ),
-    FamilyJourneyPhase.failed => const SchoolStatusBanner(
-      label: 'Information unavailable',
-      message: 'No cached academic or financial values are being substituted.',
-      tone: SchoolStatusTone.error,
-    ),
-  };
+  Widget _journeyStatus(BuildContext context, FamilyJourneyState state) {
+    final strings = FamilyProductionStrings.forLocale(
+      Localizations.localeOf(context),
+    );
+    return switch (state.phase) {
+      FamilyJourneyPhase.loading => SchoolStatusBanner(
+        label: strings.loadingPublishedInformation,
+        message: strings.selectedProfileRefreshing,
+        tone: SchoolStatusTone.information,
+      ),
+      FamilyJourneyPhase.ready => SchoolStatusBanner(
+        label: strings.publishedInformation,
+        message:
+            '${SchoolBidirectionalText.isolate(state.directory!.activeStudent.displayName)} · '
+            '${SchoolBidirectionalText.isolate(state.directory!.activeStudent.gradeLabel)}',
+        tone: SchoolStatusTone.success,
+      ),
+      FamilyJourneyPhase.failed => SchoolStatusBanner(
+        label: strings.informationUnavailable,
+        message: strings.substituteValuesHiddenUntilVerified,
+        tone: SchoolStatusTone.error,
+      ),
+    };
+  }
 }
 
 class _FamilyJourneyView extends StatelessWidget {
@@ -652,6 +656,9 @@ class _FamilyJourneyView extends StatelessWidget {
     animation: journey,
     builder: (context, _) {
       final state = journey.state;
+      final strings = FamilyProductionStrings.forLocale(
+        Localizations.localeOf(context),
+      );
       switch (state.phase) {
         case FamilyJourneyPhase.loading:
           return const Center(child: CircularProgressIndicator());
@@ -659,23 +666,21 @@ class _FamilyJourneyView extends StatelessWidget {
           return ListView(
             children: [
               SchoolPageSection(
-                description:
-                    'Published information could not be verified for this profile.',
-                title: 'Unable to load Family information',
+                description: strings.informationUnavailable,
+                title: strings.unableToLoadFamilyInformation,
                 child: SchoolPanel(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const SchoolStatusBanner(
-                        label: 'No substitute values shown',
-                        message:
-                            'Academic and financial values remain hidden until the authorized service responds.',
+                      SchoolStatusBanner(
+                        label: strings.noSubstituteValuesShown,
+                        message: strings.substituteValuesHiddenUntilVerified,
                         tone: SchoolStatusTone.error,
                       ),
                       const SizedBox(height: SchoolSpacing.md),
                       FilledButton.icon(
                         icon: const Icon(Icons.refresh),
-                        label: const Text('Try again'),
+                        label: Text(strings.tryAgain),
                         onPressed: () => unawaited(journey.initialize()),
                       ),
                     ],
@@ -706,6 +711,10 @@ class _FamilyHomeScreen extends StatelessWidget {
   Widget build(BuildContext context) => _FamilyJourneyView(
     journey: journey,
     builder: (context, directory, dashboard) {
+      final strings = FamilyProductionStrings.forLocale(
+        Localizations.localeOf(context),
+      );
+      final countStrings = SchoolCountStrings.of(context);
       final links = <Widget>[];
       void addLink(
         IconData icon,
@@ -729,7 +738,7 @@ class _FamilyHomeScreen extends StatelessWidget {
       if (dashboard.attendance != null) {
         addLink(
           Icons.fact_check_outlined,
-          'Review attendance',
+          strings.reviewAttendance,
           '/attendance',
           SchoolBidirectionalText.isolate(dashboard.attendance!.summaryLabel),
         );
@@ -737,17 +746,17 @@ class _FamilyHomeScreen extends StatelessWidget {
       if (dashboard.publishedResults.isNotEmpty) {
         addLink(
           Icons.school_outlined,
-          'View published results',
+          strings.viewPublishedResults,
           '/results',
-          '${dashboard.publishedResults.length} published result(s)',
+          countStrings.publishedResults(dashboard.publishedResults.length),
         );
       }
       if (dashboard.fees != null) {
         addLink(
           Icons.receipt_long_outlined,
-          'Review fees and receipts',
+          strings.reviewFeesAndReceipts,
           '/fees',
-          'Invoice ${SchoolBidirectionalText.isolate(dashboard.fees!.invoiceReference)}',
+          '${strings.invoice} ${SchoolBidirectionalText.isolate(dashboard.fees!.invoiceReference)}',
         );
       }
       if (interactionsAvailable &&
@@ -755,17 +764,19 @@ class _FamilyHomeScreen extends StatelessWidget {
               session.can(SchoolCapability.formsConsent))) {
         addLink(
           Icons.dashboard_customize_outlined,
-          'Documents and forms',
+          strings.documentsAndForms,
           '/services',
-          'Capability-scoped Family services',
+          strings.capabilityScopedFamilyServices,
         );
       }
       if (dashboard.messages != null) {
         addLink(
           Icons.forum_outlined,
-          interactionsAvailable ? 'Open conversations' : 'Open messages',
+          interactionsAvailable
+              ? strings.openConversations
+              : strings.openMessages,
           interactionsAvailable ? '/conversations' : '/messages',
-          '${dashboard.messages!.unreadCount} unread message(s)',
+          countStrings.unreadMessages(dashboard.messages!.unreadCount),
         );
       }
 
@@ -783,12 +794,12 @@ class _FamilyHomeScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    'Today’s timetable',
+                    strings.todaysTimetable,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: SchoolSpacing.sm),
                   if (dashboard.timetable.isEmpty)
-                    const Text('No published timetable items.')
+                    Text(strings.noPublishedTimetableItems)
                   else
                     for (final item in dashboard.timetable)
                       ListTile(
@@ -823,18 +834,21 @@ class _FamilyAttendanceScreen extends StatelessWidget {
   Widget build(BuildContext context) => _FamilyJourneyView(
     journey: journey,
     builder: (context, directory, dashboard) {
+      final strings = FamilyProductionStrings.forLocale(
+        Localizations.localeOf(context),
+      );
+      final countStrings = SchoolCountStrings.of(context);
       final attendance = dashboard.attendance;
       return ListView(
         children: [
           SchoolPageSection(
-            description:
-                'Published sessions only. Approved corrections may change these totals.',
+            description: strings.publishedSessionsDescription,
             title: session.activePersona == SchoolPersona.guardian
-                ? '${SchoolBidirectionalText.isolate(dashboard.student.displayName)} attendance'
-                : 'My attendance',
+                ? '${SchoolBidirectionalText.isolate(dashboard.student.displayName)} · ${SchoolShellStrings.of(context).attendance}'
+                : strings.myAttendance,
             child: SchoolPanel(
               child: attendance == null
-                  ? const Text('No published attendance summary is available.')
+                  ? Text(strings.noPublishedAttendanceSummary)
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -848,23 +862,25 @@ class _FamilyAttendanceScreen extends StatelessWidget {
                         _countTile(
                           context,
                           Icons.check_circle_outline,
-                          'Present',
+                          strings.present,
                           attendance.presentSessions,
                         ),
                         _countTile(
                           context,
                           Icons.access_time_outlined,
-                          'Late',
+                          strings.late,
                           attendance.lateSessions,
                         ),
                         _countTile(
                           context,
                           Icons.event_busy_outlined,
-                          'Absent',
+                          strings.absent,
                           attendance.absentSessions,
                         ),
                         Text(
-                          'Total finalized sessions · ${attendance.totalSessions}',
+                          countStrings.finalizedSessions(
+                            attendance.totalSessions,
+                          ),
                         ),
                       ],
                     ),
@@ -881,15 +897,11 @@ class _FamilyAttendanceScreen extends StatelessWidget {
     String label,
     int count,
   ) {
-    final category = SchoolCardinalPluralRules.categoryFor(
-      Localizations.localeOf(context),
-      count,
-    );
-    final noun = category == SchoolPluralCategory.one ? 'session' : 'sessions';
+    final sessions = SchoolCountStrings.of(context).finalizedSessions(count);
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: Icon(icon),
-      title: Text('$label · $count $noun'),
+      title: Text('$label · $sessions'),
     );
   }
 }
@@ -905,13 +917,18 @@ class _FamilyResultsReadScreen extends StatelessWidget {
     builder: (context, directory, dashboard) => ListView(
       children: [
         SchoolPageSection(
-          description:
-              'Only results released by the academic publication workflow are shown.',
+          description: FamilyProductionStrings.forLocale(
+            Localizations.localeOf(context),
+          ).publishedResultsDescription,
           title:
-              '${SchoolBidirectionalText.isolate(dashboard.student.displayName)} · Published results',
+              '${SchoolBidirectionalText.isolate(dashboard.student.displayName)} · ${FamilyProductionStrings.forLocale(Localizations.localeOf(context)).publishedResults}',
           child: SchoolPanel(
             child: dashboard.publishedResults.isEmpty
-                ? const Text('No published results are available.')
+                ? Text(
+                    FamilyProductionStrings.forLocale(
+                      Localizations.localeOf(context),
+                    ).noPublishedResults,
+                  )
                 : Column(
                     children: [
                       for (final result in dashboard.publishedResults)
@@ -946,26 +963,28 @@ class _FamilyFeesReadScreen extends StatelessWidget {
   Widget build(BuildContext context) => _FamilyJourneyView(
     journey: journey,
     builder: (context, directory, dashboard) {
+      final strings = FamilyProductionStrings.forLocale(
+        Localizations.localeOf(context),
+      );
       final fees = dashboard.fees;
       return ListView(
         children: [
           SchoolPageSection(
-            description:
-                'Amounts come from issued invoices and allocated receipts.',
-            title: 'Fees and receipts',
+            description: strings.amountsFromIssuedInvoices,
+            title: strings.feesAndReceipts,
             child: SchoolPanel(
               child: fees == null
-                  ? const Text('No fee summary is available for this profile.')
+                  ? Text(strings.noFeeSummary)
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Text(
-                          'Outstanding · ${_moneyLabel(context, fees.outstanding)}',
+                          '${strings.outstanding} · ${_moneyLabel(context, fees.outstanding)}',
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                         const SizedBox(height: SchoolSpacing.xs),
                         Text(
-                          'Invoice ${SchoolBidirectionalText.isolate(fees.invoiceReference)}',
+                          '${strings.invoice} ${SchoolBidirectionalText.isolate(fees.invoiceReference)}',
                         ),
                         if (fees.lastReceipt != null) ...[
                           const Divider(height: SchoolSpacing.lg),
@@ -973,7 +992,7 @@ class _FamilyFeesReadScreen extends StatelessWidget {
                             contentPadding: EdgeInsets.zero,
                             leading: const Icon(Icons.receipt_outlined),
                             title: Text(
-                              'Last receipt · ${_moneyLabel(context, fees.lastReceipt!)}',
+                              '${strings.lastReceipt} · ${_moneyLabel(context, fees.lastReceipt!)}',
                             ),
                             subtitle: Text(
                               SchoolBidirectionalText.isolate(
@@ -1009,23 +1028,26 @@ class _FamilyMessagesReadScreen extends StatelessWidget {
   Widget build(BuildContext context) => _FamilyJourneyView(
     journey: journey,
     builder: (context, directory, dashboard) {
+      final strings = FamilyProductionStrings.forLocale(
+        Localizations.localeOf(context),
+      );
+      final countStrings = SchoolCountStrings.of(context);
       final messages = dashboard.messages;
       return ListView(
         children: [
           SchoolPageSection(
-            description:
-                'Conversation access follows school relationship permissions.',
-            title: 'Messages',
+            description: strings.conversationAccessDescription,
+            title: strings.messages,
             child: SchoolPanel(
               child: messages == null
-                  ? const Text('No message summary is available.')
+                  ? Text(strings.noMessageSummary)
                   : ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: const Icon(Icons.mark_email_unread_outlined),
-                      title: Text('${messages.unreadCount} unread message(s)'),
-                      subtitle: const Text(
-                        'Open conversation data will be added through the server-owned messaging contract.',
+                      title: Text(
+                        countStrings.unreadMessages(messages.unreadCount),
                       ),
+                      subtitle: Text(strings.openConversationDataPending),
                     ),
             ),
           ),
