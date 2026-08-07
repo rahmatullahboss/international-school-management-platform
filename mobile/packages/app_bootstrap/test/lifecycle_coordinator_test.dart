@@ -13,34 +13,37 @@ void main() {
     redirectUri: Uri.parse('ozzylschoolfamily:/oauthredirect'),
   );
 
-  test('memory pressure records privacy decision without blocking ready UI', () async {
-    final store = MemoryAuthTokenStore();
-    await store.write(_tokenSet(now));
-    final coordinator = _coordinator(
-      gateway: _ImmediateAuthorizationGateway(_tokenSet(now)),
-      oidc: oidc,
-      now: now,
-      store: store,
-    );
+  test(
+    'memory pressure records privacy decision without blocking ready UI',
+    () async {
+      final store = MemoryAuthTokenStore();
+      await store.write(_tokenSet(now));
+      final coordinator = _coordinator(
+        gateway: _ImmediateAuthorizationGateway(_tokenSet(now)),
+        oidc: oidc,
+        now: now,
+        store: store,
+      );
 
-    await coordinator.initialize();
-    expect(coordinator.state.phase, MobileApplicationPhase.ready);
+      await coordinator.initialize();
+      expect(coordinator.state.phase, MobileApplicationPhase.ready);
 
-    await coordinator.handlePlatformLifecycle(
-      MobilePlatformLifecycleSignal.memoryPressure,
-    );
+      await coordinator.handlePlatformLifecycle(
+        MobilePlatformLifecycleSignal.memoryPressure,
+      );
 
-    expect(coordinator.state.phase, MobileApplicationPhase.ready);
-    expect(
-      coordinator.lastLifecycleDecision?.reasonCode,
-      'MOBILE_LIFECYCLE_MEMORY_PRESSURE',
-    );
-    expect(
-      coordinator.lastLifecycleDecision?.obscureRestrictedContent,
-      isTrue,
-    );
-    coordinator.dispose();
-  });
+      expect(coordinator.state.phase, MobileApplicationPhase.ready);
+      expect(
+        coordinator.lastLifecycleDecision?.reasonCode,
+        'MOBILE_LIFECYCLE_MEMORY_PRESSURE',
+      );
+      expect(
+        coordinator.lastLifecycleDecision?.obscureRestrictedContent,
+        isTrue,
+      );
+      coordinator.dispose();
+    },
+  );
 
   test('inactive AppAuth transition does not cancel sign in', () async {
     final gateway = _DeferredAuthorizationGateway();
@@ -104,7 +107,7 @@ AuthTokenSet _tokenSet(DateTime now) => AuthTokenSet(
 MobileBootstrap _bootstrap() => MobileBootstrap(
   accountId: 'account-1',
   locale: 'en-BD',
-  schools: const [
+  schools: [
     TenantAccess(
       campuses: [
         CampusAccess(
@@ -112,7 +115,7 @@ MobileBootstrap _bootstrap() => MobileBootstrap(
           campusName: 'Main Campus',
           personas: [
             PersonaAccess(
-              capabilities: {SchoolCapability.attendanceRead},
+              capabilities: const {SchoolCapability.attendanceRead},
               persona: SchoolPersona.guardian,
             ),
           ],
