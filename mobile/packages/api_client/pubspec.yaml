@@ -1,0 +1,18 @@
+name: school_api_client
+description: Authenticated HTTP client for versioned school platform APIs.
+version: 0.1.0
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  http: ^1.6.0
+  school_family_domain: ^0.1.0
+  school_mobile_core: ^0.1.0
+  school_staff_domain: ^0.1.0
+
+dev_dependencies:
+  lints: ^6.1.0
+  test: ^1.25.0
