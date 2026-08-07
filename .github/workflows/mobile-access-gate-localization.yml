@@ -1,0 +1,60 @@
+name: Mobile Access Gate Localization
+
+on:
+  pull_request:
+    paths:
+      - 'mobile/apps/family_app/lib/production_app.dart'
+      - 'mobile/apps/staff_app/lib/production_app.dart'
+      - 'mobile/packages/app_bootstrap/lib/src/access_gate.dart'
+      - 'mobile/packages/app_bootstrap/lib/src/mobile_access_strings.dart'
+      - 'mobile/packages/app_bootstrap/test/app_bootstrap_test.dart'
+      - 'mobile/packages/app_bootstrap/test/access_gate_localization_test.dart'
+      - 'mobile/tool/apply_access_gate_localization.py'
+      - '.github/workflows/mobile-access-gate-localization.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.44.7'
+          cache: true
+      - name: Apply bounded access-gate localization migration
+        run: python3 mobile/tool/apply_access_gate_localization.py
+      - name: Format changed Dart files
+        run: |
+          dart format \
+            mobile/apps/family_app/lib/production_app.dart \
+            mobile/apps/staff_app/lib/production_app.dart \
+            mobile/packages/app_bootstrap/lib/src/access_gate.dart \
+            mobile/packages/app_bootstrap/lib/src/mobile_access_strings.dart \
+            mobile/packages/app_bootstrap/test/app_bootstrap_test.dart \
+            mobile/packages/app_bootstrap/test/access_gate_localization_test.dart
+      - name: Commit migrated localization call sites
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo 'Access-gate localization migration already applied.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add \
+            mobile/apps/family_app/lib/production_app.dart \
+            mobile/apps/staff_app/lib/production_app.dart \
+            mobile/packages/app_bootstrap/lib/src/access_gate.dart \
+            mobile/packages/app_bootstrap/lib/src/mobile_access_strings.dart \
+            mobile/packages/app_bootstrap/test/app_bootstrap_test.dart \
+            mobile/packages/app_bootstrap/test/access_gate_localization_test.dart
+          git commit -m 'feat(mobile): localize shared access gate'
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
