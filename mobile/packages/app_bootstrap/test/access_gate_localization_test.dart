@@ -24,9 +24,9 @@ void main() {
       ),
     );
 
-    expect(find.text('স্কুল ফ্যামিলি'), oneWidget);
-    expect(find.text('চালিয়ে যেতে সাইন ইন করুন'), oneWidget);
-    expect(find.text('নিরাপদভাবে সাইন ইন করুন'), oneWidget);
+    expect(find.text('স্কুল ফ্যামিলি'), findsOneWidget);
+    expect(find.text('চালিয়ে যেতে সাইন ইন করুন'), findsOneWidget);
+    expect(find.text('নিরাপদভাবে সাইন ইন করুন'), findsOneWidget);
     expect(find.text('Sign in to continue'), findsNothing);
   });
 
@@ -43,10 +43,10 @@ void main() {
       ),
     );
 
-    expect(find.text('طاقم المدرسة'), oneWidget);
-    expect(find.text('يلزم إعداد التطبيق'), oneWidget);
-    expect(find.textContaining('رمز الدعم'), oneWidget);
-    expect(find.textContaining('STAFF_CONFIGURATION_REQUIRED'), oneWidget);
+    expect(find.text('طاقم المدرسة'), findsOneWidget);
+    expect(find.text('يلزم إعداد التطبيق'), findsOneWidget);
+    expect(find.textContaining('رمز الدعم'), findsOneWidget);
+    expect(find.textContaining('STAFF_CONFIGURATION_REQUIRED'), findsOneWidget);
     expect(
       Directionality.of(tester.element(find.byType(Scaffold))),
       TextDirection.rtl,
@@ -105,9 +105,9 @@ void main() {
       ),
     );
 
-    expect(find.textContaining('International School'), oneWidget);
-    expect(find.textContaining('Main Campus'), oneWidget);
-    expect(find.textContaining('শিক্ষার্থী'), oneWidget);
+    expect(find.textContaining('International School'), findsOneWidget);
+    expect(find.textContaining('Main Campus'), findsOneWidget);
+    expect(find.textContaining('শিক্ষার্থী'), findsOneWidget);
     expect(find.textContaining('Student'), findsNothing);
 
     await tester.tap(
