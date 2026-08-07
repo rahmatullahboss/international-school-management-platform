@@ -6,38 +6,39 @@ import 'package:school_design_system/school_design_system.dart';
 import 'package:school_family_app/family_date_only_presentation.dart';
 
 void main() {
-  testWidgets('date-only display follows the active locale without changing payload', (
-    tester,
-  ) async {
-    const isoDate = '2026-08-07';
-    late String banglaLabel;
-    late String expectedBangla;
+  testWidgets(
+    'date-only display follows the active locale without changing payload',
+    (tester) async {
+      const isoDate = '2026-08-07';
+      late String banglaLabel;
+      late String expectedBangla;
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Builder(
-          builder: (context) {
-            expectedBangla = MaterialLocalizations.of(
-              context,
-            ).formatMediumDate(DateTime(2026, 8, 7));
-            banglaLabel = FamilyDateOnlyPresentation.display(context, isoDate);
-            return const SizedBox();
-          },
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              expectedBangla = MaterialLocalizations.of(
+                context,
+              ).formatMediumDate(DateTime(2026, 8, 7));
+              banglaLabel = FamilyDateOnlyPresentation.display(
+                context,
+                isoDate,
+              );
+              return const SizedBox();
+            },
+          ),
+          locale: const Locale('bn'),
+          localizationsDelegates:
+              SchoolLocalizationConfiguration.localizationsDelegates,
+          supportedLocales: SchoolLocalizationConfiguration.supportedLocales,
         ),
-        locale: const Locale('bn'),
-        localizationsDelegates:
-            SchoolLocalizationConfiguration.localizationsDelegates,
-        supportedLocales: SchoolLocalizationConfiguration.supportedLocales,
-      ),
-    );
+      );
 
-    expect(banglaLabel, expectedBangla);
-    expect(banglaLabel, isNot(isoDate));
-    expect(
-      FamilyDateOnlyPresentation.encode(DateTime(2026, 8, 7)),
-      isoDate,
-    );
-  });
+      expect(banglaLabel, expectedBangla);
+      expect(banglaLabel, isNot(isoDate));
+      expect(FamilyDateOnlyPresentation.encode(DateTime(2026, 8, 7)), isoDate);
+    },
+  );
 
   test('strict date-only parsing rejects rollover and timestamp values', () {
     expect(FamilyDateOnlyPresentation.parse('2026-02-29'), isNull);

@@ -18,8 +18,7 @@ abstract final class FamilyDateOnlyPresentation {
       '${date.day.toString().padLeft(2, '0')}';
 
   static DateTime? parse(String? isoDate) {
-    if (isoDate == null ||
-        !RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(isoDate)) {
+    if (isoDate == null || !RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(isoDate)) {
       return null;
     }
     final parts = isoDate.split('-');
