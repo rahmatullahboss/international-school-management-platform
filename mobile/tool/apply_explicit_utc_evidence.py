@@ -44,7 +44,37 @@ evidence = evidence_path.read_text()
 
 evidence = replace_once(
     evidence,
-    '- reviewed pluralized count sentences on completed Family and Staff production surfaces instead of English `(s)` placeholders;\n- bidi isolation for localized Staff teacher, subject, section, room, student and operation identifiers plus Family interaction student/document/form/consent/conversation/message dynamic values; Staff Gradebook/Messages show localized fail-closed server-boundary states instead of fixture data while authoritative read models are unavailable.\n',
-    evidence,
-    'noop placeholder',
+    '- exact integer minor-unit money formatting in the Family fees/receipts read journey, preserving the existing two-fraction-digit contract until authoritative currency metadata is added to the server read model;\n- reviewed English/Bangla/Arabic domain copy for Family production status/Home/Attendance/Results/Fees/Messages plus Services/Documents/Forms/Guardian Consent/Conversations/Messages, and Staff shell/Today/roster/attendance/sync-journal states;\n',
+    '- exact integer minor-unit money formatting in the Family fees/receipts read journey, preserving the existing two-fraction-digit contract until authoritative currency metadata is added to the server read model;\n- explicit UTC presentation for Family interaction dates/timestamps while authoritative school offset/timezone metadata is absent; device timezone is never inferred for those server instants;\n- reviewed English/Bangla/Arabic domain copy for Family production status/Home/Attendance/Results/Fees/Messages plus Services/Documents/Forms/Guardian Consent/Conversations/Messages, and Staff shell/Today/roster/attendance/sync-journal states;\n',
+    'production composition UTC adoption',
 )
+
+evidence = replace_once(
+    evidence,
+    '- exact money and explicit-offset timestamp rendering in English, Bangla, and Arabic;\n- reduced-motion preference behavior without changing authorization or security decisions;\n',
+    '- exact money and explicit-offset timestamp rendering in English, Bangla, and Arabic;\n- Family interaction UTC fallback converts current server instants with `toUtc()`, labels `UTC`, and source-level tests reject any return of `toLocal()`;\n- reduced-motion preference behavior without changing authorization or security decisions;\n',
+    'source gate UTC adoption',
+)
+
+evidence = replace_once(
+    evidence,
+    'Any remaining untranslated domain surfaces, authoritative Staff assessment/conversation read models, authoritative currency fraction metadata, and representative TalkBack/VoiceOver/device journeys remain incomplete. Flutter lifecycle signals are wired into the shared coordinator, Android windows now use `FLAG_SECURE`, and iOS SceneDelegates now install inactive/app-switcher privacy covers.',
+    'Any remaining untranslated domain surfaces, authoritative Staff assessment/conversation read models, authoritative currency fraction metadata, and representative TalkBack/VoiceOver/device journeys remain incomplete. Family interaction timestamps now use an explicit UTC fallback rather than device timezone inference; school-local presentation remains blocked on authoritative offset/timezone metadata. Flutter lifecycle signals are wired into the shared coordinator, Android windows now use `FLAG_SECURE`, and iOS SceneDelegates now install inactive/app-switcher privacy covers.',
+    'evidence narrative UTC adoption',
+)
+
+evidence = replace_once(
+    evidence,
+    '| Date/time presentation | UTC instant plus explicit offset/timezone formatter tests | DST/locale/device review from authoritative read models | Source gate present; production adoption pending |',
+    '| Date/time presentation | UTC instant plus explicit offset/timezone formatter tests and Family explicit-UTC fallback tests | DST/locale/device review from authoritative school-local read models | Family interaction UTC fallback adopted; school-local explicit-offset presentation blocked on server timezone metadata |',
+    'date/time matrix status',
+)
+
+evidence = replace_once(
+    evidence,
+    '- production adoption of explicit-offset timestamp presentation;\n',
+    '- authoritative school offset/timezone metadata and replacement of the current Family explicit UTC fallback with school-local explicit-offset presentation where those fields are supplied;\n',
+    'remaining timestamp boundary',
+)
+
+evidence_path.write_text(evidence)
