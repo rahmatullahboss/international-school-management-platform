@@ -37,6 +37,17 @@ def prohibit(path: Path, *snippets: str) -> None:
             raise SystemExit(f"NATIVE_SETTING_PROHIBITED:{path}:{snippet}")
 
 
+def require_single_activity(app_root: Path) -> Path:
+    activities = list(
+        (app_root / "android/app/src/main/kotlin").rglob("MainActivity.kt")
+    )
+    if len(activities) != 1:
+        raise SystemExit(
+            f"NATIVE_MAIN_ACTIVITY_REQUIRED:{app_root}:found={len(activities)}"
+        )
+    return activities[0]
+
+
 def main() -> None:
     root = Path(__file__).resolve().parents[1] / "apps"
     for app, config in APPS.items():
@@ -63,6 +74,17 @@ def main() -> None:
             android_manifest,
             'android:allowBackup="true"',
             'android:usesCleartextTraffic="true"',
+        )
+
+        main_activity = require_single_activity(app_root)
+        require(
+            main_activity,
+            "WindowManager.LayoutParams.FLAG_SECURE",
+            "window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)",
+        )
+        prohibit(
+            main_activity,
+            "clearFlags(WindowManager.LayoutParams.FLAG_SECURE)",
         )
 
         info_plist = app_root / "ios/Runner/Info.plist"
@@ -99,6 +121,17 @@ def main() -> None:
         require(
             app_root / "ios/Flutter/Release.xcconfig",
             "CODE_SIGN_ENTITLEMENTS=Runner/Release.entitlements",
+        )
+
+        scene_delegate = app_root / "ios/Runner/SceneDelegate.swift"
+        require(
+            scene_delegate,
+            "sceneWillResignActive",
+            "sceneDidBecomeActive",
+            "privacyCoverTag",
+            "cover.backgroundColor = .systemBackground",
+            "window.addSubview(cover)",
+            "removeFromSuperview()",
         )
 
     print("Native application configuration verified.")
