@@ -598,24 +598,27 @@ class _FamilyDateField extends StatelessWidget {
   final String? value;
 
   @override
-  Widget build(BuildContext context) => OutlinedButton.icon(
-    icon: const Icon(Icons.calendar_today_outlined),
-    label: Text(value == null ? label : '$label · $value'),
-    onPressed: () async {
-      final now = DateTime.now();
-      final selected = await showDatePicker(
-        context: context,
-        firstDate: DateTime(now.year - 1),
-        initialDate: DateTime.tryParse(value ?? '') ?? now,
-        lastDate: DateTime(now.year + 5),
-      );
-      if (selected != null) {
-        onChanged(
-          '${selected.year.toString().padLeft(4, '0')}-${selected.month.toString().padLeft(2, '0')}-${selected.day.toString().padLeft(2, '0')}',
+  Widget build(BuildContext context) {
+    final displayValue = value == null
+        ? null
+        : FamilyDateOnlyPresentation.display(context, value!);
+    return OutlinedButton.icon(
+      icon: const Icon(Icons.calendar_today_outlined),
+      label: Text(displayValue == null ? label : '$label · $displayValue'),
+      onPressed: () async {
+        final now = DateTime.now();
+        final selected = await showDatePicker(
+          context: context,
+          firstDate: DateTime(now.year - 1),
+          initialDate: FamilyDateOnlyPresentation.parse(value) ?? now,
+          lastDate: DateTime(now.year + 5),
         );
-      }
-    },
-  );
+        if (selected != null) {
+          onChanged(FamilyDateOnlyPresentation.encode(selected));
+        }
+      },
+    );
+  }
 }
 
 class _FamilyConsentsScreen extends StatelessWidget {
