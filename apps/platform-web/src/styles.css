@@ -81,424 +81,151 @@ dl div {
   padding: 1rem;
 }
 
-/*
- * Operator workspaces are task consoles, not pilot landing pages.
- * This scoped layer deliberately overrides the decorative pilot shell for
- * Admissions, Finance and Support while leaving the public role chooser alone.
- */
-.pilot-entry[data-role='admissions'],
-.pilot-entry[data-role='finance'],
-.pilot-entry[data-role='support'] {
+/* Staff operator routes use a compact ERP console instead of the staging hero layout. */
+.operator-entry {
   min-height: 100vh;
-  background: #f3f6f8;
   color: #12263a;
+  background: #f3f6f8;
 }
 
-.pilot-entry[data-role='admissions'] .pilot-entry__masthead,
-.pilot-entry[data-role='finance'] .pilot-entry__masthead,
-.pilot-entry[data-role='support'] .pilot-entry__masthead {
+.operator-entry .pilot-entry__masthead {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 1.5rem;
+  gap: 1rem 2rem;
   align-items: center;
-  min-height: 7.25rem;
-  padding: 1.25rem clamp(1rem, 3vw, 2.5rem);
-  color: #ffffff;
-  background: #12263a;
+  min-height: auto;
+  padding: 1rem clamp(1rem, 3vw, 2.25rem);
   border-bottom: 1px solid #315067;
+  background: #12263a;
 }
 
-.pilot-entry[data-role='admissions'] .pilot-entry__masthead h1,
-.pilot-entry[data-role='finance'] .pilot-entry__masthead h1,
-.pilot-entry[data-role='support'] .pilot-entry__masthead h1 {
+.operator-entry .pilot-entry__masthead h1 {
   max-width: none;
-  margin: 0.2rem 0 0;
+  margin: 0.15rem 0 0;
   font-family: inherit;
-  font-size: clamp(1.45rem, 2vw, 2rem);
-  font-weight: 750;
+  font-size: clamp(1.4rem, 2vw, 1.9rem);
   line-height: 1.15;
-  letter-spacing: -0.025em;
 }
 
-.pilot-entry[data-role='admissions'] .pilot-entry__masthead > div > p:last-child,
-.pilot-entry[data-role='finance'] .pilot-entry__masthead > div > p:last-child,
-.pilot-entry[data-role='support'] .pilot-entry__masthead > div > p:last-child {
+.operator-entry .pilot-entry__masthead > div > p:last-child {
   max-width: 72ch;
-  margin: 0.4rem 0 0;
+  margin: 0.35rem 0 0;
   color: #d7e1e8;
-  font-size: 0.92rem;
-  line-height: 1.45;
+  font-size: 0.9rem;
 }
 
-.pilot-entry[data-role='admissions'] .pilot-kicker,
-.pilot-entry[data-role='finance'] .pilot-kicker,
-.pilot-entry[data-role='support'] .pilot-kicker {
+.operator-entry .pilot-kicker {
   margin: 0;
   color: #a9c6d2;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
+  font-size: 0.68rem;
 }
 
-.pilot-entry[data-role='admissions'] .pilot-entry__status,
-.pilot-entry[data-role='finance'] .pilot-entry__status,
-.pilot-entry[data-role='support'] .pilot-entry__status {
+.operator-entry .pilot-entry__status {
   display: grid;
-  grid-template-columns: auto auto;
-  gap: 0.15rem 1rem;
-  align-content: center;
-  min-width: 17rem;
+  grid-template-columns: 1fr auto;
+  gap: 0.2rem 1rem;
+  min-width: 16rem;
   padding: 0;
   border: 0;
-  border-radius: 0;
   background: transparent;
 }
 
-.pilot-entry[data-role='admissions'] .pilot-entry__status strong,
-.pilot-entry[data-role='finance'] .pilot-entry__status strong,
-.pilot-entry[data-role='support'] .pilot-entry__status strong {
+.operator-entry .pilot-entry__status strong {
   grid-column: 1 / -1;
-  font-size: 0.92rem;
 }
 
-.pilot-entry[data-role='admissions'] .pilot-entry__status span,
-.pilot-entry[data-role='finance'] .pilot-entry__status span,
-.pilot-entry[data-role='support'] .pilot-entry__status span {
+.operator-entry .pilot-entry__status span {
   color: #bed0db;
   font-size: 0.78rem;
 }
 
-.pilot-entry[data-role='admissions'] .pilot-entry__status a,
-.pilot-entry[data-role='finance'] .pilot-entry__status a,
-.pilot-entry[data-role='support'] .pilot-entry__status a,
-.pilot-entry[data-role='admissions'] .pilot-entry__status button,
-.pilot-entry[data-role='finance'] .pilot-entry__status button,
-.pilot-entry[data-role='support'] .pilot-entry__status button {
-  justify-self: end;
-  margin: 0;
-  padding: 0;
-  color: #ffffff;
-  font: inherit;
+.operator-entry .pilot-entry__status a {
+  color: #fff;
   font-size: 0.8rem;
-  font-weight: 700;
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
 }
 
-.pilot-entry[data-role='admissions'] .pilot-entry__main,
-.pilot-entry[data-role='finance'] .pilot-entry__main,
-.pilot-entry[data-role='support'] .pilot-entry__main {
+.operator-entry .pilot-entry__main {
   display: grid;
-  gap: 1.25rem;
+  gap: 1rem;
   width: min(100%, 96rem);
   margin-inline: auto;
-  padding: 1.25rem clamp(1rem, 3vw, 2.5rem) 3rem;
+  padding: 1rem clamp(1rem, 3vw, 2.25rem) 2.5rem;
 }
 
-.pilot-entry[data-role='admissions'] .pilot-data-status,
-.pilot-entry[data-role='finance'] .pilot-data-status,
-.pilot-entry[data-role='support'] .pilot-data-status {
-  margin: 0;
-}
-
-.pilot-entry[data-role='admissions'] .pilot-actions,
-.pilot-entry[data-role='finance'] .pilot-actions,
-.pilot-entry[data-role='support'] .pilot-actions {
+.operator-entry .pilot-actions {
   display: flex;
   gap: 0;
   overflow-x: auto;
   padding: 0;
   border: 1px solid #cbd6de;
   border-radius: 8px;
-  background: #ffffff;
+  background: #fff;
 }
 
-.pilot-entry[data-role='admissions'] .pilot-actions a,
-.pilot-entry[data-role='finance'] .pilot-actions a,
-.pilot-entry[data-role='support'] .pilot-actions a {
+.operator-entry .pilot-actions a {
+  min-height: 2.7rem;
   display: inline-flex;
-  min-height: 2.75rem;
   align-items: center;
-  padding: 0.7rem 1rem;
+  padding: 0.65rem 0.9rem;
   color: #365166;
-  font-size: 0.86rem;
+  font-size: 0.84rem;
   font-weight: 700;
   text-decoration: none;
   white-space: nowrap;
-  border: 0;
   border-inline-end: 1px solid #dce4e9;
-  border-radius: 0;
-  background: #ffffff;
 }
 
-.pilot-entry[data-role='admissions'] .pilot-actions a:first-child,
-.pilot-entry[data-role='finance'] .pilot-actions a:first-child,
-.pilot-entry[data-role='support'] .pilot-actions a:first-child {
-  color: #365166;
-  background: #ffffff;
-}
-
-.pilot-entry[data-role='admissions'] .pilot-actions a[aria-current='page'],
-.pilot-entry[data-role='finance'] .pilot-actions a[aria-current='page'],
-.pilot-entry[data-role='support'] .pilot-actions a[aria-current='page'] {
+.operator-entry .pilot-actions a[aria-current='page'] {
   color: #004f57;
   box-shadow: inset 0 -3px 0 #006d77;
   background: #f7fbfb;
 }
 
-.pilot-entry[data-role='admissions'] .pilot-metrics,
-.pilot-entry[data-role='finance'] .pilot-metrics,
-.pilot-entry[data-role='support'] .pilot-metrics {
+.operator-entry :is(.pilot-metrics, .pilot-work-queue, .pilot-demo-note, .pilot-coverage) {
   border-color: #cbd6de;
   border-radius: 8px;
   box-shadow: none;
 }
 
-.pilot-entry[data-role='admissions'] .pilot-metrics article,
-.pilot-entry[data-role='finance'] .pilot-metrics article,
-.pilot-entry[data-role='support'] .pilot-metrics article {
-  min-height: 7rem;
-  padding: 1rem 1.15rem;
-}
-
-.pilot-entry[data-role='admissions'] .pilot-metrics strong,
-.pilot-entry[data-role='finance'] .pilot-metrics strong,
-.pilot-entry[data-role='support'] .pilot-metrics strong {
-  font-family: inherit;
-  font-size: 1.65rem;
-  font-weight: 750;
-}
-
-.pilot-entry[data-role='admissions'] .pilot-work-queue,
-.pilot-entry[data-role='finance'] .pilot-work-queue,
-.pilot-entry[data-role='support'] .pilot-work-queue {
+.operator-entry .pilot-work-queue {
   grid-template-columns: minmax(12rem, 0.28fr) minmax(0, 1fr);
-  gap: 1.25rem;
-  padding: 1.1rem;
-  border-color: #cbd6de;
-  border-radius: 8px;
-  background: #ffffff;
+  padding: 1rem;
+  background: #fff;
 }
 
-.pilot-entry[data-role='admissions'] .pilot-work-queue h2,
-.pilot-entry[data-role='admissions'] .pilot-work-queue h3,
-.pilot-entry[data-role='finance'] .pilot-work-queue h2,
-.pilot-entry[data-role='finance'] .pilot-work-queue h3,
-.pilot-entry[data-role='support'] .pilot-work-queue h2,
-.pilot-entry[data-role='support'] .pilot-work-queue h3 {
+.operator-entry .pilot-work-queue :is(h2, h3) {
   font-family: inherit;
-  font-size: 1.15rem;
-  font-weight: 750;
-  letter-spacing: -0.015em;
 }
 
-.pilot-entry[data-role='admissions'] .pilot-work-queue li,
-.pilot-entry[data-role='finance'] .pilot-work-queue li,
-.pilot-entry[data-role='support'] .pilot-work-queue li {
+.operator-entry .pilot-work-queue li {
+  padding: 0.85rem 0;
   border: 0;
   border-top: 1px solid #dce4e9;
   border-radius: 0;
-  padding: 0.9rem 0;
 }
 
-.pilot-entry[data-role='admissions'] .pilot-work-queue li:first-child,
-.pilot-entry[data-role='finance'] .pilot-work-queue li:first-child,
-.pilot-entry[data-role='support'] .pilot-work-queue li:first-child {
+.operator-entry .pilot-work-queue li:first-child {
   border-top: 0;
 }
 
-.pilot-entry[data-role='admissions'] .pilot-demo-note,
-.pilot-entry[data-role='finance'] .pilot-demo-note,
-.pilot-entry[data-role='support'] .pilot-demo-note {
-  display: grid;
-  gap: 0.5rem;
-  padding: 0.9rem 1rem;
-  color: #31475a;
-  border: 1px solid #b9d8d6;
-  border-radius: 8px;
+.operator-entry .pilot-demo-note {
+  padding: 0.85rem 1rem;
   background: #edf8f6;
 }
 
-.pilot-entry[data-role='admissions'] .pilot-coverage,
-.pilot-entry[data-role='finance'] .pilot-coverage,
-.pilot-entry[data-role='support'] .pilot-coverage {
-  padding: 1.25rem;
-  border: 1px solid #cbd6de;
-  border-radius: 8px;
-  background: #ffffff;
-}
-
-.pilot-entry[data-role='admissions'] .pilot-section-heading,
-.pilot-entry[data-role='finance'] .pilot-section-heading,
-.pilot-entry[data-role='support'] .pilot-section-heading {
-  max-width: 70ch;
-  margin-bottom: 1rem;
-}
-
-.pilot-entry[data-role='admissions'] .pilot-section-heading > p,
-.pilot-entry[data-role='finance'] .pilot-section-heading > p,
-.pilot-entry[data-role='support'] .pilot-section-heading > p {
-  margin-bottom: 0.35rem;
-  color: #4c6275;
-  font-size: 0.72rem;
-  letter-spacing: 0.06em;
-}
-
-.pilot-entry[data-role='admissions'] .pilot-section-heading h2,
-.pilot-entry[data-role='finance'] .pilot-section-heading h2,
-.pilot-entry[data-role='support'] .pilot-section-heading h2 {
-  margin: 0;
-  font-family: inherit;
-  font-size: clamp(1.2rem, 2vw, 1.55rem);
-  font-weight: 750;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-}
-
-.pilot-entry[data-role='admissions'] .pilot-section-heading span,
-.pilot-entry[data-role='finance'] .pilot-section-heading span,
-.pilot-entry[data-role='support'] .pilot-section-heading span {
-  margin-top: 0.35rem;
-  font-size: 0.9rem;
-  line-height: 1.5;
-}
-
-.pilot-entry[data-role='admissions'] .pilot-coverage form,
-.pilot-entry[data-role='finance'] .pilot-coverage form,
-.pilot-entry[data-role='support'] .pilot-coverage form {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-items: end;
-  background: #f8fafb;
-  border-color: #d5dee4;
-}
-
-.pilot-entry[data-role='admissions'] .pilot-coverage form label,
-.pilot-entry[data-role='finance'] .pilot-coverage form label,
-.pilot-entry[data-role='support'] .pilot-coverage form label {
-  display: grid;
-  gap: 0.35rem;
-  color: #243e52;
-  font-size: 0.82rem;
-  font-weight: 700;
-}
-
-.pilot-entry[data-role='admissions'] .pilot-coverage form select,
-.pilot-entry[data-role='admissions'] .pilot-coverage form input,
-.pilot-entry[data-role='admissions'] .pilot-coverage form textarea,
-.pilot-entry[data-role='finance'] .pilot-coverage form select,
-.pilot-entry[data-role='finance'] .pilot-coverage form input,
-.pilot-entry[data-role='finance'] .pilot-coverage form textarea,
-.pilot-entry[data-role='support'] .pilot-coverage form select,
-.pilot-entry[data-role='support'] .pilot-coverage form input,
-.pilot-entry[data-role='support'] .pilot-coverage form textarea {
-  width: 100%;
-  min-height: 2.7rem;
-  padding: 0.65rem 0.75rem;
-  color: #12263a;
-  font: inherit;
-  border: 1px solid #9eafbb;
-  border-radius: 8px;
-  background: #ffffff;
-}
-
-.pilot-entry[data-role='admissions'] .pilot-coverage form textarea,
-.pilot-entry[data-role='finance'] .pilot-coverage form textarea,
-.pilot-entry[data-role='support'] .pilot-coverage form textarea {
-  min-height: 5.5rem;
-  resize: vertical;
-}
-
-.pilot-entry[data-role='admissions'] .pilot-coverage form button,
-.pilot-entry[data-role='finance'] .pilot-coverage form button,
-.pilot-entry[data-role='support'] .pilot-coverage form button {
-  min-height: 2.75rem;
-  justify-self: start;
-  padding: 0.65rem 1rem;
-  color: #ffffff;
-  font: inherit;
-  font-size: 0.86rem;
-  font-weight: 750;
-  border: 1px solid #006d77;
-  border-radius: 8px;
-  background: #006d77;
-  cursor: pointer;
-}
-
-.pilot-entry[data-role='admissions'] .pilot-coverage form button:hover,
-.pilot-entry[data-role='finance'] .pilot-coverage form button:hover,
-.pilot-entry[data-role='support'] .pilot-coverage form button:hover {
-  border-color: #004f57;
-  background: #004f57;
-}
-
-.pilot-entry[data-role='admissions'] .pilot-coverage form button:disabled,
-.pilot-entry[data-role='finance'] .pilot-coverage form button:disabled,
-.pilot-entry[data-role='support'] .pilot-coverage form button:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
-
-.pilot-entry[data-role='admissions'] .pilot-coverage__grid,
-.pilot-entry[data-role='finance'] .pilot-coverage__grid,
-.pilot-entry[data-role='support'] .pilot-coverage__grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0;
-  border-top: 1px solid #dce4e9;
-}
-
-.pilot-entry[data-role='admissions'] .pilot-coverage article,
-.pilot-entry[data-role='finance'] .pilot-coverage article,
-.pilot-entry[data-role='support'] .pilot-coverage article {
-  min-height: auto;
-  padding: 0.75rem 0.9rem;
-  border: 0;
-  border-bottom: 1px solid #dce4e9;
-  border-radius: 0;
-  background: transparent;
-}
-
-.pilot-entry[data-role='admissions'] .pilot-coverage article h3,
-.pilot-entry[data-role='finance'] .pilot-coverage article h3,
-.pilot-entry[data-role='support'] .pilot-coverage article h3 {
-  margin: 0;
-  overflow-wrap: anywhere;
-  color: #365166;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.76rem;
-  font-weight: 600;
-}
-
-.pilot-entry[data-role='admissions'] :is(a, button, input, select, textarea):focus-visible,
-.pilot-entry[data-role='finance'] :is(a, button, input, select, textarea):focus-visible,
-.pilot-entry[data-role='support'] :is(a, button, input, select, textarea):focus-visible {
+.operator-entry :is(a, button, input, select, textarea):focus-visible {
   outline: 3px solid #0b63ce;
   outline-offset: 2px;
 }
 
 @media (max-width: 64rem) {
-  .pilot-entry[data-role='admissions'] .pilot-entry__masthead,
-  .pilot-entry[data-role='finance'] .pilot-entry__masthead,
-  .pilot-entry[data-role='support'] .pilot-entry__masthead {
+  .operator-entry .pilot-entry__masthead,
+  .operator-entry .pilot-work-queue {
     grid-template-columns: 1fr;
-    gap: 0.85rem;
   }
 
-  .pilot-entry[data-role='admissions'] .pilot-entry__status,
-  .pilot-entry[data-role='finance'] .pilot-entry__status,
-  .pilot-entry[data-role='support'] .pilot-entry__status {
-    grid-template-columns: 1fr auto;
+  .operator-entry .pilot-entry__status {
     min-width: 0;
-  }
-
-  .pilot-entry[data-role='admissions'] .pilot-work-queue,
-  .pilot-entry[data-role='finance'] .pilot-work-queue,
-  .pilot-entry[data-role='support'] .pilot-work-queue {
-    grid-template-columns: 1fr;
   }
 }
 
@@ -512,25 +239,8 @@ dl div {
     border-bottom: 1px solid #d9deea;
   }
 
-  .pilot-entry[data-role='admissions'] .pilot-entry__masthead,
-  .pilot-entry[data-role='finance'] .pilot-entry__masthead,
-  .pilot-entry[data-role='support'] .pilot-entry__masthead {
-    min-height: auto;
-    padding: 1rem;
-  }
-
-  .pilot-entry[data-role='admissions'] .pilot-entry__main,
-  .pilot-entry[data-role='finance'] .pilot-entry__main,
-  .pilot-entry[data-role='support'] .pilot-entry__main {
-    padding: 1rem 0.75rem 2rem;
-  }
-
-  .pilot-entry[data-role='admissions'] .pilot-coverage form,
-  .pilot-entry[data-role='finance'] .pilot-coverage form,
-  .pilot-entry[data-role='support'] .pilot-coverage form,
-  .pilot-entry[data-role='admissions'] .pilot-coverage__grid,
-  .pilot-entry[data-role='finance'] .pilot-coverage__grid,
-  .pilot-entry[data-role='support'] .pilot-coverage__grid {
-    grid-template-columns: 1fr;
+  .operator-entry .pilot-entry__masthead,
+  .operator-entry .pilot-entry__main {
+    padding-inline: 0.75rem;
   }
 }
