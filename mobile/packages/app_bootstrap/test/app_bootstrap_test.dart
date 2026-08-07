@@ -153,6 +153,133 @@ void main() {
         coordinator.dispose();
       },
     );
+
+    test('obscures ready data and reloads access after resume', () async {
+      final store = MemoryAuthTokenStore();
+      await store.write(tokenSet(now));
+      final loader = CountingBootstrapLoader(familyBootstrap());
+      final coordinator = coordinatorFor(
+        allowedPersonas: const {SchoolPersona.guardian},
+        bootstrap: familyBootstrap(),
+        bootstrapLoader: loader,
+        oidc: oidc,
+        now: now,
+        store: store,
+      );
+
+      await coordinator.initialize();
+      expect(coordinator.state.phase, MobileApplicationPhase.ready);
+      expect(loader.loadCount, 1);
+
+      await coordinator.handlePlatformLifecycle(
+        MobilePlatformLifecycleSignal.paused,
+      );
+
+      expect(coordinator.state.phase, MobileApplicationPhase.restoring);
+      expect(
+        coordinator.lastLifecycleDecision?.reasonCode,
+        'MOBILE_LIFECYCLE_BACKGROUND_PRIVACY',
+      );
+      expect(
+        coordinator.lastLifecycleDecision?.obscureRestrictedContent,
+        isTrue,
+      );
+
+      await coordinator.handlePlatformLifecycle(
+        MobilePlatformLifecycleSignal.resumed,
+      );
+
+      expect(coordinator.state.phase, MobileApplicationPhase.ready);
+      expect(loader.loadCount, 2);
+      expect(
+        coordinator.lastLifecycleDecision?.reasonCode,
+        'MOBILE_LIFECYCLE_RESUMED',
+      );
+      expect(
+        coordinator.lastLifecycleDecision?.requireFreshAuthorization,
+        isFalse,
+      );
+      coordinator.dispose();
+    });
+
+    test('refreshes an expired token after a detached lifecycle', () async {
+      var clock = now;
+      final store = MemoryAuthTokenStore();
+      await store.write(tokenSet(now));
+      final refreshedTokens = tokenSet(now.add(const Duration(hours: 3)));
+      final gateway = FakeAuthorizationGateway(
+        refreshTokens: refreshedTokens,
+        signInTokens: tokenSet(now),
+      );
+      final coordinator = coordinatorFor(
+        allowedPersonas: const {SchoolPersona.guardian},
+        bootstrap: familyBootstrap(),
+        clock: () => clock,
+        gateway: gateway,
+        oidc: oidc,
+        now: now,
+        store: store,
+      );
+
+      await coordinator.initialize();
+      expect(coordinator.state.phase, MobileApplicationPhase.ready);
+
+      await coordinator.handlePlatformLifecycle(
+        MobilePlatformLifecycleSignal.detached,
+      );
+      expect(coordinator.state.phase, MobileApplicationPhase.restoring);
+      expect(
+        coordinator.lastLifecycleDecision?.reasonCode,
+        'MOBILE_LIFECYCLE_PROCESS_DETACHED',
+      );
+
+      clock = now.add(const Duration(hours: 2));
+      await coordinator.handlePlatformLifecycle(
+        MobilePlatformLifecycleSignal.resumed,
+      );
+
+      expect(gateway.refreshCount, 1);
+      expect(coordinator.state.phase, MobileApplicationPhase.ready);
+      expect(
+        coordinator.lastLifecycleDecision?.reasonCode,
+        'MOBILE_LIFECYCLE_RESUMED',
+      );
+      coordinator.dispose();
+    });
+  });
+
+  testWidgets('native lifecycle events reach the coordinator observer', (
+    tester,
+  ) async {
+    final store = MemoryAuthTokenStore();
+    await store.write(tokenSet(now));
+    final loader = CountingBootstrapLoader(familyBootstrap());
+    final coordinator = coordinatorFor(
+      allowedPersonas: const {SchoolPersona.guardian},
+      bootstrap: familyBootstrap(),
+      bootstrapLoader: loader,
+      observePlatformLifecycle: true,
+      oidc: oidc,
+      now: now,
+      store: store,
+    );
+    await coordinator.initialize();
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    await tester.pump();
+
+    expect(coordinator.state.phase, MobileApplicationPhase.restoring);
+    expect(
+      coordinator.lastLifecycleDecision?.reasonCode,
+      'MOBILE_LIFECYCLE_BACKGROUND_PRIVACY',
+    );
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pumpAndSettle();
+
+    expect(coordinator.state.phase, MobileApplicationPhase.ready);
+    expect(loader.loadCount, 2);
+    coordinator.dispose();
   });
 
   testWidgets('access gate exposes sign-in and authorized access actions', (
@@ -224,23 +351,30 @@ MobileAppCoordinator coordinatorFor({
   required MobileBootstrap bootstrap,
   required MobileOidcConfiguration oidc,
   required DateTime now,
+  MobileBootstrapLoader? bootstrapLoader,
+  DateTime Function()? clock,
+  FakeAuthorizationGateway? gateway,
+  bool observePlatformLifecycle = false,
   AuthTokenStore? store,
   AuthTokenSet? signInTokens,
 }) {
-  final gateway = FakeAuthorizationGateway(
-    signInTokens: signInTokens ?? tokenSet(now),
-  );
+  final authGateway =
+      gateway ??
+      FakeAuthorizationGateway(signInTokens: signInTokens ?? tokenSet(now));
+  final effectiveClock = clock ?? () => now;
   final authentication = AuthSessionManager(
-    clock: () => now,
+    clock: effectiveClock,
     configuration: oidc,
-    gateway: gateway,
+    gateway: authGateway,
     tokenStore: store ?? MemoryAuthTokenStore(),
   );
   return MobileAppCoordinator(
     allowedPersonas: allowedPersonas,
     authentication: authentication,
-    bootstrapLoader: FakeBootstrapLoader(bootstrap),
+    bootstrapLoader: bootstrapLoader ?? FakeBootstrapLoader(bootstrap),
     correlationIdFactory: () => 'correlation-1',
+    lifecycleClock: effectiveClock,
+    observePlatformLifecycle: observePlatformLifecycle,
   );
 }
 
@@ -304,10 +438,28 @@ final class FakeBootstrapLoader implements MobileBootstrapLoader {
       bootstrap;
 }
 
-final class FakeAuthorizationGateway implements AuthorizationGateway {
-  const FakeAuthorizationGateway({required this.signInTokens});
+final class CountingBootstrapLoader implements MobileBootstrapLoader {
+  CountingBootstrapLoader(this.bootstrap);
 
+  final MobileBootstrap bootstrap;
+  int loadCount = 0;
+
+  @override
+  Future<MobileBootstrap> load({required String correlationId}) async {
+    loadCount++;
+    return bootstrap;
+  }
+}
+
+final class FakeAuthorizationGateway implements AuthorizationGateway {
+  FakeAuthorizationGateway({
+    this.refreshTokens,
+    required this.signInTokens,
+  });
+
+  final AuthTokenSet? refreshTokens;
   final AuthTokenSet signInTokens;
+  int refreshCount = 0;
 
   @override
   Future<AuthTokenSet> authorize(MobileOidcConfiguration configuration) async =>
@@ -323,5 +475,8 @@ final class FakeAuthorizationGateway implements AuthorizationGateway {
   Future<AuthTokenSet> refresh(
     MobileOidcConfiguration configuration,
     String refreshToken,
-  ) async => signInTokens;
+  ) async {
+    refreshCount++;
+    return refreshTokens ?? signInTokens;
+  }
 }
