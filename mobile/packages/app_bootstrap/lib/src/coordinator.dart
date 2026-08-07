@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:school_api_client/mobile_bootstrap_api.dart';
 import 'package:school_api_client/school_api_client.dart';
