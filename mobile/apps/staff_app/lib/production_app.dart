@@ -57,7 +57,7 @@ class _StaffProductionAppState extends State<StaffProductionApp> {
       return MaterialApp(
         debugShowCheckedModeBanner: false,
         home: MobileConfigurationFailureScreen(
-          appName: 'School Staff',
+          application: MobileAccessApplication.staff,
           reasonCode: configurationReason,
         ),
         localeListResolutionCallback:
@@ -87,7 +87,7 @@ class _StaffProductionAppState extends State<StaffProductionApp> {
             return MaterialApp(
               debugShowCheckedModeBanner: false,
               home: const MobileConfigurationFailureScreen(
-                appName: 'School Staff',
+                application: MobileAccessApplication.staff,
                 reasonCode: 'TEACHER_REPOSITORY_CONFIGURATION_REQUIRED',
               ),
               localeListResolutionCallback:
@@ -113,7 +113,7 @@ class _StaffProductionAppState extends State<StaffProductionApp> {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           home: MobileAccessGate(
-            appName: 'School Staff',
+            application: MobileAccessApplication.staff,
             onRetry: coordinator.initialize,
             onSelectAccess: coordinator.selectAccess,
             onSignIn: coordinator.signIn,

@@ -180,9 +180,12 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates:
+            SchoolLocalizationConfiguration.localizationsDelegates,
+        supportedLocales: SchoolLocalizationConfiguration.supportedLocales,
         theme: SchoolTheme.light(),
         home: MobileAccessGate(
-          appName: 'School Family',
+          application: MobileAccessApplication.family,
           onRetry: () async {},
           onSelectAccess: (option) => selected = option,
           onSignIn: () async {
@@ -199,9 +202,12 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates:
+            SchoolLocalizationConfiguration.localizationsDelegates,
+        supportedLocales: SchoolLocalizationConfiguration.supportedLocales,
         theme: SchoolTheme.light(),
         home: MobileAccessGate(
-          appName: 'School Family',
+          application: MobileAccessApplication.family,
           onRetry: () async {},
           onSelectAccess: (option) => selected = option,
           onSignIn: () async {},
@@ -213,7 +219,9 @@ void main() {
         ),
       ),
     );
-    await tester.tap(find.text('International School').last);
+    await tester.tap(
+      find.byKey(const ValueKey('access-tenant-1-campus-1-student')),
+    );
     await tester.pump();
     expect(selected?.persona, SchoolPersona.student);
   });

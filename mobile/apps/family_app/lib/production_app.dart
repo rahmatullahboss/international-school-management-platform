@@ -62,7 +62,7 @@ class _FamilyProductionAppState extends State<FamilyProductionApp> {
       return MaterialApp(
         debugShowCheckedModeBanner: false,
         home: MobileConfigurationFailureScreen(
-          appName: 'School Family',
+          application: MobileAccessApplication.family,
           reasonCode: configurationReason,
         ),
         localeListResolutionCallback:
@@ -98,7 +98,7 @@ class _FamilyProductionAppState extends State<FamilyProductionApp> {
             return MaterialApp(
               debugShowCheckedModeBanner: false,
               home: const MobileConfigurationFailureScreen(
-                appName: 'School Family',
+                application: MobileAccessApplication.family,
                 reasonCode: 'FAMILY_REPOSITORY_CONFIGURATION_REQUIRED',
               ),
               localeListResolutionCallback:
@@ -125,7 +125,7 @@ class _FamilyProductionAppState extends State<FamilyProductionApp> {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           home: MobileAccessGate(
-            appName: 'School Family',
+            application: MobileAccessApplication.family,
             onRetry: coordinator.initialize,
             onSelectAccess: coordinator.selectAccess,
             onSignIn: coordinator.signIn,
