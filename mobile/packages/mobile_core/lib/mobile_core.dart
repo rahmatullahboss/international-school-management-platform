@@ -1,6 +1,8 @@
 /// Shared, platform-neutral contracts used by both Flutter applications.
 library;
 
+export 'privacy_lifecycle.dart';
+
 enum SchoolPersona {
   guardian,
   student,
