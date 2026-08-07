@@ -329,6 +329,31 @@ export class CareSecurityService {
     }
     const breakGlass = this.#authorizeBreakGlass(request, now);
     if (breakGlass) return breakGlass;
+    const isWriteOnlySafeguardingIntake =
+      resource.classification === 'CARE-C4' &&
+      request.action === 'create' &&
+      request.permission === 'care.safeguarding.concern.create' &&
+      (context.purpose === 'mandatory-reporting' ||
+        context.purpose === 'safeguarding-assessment');
+    const isSafeguardingCaseBootstrap =
+      resource.classification === 'CARE-C4' &&
+      request.action === 'create' &&
+      request.permission === 'care.safeguarding.case.open' &&
+      context.persona === 'safeguarding-lead' &&
+      context.assurance === 'aal2' &&
+      context.purpose === 'safeguarding-assessment';
+    if (isWriteOnlySafeguardingIntake || isSafeguardingCaseBootstrap) {
+      const relationship = request.relationship;
+      if (
+        !relationship ||
+        relationship.studentPersonId !== resource.studentPersonId ||
+        !relationship.active ||
+        (relationship.expiresAt !== undefined && relationship.expiresAt <= now)
+      ) {
+        return this.#deny(request, 'relationship-required', now);
+      }
+      return this.#allow(request, 'need-to-know', now, true);
+    }
     if (
       broadRestrictedPersonas.has(context.persona) &&
       (resource.classification === 'CARE-C3' || resource.classification === 'CARE-C4')

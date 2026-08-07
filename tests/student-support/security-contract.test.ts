@@ -98,6 +98,54 @@ describe('CARE-01 security contract', () => {
     });
   });
 
+  test('allows exact write-only safeguarding intake but masks every broad-role read', () => {
+    const security = new CareSecurityService({ now: () => now });
+    const teacherContext: CareRequestContext = {
+      ...context,
+      principalId: 'teacher-1',
+      persona: 'teacher',
+      assurance: 'aal1',
+      purpose: 'mandatory-reporting',
+      permissions: ['care.safeguarding.concern.create', 'care.safeguarding.read'],
+    };
+    const concernResource: CareResource = {
+      ...resource,
+      resourceId: 'concern-intake-1',
+      classification: 'CARE-C4',
+      fields: ['concern-category', 'concern-narrative'],
+    };
+    expect(
+      security.authorize({
+        context: teacherContext,
+        resource: concernResource,
+        action: 'create',
+        permission: 'care.safeguarding.concern.create',
+        relationship: { studentPersonId: 'student-1', active: true },
+        now,
+      }),
+    ).toMatchObject({ allowed: true, reason: 'need-to-know', masked: true });
+    expect(
+      security.authorize({
+        context: teacherContext,
+        resource: concernResource,
+        action: 'read',
+        permission: 'care.safeguarding.read',
+        relationship: { studentPersonId: 'student-1', active: true },
+        now,
+      }).reason,
+    ).toBe('not-found');
+    expect(
+      security.authorize({
+        context: teacherContext,
+        resource: concernResource,
+        action: 'create',
+        permission: 'care.safeguarding.read',
+        relationship: { studentPersonId: 'student-1', active: true },
+        now,
+      }).reason,
+    ).toBe('not-found');
+  });
+
   test('protects safeguarding existence and requires matching active case membership', () => {
     const security = new CareSecurityService({ now: () => now });
     const safeguardingResource: CareResource = {

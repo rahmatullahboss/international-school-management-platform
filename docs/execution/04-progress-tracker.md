@@ -556,6 +556,25 @@ Neon checks: `202607290204_CARE-01_wellbeing` applied on CARE branch; 10/10 well
 Security/privacy evidence: teachers can submit scoped CARE-C2 referrals but cannot access CARE-C3 counselling; assigned-counselor restriction enforced; high/immediate risk and escalation require AAL2; events exclude narrative/factors/actions; guardian release excludes counselling/risk detail; cohorts below five suppressed
 Production mutation performed: no; Neon `main`, integration branch, ACAD-01 and OPS-01 were not modified
 Exact next milestone: safeguarding-domain
+Checkpoint SHA: `c173bbf`
+Dirty/uncommitted state: clean after checkpoint commit and push
+
+### Checkpoint 5 — safeguarding-domain
+
+Date/time: 2026-07-29T10:28:52+06:00
+Stream: CARE-01
+Milestone completed: safeguarding-domain
+Git branch: `module/student-support`
+Worktree: `.worktrees/care-01-student-support`
+Neon branch: `agent/care-01-student-support` (`br-raspy-smoke-ax0msb57`)
+Starting checkpoint SHA: `c173bbf`
+Changed paths: `packages/modules/safeguarding/**`, `tests/student-support/security-contract.test.ts`, `tests/student-support/safeguarding-domain*.test.ts`, `docs/modules/student-support/safeguarding.md`, CARE-01 tracker section
+Domain evidence: idempotent write-only concern intake, narrow AAL2 case bootstrap, explicit purpose-bound case membership, immediate revocation, immutable chronology/assessment, safety plans, mandatory reports, exact expiring disclosures, C4 document references, independently approved closure and no default portal publication implemented
+Focused checks: security plus safeguarding-domain Vitest suite PASS; full CARE source regression and TypeScript no-emit typecheck PASS
+Neon checks: `202607290205_CARE-01_safeguarding_domain` applied on CARE branch; 16/16 safeguarding tables FORCE RLS; no-context rows hidden; teacher concern/case reads hidden; AAL2 lead triage sees tenant-A only; active principal/purpose membership sees tenant-A case only; cross-tenant intake denied; chronology rewrite denied
+Security/privacy evidence: reporter receives opaque receipt only; stale membership snapshot cannot survive revocation; report and disclosure purposes require matching memberships; exact field/recipient scope and independent AAL2 approval enforced; events exclude reporter/allegation/narrative/factors/actions/recipient; aggregate cohorts below ten suppressed
+Production mutation performed: no; Neon `main`, integration branch, ACAD-01 and OPS-01 were not modified
+Exact next milestone: learning-support
 Dirty/uncommitted state: checkpoint evidence pending commit
 
 ## EXP-01 evidence
