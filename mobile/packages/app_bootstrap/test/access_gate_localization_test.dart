@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:school_api_client/mobile_bootstrap_api.dart';
 import 'package:school_app_bootstrap/school_app_bootstrap.dart';
 import 'package:school_design_system/school_design_system.dart';
 import 'package:school_mobile_core/mobile_core.dart';
@@ -68,7 +67,24 @@ void main() {
     final bootstrap = MobileBootstrap(
       accountId: 'account-1',
       locale: 'bn-BD',
-      schools: const [],
+      schools: [
+        TenantAccess(
+          campuses: [
+            CampusAccess(
+              campusId: option.campusId,
+              campusName: option.campusName,
+              personas: [
+                PersonaAccess(
+                  capabilities: const <String>{},
+                  persona: option.persona,
+                ),
+              ],
+            ),
+          ],
+          tenantId: option.tenantId,
+          tenantName: option.tenantName,
+        ),
+      ],
       timeZone: 'Asia/Dhaka',
     );
 
