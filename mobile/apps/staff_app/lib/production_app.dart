@@ -346,6 +346,10 @@ class _AuthorizedStaffShell extends StatelessWidget {
     animation: sync,
     builder: (context, _) {
       final strings = SchoolShellStrings.of(context);
+      final staffStrings = StaffProductionStrings.forLocale(
+        Localizations.localeOf(context),
+      );
+      final countCopy = StaffProductionCountCopy.of(context);
       final paths = <String>['/'];
       final destinations = <SchoolDestination>[
         SchoolDestination(
@@ -393,26 +397,25 @@ class _AuthorizedStaffShell extends StatelessWidget {
         syncState.pendingCount,
       )) {
         (StaffSyncPhase.failed, _, _) => SchoolStatusBanner(
-          label: 'Sync unavailable',
-          message: SchoolBidirectionalText.isolate(
-            syncState.reasonCode ?? 'Attendance sync could not be verified.',
-          ),
+          label: staffStrings.syncUnavailable,
+          message: syncState.reasonCode == null
+              ? staffStrings.encryptedQueueUnavailable
+              : SchoolBidirectionalText.isolate(syncState.reasonCode!),
           tone: SchoolStatusTone.error,
         ),
         (_, final attention, _) when attention > 0 => SchoolStatusBanner(
-          label: 'Review required',
-          message: '$attention attendance operation(s) need reconciliation.',
+          label: staffStrings.reviewRequired,
+          message: countCopy.operationsRequireReview(attention),
           tone: SchoolStatusTone.error,
         ),
         (_, _, final pending) when pending > 0 => SchoolStatusBanner(
-          label: 'Saved on device',
-          message:
-              '$pending encrypted attendance operation(s) are waiting to sync.',
+          label: staffStrings.savedOnDevice,
+          message: countCopy.encryptedOperationsWaiting(pending),
           tone: SchoolStatusTone.warning,
         ),
-        _ => const SchoolStatusBanner(
-          label: 'Authorized session',
-          message: 'No attendance operations are waiting on this device.',
+        _ => SchoolStatusBanner(
+          label: staffStrings.authorizedSession,
+          message: staffStrings.noAttendanceOperationsWaiting,
           tone: SchoolStatusTone.success,
         ),
       };

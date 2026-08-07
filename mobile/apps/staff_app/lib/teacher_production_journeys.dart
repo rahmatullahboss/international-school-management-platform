@@ -31,6 +31,9 @@ class _StaffJourneyView extends StatelessWidget {
     animation: journey,
     builder: (context, _) {
       final state = journey.state;
+      final strings = StaffProductionStrings.forLocale(
+        Localizations.localeOf(context),
+      );
       switch (state.phase) {
         case StaffJourneyPhase.loading:
           return const Center(child: CircularProgressIndicator());
@@ -38,23 +41,21 @@ class _StaffJourneyView extends StatelessWidget {
           return ListView(
             children: [
               SchoolPageSection(
-                description:
-                    'Assigned teacher information could not be verified for this school scope.',
-                title: 'Teacher information unavailable',
+                description: strings.teacherInformationUnverified,
+                title: strings.teacherInformationUnavailable,
                 child: SchoolPanel(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const SchoolStatusBanner(
-                        label: 'No substitute class data shown',
-                        message:
-                            'Schedules, rosters and operational records remain hidden until the authorized service responds.',
+                      SchoolStatusBanner(
+                        label: strings.noSubstituteClassDataShown,
+                        message: strings.schedulesRemainHidden,
                         tone: SchoolStatusTone.error,
                       ),
                       const SizedBox(height: SchoolSpacing.md),
                       FilledButton.icon(
                         icon: const Icon(Icons.refresh),
-                        label: const Text('Try again'),
+                        label: Text(strings.tryAgain),
                         onPressed: () => unawaited(journey.initialize()),
                       ),
                     ],
@@ -82,18 +83,21 @@ class _TeacherTodayScreen extends StatelessWidget {
     builder: (context, state) {
       final today = state.today!;
       final countCopy = StaffProductionCountCopy.of(context);
+      final strings = StaffProductionStrings.forLocale(
+        Localizations.localeOf(context),
+      );
       return ListView(
         children: [
           SchoolPageSection(
             description:
                 '${countCopy.assignedMeetings(today.meetings.length)} · '
-                'Assigned meetings and substitutions for the selected school campus.',
-            title: today.teacherDisplayName,
+                '${strings.assignedMeetingsDescription}',
+            title: SchoolBidirectionalText.isolate(today.teacherDisplayName),
             child: SchoolPanel(
               child: today.meetings.isEmpty
-                  ? const SchoolStatusBanner(
-                      label: 'No assigned meetings',
-                      message: 'No teacher meetings are assigned for this day.',
+                  ? SchoolStatusBanner(
+                      label: strings.noAssignedMeetings,
+                      message: strings.noTeacherMeetingsAssigned,
                       tone: SchoolStatusTone.information,
                     )
                   : Column(
@@ -142,16 +146,20 @@ class _TeacherMeetingTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final countCopy = StaffProductionCountCopy.of(context);
+    final strings = StaffProductionStrings.forLocale(
+      Localizations.localeOf(context),
+    );
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: const Icon(Icons.class_outlined),
       onTap: onOpenRoster,
       subtitle: Text(
-        '${meeting.sectionLabel} · ${meeting.roomLabel} · '
+        '${SchoolBidirectionalText.isolate(meeting.sectionLabel)} · '
+        '${SchoolBidirectionalText.isolate(meeting.roomLabel)} · '
         '${countCopy.rosterStudents(meeting.rosterCount)}'
-        '${meeting.isSubstitution ? ' · Substitution' : ''}',
+        '${meeting.isSubstitution ? ' · ${strings.substitution}' : ''}',
       ),
-      title: Text(meeting.subjectLabel),
+      title: Text(SchoolBidirectionalText.isolate(meeting.subjectLabel)),
       trailing: onOpenRoster == null ? null : const Icon(Icons.chevron_right),
     );
   }
@@ -177,21 +185,22 @@ class _TeacherRosterScreenState extends State<_TeacherRosterScreen> {
   Widget build(BuildContext context) => _StaffJourneyView(
     journey: widget.journey,
     builder: (context, state) {
+      final strings = StaffProductionStrings.forLocale(
+        Localizations.localeOf(context),
+      );
       final roster = state.activeRoster;
       if (state.rosterLoading) {
         return const Center(child: CircularProgressIndicator());
       }
       if (state.rosterReasonCode != null) {
         return ListView(
-          children: const [
+          children: [
             SchoolPageSection(
-              description:
-                  'The assigned roster could not be verified for this meeting.',
-              title: 'Roster unavailable',
+              description: strings.assignedRosterUnverified,
+              title: strings.rosterUnavailable,
               child: SchoolStatusBanner(
-                label: 'No roster substituted',
-                message:
-                    'Attendance capture is unavailable until the authorized roster service responds.',
+                label: strings.noRosterSubstituted,
+                message: strings.attendanceCaptureUnavailable,
                 tone: SchoolStatusTone.error,
               ),
             ),
@@ -200,14 +209,13 @@ class _TeacherRosterScreenState extends State<_TeacherRosterScreen> {
       }
       if (roster == null) {
         return ListView(
-          children: const [
+          children: [
             SchoolPageSection(
-              description: 'Open an assigned meeting from Today first.',
-              title: 'Select a meeting',
+              description: strings.openAssignedMeetingFirst,
+              title: strings.selectMeeting,
               child: SchoolStatusBanner(
-                label: 'Roster not selected',
-                message:
-                    'Only rosters for assigned meetings can be opened on this device.',
+                label: strings.rosterNotSelected,
+                message: strings.onlyAssignedRosters,
                 tone: SchoolStatusTone.information,
               ),
             ),
@@ -258,12 +266,16 @@ class _AttendanceSyncContent extends StatelessWidget {
     final busy =
         state.phase == StaffSyncPhase.saving ||
         state.phase == StaffSyncPhase.syncing;
+    final locale = Localizations.localeOf(context);
+    final strings = StaffProductionStrings.forLocale(locale);
     return ListView(
       children: [
         SchoolPageSection(
-          description:
-              'Version ${roster.version} · encrypted drafts remain non-authoritative until server acceptance.',
-          title: 'Attendance roster',
+          description: StaffProductionDynamicStrings.rosterVersionDescription(
+            locale,
+            roster.version,
+          ),
+          title: strings.attendanceRoster,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -271,9 +283,7 @@ class _AttendanceSyncContent extends StatelessWidget {
               const SizedBox(height: SchoolSpacing.md),
               SchoolPanel(
                 child: roster.students.isEmpty
-                    ? const Text(
-                        'No students are present in the authorized roster.',
-                      )
+                    ? Text(strings.noStudentsInAuthorizedRoster)
                     : Column(
                         children: [
                           for (
@@ -308,21 +318,21 @@ class _AttendanceSyncContent extends StatelessWidget {
                 children: [
                   FilledButton.icon(
                     icon: const Icon(Icons.lock_outline),
-                    label: const Text('Save encrypted draft'),
+                    label: Text(strings.saveEncryptedDraft),
                     onPressed: busy || !state.dirty || roster.students.isEmpty
                         ? null
                         : () => unawaited(sync.saveOnDevice()),
                   ),
                   OutlinedButton.icon(
                     icon: const Icon(Icons.sync),
-                    label: const Text('Sync now'),
+                    label: Text(strings.syncNow),
                     onPressed: busy || state.pendingCount == 0
                         ? null
                         : () => unawaited(sync.syncNow()),
                   ),
                   TextButton.icon(
                     icon: const Icon(Icons.refresh),
-                    label: const Text('Refresh status'),
+                    label: Text(strings.refreshStatus),
                     onPressed: busy
                         ? null
                         : () => unawaited(sync.refreshJournal()),
@@ -336,7 +346,7 @@ class _AttendanceSyncContent extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        'Device operation journal',
+                        strings.deviceOperationJournal,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(height: SchoolSpacing.sm),
@@ -344,10 +354,20 @@ class _AttendanceSyncContent extends StatelessWidget {
                         ListTile(
                           contentPadding: EdgeInsets.zero,
                           leading: Icon(_syncStateIcon(operation.state)),
-                          title: Text(_syncStateLabel(operation.state)),
+                          title: Text(
+                            _syncStateLabel(context, operation.state),
+                          ),
                           subtitle: Text(
-                            operation.lastReasonCode ??
-                                'Operation ${operation.operationId} · encrypted payload',
+                            operation.lastReasonCode == null
+                                ? StaffProductionDynamicStrings.encryptedOperation(
+                                    locale,
+                                    SchoolBidirectionalText.isolate(
+                                      operation.operationId,
+                                    ),
+                                  )
+                                : SchoolBidirectionalText.isolate(
+                                    operation.lastReasonCode!,
+                                  ),
                           ),
                         ),
                     ],
@@ -370,41 +390,42 @@ class _AttendanceSyncStatus extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final countCopy = StaffProductionCountCopy.of(context);
+    final strings = StaffProductionStrings.forLocale(
+      Localizations.localeOf(context),
+    );
     if (state.phase == StaffSyncPhase.failed) {
       return SchoolStatusBanner(
-        label: 'Sync unavailable',
-        message:
-            state.reasonCode ??
-            'The encrypted attendance queue could not be opened.',
+        label: strings.syncUnavailable,
+        message: state.reasonCode == null
+            ? strings.encryptedQueueUnavailable
+            : SchoolBidirectionalText.isolate(state.reasonCode!),
         tone: SchoolStatusTone.error,
       );
     }
     if (state.attentionCount > 0) {
       return SchoolStatusBanner(
-        label: 'Manual review required',
+        label: strings.manualReviewRequired,
         message: countCopy.operationsRequireReview(state.attentionCount),
         tone: SchoolStatusTone.error,
       );
     }
     if (state.dirty) {
-      return const SchoolStatusBanner(
-        label: 'Unsaved changes',
-        message:
-            'Save this roster to encrypted device storage before leaving the screen.',
+      return SchoolStatusBanner(
+        label: strings.unsavedChanges,
+        message: strings.saveBeforeLeaving,
         tone: SchoolStatusTone.warning,
       );
     }
     if (state.pendingCount > 0) {
       return SchoolStatusBanner(
-        label: 'Saved on device',
+        label: strings.savedOnDevice,
         message: countCopy.encryptedOperationsWaiting(state.pendingCount),
         tone: SchoolStatusTone.warning,
       );
     }
-    return const SchoolStatusBanner(
-      label: 'No pending draft',
-      message:
-          'The server remains authoritative for attendance acceptance and locking.',
+    return SchoolStatusBanner(
+      label: strings.noPendingDraft,
+      message: strings.serverAttendanceAuthoritative,
       tone: SchoolStatusTone.success,
     );
   }
@@ -428,10 +449,10 @@ class _TeacherAttendanceRow extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          student.displayName,
+          SchoolBidirectionalText.isolate(student.displayName),
           style: Theme.of(context).textTheme.titleMedium,
         ),
-        Text(student.rollLabel),
+        Text(SchoolBidirectionalText.isolate(student.rollLabel)),
         const SizedBox(height: SchoolSpacing.sm),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -443,7 +464,7 @@ class _TeacherAttendanceRow extends StatelessWidget {
                 .map(
                   (value) => ButtonSegment<TeacherAttendanceMark>(
                     icon: Icon(_attendanceMarkIcon(value)),
-                    label: Text(_attendanceMarkLabel(value)),
+                    label: Text(_attendanceMarkLabel(context, value)),
                     value: value,
                   ),
                 )
@@ -456,12 +477,17 @@ class _TeacherAttendanceRow extends StatelessWidget {
   );
 }
 
-String _attendanceMarkLabel(TeacherAttendanceMark mark) => switch (mark) {
-  TeacherAttendanceMark.present => 'Present',
-  TeacherAttendanceMark.absent => 'Absent',
-  TeacherAttendanceMark.late => 'Late',
-  TeacherAttendanceMark.excused => 'Excused',
-};
+String _attendanceMarkLabel(BuildContext context, TeacherAttendanceMark mark) {
+  final strings = StaffProductionStrings.forLocale(
+    Localizations.localeOf(context),
+  );
+  return switch (mark) {
+    TeacherAttendanceMark.present => strings.present,
+    TeacherAttendanceMark.absent => strings.absent,
+    TeacherAttendanceMark.late => strings.late,
+    TeacherAttendanceMark.excused => strings.excused,
+  };
+}
 
 IconData _attendanceMarkIcon(TeacherAttendanceMark mark) => switch (mark) {
   TeacherAttendanceMark.present => Icons.check_circle_outline,
@@ -470,16 +496,21 @@ IconData _attendanceMarkIcon(TeacherAttendanceMark mark) => switch (mark) {
   TeacherAttendanceMark.excused => Icons.medical_information_outlined,
 };
 
-String _syncStateLabel(SyncOperationState state) => switch (state) {
-  SyncOperationState.savedOnDevice => 'Saved on device',
-  SyncOperationState.waitingForNetwork => 'Waiting for network',
-  SyncOperationState.inFlight => 'Sending',
-  SyncOperationState.synced => 'Accepted by server',
-  SyncOperationState.duplicate => 'Already accepted',
-  SyncOperationState.conflict => 'Version conflict',
-  SyncOperationState.rejected => 'Rejected',
-  SyncOperationState.requiresReconciliation => 'Reconciliation required',
-};
+String _syncStateLabel(BuildContext context, SyncOperationState state) {
+  final strings = StaffProductionStrings.forLocale(
+    Localizations.localeOf(context),
+  );
+  return switch (state) {
+    SyncOperationState.savedOnDevice => strings.savedOnDevice,
+    SyncOperationState.waitingForNetwork => strings.waitingForNetwork,
+    SyncOperationState.inFlight => strings.sending,
+    SyncOperationState.synced => strings.acceptedByServer,
+    SyncOperationState.duplicate => strings.alreadyAccepted,
+    SyncOperationState.conflict => strings.versionConflict,
+    SyncOperationState.rejected => strings.rejected,
+    SyncOperationState.requiresReconciliation => strings.reconciliationRequired,
+  };
+}
 
 IconData _syncStateIcon(SyncOperationState state) => switch (state) {
   SyncOperationState.savedOnDevice => Icons.lock_outline,
