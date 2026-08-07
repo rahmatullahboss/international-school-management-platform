@@ -38,3 +38,49 @@ namespace = {
     '__file__': str(source_path),
 }
 exec(compile(source, str(source_path), 'exec'), namespace)
+
+# Apply bounded repairs that are easier to express after the large transform
+# has produced the final Dart structure. These change presentation only.
+screens_path = Path('mobile/apps/family_app/lib/family_interaction_screens.dart')
+screens = screens_path.read_text()
+
+repairs = [
+    (
+        """if (!interactions.secureDocumentExchangeAvailable)
+                          const Padding(""",
+        """if (!interactions.secureDocumentExchangeAvailable)
+                          Padding(""",
+        'secure presenter dynamic padding',
+    ),
+    (
+        'const Text(strings.noAuthorizedDocumentMetadata)',
+        'Text(strings.noAuthorizedDocumentMetadata)',
+        'dynamic empty-document copy',
+    ),
+    (
+        'message: interactions.documentsReasonCode!,',
+        """message: SchoolBidirectionalText.isolate(
+                            interactions.documentsReasonCode!,
+                          ),""",
+        'document reason isolation',
+    ),
+    (
+        """        builder: (context, _) {
+          if (interactions.conversationsPhase ==
+                  FamilyInteractionPhase.loading ||""",
+        """        builder: (context, _) {
+          final strings = FamilyInteractionStrings.forLocale(
+            Localizations.localeOf(context),
+          );
+          if (interactions.conversationsPhase ==
+                  FamilyInteractionPhase.loading ||""",
+        'conversation detail strings',
+    ),
+]
+for old, new, label in repairs:
+    if old in screens:
+        screens = screens.replace(old, new, 1)
+    elif new not in screens:
+        raise SystemExit(f'{label} repair anchor missing')
+
+screens_path.write_text(screens)
