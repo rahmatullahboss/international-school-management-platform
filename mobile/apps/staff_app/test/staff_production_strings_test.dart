@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:school_staff_app/staff_production_dynamic_strings.dart';
 import 'package:school_staff_app/staff_production_strings.dart';
 
 void main() {
@@ -16,11 +17,42 @@ void main() {
     expect(arabic.rosterUnavailable, 'القائمة غير متاحة');
   });
 
+  test('localizes dynamic Staff sentences without changing values', () {
+    expect(
+      StaffProductionDynamicStrings.rosterVersionDescription(
+        const Locale('bn', 'BD'),
+        7,
+      ),
+      contains('7'),
+    );
+    expect(
+      StaffProductionDynamicStrings.encryptedOperation(
+        const Locale('ar', 'SA'),
+        'op-42',
+      ),
+      contains('op-42'),
+    );
+    expect(
+      StaffProductionDynamicStrings.rosterVersionDescription(
+        const Locale('en', 'GB'),
+        3,
+      ),
+      'Version 3 · encrypted drafts remain non-authoritative until server acceptance.',
+    );
+  });
+
   test('falls back to English for unsupported locales', () {
     final strings = StaffProductionStrings.forLocale(const Locale('fr', 'FR'));
 
     expect(strings.present, 'Present');
     expect(strings.syncUnavailable, 'Sync unavailable');
     expect(strings.tryAgain, 'Try again');
+    expect(
+      StaffProductionDynamicStrings.encryptedOperation(
+        const Locale('fr', 'FR'),
+        'op-1',
+      ),
+      'Operation op-1 · encrypted payload',
+    );
   });
 }
