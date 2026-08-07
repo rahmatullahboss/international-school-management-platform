@@ -20,9 +20,7 @@ void main() {
   testWidgets('gradebook production surface never renders fixture scores', (
     tester,
   ) async {
-    await tester.pumpWidget(
-      const MaterialApp(home: StaffGradebookScreen()),
-    );
+    await tester.pumpWidget(const MaterialApp(home: StaffGradebookScreen()));
 
     expect(find.text('Gradebook unavailable'), findsOneWidget);
     expect(find.text('No substitute assessment data shown'), findsOneWidget);
@@ -30,16 +28,15 @@ void main() {
     expect(find.text('18 of 24 results entered · Draft'), findsNothing);
   });
 
-  testWidgets('messages production surface never renders fixture conversations', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      const MaterialApp(home: StaffMessagesScreen()),
-    );
+  testWidgets(
+    'messages production surface never renders fixture conversations',
+    (tester) async {
+      await tester.pumpWidget(const MaterialApp(home: StaffMessagesScreen()));
 
-    expect(find.text('Messages unavailable'), findsOneWidget);
-    expect(find.text('No substitute conversations shown'), findsOneWidget);
-    expect(find.text('Grade 5A guardians'), findsNothing);
-    expect(find.text('Academic office'), findsNothing);
-  });
+      expect(find.text('Messages unavailable'), findsOneWidget);
+      expect(find.text('No substitute conversations shown'), findsOneWidget);
+      expect(find.text('Grade 5A guardians'), findsNothing);
+      expect(find.text('Academic office'), findsNothing);
+    },
+  );
 }

@@ -15,6 +15,7 @@ import 'package:school_mobile_core/mobile_core.dart';
 import 'package:school_mobile_core/notification_routing.dart';
 import 'package:school_staff_app/staff_production_dynamic_strings.dart';
 import 'package:school_staff_app/staff_production_strings.dart';
+import 'package:school_staff_app/staff_server_boundary_strings.dart';
 import 'package:school_staff_domain/school_staff_domain.dart';
 import 'package:school_sync_engine/school_sync_engine.dart';
 import 'package:school_sync_storage/school_sync_storage.dart';
@@ -344,72 +345,48 @@ class StaffGradebookScreen extends StatelessWidget {
   const StaffGradebookScreen({super.key});
 
   @override
-  Widget build(BuildContext context) => ListView(
-    children: [
-      SchoolPageSection(
-        description:
-            'Draft assessment results only. Publishing and calculation remain server-governed.',
-        title: 'Gradebook drafts',
-        child: SchoolPanel(
-          child: Column(
-            children: const [
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Icon(Icons.assignment_outlined),
-                title: Text('Mathematics quiz 3'),
-                subtitle: Text('18 of 24 results entered · Draft'),
-                trailing: Icon(Icons.chevron_right),
-              ),
-              Divider(),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Icon(Icons.assignment_turned_in_outlined),
-                title: Text('Term project'),
-                subtitle: Text('24 of 24 results entered · Ready for review'),
-                trailing: Icon(Icons.chevron_right),
-              ),
-            ],
+  Widget build(BuildContext context) {
+    final strings = StaffServerBoundaryStrings.forLocale(
+      Localizations.localeOf(context),
+    );
+    return ListView(
+      children: [
+        SchoolPageSection(
+          description: strings.gradebookDescription,
+          title: strings.gradebookTitle,
+          child: SchoolStatusBanner(
+            label: strings.gradebookLabel,
+            message: strings.gradebookMessage,
+            tone: SchoolStatusTone.information,
           ),
         ),
-      ),
-    ],
-  );
+      ],
+    );
+  }
 }
 
 class StaffMessagesScreen extends StatelessWidget {
   const StaffMessagesScreen({super.key});
 
   @override
-  Widget build(BuildContext context) => ListView(
-    children: const [
-      SchoolPageSection(
-        description:
-            'Conversation visibility follows relationship, class and communication permissions.',
-        title: 'Messages',
-        child: SchoolPanel(
-          child: Column(
-            children: [
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: CircleAvatar(child: Icon(Icons.groups_outlined)),
-                title: Text('Grade 5A guardians'),
-                subtitle: Text('Class update · 11:40 AM'),
-                trailing: Icon(Icons.chevron_right),
-              ),
-              Divider(),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: CircleAvatar(child: Icon(Icons.apartment_outlined)),
-                title: Text('Academic office'),
-                subtitle: Text('Assessment moderation · Yesterday'),
-                trailing: Icon(Icons.chevron_right),
-              ),
-            ],
+  Widget build(BuildContext context) {
+    final strings = StaffServerBoundaryStrings.forLocale(
+      Localizations.localeOf(context),
+    );
+    return ListView(
+      children: [
+        SchoolPageSection(
+          description: strings.messagesDescription,
+          title: strings.messagesTitle,
+          child: SchoolStatusBanner(
+            label: strings.messagesLabel,
+            message: strings.messagesMessage,
+            tone: SchoolStatusTone.information,
           ),
         ),
-      ),
-    ],
-  );
+      ],
+    );
+  }
 }
 
 class _AttendanceRow extends StatelessWidget {
