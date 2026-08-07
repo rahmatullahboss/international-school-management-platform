@@ -40,6 +40,7 @@ The Family and Staff production compositions now adopt:
 - RTL-safe isolation for Family student/profile, timetable, result, invoice, receipt, and failure-reason text;
 - exact integer minor-unit money formatting in the Family fees/receipts read journey, preserving the existing two-fraction-digit contract until authoritative currency metadata is added to the server read model;
 - explicit UTC presentation for Family interaction dates/timestamps while authoritative school offset/timezone metadata is absent; device timezone is never inferred for those server instants;
+- locale-aware Family form date-only presentation while retaining exact ISO `yyyy-MM-dd` answer payloads and performing no timezone conversion;
 - reviewed English/Bangla/Arabic domain copy for Family production status/Home/Attendance/Results/Fees/Messages plus Services/Documents/Forms/Guardian Consent/Conversations/Messages, and Staff shell/Today/roster/attendance/sync-journal states;
 - reviewed pluralized count sentences on completed Family and Staff production surfaces instead of English `(s)` placeholders;
 - bidi isolation for localized Staff teacher, subject, section, room, student and operation identifiers plus Family interaction student/document/form/consent/conversation/message dynamic values; Staff Gradebook/Messages show localized fail-closed server-boundary states instead of fixture data while authoritative read models are unavailable.
@@ -60,6 +61,7 @@ The source gates verify:
 - bidi override/isolate removal and safe re-isolation;
 - exact money and explicit-offset timestamp rendering in English, Bangla, and Arabic;
 - Family interaction UTC fallback converts current server instants with `toUtc()`, labels `UTC`, and source-level tests reject any return of `toLocal()`;
+- Family form date-only tests verify locale-aware Bangla display, strict ISO parsing/encoding and reject timezone conversion in the date-only presenter;
 - reduced-motion preference behavior without changing authorization or security decisions;
 - background, process-death, memory-pressure, stale-proof, and fresh-proof lifecycle decisions with redacted reason codes only;
 - real Flutter lifecycle propagation into the shared coordinator, background/detach obscuring, resumed OIDC restore/refresh, AppAuth inactive continuity, and nonblocking memory pressure;
@@ -82,7 +84,7 @@ These checks do not mean the production applications are fully translated or dev
 | Pluralized counts | Integer cardinal tests and reviewed `en`/`bn`/`ar` count catalogs used by Family read/interaction and Staff teacher/sync production surfaces | Screen-reader and translation review | Completed production surfaces no longer use English `(s)` placeholders where count copy is adopted; remaining domains pending |
 | Bidirectional isolation | Control-character sanitization plus Family and Staff production dynamic-identifier isolation | Representative mixed-script content review | Core Family/Staff production adoption present; broader/device pass pending |
 | Exact money presentation | Integer minor-unit formatter and Family fees/receipts adoption | Screen-reader and visual review for supported currencies | Family production adoption present; authoritative currency metadata/device review pending |
-| Date/time presentation | UTC instant plus explicit offset/timezone formatter tests and Family explicit-UTC fallback tests | DST/locale/device review from authoritative school-local read models | Family interaction UTC fallback adopted; school-local explicit-offset presentation blocked on server timezone metadata |
+| Date/time presentation | UTC instant plus explicit offset/timezone formatter tests, Family explicit-UTC fallback tests and locale-aware date-only form tests | DST/locale/device review from authoritative school-local read models | Family interaction UTC fallback and form date-only locale presentation adopted; school-local explicit-offset instant presentation blocked on server timezone metadata |
 | Screen-reader navigation | Written semantics available in shared components and locale control | TalkBack traversal and VoiceOver rotor order | Pending device evidence |
 | Dynamic type | 200% source test | iOS Larger Accessibility Sizes | Pending |
 | Keyboard/switch access | Material focus behavior only | Android switch access and iOS switch control | Pending |
