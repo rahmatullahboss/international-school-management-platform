@@ -1,6 +1,7 @@
 from pathlib import Path
 
 source_path = Path('mobile/tool/apply_family_interaction_localization.py')
+screens_path = Path('mobile/apps/family_app/lib/family_interaction_screens.dart')
 source = source_path.read_text()
 
 # The transform script contains Dart strings with a literal `\n`. When those
@@ -33,17 +34,20 @@ preserve_literal_newline(
     'message dynamic isolate output',
 )
 
-namespace = {
-    '__name__': '__main__',
-    '__file__': str(source_path),
-}
-exec(compile(source, str(source_path), 'exec'), namespace)
+# The large transform is intentionally one-shot. Once the generated production
+# marker exists, do not replay formatter-sensitive catalog anchors; only apply
+# the bounded post-transform repairs below.
+screens = screens_path.read_text()
+if 'FamilyInteractionStrings.grantExpiryFor(' not in screens:
+    namespace = {
+        '__name__': '__main__',
+        '__file__': str(source_path),
+    }
+    exec(compile(source, str(source_path), 'exec'), namespace)
+    screens = screens_path.read_text()
 
 # Apply bounded repairs that are easier to express after the large transform
 # has produced the final Dart structure. These change presentation only.
-screens_path = Path('mobile/apps/family_app/lib/family_interaction_screens.dart')
-screens = screens_path.read_text()
-
 repairs = [
     (
         """if (!interactions.secureDocumentExchangeAvailable)
