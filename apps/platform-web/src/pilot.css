@@ -34,7 +34,7 @@ body {
   grid-template-columns: minmax(0, 1fr) minmax(15rem, 22rem);
   gap: 2rem;
   align-items: end;
-  padding: clamp(2rem, 6vw, 5.5rem) clamp(1.25rem, 7vw, 7rem) clamp(2rem, 4vw, 3rem);
+  padding: 1.25rem clamp(1.25rem, 4vw, 3rem);
   color: white;
   background: #102a43;
   border-bottom: 0.4rem solid #0f766e;
@@ -102,7 +102,7 @@ body {
 .pilot-entry__main {
   display: grid;
   gap: 4rem;
-  padding: clamp(2rem, 5vw, 4.5rem) clamp(1.25rem, 7vw, 7rem) 5rem;
+  padding: 2rem clamp(1.25rem, 4vw, 3rem) 3rem;
 }
 
 .pilot-section-heading {
@@ -555,9 +555,9 @@ body {
 }
 
 .pilot-entry__masthead h1 {
-  max-inline-size: 18ch;
-  font-size: clamp(2.5rem, 6vw, 5.5rem);
-  line-height: 0.98;
+  max-inline-size: 24ch;
+  font-size: clamp(1.8rem, 4vw, 3.2rem);
+  line-height: 1.05;
 }
 
 .pilot-entry__masthead > div > p:last-child {
@@ -589,7 +589,7 @@ body {
 }
 
 .pilot-entry__main {
-  gap: 3.5rem;
+  gap: 2rem;
 }
 
 .pilot-section-heading h2 {

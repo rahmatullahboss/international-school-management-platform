@@ -88,7 +88,7 @@ function FullPersonaLanding(): ReactElement {
       </a>
       <header className="pilot-entry__masthead">
         <div>
-          <p className="pilot-kicker">Cloudflare staging · synthetic pilot data</p>
+          <p className="pilot-kicker">Ozzyl International Demo School · Staging workspace</p>
           <h1>Run the school day from one place</h1>
           <p>
             Choose a role to see the work, records and decisions available to that person. Every
@@ -96,8 +96,8 @@ function FullPersonaLanding(): ReactElement {
           </p>
         </div>
         <div className="pilot-entry__status" role="status">
-          <strong>Safe pilot environment</strong>
-          <span>No production data or live payments</span>
+          <strong>Staging environment</strong>
+          <span>Sample school data · live payments disabled</span>
           <a href="/offline.html">See offline support</a>
         </div>
       </header>
