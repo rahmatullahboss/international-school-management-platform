@@ -9,6 +9,7 @@ import {
   pilotTimestamp,
   schoolName,
 } from '../pilot-data';
+import { OperationalModuleSurface } from '../operational-module-surface';
 import { usePilotResource } from '../pilot-resource';
 import {
   PilotDataStatus,
@@ -70,18 +71,26 @@ export default function GuardianPortal(props: GuardianPortalProps): ReactElement
         message={resource.message}
         onRefresh={resource.refresh}
       />
-      {props.path === '/family' || page ? (
+      {props.path === '/family' ? (
         <GuardianHouseholdWorkspace
           guardianName="Farhana Noor"
           householdLabel="Noor household"
           locale="en-BD"
           activeChildId="student-1"
-          focus={props.path.slice(8)}
           capabilities={resource.capabilities}
-          {...overview}
+          children={overview.children}
+          applications={overview.applications}
+          attendance={overview.attendance}
+          grades={overview.grades}
+          fees={overview.fees}
+          forms={overview.forms}
+          documents={overview.documents}
+          conversations={overview.conversations}
         />
-      ) : (
+      ) : page === undefined ? (
         <UnknownRoute homeHref="/family" />
+      ) : (
+        <OperationalModuleSurface path={props.path} page={page} role="guardian" />
       )}
     </GuardianExperienceShell>
   );
