@@ -315,19 +315,19 @@ function useOperatorResource(role: OperatorRole) {
         cache: 'no-store',
       });
       if (!sessionResponse.ok)
-        throw new Error(`Pilot session API returned ${sessionResponse.status}.`);
+        throw new Error(`Staging session returned ${sessionResponse.status}.`);
       const sessionValue: unknown = await sessionResponse.json();
       if (!isMatchingSession(sessionValue, role))
-        throw new Error('Pilot session scope is invalid.');
+        throw new Error('Staging session scope is invalid.');
       const snapshotResponse = await fetch(`${apiBase}/pilot/v1/snapshots/${role}`, {
         headers: { authorization: `Bearer ${sessionValue.accessToken}` },
         cache: 'no-store',
       });
       if (!snapshotResponse.ok)
-        throw new Error(`Pilot snapshot API returned ${snapshotResponse.status}.`);
+        throw new Error(`Staging data returned ${snapshotResponse.status}.`);
       const snapshotValue: unknown = await snapshotResponse.json();
       if (!isMatchingSnapshot(snapshotValue, role))
-        throw new Error('Pilot snapshot scope is invalid.');
+        throw new Error('Staging data scope is invalid.');
       setAccessToken(sessionValue.accessToken);
       setData(snapshotValue.data);
       setCapabilities(snapshotValue.scope.capabilities);
