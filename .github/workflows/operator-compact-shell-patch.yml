@@ -23,15 +23,15 @@ jobs:
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
+          import re
 
           portal = Path('apps/platform-web/src/operator-portal.tsx')
           text = portal.read_text()
-          replacements = {
-              'Scoped operator persona · synthetic pilot data': 'Ozzyl International Demo School · Staging workspace',
-              'Audited pilot evidence': 'Environment audit evidence',
-              'This control records non-production evidence only. It does not change live\n                  financial or student records.': 'This control records staging audit evidence only. It does not change school\n                  finance or student records.',
-          }
-          for old, new in replacements.items():
+          for old, new in (
+              ('Scoped operator persona · synthetic pilot data', 'Ozzyl International Demo School · Staging workspace'),
+              ('Audited pilot evidence', 'Environment audit evidence'),
+              ('This control records non-production evidence only. It does not change live\n                  financial or student records.', 'This control records staging audit evidence only. It does not change school\n                  finance or student records.'),
+          ):
               if old not in text:
                   raise SystemExit(f'missing operator portal target: {old}')
               text = text.replace(old, new, 1)
@@ -39,92 +39,51 @@ jobs:
 
           route = Path('apps/platform-web/src/operator-route-workspace.tsx')
           text = route.read_text()
-          old = '<p>Synthetic staging register</p>'
-          new = '<p>Current scoped register</p>'
-          if old not in text:
+          if '<p>Synthetic staging register</p>' not in text:
               raise SystemExit('operator register label not found')
-          route.write_text(text.replace(old, new, 1))
+          route.write_text(text.replace('<p>Synthetic staging register</p>', '<p>Current scoped register</p>', 1))
 
           production = Path('apps/platform-web/src/production-operator-portal.tsx')
           text = production.read_text()
-          import_target = "import './pilot.css';"
-          import_replacement = "import './operator-route-workspace.css';\nimport './pilot.css';"
-          if import_replacement not in text:
-              if import_target not in text:
+          if "import './operator-route-workspace.css';" not in text:
+              if "import './pilot.css';" not in text:
                   raise SystemExit('production operator import target not found')
-              text = text.replace(import_target, import_replacement, 1)
-          note = '''        <section className="pilot-demo-note">
-          <strong>Database-authorized production surface</strong>
-          <span>
-            Only current database-owned work is actionable here. Approved writes use durable
-            commands and server-owned scope; the browser cannot elevate its tenant, campus or role.
-          </span>
-        </section>
-'''
-          if note not in text:
+              text = text.replace("import './pilot.css';", "import './operator-route-workspace.css';\nimport './pilot.css';", 1)
+          pattern = r'\n        <section className="pilot-demo-note">\n          <strong>Database-authorized production surface</strong>.*?\n        </section>'
+          text, count = re.subn(pattern, '', text, count=1, flags=re.S)
+          if count != 1:
               raise SystemExit('production authorization explainer not found')
-          production.write_text(text.replace(note, '', 1))
+          production.write_text(text)
 
           css = Path('apps/platform-web/src/operator-route-workspace.css')
           text = css.read_text()
-          addition = '''
-
-.operator-entry .pilot-entry__masthead {
-  padding: 1rem 2rem;
-}
-
-.operator-entry .pilot-entry__masthead h1 {
-  max-width: none;
-  font-family: inherit;
-  font-size: 1.5rem;
-  font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: 0;
-}
-
-.operator-entry .pilot-entry__main {
-  gap: 1.25rem;
-  padding: 1.25rem 2rem 2rem;
-}
-'''
+          addition = '\n\n.operator-entry .pilot-entry__masthead {\n  padding: 1rem 2rem;\n}\n\n.operator-entry .pilot-entry__masthead h1 {\n  max-width: none;\n  font-family: inherit;\n  font-size: 1.5rem;\n  font-weight: 700;\n  line-height: 1.2;\n  letter-spacing: 0;\n}\n\n.operator-entry .pilot-entry__main {\n  gap: 1.25rem;\n  padding: 1.25rem 2rem 2rem;\n}\n'
           if '.operator-entry .pilot-entry__masthead {' not in text:
               css.write_text(text.rstrip() + addition)
 
           prod_test = Path('apps/platform-web/src/production-operator-portal.test.tsx')
           text = prod_test.read_text()
           anchor = "    expect(markup).not.toContain('authenticated production QA');"
-          replacement = anchor + "\n    expect(markup).not.toContain('Database-authorized production surface');"
-          if replacement not in text:
+          extra = "    expect(markup).not.toContain('Database-authorized production surface');"
+          if extra not in text:
               if anchor not in text:
                   raise SystemExit('production operator test anchor not found')
-              text = text.replace(anchor, replacement, 1)
+              text = text.replace(anchor, anchor + '\n' + extra, 1)
           prod_test.write_text(text)
 
           browser = Path('tests/browser/product-persona-v2.e2e.spec.ts')
           text = browser.read_text()
           anchor = "        await expect(page.getByText('Page not available in this pilot')).toHaveCount(0);"
-          replacement = anchor + "\n        await expect(page.getByText('Scoped operator persona · synthetic pilot data')).toHaveCount(0);\n        if (route.path !== operatorRoots[role]) {\n          await expect(page.getByText('Current scoped register')).toBeVisible();\n        }"
-          if replacement not in text:
+          extra = "        await expect(page.getByText('Scoped operator persona · synthetic pilot data')).toHaveCount(0);\n        if (route.path !== operatorRoots[role]) {\n          await expect(page.getByText('Current scoped register')).toBeVisible();\n        }"
+          if extra not in text:
               if anchor not in text:
                   raise SystemExit('operator browser contract anchor not found')
-              text = text.replace(anchor, replacement, 1)
+              text = text.replace(anchor, anchor + '\n' + extra, 1)
           browser.write_text(text)
           PY
-          npx prettier --write \
-            apps/platform-web/src/operator-portal.tsx \
-            apps/platform-web/src/operator-route-workspace.tsx \
-            apps/platform-web/src/operator-route-workspace.css \
-            apps/platform-web/src/production-operator-portal.tsx \
-            apps/platform-web/src/production-operator-portal.test.tsx \
-            tests/browser/product-persona-v2.e2e.spec.ts
+          npx prettier --write apps/platform-web/src/operator-portal.tsx apps/platform-web/src/operator-route-workspace.tsx apps/platform-web/src/operator-route-workspace.css apps/platform-web/src/production-operator-portal.tsx apps/platform-web/src/production-operator-portal.test.tsx tests/browser/product-persona-v2.e2e.spec.ts
           changed="$(git diff --name-only | sort)"
-          expected="$(printf '%s\n' \
-            apps/platform-web/src/operator-portal.tsx \
-            apps/platform-web/src/operator-route-workspace.css \
-            apps/platform-web/src/operator-route-workspace.tsx \
-            apps/platform-web/src/production-operator-portal.test.tsx \
-            apps/platform-web/src/production-operator-portal.tsx \
-            tests/browser/product-persona-v2.e2e.spec.ts | sort)"
+          expected="$(printf '%s\n' apps/platform-web/src/operator-portal.tsx apps/platform-web/src/operator-route-workspace.css apps/platform-web/src/operator-route-workspace.tsx apps/platform-web/src/production-operator-portal.test.tsx apps/platform-web/src/production-operator-portal.tsx tests/browser/product-persona-v2.e2e.spec.ts | sort)"
           if [ -z "$changed" ]; then exit 0; fi
           test "$changed" = "$expected"
           git config user.name github-actions[bot]
