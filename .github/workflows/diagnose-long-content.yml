@@ -21,6 +21,7 @@ jobs:
           node-version: 22.22.2
           cache: npm
       - run: npm ci
+      - run: npm run build
       - name: Instrument missing shell diagnostics
         shell: bash
         run: |
@@ -36,4 +37,4 @@ jobs:
           PY
       - run: npx playwright install --with-deps chromium
       - name: Run long-content test only
-        run: npx playwright test tests/browser/ux-hardening.spec.ts --grep "long translated task content" --reporter=line
+        run: npx playwright test -c playwright.config.mjs tests/browser/ux-hardening.spec.ts --grep "long translated task content" --reporter=line
