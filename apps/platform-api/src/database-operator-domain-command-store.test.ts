@@ -102,6 +102,65 @@ describe('database operator domain command store', () => {
     );
   });
 
+  it('calls only the server-scoped admissions offer acceptance function', async () => {
+    const acceptReceipt = {
+      ...receipt,
+      command: 'admissions.application.offer.accept' as const,
+      domainEvidenceId: '71000000-0000-4000-8000-000000000013',
+      idempotencyKey: 'admissions-accept-0001',
+    };
+    const database = databaseWith({ accepted: true, replayed: false, receipt: acceptReceipt });
+    const store = new DatabaseOperatorDomainCommandStore(database);
+    const input = {
+      sessionId,
+      idempotencyKey: 'admissions-accept-0001',
+      correlationId,
+      command: 'admissions.application.offer.accept' as const,
+      applicationId,
+      expectedVersion: 5,
+    };
+
+    await expect(store.submit(input)).resolves.toEqual({
+      accepted: true,
+      replayed: false,
+      receipt: acceptReceipt,
+    });
+    expect(database.query).toHaveBeenCalledWith(
+      expect.stringContaining('admissions.accept_application_offer_command'),
+      [sessionId, applicationId, 5, input.idempotencyKey, correlationId],
+    );
+  });
+
+  it('calls only the server-scoped accepted-applicant conversion function', async () => {
+    const conversionReceipt = {
+      ...receipt,
+      command: 'admissions.application.applicant.convert' as const,
+      domainEvidenceId: '71000000-0000-4000-8000-000000000014',
+      idempotencyKey: 'admissions-convert-0001',
+    };
+    const database = databaseWith({ accepted: true, replayed: false, receipt: conversionReceipt });
+    const store = new DatabaseOperatorDomainCommandStore(database);
+    const input = {
+      sessionId,
+      idempotencyKey: 'admissions-convert-0001',
+      correlationId,
+      command: 'admissions.application.applicant.convert' as const,
+      applicationId,
+      expectedVersion: 6,
+      effectiveFrom: '2026-09-15',
+    };
+
+    await expect(store.submit(input)).resolves.toEqual({
+      accepted: true,
+      replayed: false,
+      receipt: conversionReceipt,
+    });
+    expect(database.query).toHaveBeenCalledWith(
+      expect.stringContaining('admissions.convert_accepted_applicant_command'),
+      [sessionId, applicationId, 6, input.effectiveFrom, input.idempotencyKey, correlationId],
+    );
+  });
+
   it('calls only the reviewed finance reconciliation function', async () => {
     const database = databaseWith({
       accepted: false,

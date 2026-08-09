@@ -18,6 +18,8 @@ const IDEMPOTENCY_KEY_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$/u;
 const COMMANDS = new Set<OperatorDomainCommandName>([
   'admissions.application.review.record',
   'admissions.application.offer.issue',
+  'admissions.application.offer.accept',
+  'admissions.application.applicant.convert',
   'finance.bank-line.reconcile',
   'support.break-glass.request',
 ]);
@@ -195,6 +197,33 @@ export class DatabaseOperatorDomainCommandStore implements OperatorDomainCommand
           input.academicYearId,
           input.gradeLevelId,
           input.expiresAt,
+          input.idempotencyKey,
+          input.correlationId,
+        ],
+      );
+    } else if (input.command === 'admissions.application.offer.accept') {
+      rows = await this.#database.query<OperatorDomainCommandRow>(
+        `SELECT admissions.accept_application_offer_command(
+           $1::uuid, $2::uuid, $3::bigint, $4::text, $5::uuid
+         ) AS value`,
+        [
+          input.sessionId,
+          input.applicationId,
+          input.expectedVersion,
+          input.idempotencyKey,
+          input.correlationId,
+        ],
+      );
+    } else if (input.command === 'admissions.application.applicant.convert') {
+      rows = await this.#database.query<OperatorDomainCommandRow>(
+        `SELECT admissions.convert_accepted_applicant_command(
+           $1::uuid, $2::uuid, $3::bigint, $4::date, $5::text, $6::uuid
+         ) AS value`,
+        [
+          input.sessionId,
+          input.applicationId,
+          input.expectedVersion,
+          input.effectiveFrom,
           input.idempotencyKey,
           input.correlationId,
         ],

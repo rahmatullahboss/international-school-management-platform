@@ -1,6 +1,8 @@
 export type OperatorDomainCommandName =
   | 'admissions.application.review.record'
   | 'admissions.application.offer.issue'
+  | 'admissions.application.offer.accept'
+  | 'admissions.application.applicant.convert'
   | 'finance.bank-line.reconcile'
   | 'support.break-glass.request';
 
@@ -30,6 +32,19 @@ export interface AdmissionsApplicationOfferIssueCommand extends OperatorDomainCo
   readonly expiresAt: string;
 }
 
+export interface AdmissionsApplicationOfferAcceptCommand extends OperatorDomainCommandBase {
+  readonly command: 'admissions.application.offer.accept';
+  readonly applicationId: string;
+  readonly expectedVersion: number;
+}
+
+export interface AdmissionsApplicantConvertCommand extends OperatorDomainCommandBase {
+  readonly command: 'admissions.application.applicant.convert';
+  readonly applicationId: string;
+  readonly expectedVersion: number;
+  readonly effectiveFrom: string;
+}
+
 export interface FinanceBankLineReconcileCommand extends OperatorDomainCommandBase {
   readonly command: 'finance.bank-line.reconcile';
   readonly bankStatementLineId: string;
@@ -46,6 +61,8 @@ export interface SupportBreakGlassRequestCommand extends OperatorDomainCommandBa
 export type OperatorDomainCommandInput =
   | AdmissionsApplicationReviewCommand
   | AdmissionsApplicationOfferIssueCommand
+  | AdmissionsApplicationOfferAcceptCommand
+  | AdmissionsApplicantConvertCommand
   | FinanceBankLineReconcileCommand
   | SupportBreakGlassRequestCommand;
 
@@ -95,6 +112,7 @@ export type OperatorDomainCommandResolution =
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
 const IDEMPOTENCY_KEY_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$/u;
 const ADMISSIONS_RECOMMENDATIONS = new Set(['admit', 'waitlist', 'decline', 'more-information']);
+const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/u;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -102,6 +120,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function validUuid(value: unknown): value is string {
   return typeof value === 'string' && UUID_PATTERN.test(value);
+}
+
+function validDateOnly(value: unknown): value is string {
+  if (typeof value !== 'string' || !DATE_ONLY_PATTERN.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
 }
 
 function validCommon(value: Record<string, unknown>): boolean {
@@ -198,6 +222,56 @@ function validateAdmissionsOffer(
   return value as unknown as AdmissionsApplicationOfferIssueCommand;
 }
 
+function validateAdmissionsOfferAccept(
+  value: Record<string, unknown>,
+): AdmissionsApplicationOfferAcceptCommand | undefined {
+  const expectedKeys = [
+    'sessionId',
+    'idempotencyKey',
+    'correlationId',
+    'command',
+    'applicationId',
+    'expectedVersion',
+  ];
+  if (!hasExactKeys(value, expectedKeys) || !validCommon(value)) return undefined;
+  if (
+    value.command !== 'admissions.application.offer.accept' ||
+    !validUuid(value.applicationId) ||
+    typeof value.expectedVersion !== 'number' ||
+    !Number.isSafeInteger(value.expectedVersion) ||
+    value.expectedVersion < 1
+  ) {
+    return undefined;
+  }
+  return value as unknown as AdmissionsApplicationOfferAcceptCommand;
+}
+
+function validateAdmissionsConvert(
+  value: Record<string, unknown>,
+): AdmissionsApplicantConvertCommand | undefined {
+  const expectedKeys = [
+    'sessionId',
+    'idempotencyKey',
+    'correlationId',
+    'command',
+    'applicationId',
+    'expectedVersion',
+    'effectiveFrom',
+  ];
+  if (!hasExactKeys(value, expectedKeys) || !validCommon(value)) return undefined;
+  if (
+    value.command !== 'admissions.application.applicant.convert' ||
+    !validUuid(value.applicationId) ||
+    typeof value.expectedVersion !== 'number' ||
+    !Number.isSafeInteger(value.expectedVersion) ||
+    value.expectedVersion < 1 ||
+    !validDateOnly(value.effectiveFrom)
+  ) {
+    return undefined;
+  }
+  return value as unknown as AdmissionsApplicantConvertCommand;
+}
+
 function validateFinance(
   value: Record<string, unknown>,
 ): FinanceBankLineReconcileCommand | undefined {
@@ -251,6 +325,10 @@ function validateInput(value: unknown): OperatorDomainCommandInput | undefined {
   if (!isRecord(value) || typeof value.command !== 'string') return undefined;
   if (value.command === 'admissions.application.review.record') return validateAdmissions(value);
   if (value.command === 'admissions.application.offer.issue') return validateAdmissionsOffer(value);
+  if (value.command === 'admissions.application.offer.accept')
+    return validateAdmissionsOfferAccept(value);
+  if (value.command === 'admissions.application.applicant.convert')
+    return validateAdmissionsConvert(value);
   if (value.command === 'finance.bank-line.reconcile') return validateFinance(value);
   if (value.command === 'support.break-glass.request') return validateSupport(value);
   return undefined;
