@@ -22,7 +22,7 @@ jobs:
           node-version: 22.22.2
           cache: npm
       - run: npm ci
-      - name: Apply minimal queue-heading reflow fix
+      - name: Apply shared translated-content reflow fix
         id: patch
         shell: bash
         run: |
@@ -31,12 +31,19 @@ jobs:
           from pathlib import Path
           path = Path('apps/platform-web/src/operational-module-surface.css')
           text = path.read_text()
-          old = ".operational-module__header > div {\n  min-inline-size: 0;\n}"
-          new = ".operational-module__header > div,\n.operational-section__heading > div {\n  min-inline-size: 0;\n  overflow-wrap: anywhere;\n}"
-          if old in text:
-              path.write_text(text.replace(old, new, 1))
-          elif new not in text:
-              raise SystemExit('targeted reflow rule not found')
+          root_old = "  color: var(--op-ink);\n  display: grid;"
+          root_new = "  color: var(--op-ink);\n  overflow-wrap: anywhere;\n  display: grid;"
+          media_old = "  .operational-pane > header {\n    align-items: start;\n    flex-direction: column;\n  }"
+          media_new = "  .operational-pane > header {\n    align-items: stretch;\n    flex-direction: column;\n  }"
+          if root_old in text:
+              text = text.replace(root_old, root_new, 1)
+          elif root_new not in text:
+              raise SystemExit('module wrap target not found')
+          if media_old in text:
+              text = text.replace(media_old, media_new, 1)
+          elif media_new not in text:
+              raise SystemExit('mobile header stretch target not found')
+          path.write_text(text)
           PY
           if git diff --quiet -- apps/platform-web/src/operational-module-surface.css; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
@@ -56,5 +63,5 @@ jobs:
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add apps/platform-web/src/operational-module-surface.css
-          git commit -m "fix(ux): constrain translated queue headings"
+          git commit -m "fix(ux): constrain translated task content"
           git push origin HEAD:codex/ux-hardening-long-content-20260809
