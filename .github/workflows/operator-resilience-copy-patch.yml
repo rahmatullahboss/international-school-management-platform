@@ -1,0 +1,65 @@
+name: Operator resilience copy patch
+
+on:
+  push:
+    branches:
+      - codex/operator-resilience-copy-20260809
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: codex/operator-resilience-copy-20260809
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.2
+          cache: npm
+      - run: npm ci
+      - name: Harden operator resilience copy and browser contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          portal = Path('apps/platform-web/src/operator-portal.tsx')
+          text = portal.read_text()
+          replacements = {
+              '`Pilot session API returned ${sessionResponse.status}.`': '`Staging session returned ${sessionResponse.status}.`',
+              "'Pilot session scope is invalid.'": "'Staging session scope is invalid.'",
+              '`Pilot snapshot API returned ${snapshotResponse.status}.`': '`Staging data returned ${snapshotResponse.status}.`',
+              "'Pilot snapshot scope is invalid.'": "'Staging data scope is invalid.'",
+          }
+          for old, new in replacements.items():
+              if old not in text:
+                  raise SystemExit(f'missing operator runtime target: {old}')
+              text = text.replace(old, new, 1)
+          portal.write_text(text)
+
+          browser = Path('tests/browser/product-persona-v2.e2e.spec.ts')
+          text = browser.read_text()
+          anchor = "test('operator sessions cannot be replayed across operator or core roles', async ({ request }) => {"
+          block = """test('operator task route stays usable while staging refresh is slow', async ({ page }) => {\n  await configureLivePilotApi(page);\n  await page.route(`${liveApiUrl}/pilot/v1/sessions/admissions`, async (route) => {\n    await new Promise((resolve) => setTimeout(resolve, 900));\n    await route.continue();\n  });\n\n  await page.goto('/admissions/applications');\n  await expect(page.getByText('Current scoped register')).toBeVisible();\n  await expect(page.getByRole('heading', { name: 'Application review register' })).toBeVisible();\n  await expect(page.getByText('Nabil Noor').first()).toBeVisible();\n  await expect(page.getByText('Checking for updates')).toBeVisible();\n  await expect(page.getByText('Current from staging API')).toBeVisible();\n});\n\ntest('operator session failure keeps task data and uses neutral service language', async ({ page }) => {\n  await configureLivePilotApi(page);\n  await page.route(`${liveApiUrl}/pilot/v1/sessions/support`, async (route) => {\n    await route.fulfill({\n      status: 503,\n      headers: { 'access-control-allow-origin': '*' },\n      contentType: 'application/json',\n      body: JSON.stringify({ error: 'temporarily_unavailable' }),\n    });\n  });\n\n  await page.goto('/support/access');\n  await expect(page.getByText('Current scoped register')).toBeVisible();\n  await expect(page.getByRole('heading', { name: 'Privileged access requests' })).toBeVisible();\n  await expect(page.getByText('No active grant')).toBeVisible();\n  await expect(page.getByText('Using saved data')).toBeVisible();\n  await expect(page.getByText('Staging session returned 503.')).toBeVisible();\n  await expect(page.getByText(/Pilot session API/u)).toHaveCount(0);\n});\n\ntest('operator register exposes an explicit empty state after filtering', async ({ page }) => {\n  await page.goto('/admissions/enquiries');\n  await page.getByRole('searchbox', { name: 'Search' }).fill('no-family-matches-this-query');\n\n  await expect(page.getByText('No records match the current filters.')).toBeVisible();\n  await expect(page.getByRole('region', { name: 'Enquiry register table' })).toBeVisible();\n});\n\n"""
+          if block not in text:
+              if anchor not in text:
+                  raise SystemExit('operator browser insertion point not found')
+              text = text.replace(anchor, block + anchor, 1)
+          browser.write_text(text)
+          PY
+          npx prettier --write apps/platform-web/src/operator-portal.tsx tests/browser/product-persona-v2.e2e.spec.ts
+          changed="$(git diff --name-only | sort)"
+          expected="$(printf '%s\n' apps/platform-web/src/operator-portal.tsx tests/browser/product-persona-v2.e2e.spec.ts | sort)"
+          if [ -z "$changed" ]; then exit 0; fi
+          test "$changed" = "$expected"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add apps/platform-web/src/operator-portal.tsx tests/browser/product-persona-v2.e2e.spec.ts
+          git commit -m "fix(ux): harden operator resilience states"
+          git push origin HEAD:codex/operator-resilience-copy-20260809
