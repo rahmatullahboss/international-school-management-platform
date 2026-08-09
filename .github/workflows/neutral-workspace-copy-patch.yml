@@ -42,10 +42,15 @@ jobs:
 
           coverage = Path('tests/browser/full-role-route-coverage.spec.ts')
           text = coverage.read_text()
-          old = "await expect(page.getByRole('alert')).toContainText('Page not available in this pilot');"
-          new = "await expect(page.getByRole('alert')).toContainText('Page not available');"
+          old = ".filter({ hasText: 'Page not available in this pilot' });"
+          new = ".filter({ hasText: 'Page not available' });"
           if old not in text:
-              raise SystemExit('fail-closed browser contract not found')
+              raise SystemExit('fail-closed unavailable filter not found')
+          text = text.replace(old, new, 1)
+          old = "'This task has not been connected to the pilot workspace yet.',"
+          new = "'This task is not available in your current workspace.',"
+          if old not in text:
+              raise SystemExit('fail-closed detail contract not found')
           coverage.write_text(text.replace(old, new, 1))
 
           persona = Path('tests/browser/product-persona-v2.e2e.spec.ts')
