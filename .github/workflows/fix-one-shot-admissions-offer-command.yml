@@ -1,0 +1,52 @@
+name: fix one-shot admissions offer command
+
+on:
+  push:
+    branches:
+      - codex/admissions-offer-enrolment-commands-20260809
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/admissions-offer-enrolment-commands-20260809
+          fetch-depth: 0
+      - name: Fix verifier stream-list guard
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('.github/workflows/one-shot-admissions-offer-command.yml')
+          text = path.read_text()
+          old = """          replace_once('tests/integration/verify-auth-durable-context.sh',
+              \"'PILOT-12', 'PILOT-13'\",
+              \"'PILOT-12', 'PILOT-13', 'PILOT-14'\")
+"""
+          new = """          verifier_path = Path('tests/integration/verify-auth-durable-context.sh')
+          verifier_text = verifier_path.read_text()
+          stream_tail = \"'PILOT-12', 'PILOT-13'\"
+          if verifier_text.count(stream_tail) != 3:
+              raise SystemExit(f'verifier: expected three stream-list tails, found {verifier_text.count(stream_tail)}')
+          verifier_path.write_text(verifier_text.replace(stream_tail, \"'PILOT-12', 'PILOT-13', 'PILOT-14'\"))
+"""
+          if text.count(old) != 1:
+              raise SystemExit(f'helper: expected one target block, found {text.count(old)}')
+          path.write_text(text.replace(old, new, 1))
+          PY
+          git diff --check
+          git diff -- .github/workflows/one-shot-admissions-offer-command.yml
+      - name: Commit helper fix
+        shell: bash
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add .github/workflows/one-shot-admissions-offer-command.yml
+          git commit -m 'ci: fix admissions offer patch guard'
+          git push origin HEAD:codex/admissions-offer-enrolment-commands-20260809
