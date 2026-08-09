@@ -1,24 +1,24 @@
 .student-workspace {
-  --student-ink: #12263a;
-  --student-muted: #4c6275;
-  --student-paper: #ffffff;
-  --student-canvas: #f3f6f8;
-  --student-line: #cbd6de;
-  --student-action: #006d77;
-  --student-action-strong: #004f57;
-  --student-focus: #0b63ce;
-  --student-info-surface: #e7f2f8;
-  --student-success-surface: #e5f4ec;
-  --student-success-text: #145c36;
-  --student-error-surface: #fde8e7;
-  --student-error-text: #8a1c17;
+  --ink: #12263a;
+  --muted: #4c6275;
+  --paper: #ffffff;
+  --canvas: #f3f6f8;
+  --line: #cbd6de;
+  --action: #006d77;
+  --action-strong: #004f57;
+  --focus: #0b63ce;
+  --info: #e7f2f8;
+  --success: #e5f4ec;
+  --success-text: #145c36;
+  --error: #fde8e7;
+  --error-text: #8a1c17;
   display: grid;
   gap: 1.5rem;
-  color: var(--student-ink);
+  color: var(--ink);
 }
 
 .student-workspace :is(a, button, input):focus-visible {
-  outline: 3px solid var(--student-focus);
+  outline: 3px solid var(--focus);
   outline-offset: 3px;
 }
 
@@ -28,7 +28,7 @@
   gap: 1rem 2rem;
   align-items: end;
   padding-block-end: 1.25rem;
-  border-block-end: 1px solid var(--student-line);
+  border-block-end: 1px solid var(--line);
 }
 
 .student-workspace__masthead h2,
@@ -46,13 +46,13 @@
   display: block;
   max-inline-size: 68ch;
   margin-block: 0.45rem 0;
-  color: var(--student-muted);
+  color: var(--muted);
   line-height: 1.55;
 }
 
 .student-workspace__kicker {
   margin: 0 0 0.35rem;
-  color: var(--student-action-strong);
+  color: var(--action-strong);
   font-size: 0.85rem;
   font-weight: 750;
   letter-spacing: 0.03em;
@@ -63,21 +63,21 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   margin: 0;
-  border-block-start: 1px solid var(--student-line);
-  border-inline-start: 1px solid var(--student-line);
+  border-block-start: 1px solid var(--line);
+  border-inline-start: 1px solid var(--line);
 }
 
 .student-workspace__masthead dl > div {
   display: grid;
   gap: 0.35rem;
   padding: 0.85rem;
-  border-block-end: 1px solid var(--student-line);
-  border-inline-end: 1px solid var(--student-line);
-  background: var(--student-paper);
+  border-block-end: 1px solid var(--line);
+  border-inline-end: 1px solid var(--line);
+  background: var(--paper);
 }
 
 .student-workspace__masthead dt {
-  color: var(--student-muted);
+  color: var(--muted);
   font-size: 0.78rem;
   font-weight: 700;
 }
@@ -94,9 +94,9 @@
 .student-workspace__state {
   min-inline-size: 0;
   padding: clamp(1rem, 2vw, 1.5rem);
-  border: 1px solid var(--student-line);
+  border: 1px solid var(--line);
   border-radius: 16px;
-  background: var(--student-paper);
+  background: var(--paper);
 }
 
 .student-workspace__section > header {
@@ -104,7 +104,7 @@
 }
 
 .student-workspace a {
-  color: var(--student-action-strong);
+  color: var(--action-strong);
   font-weight: 700;
 }
 
@@ -121,7 +121,7 @@
 }
 
 .student-workspace__timeline {
-  border-block-start: 1px solid var(--student-line);
+  border-block-start: 1px solid var(--line);
 }
 
 .student-workspace__timeline > li {
@@ -130,15 +130,15 @@
   gap: 1rem;
   align-items: center;
   padding-block: 0.9rem;
-  border-block-end: 1px solid var(--student-line);
+  border-block-end: 1px solid var(--line);
 }
 
 .student-workspace__timeline > li[data-state='current'] {
-  background: var(--student-info-surface);
+  background: var(--info);
 }
 
 .student-workspace__timeline > li[data-state='cancelled'] {
-  color: var(--student-muted);
+  color: var(--muted);
 }
 
 .student-workspace__timeline > li > div,
@@ -164,7 +164,7 @@
 .student-workspace__tasks time,
 .student-workspace__messages span,
 .student-workspace__messages time {
-  color: var(--student-muted);
+  color: var(--muted);
   line-height: 1.4;
 }
 
@@ -178,7 +178,7 @@
 .student-workspace__results,
 .student-workspace__tasks,
 .student-workspace__messages {
-  border-block-start: 1px solid var(--student-line);
+  border-block-start: 1px solid var(--line);
 }
 
 .student-workspace__records > li,
@@ -188,27 +188,27 @@
   display: grid;
   gap: 0.75rem;
   padding-block: 0.9rem;
-  border-block-end: 1px solid var(--student-line);
+  border-block-end: 1px solid var(--line);
 }
 
 .student-workspace__records dl {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   margin: 0;
-  border-block-start: 1px solid var(--student-line);
-  border-inline-start: 1px solid var(--student-line);
+  border-block-start: 1px solid var(--line);
+  border-inline-start: 1px solid var(--line);
 }
 
 .student-workspace__records dl > div {
   display: grid;
   gap: 0.2rem;
   padding: 0.6rem;
-  border-block-end: 1px solid var(--student-line);
-  border-inline-end: 1px solid var(--student-line);
+  border-block-end: 1px solid var(--line);
+  border-inline-end: 1px solid var(--line);
 }
 
 .student-workspace__records dt {
-  color: var(--student-muted);
+  color: var(--muted);
   font-size: 0.75rem;
 }
 
@@ -238,19 +238,19 @@
 .student-workspace__result-value {
   padding: 0.35rem 0.55rem;
   border-radius: 8px;
-  background: var(--student-success-surface);
-  color: var(--student-success-text);
+  background: var(--success);
+  color: var(--success-text);
   font-size: 1.2rem;
 }
 
 .student-workspace__results > li[data-publication='revised'] {
-  background: var(--student-info-surface);
+  background: var(--info);
 }
 
 .student-workspace__resources {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
-  border-block-start: 1px solid var(--student-line);
-  border-inline-start: 1px solid var(--student-line);
+  border-block-start: 1px solid var(--line);
+  border-inline-start: 1px solid var(--line);
 }
 
 .student-workspace__resources > li {
@@ -258,12 +258,12 @@
   display: grid;
   gap: 0.75rem;
   padding: 1rem;
-  border-block-end: 1px solid var(--student-line);
-  border-inline-end: 1px solid var(--student-line);
+  border-block-end: 1px solid var(--line);
+  border-inline-end: 1px solid var(--line);
 }
 
 .student-workspace__resources > li[data-type='activity'] {
-  background: var(--student-info-surface);
+  background: var(--info);
 }
 
 .student-workspace__tasks > li > a,
@@ -272,11 +272,11 @@
 }
 
 .student-workspace__tasks > li[data-state='declined'] {
-  background: var(--student-error-surface);
+  background: var(--error);
 }
 
 .student-workspace__tasks > li[data-state='complete'] {
-  background: var(--student-success-surface);
+  background: var(--success);
 }
 
 .student-workspace__unread {
@@ -284,7 +284,7 @@
   inline-size: fit-content;
   padding: 0.2rem 0.45rem;
   border-radius: 8px;
-  background: var(--student-action);
+  background: var(--action);
   color: white;
   font-size: 0.78rem;
   font-weight: 750;
@@ -294,29 +294,42 @@
   display: grid;
   gap: 0.25rem;
   padding: 1rem;
-  border: 1px dashed var(--student-line);
+  border: 1px dashed var(--line);
   border-radius: 8px;
-  background: var(--student-canvas);
+  background: var(--canvas);
 }
 
 .student-workspace__empty span {
-  color: var(--student-muted);
+  color: var(--muted);
   line-height: 1.45;
 }
 
 .student-workspace__state[role='alert'] {
-  border-color: var(--student-error-text);
-  background: var(--student-error-surface);
+  border-color: var(--error-text);
+  background: var(--error);
 }
 
-[data-focus='documents'] > :not([data-focus-group]),
-[data-focus='messages'] > :not([data-focus-item='messages']),
-[data-focus='documents'] [data-focus-item='requests'] {
+[data-focus] > * {
   display: none;
 }
 
-[data-focus='documents'] [data-focus-group] {
+[data-focus='timetable'] > :nth-child(2),
+[data-focus='resources'] > :nth-child(4),
+[data-focus='messages'] > :nth-child(6) {
+  display: block;
+}
+
+:is([data-focus='attendance'], [data-focus='results']) > :nth-child(3),
+:is([data-focus='requests'], [data-focus='documents']) > :nth-child(5) {
+  display: grid;
   grid-template-columns: 1fr;
+}
+
+[data-focus='attendance'] > :nth-child(3) > :last-child,
+[data-focus='requests'] > :nth-child(5) > :last-child,
+[data-focus='results'] > :nth-child(3) > :first-child,
+[data-focus='documents'] > :nth-child(5) > :first-child {
+  display: none;
 }
 
 .student-workspace[data-age-band='primary'] {

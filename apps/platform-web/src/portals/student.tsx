@@ -41,14 +41,9 @@ export default function StudentPortal(props: StudentPortalProps): ReactElement {
     props.connectivity,
   );
   const overview = resource.data;
+  const isHome = props.path === '/student';
   const routeSegment = props.path.slice('/student/'.length);
-  const focus =
-    routeSegment === 'documents' || routeSegment === 'messages' ? routeSegment : undefined;
-  const usesDailyWorkspace =
-    props.path === '/student' ||
-    routeSegment === 'resources' ||
-    routeSegment === 'requests' ||
-    focus !== undefined;
+  const usesDailyWorkspace = isHome || page !== undefined;
 
   return (
     <StudentExperienceShell
@@ -88,7 +83,7 @@ export default function StudentPortal(props: StudentPortalProps): ReactElement {
           locale="en-BD"
           date={resource.updatedAt}
           ageBand="secondary"
-          {...(focus === undefined ? {} : { focus })}
+          {...(isHome ? {} : { focus: routeSegment })}
           capabilities={resource.capabilities}
           lessons={overview.lessons}
           attendance={overview.attendance}
