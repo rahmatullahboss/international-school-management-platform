@@ -1,0 +1,54 @@
+name: Teacher task chrome patch
+
+on:
+  push:
+    branches:
+      - codex/teacher-task-first-chrome-20260809
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: codex/teacher-task-first-chrome-20260809
+      - name: Patch Teacher task chrome and tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          surface = Path('apps/platform-web/src/operational-module-surface.tsx')
+          text = surface.read_text()
+          old = "props.role === 'guardian' ? null : ("
+          new = "props.role === 'guardian' || props.role === 'teacher' ? null : ("
+          if old in text:
+              surface.write_text(text.replace(old, new, 1))
+          elif new not in text:
+              raise SystemExit('OperationalModuleSurface role condition not found')
+
+          tests = Path('apps/platform-web/src/operational-module-surface.test.tsx')
+          text = tests.read_text()
+          old = "if (role === 'guardian') {"
+          new = "if (role === 'guardian' || role === 'teacher') {"
+          if old in text:
+              tests.write_text(text.replace(old, new, 1))
+          elif new not in text:
+              raise SystemExit('OperationalModuleSurface test condition not found')
+          PY
+          npx prettier --write apps/platform-web/src/operational-module-surface.tsx apps/platform-web/src/operational-module-surface.test.tsx
+          changed="$(git diff --name-only | sort)"
+          expected="$(printf '%s\n' apps/platform-web/src/operational-module-surface.test.tsx apps/platform-web/src/operational-module-surface.tsx | sort)"
+          if [ -z "$changed" ]; then exit 0; fi
+          test "$changed" = "$expected"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add apps/platform-web/src/operational-module-surface.tsx apps/platform-web/src/operational-module-surface.test.tsx
+          git commit -m "fix(teacher): keep task routes task-first"
+          git push origin HEAD:codex/teacher-task-first-chrome-20260809
