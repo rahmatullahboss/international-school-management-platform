@@ -17,20 +17,14 @@ jobs:
         with:
           fetch-depth: 0
           ref: codex/guardian-core-route-workflows-20260809
-      - name: Restore workspace contract and remove focus-only CSS
+      - name: Restore Guardian workspace exactly from main
         shell: bash
         run: |
           set -euo pipefail
           git fetch origin main
-          git checkout origin/main -- apps/web-family/src/features/experience/GuardianHouseholdWorkspace.tsx
-          python3 - <<'PY'
-          from pathlib import Path
-          path = Path('apps/web-family/src/features/experience/guardian-household-workspace.css')
-          text = path.read_text()
-          start = text.index("\n:is(\n    [data-focus='applications'],")
-          end = text.index("\n@media (max-width: 68rem)", start)
-          path.write_text(text[:start] + text[end:])
-          PY
+          git checkout origin/main -- \
+            apps/web-family/src/features/experience/GuardianHouseholdWorkspace.tsx \
+            apps/web-family/src/features/experience/guardian-household-workspace.css
           changed="$(git diff --name-only | sort)"
           expected="$(printf '%s\n' \
             apps/web-family/src/features/experience/GuardianHouseholdWorkspace.tsx \
@@ -39,5 +33,5 @@ jobs:
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add apps/web-family/src/features/experience/GuardianHouseholdWorkspace.tsx apps/web-family/src/features/experience/guardian-household-workspace.css
-          git commit -m "fix(guardian): restore route detail workflows"
+          git commit -m "fix(guardian): restore operational route behavior"
           git push origin HEAD:codex/guardian-core-route-workflows-20260809
