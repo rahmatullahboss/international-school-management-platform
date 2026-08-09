@@ -10,6 +10,8 @@ const correlationId = '71000000-0000-4000-8000-000000000002';
 const applicationId = '71000000-0000-4000-8000-000000000003';
 const bankStatementLineId = '71000000-0000-4000-8000-000000000004';
 const paymentId = '71000000-0000-4000-8000-000000000005';
+const programId = '71000000-0000-4000-8000-000000000006';
+const academicYearId = '71000000-0000-4000-8000-000000000007';
 
 function storeWith(result: unknown) {
   const submit = vi.fn().mockResolvedValue(result);
@@ -28,6 +30,21 @@ function admissionsInput() {
     recommendation: 'more-information' as const,
     score: 82.5,
     notes: 'Request one additional verified school record before the decision review.',
+  };
+}
+
+function admissionsOfferInput() {
+  return {
+    sessionId,
+    idempotencyKey: 'admissions-offer-0001',
+    correlationId,
+    command: 'admissions.application.offer.issue' as const,
+    applicationId,
+    expectedVersion: 4,
+    programId,
+    academicYearId,
+    gradeLevelId: null,
+    expiresAt: '2026-09-01T00:00:00.000Z',
   };
 }
 
@@ -69,7 +86,12 @@ const accepted = {
 
 describe('operator domain command boundary', () => {
   it('submits exact server-scoped admissions, finance and support commands', async () => {
-    for (const input of [admissionsInput(), financeInput(), supportInput()]) {
+    for (const input of [
+      admissionsInput(),
+      admissionsOfferInput(),
+      financeInput(),
+      supportInput(),
+    ]) {
       const { store, submit } = storeWith(accepted);
       await expect(
         submitOperatorDomainCommand({ configured: true, input, store }),
@@ -100,6 +122,10 @@ describe('operator domain command boundary', () => {
       { ...admissionsInput(), recommendation: 'auto-admit' },
       { ...admissionsInput(), score: 101 },
       { ...admissionsInput(), notes: 'x'.repeat(2001) },
+      { ...admissionsOfferInput(), expectedVersion: 0 },
+      { ...admissionsOfferInput(), programId: 'not-a-uuid' },
+      { ...admissionsOfferInput(), campusId: 'browser-selected-campus' },
+      { ...admissionsOfferInput(), expiresAt: 'not-a-timestamp' },
       { ...financeInput(), reason: 'short' },
       { ...financeInput(), applicationId },
       { ...supportInput(), requestedMinutes: 31 },

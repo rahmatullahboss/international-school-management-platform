@@ -17,6 +17,7 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3
 const IDEMPOTENCY_KEY_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$/u;
 const COMMANDS = new Set<OperatorDomainCommandName>([
   'admissions.application.review.record',
+  'admissions.application.offer.issue',
   'finance.bank-line.reconcile',
   'support.break-glass.request',
 ]);
@@ -176,6 +177,24 @@ export class DatabaseOperatorDomainCommandStore implements OperatorDomainCommand
           input.recommendation,
           input.score,
           input.notes,
+          input.idempotencyKey,
+          input.correlationId,
+        ],
+      );
+    } else if (input.command === 'admissions.application.offer.issue') {
+      rows = await this.#database.query<OperatorDomainCommandRow>(
+        `SELECT admissions.issue_application_offer_command(
+           $1::uuid, $2::uuid, $3::bigint, $4::uuid, $5::uuid,
+           $6::uuid, $7::timestamptz, $8::text, $9::uuid
+         ) AS value`,
+        [
+          input.sessionId,
+          input.applicationId,
+          input.expectedVersion,
+          input.programId,
+          input.academicYearId,
+          input.gradeLevelId,
+          input.expiresAt,
           input.idempotencyKey,
           input.correlationId,
         ],

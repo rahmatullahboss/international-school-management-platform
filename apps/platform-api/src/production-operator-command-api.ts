@@ -31,6 +31,15 @@ type BrowserOperatorCommandBody =
       readonly notes: string | null;
     }
   | {
+      readonly command: 'admissions.application.offer.issue';
+      readonly applicationId: string;
+      readonly expectedVersion: number;
+      readonly programId: string;
+      readonly academicYearId: string;
+      readonly gradeLevelId: string | null;
+      readonly expiresAt: string;
+    }
+  | {
       readonly command: 'finance.bank-line.reconcile';
       readonly bankStatementLineId: string;
       readonly paymentId: string;
@@ -135,6 +144,39 @@ function parseBrowserBody(value: unknown): BrowserOperatorCommandBody | undefine
     return value as unknown as BrowserOperatorCommandBody;
   }
 
+  if (value.command === 'admissions.application.offer.issue') {
+    if (
+      !hasExactKeys(value, [
+        'command',
+        'applicationId',
+        'expectedVersion',
+        'programId',
+        'academicYearId',
+        'gradeLevelId',
+        'expiresAt',
+      ]) ||
+      typeof value.applicationId !== 'string' ||
+      !UUID_PATTERN.test(value.applicationId) ||
+      typeof value.expectedVersion !== 'number' ||
+      !Number.isSafeInteger(value.expectedVersion) ||
+      value.expectedVersion < 1 ||
+      typeof value.programId !== 'string' ||
+      !UUID_PATTERN.test(value.programId) ||
+      typeof value.academicYearId !== 'string' ||
+      !UUID_PATTERN.test(value.academicYearId) ||
+      !(
+        value.gradeLevelId === null ||
+        (typeof value.gradeLevelId === 'string' && UUID_PATTERN.test(value.gradeLevelId))
+      ) ||
+      typeof value.expiresAt !== 'string' ||
+      value.expiresAt.length > 64 ||
+      !Number.isFinite(Date.parse(value.expiresAt))
+    ) {
+      return undefined;
+    }
+    return value as unknown as BrowserOperatorCommandBody;
+  }
+
   if (value.command === 'finance.bank-line.reconcile') {
     if (
       !hasExactKeys(value, ['command', 'bankStatementLineId', 'paymentId', 'reason']) ||
@@ -185,7 +227,11 @@ async function readJsonBody(request: Request): Promise<unknown> {
 }
 
 function roleForCommand(command: BrowserOperatorCommandBody['command']): DatabaseWorkspaceRole {
-  if (command === 'admissions.application.review.record') return 'admissions';
+  if (
+    command === 'admissions.application.review.record' ||
+    command === 'admissions.application.offer.issue'
+  )
+    return 'admissions';
   if (command === 'finance.bank-line.reconcile') return 'finance';
   return 'support';
 }

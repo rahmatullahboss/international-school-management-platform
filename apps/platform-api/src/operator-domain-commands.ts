@@ -1,5 +1,6 @@
 export type OperatorDomainCommandName =
   | 'admissions.application.review.record'
+  | 'admissions.application.offer.issue'
   | 'finance.bank-line.reconcile'
   | 'support.break-glass.request';
 
@@ -19,6 +20,16 @@ export interface AdmissionsApplicationReviewCommand extends OperatorDomainComman
   readonly notes: string | null;
 }
 
+export interface AdmissionsApplicationOfferIssueCommand extends OperatorDomainCommandBase {
+  readonly command: 'admissions.application.offer.issue';
+  readonly applicationId: string;
+  readonly expectedVersion: number;
+  readonly programId: string;
+  readonly academicYearId: string;
+  readonly gradeLevelId: string | null;
+  readonly expiresAt: string;
+}
+
 export interface FinanceBankLineReconcileCommand extends OperatorDomainCommandBase {
   readonly command: 'finance.bank-line.reconcile';
   readonly bankStatementLineId: string;
@@ -34,6 +45,7 @@ export interface SupportBreakGlassRequestCommand extends OperatorDomainCommandBa
 
 export type OperatorDomainCommandInput =
   | AdmissionsApplicationReviewCommand
+  | AdmissionsApplicationOfferIssueCommand
   | FinanceBankLineReconcileCommand
   | SupportBreakGlassRequestCommand;
 
@@ -152,6 +164,40 @@ function validateAdmissions(
   return value as unknown as AdmissionsApplicationReviewCommand;
 }
 
+function validateAdmissionsOffer(
+  value: Record<string, unknown>,
+): AdmissionsApplicationOfferIssueCommand | undefined {
+  const expectedKeys = [
+    'sessionId',
+    'idempotencyKey',
+    'correlationId',
+    'command',
+    'applicationId',
+    'expectedVersion',
+    'programId',
+    'academicYearId',
+    'gradeLevelId',
+    'expiresAt',
+  ];
+  if (!hasExactKeys(value, expectedKeys) || !validCommon(value)) return undefined;
+  if (
+    value.command !== 'admissions.application.offer.issue' ||
+    !validUuid(value.applicationId) ||
+    typeof value.expectedVersion !== 'number' ||
+    !Number.isSafeInteger(value.expectedVersion) ||
+    value.expectedVersion < 1 ||
+    !validUuid(value.programId) ||
+    !validUuid(value.academicYearId) ||
+    !(value.gradeLevelId === null || validUuid(value.gradeLevelId)) ||
+    typeof value.expiresAt !== 'string' ||
+    value.expiresAt.length > 64 ||
+    !Number.isFinite(Date.parse(value.expiresAt))
+  ) {
+    return undefined;
+  }
+  return value as unknown as AdmissionsApplicationOfferIssueCommand;
+}
+
 function validateFinance(
   value: Record<string, unknown>,
 ): FinanceBankLineReconcileCommand | undefined {
@@ -204,6 +250,7 @@ function validateSupport(
 function validateInput(value: unknown): OperatorDomainCommandInput | undefined {
   if (!isRecord(value) || typeof value.command !== 'string') return undefined;
   if (value.command === 'admissions.application.review.record') return validateAdmissions(value);
+  if (value.command === 'admissions.application.offer.issue') return validateAdmissionsOffer(value);
   if (value.command === 'finance.bank-line.reconcile') return validateFinance(value);
   if (value.command === 'support.break-glass.request') return validateSupport(value);
   return undefined;

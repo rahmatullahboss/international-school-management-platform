@@ -8,6 +8,8 @@ import {
 const sessionId = '96000000-0000-4000-8000-000000000001';
 const correlationId = '96000000-0000-4000-8000-000000000002';
 const applicationId = '96000000-0000-4000-8000-000000000003';
+const programId = '96000000-0000-4000-8000-000000000004';
+const academicYearId = '96000000-0000-4000-8000-000000000005';
 
 const environment: ProductionOperatorCommandBindings = {
   APP_ENV: 'production',
@@ -54,6 +56,18 @@ function admissionsBody() {
     recommendation: 'more-information',
     score: 82.5,
     notes: 'Request one additional verified record before the final review.',
+  };
+}
+
+function offerBody() {
+  return {
+    command: 'admissions.application.offer.issue',
+    applicationId,
+    expectedVersion: 4,
+    programId,
+    academicYearId,
+    gradeLevelId: null,
+    expiresAt: '2026-09-01T00:00:00.000Z',
   };
 }
 
@@ -198,6 +212,35 @@ describe('production operator command API', () => {
       replayed: false,
       receipt: { correlationId },
     });
+  });
+
+  it('submits offer issuance without accepting browser-selected campus scope', async () => {
+    const deps = dependencies();
+    const response = await handleProductionOperatorCommandRequest(
+      request(offerBody(), { 'idempotency-key': 'admissions-offer-qa-0001' }),
+      environment,
+      deps.value,
+    );
+    expect(response?.status).toBe(202);
+    expect(deps.submit).toHaveBeenCalledWith(
+      environment.DATABASE_URL,
+      expect.objectContaining({
+        ...offerBody(),
+        sessionId,
+        idempotencyKey: 'admissions-offer-qa-0001',
+        correlationId,
+      }),
+    );
+
+    const invalid = await handleProductionOperatorCommandRequest(
+      request(
+        { ...offerBody(), campusId: activeSession.context.campusId },
+        { 'idempotency-key': 'admissions-offer-qa-0002' },
+      ),
+      environment,
+      dependencies().value,
+    );
+    expect(invalid?.status).toBe(400);
   });
 
   it('denies cross-role command replay even with a valid session', async () => {
