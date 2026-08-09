@@ -79,12 +79,10 @@ for (const denied of deniedRoleRoutes) {
   test(`unpublished role route ${denied.path} fails closed`, async ({ page }) => {
     await page.goto(denied.path);
 
-    const unavailable = page
-      .getByRole('alert')
-      .filter({ hasText: 'Page not available in this pilot' });
+    const unavailable = page.getByRole('alert').filter({ hasText: 'Page not available' });
     await expect(unavailable).toBeVisible();
     await expect(unavailable).toContainText(
-      'This task has not been connected to the pilot workspace yet.',
+      'This task is not available in your current workspace.',
     );
     await expect(
       unavailable.getByRole('link', { name: 'Return to workspace home' }),
