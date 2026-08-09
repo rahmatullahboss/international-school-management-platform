@@ -85,10 +85,12 @@ describe('OperationalModuleSurface', () => {
   it('disables production-write controls until a safe route contract is wired', () => {
     const markup = renderRoute('/admin/reports', 'admin');
 
-    expect(markup).toContain('operational-pilot-action-boundary');
+    expect(markup).toContain('operational-action-availability');
+    expect(markup).toContain('operational-sr-only');
     expect(markup).toContain('Approve with AAL2');
     expect(markup).toContain('disabled=""');
-    expect(markup).toContain('existing safe route contract is wired');
+    expect(markup).toContain('This action is unavailable in the current environment.');
+    expect(markup).not.toContain('Pilot boundary');
   });
 
   it('does not present unavailable timetable days as working controls', () => {

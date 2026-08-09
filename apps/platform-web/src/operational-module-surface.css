@@ -834,19 +834,13 @@
   font-size: 0.82rem;
 }
 
-.operational-pilot-note {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 0.8rem;
-  padding: 0.8rem 0;
-  border-block: 1px solid var(--op-rule);
-  color: var(--op-muted);
-  font-size: 0.78rem;
-  line-height: 1.45;
-}
-
-.operational-pilot-note strong {
-  color: var(--op-ink);
+.operational-sr-only {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 
 @media (max-width: 76rem) {
