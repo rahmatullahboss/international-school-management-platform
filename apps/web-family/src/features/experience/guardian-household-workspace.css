@@ -381,7 +381,7 @@
   background: var(--error);
 }
 
-[data-focus] > * {
+:is([data-focus='applications'], [data-focus='children'], [data-focus='attendance'], [data-focus='grades'], [data-focus='finance'], [data-focus='forms'], [data-focus='documents'], [data-focus='messages']) > * {
   display: none;
 }
 
