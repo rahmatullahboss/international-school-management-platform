@@ -1,0 +1,26 @@
+name: Diagnose long content overflow
+
+on:
+  push:
+    branches:
+      - codex/ux-hardening-long-content-20260809
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/ux-hardening-long-content-20260809
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.2
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Run long-content test only
+        run: npx playwright test tests/browser/ux-hardening.spec.ts --grep "long translated task content" --reporter=line
