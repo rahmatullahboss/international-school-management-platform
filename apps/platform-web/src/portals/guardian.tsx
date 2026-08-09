@@ -9,7 +9,6 @@ import {
   pilotTimestamp,
   schoolName,
 } from '../pilot-data';
-import { OperationalModuleSurface } from '../operational-module-surface';
 import { usePilotResource } from '../pilot-resource';
 import {
   PilotDataStatus,
@@ -41,6 +40,9 @@ export default function GuardianPortal(props: GuardianPortalProps): ReactElement
     props.connectivity,
   );
   const overview = resource.data;
+  const isHome = props.path === '/family';
+  const routeSegment = props.path.slice('/family/'.length);
+  const usesHouseholdWorkspace = isHome || page !== undefined;
 
   return (
     <GuardianExperienceShell
@@ -71,12 +73,13 @@ export default function GuardianPortal(props: GuardianPortalProps): ReactElement
         message={resource.message}
         onRefresh={resource.refresh}
       />
-      {props.path === '/family' ? (
+      {usesHouseholdWorkspace ? (
         <GuardianHouseholdWorkspace
           guardianName="Farhana Noor"
           householdLabel="Noor household"
           locale="en-BD"
           activeChildId="student-1"
+          {...(isHome ? {} : { focus: routeSegment })}
           capabilities={resource.capabilities}
           children={overview.children}
           applications={overview.applications}
@@ -87,10 +90,8 @@ export default function GuardianPortal(props: GuardianPortalProps): ReactElement
           documents={overview.documents}
           conversations={overview.conversations}
         />
-      ) : page === undefined ? (
-        <UnknownRoute homeHref="/family" />
       ) : (
-        <OperationalModuleSurface path={props.path} page={page} role="guardian" />
+        <UnknownRoute homeHref="/family" />
       )}
     </GuardianExperienceShell>
   );
