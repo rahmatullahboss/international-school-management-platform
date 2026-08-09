@@ -7,6 +7,8 @@ const correlationId = '71000000-0000-4000-8000-000000000002';
 const applicationId = '71000000-0000-4000-8000-000000000003';
 const bankStatementLineId = '71000000-0000-4000-8000-000000000004';
 const paymentId = '71000000-0000-4000-8000-000000000005';
+const programId = '71000000-0000-4000-8000-000000000006';
+const academicYearId = '71000000-0000-4000-8000-000000000007';
 
 function databaseWith(value: unknown) {
   return { query: vi.fn().mockResolvedValue([{ value }]) };
@@ -51,6 +53,49 @@ describe('database operator domain command store', () => {
         'more-information',
         82.5,
         input.notes,
+        input.idempotencyKey,
+        correlationId,
+      ],
+    );
+  });
+
+  it('calls only the server-scoped admissions offer function', async () => {
+    const offerReceipt = {
+      ...receipt,
+      command: 'admissions.application.offer.issue' as const,
+      domainEvidenceId: '71000000-0000-4000-8000-000000000012',
+      idempotencyKey: 'admissions-offer-0001',
+    };
+    const database = databaseWith({ accepted: true, replayed: false, receipt: offerReceipt });
+    const store = new DatabaseOperatorDomainCommandStore(database);
+    const input = {
+      sessionId,
+      idempotencyKey: 'admissions-offer-0001',
+      correlationId,
+      command: 'admissions.application.offer.issue' as const,
+      applicationId,
+      expectedVersion: 4,
+      programId,
+      academicYearId,
+      gradeLevelId: null,
+      expiresAt: '2026-09-01T00:00:00.000Z',
+    };
+
+    await expect(store.submit(input)).resolves.toEqual({
+      accepted: true,
+      replayed: false,
+      receipt: offerReceipt,
+    });
+    expect(database.query).toHaveBeenCalledWith(
+      expect.stringContaining('admissions.issue_application_offer_command'),
+      [
+        sessionId,
+        applicationId,
+        4,
+        programId,
+        academicYearId,
+        null,
+        input.expiresAt,
         input.idempotencyKey,
         correlationId,
       ],

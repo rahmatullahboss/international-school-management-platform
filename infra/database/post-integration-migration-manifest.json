@@ -1,6 +1,6 @@
 {
   "program": "international-school-platform-v1",
-  "gate": "GATE-PILOT-OPERATOR-DOMAIN-COMMANDS-V1",
+  "gate": "GATE-PILOT-ADMISSIONS-OFFER-COMMAND-V1",
   "baseManifest": "infra/database/migration-manifest.json",
   "orderingRule": "apply the reviewed 40-migration Wave 2 manifest first, then all reviewed post-integration migrations in contiguous order",
   "migrations": [
@@ -81,6 +81,12 @@
       "id": "202608010501_PILOT-13_operator_domain_commands",
       "stream": "PILOT-13",
       "path": "infra/database/post-integration-migrations/202608010501_PILOT-13_operator_domain_commands.sql"
+    },
+    {
+      "order": 14,
+      "id": "202608090901_PILOT-14_admissions_offer_command",
+      "stream": "PILOT-14",
+      "path": "infra/database/post-integration-migrations/202608090901_PILOT-14_admissions_offer_command.sql"
     }
   ]
 }
