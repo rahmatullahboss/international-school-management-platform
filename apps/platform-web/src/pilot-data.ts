@@ -71,7 +71,7 @@ export const studentCapabilities = [
 ] as const;
 
 const source = {
-  label: 'Pilot readiness projection',
+  label: 'Scoped readiness projection',
   href: '/admin/reports',
   updatedAt: pilotTimestamp,
 };

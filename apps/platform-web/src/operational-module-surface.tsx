@@ -1294,7 +1294,7 @@ function TeacherAttendance(): ReactElement {
         </button>
         <button type="button" disabled aria-describedby="operational-action-availability">
           <strong>Year 9B Mathematics</strong>
-          <span>10:00 · 0/26 marked · register fixture not loaded</span>
+          <span>10:00 · 0/26 marked · register data unavailable</span>
         </button>
       </div>
       <Pane
