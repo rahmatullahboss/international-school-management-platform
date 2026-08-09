@@ -96,7 +96,7 @@ describe('OperationalModuleSurface', () => {
   it('does not present unavailable timetable days as working controls', () => {
     const markup = renderRoute('/student/timetable', 'student');
 
-    expect(markup).toContain('Only Wednesday’s synthetic schedule is loaded');
+    expect(markup).toContain('Only Wednesday’s published schedule is available in this view.');
     expect(markup).toContain('student-timetable-preview-boundary');
     expect(markup).toContain('disabled=""');
   });
@@ -226,6 +226,8 @@ describe('OperationalModuleSurface', () => {
     const markup = renderRoute('/family/finance', 'guardian');
     expect((markup.match(/>Download<\/button>/gu) ?? []).length).toBe(3);
     expect(markup).toContain('operational-action-availability');
+    expect(markup).toContain('payment submission is not available on this screen');
+    expect(markup).not.toContain('No production payments in this pilot');
   });
 
   it('wires the family offline form draft to the local form and disables unloaded history', () => {
