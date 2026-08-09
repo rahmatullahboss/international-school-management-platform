@@ -1,0 +1,73 @@
+name: Compact role chooser patch
+
+on:
+  push:
+    branches:
+      - codex/compact-role-chooser-20260809
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: codex/compact-role-chooser-20260809
+      - name: Compact role chooser and remove visible pilot copy
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          css = Path('apps/platform-web/src/pilot.css')
+          text = css.read_text()
+          replacements = {
+              "padding: clamp(2rem, 6vw, 5.5rem) clamp(1.25rem, 7vw, 7rem) clamp(2rem, 4vw, 3rem);": "padding: 1.25rem clamp(1.25rem, 4vw, 3rem);",
+              "padding: clamp(2rem, 5vw, 4.5rem) clamp(1.25rem, 7vw, 7rem) 5rem;": "padding: 2rem clamp(1.25rem, 4vw, 3rem) 3rem;",
+              "max-inline-size: 18ch;\n  font-size: clamp(2.5rem, 6vw, 5.5rem);\n  line-height: 0.98;": "max-inline-size: 24ch;\n  font-size: clamp(1.8rem, 4vw, 3.2rem);\n  line-height: 1.05;",
+              "gap: 3.5rem;": "gap: 2rem;",
+          }
+          for old, new in replacements.items():
+              if old not in text:
+                  raise SystemExit(f'missing role chooser CSS target: {old}')
+              text = text.replace(old, new, 1)
+          css.write_text(text)
+
+          for filename in ('apps/platform-web/src/entry.tsx', 'apps/platform-web/src/main.tsx'):
+              path = Path(filename)
+              text = path.read_text()
+              for old, new in (
+                  ('Cloudflare staging · synthetic pilot data', 'Ozzyl International Demo School · Staging workspace'),
+                  ('Safe pilot environment', 'Staging environment'),
+                  ('No production data or live payments', 'Sample school data · live payments disabled'),
+              ):
+                  if old not in text:
+                      raise SystemExit(f'missing landing copy target in {filename}: {old}')
+                  text = text.replace(old, new, 1)
+              path.write_text(text)
+
+          browser = Path('tests/browser/product-persona-v2.e2e.spec.ts')
+          text = browser.read_text()
+          anchor = "  await expect(page.getByRole('heading', { name: 'Who are you working as?' })).toBeVisible();"
+          extra = "  await expect(page.getByText('Ozzyl International Demo School · Staging workspace')).toBeVisible();\n  await expect(page.getByText('Cloudflare staging · synthetic pilot data')).toHaveCount(0);\n  await expect(page.getByText('Staging environment')).toBeVisible();"
+          if extra not in text:
+              if anchor not in text:
+                  raise SystemExit('role chooser browser contract anchor not found')
+              text = text.replace(anchor, anchor + '\n' + extra, 1)
+          browser.write_text(text)
+          PY
+          npx prettier --write apps/platform-web/src/pilot.css apps/platform-web/src/entry.tsx apps/platform-web/src/main.tsx tests/browser/product-persona-v2.e2e.spec.ts
+          changed="$(git diff --name-only | sort)"
+          expected="$(printf '%s\n' apps/platform-web/src/entry.tsx apps/platform-web/src/main.tsx apps/platform-web/src/pilot.css tests/browser/product-persona-v2.e2e.spec.ts | sort)"
+          if [ -z "$changed" ]; then exit 0; fi
+          test "$changed" = "$expected"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add apps/platform-web/src/entry.tsx apps/platform-web/src/main.tsx apps/platform-web/src/pilot.css tests/browser/product-persona-v2.e2e.spec.ts
+          git commit -m "fix(ux): compact staging role chooser"
+          git push origin HEAD:codex/compact-role-chooser-20260809
