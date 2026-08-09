@@ -1,0 +1,74 @@
+name: Neutral source fixture copy patch
+
+on:
+  push:
+    branches:
+      - codex/neutral-source-fixture-copy-20260809
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: codex/neutral-source-fixture-copy-20260809
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.2
+          cache: npm
+      - run: npm ci
+      - name: Replace residual visible source and fixture copy
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          data = Path('apps/platform-web/src/pilot-data.ts')
+          text = data.read_text()
+          old = "label: 'Pilot readiness projection'"
+          new = "label: 'Scoped readiness projection'"
+          if text.count(old) != 1:
+              raise SystemExit('expected exactly one readiness source label')
+          data.write_text(text.replace(old, new, 1))
+
+          surface = Path('apps/platform-web/src/operational-module-surface.tsx')
+          text = surface.read_text()
+          old = 'register fixture not loaded'
+          new = 'register data unavailable'
+          if text.count(old) != 1:
+              raise SystemExit('expected exactly one teacher fixture label')
+          surface.write_text(text.replace(old, new, 1))
+
+          browser = Path('tests/browser/pilot-portals.spec.ts')
+          text = browser.read_text()
+          admin_anchor = "  await expect(page.getByText('Three registers are not finalised')).toBeVisible();"
+          admin_extra = "  await expect(page.getByText('Scoped readiness projection').first()).toBeVisible();\n  await expect(page.getByText('Pilot readiness projection')).toHaveCount(0);"
+          if admin_extra not in text:
+              if admin_anchor not in text:
+                  raise SystemExit('admin browser anchor not found')
+              text = text.replace(admin_anchor, admin_anchor + '\n' + admin_extra, 1)
+
+          teacher_anchor = "  await expect(page.getByText(/21 of 28 entered/u)).toBeVisible();"
+          teacher_extra = "  await page.goto('/teacher/attendance');\n  await expect(page.getByText(/register data unavailable/u)).toBeVisible();\n  await expect(page.getByText(/register fixture not loaded/u)).toHaveCount(0);"
+          if teacher_extra not in text:
+              if teacher_anchor not in text:
+                  raise SystemExit('teacher browser anchor not found')
+              text = text.replace(teacher_anchor, teacher_anchor + '\n\n' + teacher_extra, 1)
+          browser.write_text(text)
+          PY
+          npx prettier --write apps/platform-web/src/pilot-data.ts apps/platform-web/src/operational-module-surface.tsx tests/browser/pilot-portals.spec.ts
+          changed="$(git diff --name-only | sort)"
+          expected="$(printf '%s\n' apps/platform-web/src/operational-module-surface.tsx apps/platform-web/src/pilot-data.ts tests/browser/pilot-portals.spec.ts | sort)"
+          if [ -z "$changed" ]; then exit 0; fi
+          test "$changed" = "$expected"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add apps/platform-web/src/pilot-data.ts apps/platform-web/src/operational-module-surface.tsx tests/browser/pilot-portals.spec.ts
+          git commit -m "fix(ux): neutralize source and fixture copy"
+          git push origin HEAD:codex/neutral-source-fixture-copy-20260809
