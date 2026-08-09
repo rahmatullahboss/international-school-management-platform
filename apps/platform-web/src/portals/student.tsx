@@ -1,6 +1,10 @@
 import type { ReactElement } from 'react';
 
-import { StudentDailyWorkspace, StudentExperienceShell } from '@school/web-student/experience';
+import {
+  StudentDailyWorkspace,
+  StudentExperienceShell,
+  StudentPublishedRecordsWorkspace,
+} from '@school/web-student/experience';
 
 import {
   modulePages,
@@ -88,6 +92,15 @@ export default function StudentPortal(props: StudentPortalProps): ReactElement {
           results={overview.results}
           resources={overview.resources}
           requests={overview.requests}
+          documents={overview.documents}
+          conversations={overview.conversations}
+        />
+      ) : props.path === '/student/documents' || props.path === '/student/messages' ? (
+        <StudentPublishedRecordsWorkspace
+          view={props.path === '/student/documents' ? 'documents' : 'messages'}
+          studentId="student-1"
+          locale="en-BD"
+          capabilities={resource.capabilities}
           documents={overview.documents}
           conversations={overview.conversations}
         />
