@@ -1,0 +1,61 @@
+name: One-shot provenance sync
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    if: github.event.pull_request.head.ref == 'codex/student-documents-messages-workflows-20260809'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.2
+          cache: npm
+
+      - name: Generate and guard provenance sync
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci
+          npm run licenses:check
+          npm run provenance:generate
+          git diff --name-only | sort > /tmp/changed-files
+          printf '%s\n' \
+            THIRD_PARTY_NOTICES.md \
+            artifacts/dependency-licenses.json \
+            artifacts/sbom.cdx.json | sort > /tmp/expected-files
+          diff -u /tmp/expected-files /tmp/changed-files
+          git diff --check
+          git diff -- THIRD_PARTY_NOTICES.md artifacts/dependency-licenses.json artifacts/sbom.cdx.json | grep -q 'nanoid'
+          if git diff -- THIRD_PARTY_NOTICES.md artifacts/dependency-licenses.json artifacts/sbom.cdx.json | grep '^+' | grep -q '3\.3\.16'; then
+            echo 'Old nanoid version was added back to generated artifacts.' >&2
+            exit 1
+          fi
+          if ! git diff -- THIRD_PARTY_NOTICES.md artifacts/dependency-licenses.json artifacts/sbom.cdx.json | grep '^+' | grep -q '3\.3\.18'; then
+            echo 'Expected nanoid 3.3.18 generated metadata is missing.' >&2
+            exit 1
+          fi
+
+      - name: Commit guarded provenance sync
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- THIRD_PARTY_NOTICES.md artifacts/dependency-licenses.json artifacts/sbom.cdx.json; then
+            echo 'No provenance change needed.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add THIRD_PARTY_NOTICES.md artifacts/dependency-licenses.json artifacts/sbom.cdx.json
+          git commit -m 'chore(deps): refresh nanoid provenance'
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
