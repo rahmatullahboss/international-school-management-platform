@@ -1,0 +1,55 @@
+name: one-shot harden admissions offer permission
+
+on:
+  push:
+    branches:
+      - codex/admissions-offer-enrolment-commands-20260809
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/admissions-offer-enrolment-commands-20260809
+          fetch-depth: 0
+      - name: Harden role grant
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('infra/database/post-integration-migrations/202608090901_PILOT-14_admissions_offer_command.sql')
+          text = path.read_text()
+          old = """INSERT INTO iam.role_permission (tenant_id, role_id, permission_key)
+SELECT role_permission.tenant_id, role_permission.role_id, 'admissions.application.offer.issue'
+FROM iam.role_permission AS role_permission
+WHERE role_permission.permission_key = 'admissions.application.review'
+ON CONFLICT DO NOTHING;
+"""
+          new = """INSERT INTO iam.role_permission (tenant_id, role_id, permission_key)
+SELECT role_permission.tenant_id, role_permission.role_id, 'admissions.application.offer.issue'
+FROM iam.role_permission AS role_permission
+JOIN iam.role AS role
+  ON role.tenant_id = role_permission.tenant_id
+ AND role.role_id = role_permission.role_id
+WHERE role_permission.permission_key = 'admissions.application.review'
+  AND role.role_key = 'admissions'
+ON CONFLICT DO NOTHING;
+"""
+          if text.count(old) != 1:
+              raise SystemExit(f'expected one permission grant block, found {text.count(old)}')
+          path.write_text(text.replace(old, new, 1))
+          PY
+          git diff --check
+      - name: Commit product patch
+        shell: bash
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add infra/database/post-integration-migrations/202608090901_PILOT-14_admissions_offer_command.sql
+          git commit -m 'fix(admissions): restrict offer permission backfill'
+          git push origin HEAD:codex/admissions-offer-enrolment-commands-20260809
