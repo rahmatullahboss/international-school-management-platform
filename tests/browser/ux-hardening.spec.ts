@@ -50,7 +50,9 @@ test('core and operator task routes reflow at a narrow mobile viewport', async (
   }
 });
 
-test('wide operational routes reflow at 640 CSS pixels for 200 percent zoom use', async ({ page }) => {
+test('wide operational routes reflow at 640 CSS pixels for 200 percent zoom use', async ({
+  page,
+}) => {
   await suppressWalkthrough(page);
   await page.setViewportSize({ width: 640, height: 900 });
 
@@ -66,7 +68,9 @@ test('wide operational routes reflow at 640 CSS pixels for 200 percent zoom use'
   }
 });
 
-test('representative core and operator task routes remain usable in RTL direction', async ({ page }) => {
+test('representative core and operator task routes remain usable in RTL direction', async ({
+  page,
+}) => {
   await suppressWalkthrough(page);
   await page.setViewportSize({ width: 1024, height: 900 });
 
