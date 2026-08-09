@@ -78,14 +78,7 @@ export default function GuardianPortal(props: GuardianPortalProps): ReactElement
           activeChildId="student-1"
           focus={props.path.slice(8)}
           capabilities={resource.capabilities}
-          children={overview.children}
-          applications={overview.applications}
-          attendance={overview.attendance}
-          grades={overview.grades}
-          fees={overview.fees}
-          forms={overview.forms}
-          documents={overview.documents}
-          conversations={overview.conversations}
+          {...overview}
         />
       ) : (
         <UnknownRoute homeHref="/family" />
