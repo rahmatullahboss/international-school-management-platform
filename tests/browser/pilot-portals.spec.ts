@@ -254,6 +254,23 @@ test('background revalidation keeps current content visible and accepts only a s
   await expect(page.getByText('Three registers are not finalised')).toHaveCount(0);
 });
 
+test('staging session failures use neutral service language', async ({ page }) => {
+  await configurePilotApi(page);
+  await page.route('https://pilot-api.test/pilot/v1/sessions/admin', async (route) => {
+    await route.fulfill({
+      status: 503,
+      headers: { 'access-control-allow-origin': '*' },
+      contentType: 'application/json',
+      body: JSON.stringify({ error: 'temporarily_unavailable' }),
+    });
+  });
+
+  await page.goto('/admin');
+  await expect(page.getByText('Using saved data')).toBeVisible();
+  await expect(page.getByText(/Staging session service returned 503/u)).toBeVisible();
+  await expect(page.getByText(/Pilot session API/u)).toHaveCount(0);
+});
+
 test('a failed signed refresh keeps the last safe role data instead of showing a loading page', async ({
   page,
 }) => {

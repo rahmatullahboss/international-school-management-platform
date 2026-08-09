@@ -291,15 +291,15 @@ async function requestSession(
       credentials: 'omit',
       cache: 'no-store',
     });
-    if (!response.ok) throw new Error(`Pilot session API returned ${response.status}.`);
+    if (!response.ok) throw new Error(`Staging session service returned ${response.status}.`);
 
     const payload: unknown = await response.json();
     if (!isMatchingSession(payload, role)) {
-      throw new Error('Pilot session API returned an invalid identity scope.');
+      throw new Error('Staging session service returned an invalid identity scope.');
     }
     const expiresAt = Date.parse(payload.expiresAt);
     if (!Number.isFinite(expiresAt) || expiresAt <= Date.now() + SESSION_EXPIRY_SKEW_MS) {
-      throw new Error('Pilot session API returned an expired identity session.');
+      throw new Error('Staging session service returned an expired session.');
     }
 
     const stored: StoredSession = {
@@ -427,11 +427,11 @@ async function requestSnapshot<T>(
         storeSnapshot(key, refreshed);
         return refreshed;
       }
-      if (!response.ok) throw new Error(`Pilot read API returned ${response.status}.`);
+      if (!response.ok) throw new Error(`Staging data service returned ${response.status}.`);
 
       const payload: unknown = await response.json();
       if (!isMatchingEnvelope<T>(payload, role)) {
-        throw new Error('Pilot read API returned a snapshot outside the requested scope.');
+        throw new Error('Staging data service returned data outside the requested scope.');
       }
 
       const stored: StoredSnapshot<T> = {
@@ -444,7 +444,7 @@ async function requestSnapshot<T>(
       return stored;
     }
 
-    throw new Error('Pilot identity session could not be renewed.');
+    throw new Error('Staging identity session could not be renewed.');
   })();
 
   inFlight.set(key, promise);
