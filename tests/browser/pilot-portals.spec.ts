@@ -204,7 +204,7 @@ test('teacher portal exposes daily work and assigned tasks', async ({ page }) =>
   await page.getByRole('link', { name: /Grades & assessments/u }).click();
   await expect(page).toHaveURL(/\/teacher\/gradebook$/u);
   await expect(page.getByRole('heading', { name: 'Gradebook tasks' }).first()).toBeVisible();
-  await expect(page.getByText('21 / 28')).toBeVisible();
+  await expect(page.getByText(/21 of 28 entered/u)).toBeVisible();
 });
 
 test('guardian and student portals remain scoped to their own records', async ({ page }) => {
