@@ -53,7 +53,7 @@ export default function GuardianPortal(props: GuardianPortalProps): ReactElement
       capabilities={resource.capabilities}
       session={{
         assurance: 'aal1',
-        deviceLabel: 'Pilot browser',
+        deviceLabel: 'Web browser',
         expiresAt: '2026-07-30T08:00:00+06:00',
       }}
       connectivity={{

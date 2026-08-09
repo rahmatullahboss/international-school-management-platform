@@ -63,6 +63,7 @@ for (const [role, routes] of Object.entries(routesByRole)) {
           0,
         );
         await expect(page.getByRole('link', { name: 'Change role' })).toBeVisible();
+        await expect(page.getByText('Pilot browser', { exact: true })).toHaveCount(0);
       });
     }
   });
