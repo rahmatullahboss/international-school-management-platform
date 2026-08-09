@@ -49,7 +49,13 @@ describe('OperationalModuleSurface', () => {
 
     expect(markup).toContain(`data-route="${path}"`);
     expect(markup).toContain(marker);
-    expect(markup).toContain('operational-metrics');
+    if (role === 'guardian') {
+      expect(markup).not.toContain('operational-metrics');
+      expect(markup).not.toContain('operational-action-bar');
+    } else {
+      expect(markup).toContain('operational-metrics');
+      expect(markup).toContain('operational-action-bar');
+    }
     expect(markup).not.toContain('pilot-module__heading');
   });
 
