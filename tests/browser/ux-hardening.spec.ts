@@ -108,7 +108,7 @@ test('long translated task content wraps at narrow width without obscuring contr
 
   for (const route of ['/teacher/attendance', '/family/documents', '/student/resources']) {
     await page.goto(route);
-    const main = page.getByRole('main').first();
+    const main = page.locator('#experience-main');
     await expect(main, route).toBeVisible();
 
     const textTarget = main.locator('h2, h3, p').first();
