@@ -22,17 +22,17 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
-      - name: Instrument missing shell diagnostics
+      - name: Instrument long-content geometry
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
           path = Path('tests/browser/ux-hardening.spec.ts')
           text = path.read_text()
-          old = "    await expect(main, route).toBeVisible();\n\n    const textTarget = main.locator('h2, h3, p').first();"
-          new = "    if ((await main.count()) === 0) {\n      console.log(`DIAG route=${route} url=${page.url()}`);\n      console.log((await page.locator('body').innerText()).slice(0, 3000));\n    }\n    await expect(main, route).toBeVisible();\n\n    const textTarget = main.locator('h2, h3, p').first();"
+          old = "    const layout = await textTarget.evaluate((element) => {"
+          new = "    console.log('GEOMETRY', await textTarget.evaluate((element) => { const style = getComputedStyle(element); const parent = element.parentElement; const main = element.closest('#experience-main'); const rect = element.getBoundingClientRect(); const parentRect = parent?.getBoundingClientRect(); const mainRect = main?.getBoundingClientRect(); return { tag: element.tagName, className: element.className, text: element.textContent, rect: { left: rect.left, right: rect.right, width: rect.width }, clientWidth: element.clientWidth, scrollWidth: element.scrollWidth, overflowWrap: style.overflowWrap, wordBreak: style.wordBreak, whiteSpace: style.whiteSpace, parent: parent ? { tag: parent.tagName, className: parent.className, rect: parentRect && { left: parentRect.left, right: parentRect.right, width: parentRect.width } } : null, mainRect: mainRect && { left: mainRect.left, right: mainRect.right, width: mainRect.width }, viewport: document.documentElement.clientWidth }; }));\n\n    const layout = await textTarget.evaluate((element) => {"
           if old not in text:
-              raise SystemExit('diagnostic insertion target not found')
+              raise SystemExit('geometry insertion target not found')
           path.write_text(text.replace(old, new, 1))
           PY
       - run: npx playwright install --with-deps chromium
