@@ -8,6 +8,7 @@
   --op-teal-strong: #004f57;
   --op-focus: #0b63ce;
   color: var(--op-ink);
+  overflow-wrap: anywhere;
   display: grid;
   gap: 1.5rem;
   max-inline-size: 90rem;
@@ -873,7 +874,7 @@
   .operational-module__header,
   .operational-section__heading,
   .operational-pane > header {
-    align-items: start;
+    align-items: stretch;
     flex-direction: column;
   }
 
