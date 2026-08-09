@@ -23,79 +23,34 @@ jobs:
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
-
+          import re
           tsx = Path('apps/platform-web/src/operational-module-surface.tsx')
-          text = tsx.read_text()
-          text = text.replace('operational-pilot-action-boundary', 'operational-action-availability')
-          old = '''      <aside className="operational-pilot-note" id="operational-action-availability">
-        <strong>Pilot boundary</strong>
-        <span>
-          Records shown here are synthetic. Controls that would write, send, publish, approve,
-          download or fetch privileged production data stay disabled unless an existing safe route
-          contract is wired. Local attendance marking can be saved on this device without sending a
-          production write.
-        </span>
-      </aside>'''
-          new = '''      <span className="operational-sr-only" id="operational-action-availability">
-        This action is unavailable in the current environment.
-      </span>'''
-          if old not in text:
+          text = tsx.read_text().replace('operational-pilot-action-boundary', 'operational-action-availability')
+          pattern = r'\n      <aside className="operational-pilot-note" id="operational-action-availability">.*?\n      </aside>'
+          replacement = '\n      <span className="operational-sr-only" id="operational-action-availability">\n        This action is unavailable in the current environment.\n      </span>'
+          text, count = re.subn(pattern, replacement, text, count=1, flags=re.S)
+          if count != 1:
               raise SystemExit('visible pilot boundary target not found')
-          tsx.write_text(text.replace(old, new, 1))
-
+          tsx.write_text(text)
           css = Path('apps/platform-web/src/operational-module-surface.css')
           text = css.read_text()
-          old = '''.operational-pilot-note {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 0.8rem;
-  padding: 0.8rem 0;
-  border-block: 1px solid var(--op-rule);
-  color: var(--op-muted);
-  font-size: 0.78rem;
-  line-height: 1.45;
-}
-
-.operational-pilot-note strong {
-  color: var(--op-ink);
-}'''
-          new = '''.operational-sr-only {
-  position: absolute;
-  inline-size: 1px;
-  block-size: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-}'''
-          if old not in text:
+          pattern = r'\n\.operational-pilot-note \{.*?\n\}\n\n\.operational-pilot-note strong \{.*?\n\}'
+          replacement = '\n.operational-sr-only {\n  position: absolute;\n  inline-size: 1px;\n  block-size: 1px;\n  overflow: hidden;\n  clip: rect(0 0 0 0);\n  white-space: nowrap;\n}'
+          text, count = re.subn(pattern, replacement, text, count=1, flags=re.S)
+          if count != 1:
               raise SystemExit('pilot boundary CSS target not found')
-          css.write_text(text.replace(old, new, 1))
-
+          css.write_text(text)
           tests = Path('apps/platform-web/src/operational-module-surface.test.tsx')
           text = tests.read_text()
-          old = '''    expect(markup).toContain('operational-pilot-action-boundary');
-    expect(markup).toContain('Approve with AAL2');
-    expect(markup).toContain('disabled=""');
-    expect(markup).toContain('existing safe route contract is wired');'''
-          new = '''    expect(markup).toContain('operational-action-availability');
-    expect(markup).toContain('operational-sr-only');
-    expect(markup).toContain('Approve with AAL2');
-    expect(markup).toContain('disabled=""');
-    expect(markup).toContain('This action is unavailable in the current environment.');
-    expect(markup).not.toContain('Pilot boundary');'''
+          old = "    expect(markup).toContain('operational-pilot-action-boundary');\n    expect(markup).toContain('Approve with AAL2');\n    expect(markup).toContain('disabled=\"\"');\n    expect(markup).toContain('existing safe route contract is wired');"
+          new = "    expect(markup).toContain('operational-action-availability');\n    expect(markup).toContain('operational-sr-only');\n    expect(markup).toContain('Approve with AAL2');\n    expect(markup).toContain('disabled=\"\"');\n    expect(markup).toContain('This action is unavailable in the current environment.');\n    expect(markup).not.toContain('Pilot boundary');"
           if old not in text:
               raise SystemExit('pilot boundary test target not found')
           tests.write_text(text.replace(old, new, 1))
           PY
-          npx prettier --write \
-            apps/platform-web/src/operational-module-surface.tsx \
-            apps/platform-web/src/operational-module-surface.css \
-            apps/platform-web/src/operational-module-surface.test.tsx
+          npx prettier --write apps/platform-web/src/operational-module-surface.tsx apps/platform-web/src/operational-module-surface.css apps/platform-web/src/operational-module-surface.test.tsx
           changed="$(git diff --name-only | sort)"
-          expected="$(printf '%s\n' \
-            apps/platform-web/src/operational-module-surface.css \
-            apps/platform-web/src/operational-module-surface.test.tsx \
-            apps/platform-web/src/operational-module-surface.tsx | sort)"
+          expected="$(printf '%s\n' apps/platform-web/src/operational-module-surface.css apps/platform-web/src/operational-module-surface.test.tsx apps/platform-web/src/operational-module-surface.tsx | sort)"
           if [ -z "$changed" ]; then exit 0; fi
           test "$changed" = "$expected"
           git config user.name github-actions[bot]
