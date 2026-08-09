@@ -1,0 +1,46 @@
+name: Remove dead pilot surface
+
+on:
+  push:
+    branches:
+      - codex/remove-dead-pilot-surface-20260809
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: codex/remove-dead-pilot-surface-20260809
+      - name: Prove generic surface is unreferenced and remove it
+        shell: bash
+        run: |
+          set -euo pipefail
+          matches="$(git grep -n 'PilotModuleSurface' -- '*.ts' '*.tsx' || true)"
+          printf '%s\n' "$matches"
+          test "$(printf '%s\n' "$matches" | sed '/^$/d' | wc -l)" -eq 1
+          printf '%s\n' "$matches" | grep -q '^apps/platform-web/src/portal-shared.tsx:'
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('apps/platform-web/src/portal-shared.tsx')
+          text = path.read_text()
+          start = text.index('export function PilotModuleSurface(')
+          end = text.index('export function UnknownRoute(', start)
+          next_text = text[:start] + text[end:]
+          if 'PilotModuleSurface' in next_text:
+              raise SystemExit('generic pilot surface reference remains in portal-shared.tsx')
+          path.write_text(next_text)
+          PY
+          changed="$(git diff --name-only)"
+          test "$changed" = "apps/platform-web/src/portal-shared.tsx"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add apps/platform-web/src/portal-shared.tsx
+          git commit -m "refactor(ux): remove dead generic pilot surface"
+          git push origin HEAD:codex/remove-dead-pilot-surface-20260809
