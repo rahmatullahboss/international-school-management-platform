@@ -97,3 +97,42 @@ test('keyboard users can activate the skip link and focus the main role chooser 
   await expect(page).toHaveURL(/#main-content$/u);
   await expect(page.locator('#main-content')).toBeFocused();
 });
+
+test('long translated task content wraps at narrow width without obscuring controls', async ({
+  page,
+}) => {
+  await suppressWalkthrough(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  const longLabel =
+    'Schüleranwesenheitsüberprüfungsdokumentationsverantwortlichkeit 学籍情報確認と保護者連絡のための詳細な操作説明';
+
+  for (const route of ['/teacher/attendance', '/family/documents', '/student/resources']) {
+    await page.goto(route);
+    const main = page.getByRole('main').first();
+    await expect(main, route).toBeVisible();
+
+    const textTarget = main.locator('h2, h3, p').first();
+    await textTarget.evaluate((element, replacement) => {
+      element.textContent = replacement;
+    }, longLabel);
+
+    const layout = await textTarget.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      return {
+        clientWidth: element.clientWidth,
+        scrollWidth: element.scrollWidth,
+        left: rect.left,
+        right: rect.right,
+        viewport: document.documentElement.clientWidth,
+      };
+    });
+
+    expect(layout.scrollWidth, `${route} long text overflow`).toBeLessThanOrEqual(
+      layout.clientWidth + 1,
+    );
+    expect(layout.left, `${route} long text left edge`).toBeGreaterThanOrEqual(-1);
+    expect(layout.right, `${route} long text right edge`).toBeLessThanOrEqual(layout.viewport + 1);
+    await expect(main.locator('a, button').first(), `${route} task control`).toBeVisible();
+    await expectNoDocumentOverflow(page, route);
+  }
+});
