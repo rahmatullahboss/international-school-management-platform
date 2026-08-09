@@ -7,7 +7,7 @@ SET description = EXCLUDED.description,
     required_assurance = EXCLUDED.required_assurance;
 
 INSERT INTO iam.role_permission (tenant_id, role_id, permission_key)
-SELECT role_permission.tenant_id, role_permission.role_id, permission_key
+SELECT role_permission.tenant_id, role_permission.role_id, permission.permission_key
 FROM iam.role_permission AS role_permission
 JOIN iam.role AS role
   ON role.tenant_id = role_permission.tenant_id

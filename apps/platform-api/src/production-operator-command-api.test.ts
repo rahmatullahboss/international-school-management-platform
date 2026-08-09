@@ -71,6 +71,23 @@ function offerBody() {
   };
 }
 
+function acceptBody() {
+  return {
+    command: 'admissions.application.offer.accept',
+    applicationId,
+    expectedVersion: 5,
+  };
+}
+
+function convertBody() {
+  return {
+    command: 'admissions.application.applicant.convert',
+    applicationId,
+    expectedVersion: 6,
+    effectiveFrom: '2026-09-15',
+  };
+}
+
 function dependencies(options?: {
   role?: 'admissions' | 'finance' | 'support';
   resolution?: unknown;
@@ -241,6 +258,50 @@ describe('production operator command API', () => {
       dependencies().value,
     );
     expect(invalid?.status).toBe(400);
+  });
+
+  it('submits offer acceptance and conversion without browser-selected scope', async () => {
+    for (const [body, key] of [
+      [acceptBody(), 'admissions-accept-qa-0001'],
+      [convertBody(), 'admissions-convert-qa-0001'],
+    ] as const) {
+      const deps = dependencies();
+      const response = await handleProductionOperatorCommandRequest(
+        request(body, { 'idempotency-key': key }),
+        environment,
+        deps.value,
+      );
+      expect(response?.status).toBe(202);
+      expect(deps.submit).toHaveBeenCalledWith(
+        environment.DATABASE_URL,
+        expect.objectContaining({
+          ...body,
+          sessionId,
+          idempotencyKey: key,
+          correlationId,
+        }),
+      );
+
+      const invalid = await handleProductionOperatorCommandRequest(
+        request(
+          { ...body, campusId: activeSession.context.campusId },
+          { 'idempotency-key': `${key}-scope` },
+        ),
+        environment,
+        dependencies().value,
+      );
+      expect(invalid?.status).toBe(400);
+    }
+
+    const invalidDate = await handleProductionOperatorCommandRequest(
+      request(
+        { ...convertBody(), effectiveFrom: '2026-02-30' },
+        { 'idempotency-key': 'admissions-convert-qa-invalid-date' },
+      ),
+      environment,
+      dependencies().value,
+    );
+    expect(invalidDate?.status).toBe(400);
   });
 
   it('denies cross-role command replay even with a valid session', async () => {

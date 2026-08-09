@@ -48,6 +48,29 @@ function admissionsOfferInput() {
   };
 }
 
+function admissionsAcceptInput() {
+  return {
+    sessionId,
+    idempotencyKey: 'admissions-accept-0001',
+    correlationId,
+    command: 'admissions.application.offer.accept' as const,
+    applicationId,
+    expectedVersion: 5,
+  };
+}
+
+function admissionsConvertInput() {
+  return {
+    sessionId,
+    idempotencyKey: 'admissions-convert-0001',
+    correlationId,
+    command: 'admissions.application.applicant.convert' as const,
+    applicationId,
+    expectedVersion: 6,
+    effectiveFrom: '2026-09-15',
+  };
+}
+
 function financeInput() {
   return {
     sessionId,
@@ -89,6 +112,8 @@ describe('operator domain command boundary', () => {
     for (const input of [
       admissionsInput(),
       admissionsOfferInput(),
+      admissionsAcceptInput(),
+      admissionsConvertInput(),
       financeInput(),
       supportInput(),
     ]) {
@@ -126,6 +151,12 @@ describe('operator domain command boundary', () => {
       { ...admissionsOfferInput(), programId: 'not-a-uuid' },
       { ...admissionsOfferInput(), campusId: 'browser-selected-campus' },
       { ...admissionsOfferInput(), expiresAt: 'not-a-timestamp' },
+      { ...admissionsAcceptInput(), expectedVersion: 0 },
+      { ...admissionsAcceptInput(), campusId: 'browser-selected-campus' },
+      { ...admissionsConvertInput(), expectedVersion: 0 },
+      { ...admissionsConvertInput(), effectiveFrom: '2026-02-30' },
+      { ...admissionsConvertInput(), effectiveFrom: 'not-a-date' },
+      { ...admissionsConvertInput(), campusId: 'browser-selected-campus' },
       { ...financeInput(), reason: 'short' },
       { ...financeInput(), applicationId },
       { ...supportInput(), requestedMinutes: 31 },

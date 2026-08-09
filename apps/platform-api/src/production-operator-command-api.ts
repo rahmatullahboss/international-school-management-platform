@@ -40,6 +40,17 @@ type BrowserOperatorCommandBody =
       readonly expiresAt: string;
     }
   | {
+      readonly command: 'admissions.application.offer.accept';
+      readonly applicationId: string;
+      readonly expectedVersion: number;
+    }
+  | {
+      readonly command: 'admissions.application.applicant.convert';
+      readonly applicationId: string;
+      readonly expectedVersion: number;
+      readonly effectiveFrom: string;
+    }
+  | {
       readonly command: 'finance.bank-line.reconcile';
       readonly bankStatementLineId: string;
       readonly paymentId: string;
@@ -70,6 +81,7 @@ interface ProductionOperatorCommandDependencies {
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
 const IDEMPOTENCY_KEY_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$/u;
 const ADMISSIONS_RECOMMENDATIONS = new Set(['admit', 'waitlist', 'decline', 'more-information']);
+const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/u;
 const MAX_BODY_BYTES = 4096;
 
 function jsonResponse(body: unknown, status: number, headers?: Headers): Response {
@@ -108,6 +120,12 @@ function validBoundedText(value: unknown, minimum: number, maximum: number): val
     value.length <= maximum &&
     value.trim() === value
   );
+}
+
+function validDateOnly(value: unknown): value is string {
+  if (typeof value !== 'string' || !DATE_ONLY_PATTERN.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
 }
 
 function parseBrowserBody(value: unknown): BrowserOperatorCommandBody | undefined {
@@ -177,6 +195,35 @@ function parseBrowserBody(value: unknown): BrowserOperatorCommandBody | undefine
     return value as unknown as BrowserOperatorCommandBody;
   }
 
+  if (value.command === 'admissions.application.offer.accept') {
+    if (
+      !hasExactKeys(value, ['command', 'applicationId', 'expectedVersion']) ||
+      typeof value.applicationId !== 'string' ||
+      !UUID_PATTERN.test(value.applicationId) ||
+      typeof value.expectedVersion !== 'number' ||
+      !Number.isSafeInteger(value.expectedVersion) ||
+      value.expectedVersion < 1
+    ) {
+      return undefined;
+    }
+    return value as unknown as BrowserOperatorCommandBody;
+  }
+
+  if (value.command === 'admissions.application.applicant.convert') {
+    if (
+      !hasExactKeys(value, ['command', 'applicationId', 'expectedVersion', 'effectiveFrom']) ||
+      typeof value.applicationId !== 'string' ||
+      !UUID_PATTERN.test(value.applicationId) ||
+      typeof value.expectedVersion !== 'number' ||
+      !Number.isSafeInteger(value.expectedVersion) ||
+      value.expectedVersion < 1 ||
+      !validDateOnly(value.effectiveFrom)
+    ) {
+      return undefined;
+    }
+    return value as unknown as BrowserOperatorCommandBody;
+  }
+
   if (value.command === 'finance.bank-line.reconcile') {
     if (
       !hasExactKeys(value, ['command', 'bankStatementLineId', 'paymentId', 'reason']) ||
@@ -229,7 +276,9 @@ async function readJsonBody(request: Request): Promise<unknown> {
 function roleForCommand(command: BrowserOperatorCommandBody['command']): DatabaseWorkspaceRole {
   if (
     command === 'admissions.application.review.record' ||
-    command === 'admissions.application.offer.issue'
+    command === 'admissions.application.offer.issue' ||
+    command === 'admissions.application.offer.accept' ||
+    command === 'admissions.application.applicant.convert'
   )
     return 'admissions';
   if (command === 'finance.bank-line.reconcile') return 'finance';
