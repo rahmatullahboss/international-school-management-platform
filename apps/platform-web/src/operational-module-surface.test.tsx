@@ -119,7 +119,7 @@ describe('OperationalModuleSurface', () => {
 
     expect(markup).not.toContain(`href="${path}"`);
     expect(markup).toContain('disabled=""');
-    expect(markup).toContain('operational-pilot-action-boundary');
+    expect(markup).toContain('operational-action-availability');
   });
 
   it.each([
@@ -143,7 +143,7 @@ describe('OperationalModuleSurface', () => {
 
       for (const label of labels) expect(markup).toContain(label);
       expect((markup.match(/disabled=""/gu) ?? []).length).toBeGreaterThanOrEqual(labels.length);
-      expect(markup).toContain('operational-pilot-action-boundary');
+      expect(markup).toContain('operational-action-availability');
     },
   );
 
@@ -162,7 +162,7 @@ describe('OperationalModuleSurface', () => {
 
       for (const label of labels) expect(markup).toContain(label);
       expect(markup).toContain('disabled=""');
-      expect(markup).toContain('operational-pilot-action-boundary');
+      expect(markup).toContain('operational-action-availability');
     },
   );
 
@@ -225,7 +225,7 @@ describe('OperationalModuleSurface', () => {
   it('keeps family receipt downloads unavailable until a reviewed file contract exists', () => {
     const markup = renderRoute('/family/finance', 'guardian');
     expect((markup.match(/>Download<\/button>/gu) ?? []).length).toBe(3);
-    expect(markup).toContain('operational-pilot-action-boundary');
+    expect(markup).toContain('operational-action-availability');
   });
 
   it('wires the family offline form draft to the local form and disables unloaded history', () => {
