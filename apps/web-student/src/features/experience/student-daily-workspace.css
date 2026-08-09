@@ -312,6 +312,16 @@
   background: var(--student-error-surface);
 }
 
+.student-workspace[data-focus='documents'] > :not([data-focus-group='documents']),
+.student-workspace[data-focus='messages'] > :not([data-focus-item='messages']),
+.student-workspace[data-focus='documents'] [data-focus-item='requests'] {
+  display: none;
+}
+
+.student-workspace[data-focus='documents'] [data-focus-group='documents'] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .student-workspace[data-age-band='primary'] {
   font-size: 1.03rem;
 }
