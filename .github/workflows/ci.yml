@@ -89,6 +89,13 @@ jobs:
           PGUSER: postgres
           PGDATABASE: postgres
         run: bash tests/integration/verify-admissions-offer-command.sh
+      - name: Verify admissions offer acceptance and applicant conversion
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: 5432
+          PGUSER: postgres
+          PGDATABASE: postgres
+        run: bash tests/integration/verify-admissions-accept-convert.sh
       - name: Verify live Neon serverless driver
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
         env:
