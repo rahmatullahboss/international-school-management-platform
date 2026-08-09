@@ -1277,7 +1277,7 @@ function TeacherAttendance(): ReactElement {
       window.localStorage.setItem('school-pilot-teacher-attendance', JSON.stringify(attendance));
     }
     setDirtyStudents(new Set());
-    setLocalSaveStatus('Saved on this device. No production attendance write was sent.');
+    setLocalSaveStatus('Saved on this device. Attendance has not been submitted to the school.');
   }
 
   return (
@@ -2334,7 +2334,10 @@ function FamilyFinance(): ReactElement {
         />
       </Pane>
       <div className="operational-split">
-        <Pane title="Payment options" description="No production payments in this pilot.">
+        <Pane
+          title="Payment options"
+          description="Review the available payment channels; payment submission is not available on this screen."
+        >
           <ul className="operational-plain-list">
             <li>Bank transfer</li>
             <li>School cashier</li>
@@ -2614,7 +2617,7 @@ function StudentTimetable(): ReactElement {
         <PilotUnavailableAction>Week view</PilotUnavailableAction>
       </div>
       <small className="operational-evidence-line" id="student-timetable-preview-boundary">
-        Only Wednesday’s synthetic schedule is loaded in this pilot fixture.
+        Only Wednesday’s published schedule is available in this view.
       </small>
       <Pane title="Wednesday timetable" description="Six published lessons · one room change.">
         <Timeline
