@@ -1,4 +1,4 @@
-name: Diagnose long content overflow
+name: Fix long content overflow
 
 on:
   push:
@@ -7,34 +7,54 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  diagnose:
+  fix:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
+          fetch-depth: 0
           ref: codex/ux-hardening-long-content-20260809
       - uses: actions/setup-node@v4
         with:
           node-version: 22.22.2
           cache: npm
       - run: npm ci
-      - run: npm run build
-      - name: Instrument long-content geometry
+      - name: Apply minimal queue-heading reflow fix
+        id: patch
         shell: bash
         run: |
+          set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
-          path = Path('tests/browser/ux-hardening.spec.ts')
+          path = Path('apps/platform-web/src/operational-module-surface.css')
           text = path.read_text()
-          old = "    const layout = await textTarget.evaluate((element) => {"
-          new = "    console.log('GEOMETRY', await textTarget.evaluate((element) => { const style = getComputedStyle(element); const parent = element.parentElement; const main = element.closest('#experience-main'); const rect = element.getBoundingClientRect(); const parentRect = parent?.getBoundingClientRect(); const mainRect = main?.getBoundingClientRect(); return { tag: element.tagName, className: element.className, text: element.textContent, rect: { left: rect.left, right: rect.right, width: rect.width }, clientWidth: element.clientWidth, scrollWidth: element.scrollWidth, overflowWrap: style.overflowWrap, wordBreak: style.wordBreak, whiteSpace: style.whiteSpace, parent: parent ? { tag: parent.tagName, className: parent.className, rect: parentRect && { left: parentRect.left, right: parentRect.right, width: parentRect.width } } : null, mainRect: mainRect && { left: mainRect.left, right: mainRect.right, width: mainRect.width }, viewport: document.documentElement.clientWidth }; }));\n\n    const layout = await textTarget.evaluate((element) => {"
-          if old not in text:
-              raise SystemExit('geometry insertion target not found')
-          path.write_text(text.replace(old, new, 1))
+          old = ".operational-module__header > div {\n  min-inline-size: 0;\n}"
+          new = ".operational-module__header > div,\n.operational-section__heading > div {\n  min-inline-size: 0;\n  overflow-wrap: anywhere;\n}"
+          if old in text:
+              path.write_text(text.replace(old, new, 1))
+          elif new not in text:
+              raise SystemExit('targeted reflow rule not found')
           PY
+          if git diff --quiet -- apps/platform-web/src/operational-module-surface.css; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            test "$(git diff --name-only)" = "apps/platform-web/src/operational-module-surface.css"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+      - run: npm run build
       - run: npx playwright install --with-deps chromium
-      - name: Run long-content test only
+      - name: Verify long-content contract
         run: npx playwright test -c playwright.config.mjs tests/browser/ux-hardening.spec.ts --grep "long translated task content" --reporter=line
+      - name: Commit verified CSS fix
+        if: steps.patch.outputs.changed == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add apps/platform-web/src/operational-module-surface.css
+          git commit -m "fix(ux): constrain translated queue headings"
+          git push origin HEAD:codex/ux-hardening-long-content-20260809
