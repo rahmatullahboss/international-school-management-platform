@@ -1,0 +1,53 @@
+name: One-shot guardian focus contract edit
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.event.pull_request.head.ref == 'codex/guardian-core-route-workflows-20260809'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Apply guarded focus contract edit
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('apps/web-family/src/features/experience/GuardianHouseholdWorkspace.tsx')
+          text = path.read_text()
+          replacements = {
+              "  readonly activeChildId?: string;\n": "  readonly activeChildId?: string;\n  readonly focus?: string;\n",
+              "    <div className=\"guardian-workspace\" data-active-child={activeChildId ?? 'household'}>": "    <div\n      className=\"guardian-workspace\"\n      data-active-child={activeChildId ?? 'household'}\n      data-focus={props.focus}\n    >",
+          }
+          for old, new in replacements.items():
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'Expected exactly one occurrence of {old!r}, found {count}')
+              text = text.replace(old, new, 1)
+          path.write_text(text)
+          PY
+          test "$(git diff --name-only)" = "apps/web-family/src/features/experience/GuardianHouseholdWorkspace.tsx"
+          git diff --check
+          grep -q 'readonly focus?: string;' apps/web-family/src/features/experience/GuardianHouseholdWorkspace.tsx
+          grep -q 'data-focus={props.focus}' apps/web-family/src/features/experience/GuardianHouseholdWorkspace.tsx
+
+      - name: Commit focus contract edit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add apps/web-family/src/features/experience/GuardianHouseholdWorkspace.tsx
+          git commit -m 'refactor(guardian): add route focus contract'
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
