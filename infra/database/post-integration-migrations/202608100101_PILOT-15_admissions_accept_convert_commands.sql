@@ -536,6 +536,24 @@ BEGIN
     );
   END IF;
 
+  IF EXISTS (
+    SELECT 1
+    FROM admissions.applicant_conversion AS conversion
+    WHERE conversion.tenant_id = session_context.tenant_id
+      AND conversion.idempotency_key = p_idempotency_key
+      AND conversion.application_id <> p_application_id
+  ) THEN
+    RETURN jsonb_build_object('accepted', false, 'reason', 'idempotency-conflict');
+  END IF;
+  IF EXISTS (
+    SELECT 1
+    FROM student_lifecycle.enrollment AS enrollment
+    WHERE enrollment.tenant_id = session_context.tenant_id
+      AND enrollment.idempotency_key = p_idempotency_key || ':enrollment'
+  ) THEN
+    RETURN jsonb_build_object('accepted', false, 'reason', 'idempotency-conflict');
+  END IF;
+
   IF selected_application_status <> 'accepted' OR selected_offer_status <> 'accepted' THEN
     RETURN jsonb_build_object('accepted', false, 'reason', 'domain-conflict');
   END IF;
@@ -549,6 +567,34 @@ BEGIN
   WHERE profile.tenant_id = session_context.tenant_id
     AND profile.person_id = selected_applicant_person_id
   FOR UPDATE OF profile;
+
+  IF selected_profile_id IS NOT NULL AND selected_profile_status <> 'active' THEN
+    SELECT history.effective_from
+    INTO selected_current_profile_status_from
+    FROM student_lifecycle.student_status_history AS history
+    WHERE history.tenant_id = session_context.tenant_id
+      AND history.student_profile_id = selected_profile_id
+      AND history.effective_to IS NULL
+    FOR UPDATE OF history;
+
+    IF selected_current_profile_status_from IS NULL
+       OR p_effective_from <= selected_current_profile_status_from THEN
+      RETURN jsonb_build_object('accepted', false, 'reason', 'domain-conflict');
+    END IF;
+  END IF;
+
+  IF selected_profile_id IS NOT NULL AND EXISTS (
+    SELECT 1
+    FROM student_lifecycle.enrollment AS enrollment
+    WHERE enrollment.tenant_id = session_context.tenant_id
+      AND enrollment.student_profile_id = selected_profile_id
+      AND enrollment.program_id = selected_offer_program_id
+      AND enrollment.academic_year_id = selected_offer_academic_year_id
+      AND enrollment.effective_to IS NULL
+      AND enrollment.status IN ('pending', 'active')
+  ) THEN
+    RETURN jsonb_build_object('accepted', false, 'reason', 'domain-conflict');
+  END IF;
 
   IF selected_profile_id IS NULL THEN
     selected_profile_id := gen_random_uuid();
@@ -576,23 +622,11 @@ BEGIN
       selected_accepted_at
     );
     selected_profile_status := 'prospective';
+    selected_current_profile_status_from := selected_application_created_at::date;
     profile_created := true;
   END IF;
 
   IF selected_profile_status <> 'active' THEN
-    SELECT history.effective_from
-    INTO selected_current_profile_status_from
-    FROM student_lifecycle.student_status_history AS history
-    WHERE history.tenant_id = session_context.tenant_id
-      AND history.student_profile_id = selected_profile_id
-      AND history.effective_to IS NULL
-    FOR UPDATE OF history;
-
-    IF selected_current_profile_status_from IS NULL
-       OR p_effective_from <= selected_current_profile_status_from THEN
-      RETURN jsonb_build_object('accepted', false, 'reason', 'domain-conflict');
-    END IF;
-
     UPDATE student_lifecycle.student_status_history
     SET effective_to = p_effective_from
     WHERE tenant_id = session_context.tenant_id
@@ -619,19 +653,6 @@ BEGIN
     WHERE tenant_id = session_context.tenant_id
       AND student_profile_id = selected_profile_id;
     profile_activated := true;
-  END IF;
-
-  IF EXISTS (
-    SELECT 1
-    FROM student_lifecycle.enrollment AS enrollment
-    WHERE enrollment.tenant_id = session_context.tenant_id
-      AND enrollment.student_profile_id = selected_profile_id
-      AND enrollment.program_id = selected_offer_program_id
-      AND enrollment.academic_year_id = selected_offer_academic_year_id
-      AND enrollment.effective_to IS NULL
-      AND enrollment.status IN ('pending', 'active')
-  ) THEN
-    RETURN jsonb_build_object('accepted', false, 'reason', 'domain-conflict');
   END IF;
 
   selected_enrollment_id := gen_random_uuid();
