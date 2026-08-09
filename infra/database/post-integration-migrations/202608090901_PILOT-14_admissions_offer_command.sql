@@ -7,7 +7,11 @@ SET description = EXCLUDED.description,
 INSERT INTO iam.role_permission (tenant_id, role_id, permission_key)
 SELECT role_permission.tenant_id, role_permission.role_id, 'admissions.application.offer.issue'
 FROM iam.role_permission AS role_permission
+JOIN iam.role AS role
+  ON role.tenant_id = role_permission.tenant_id
+ AND role.role_id = role_permission.role_id
 WHERE role_permission.permission_key = 'admissions.application.review'
+  AND role.role_key = 'admissions'
 ON CONFLICT DO NOTHING;
 
 ALTER TABLE platform.operator_domain_command_receipt
