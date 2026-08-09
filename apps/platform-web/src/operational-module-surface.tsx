@@ -2961,8 +2961,12 @@ export function OperationalModuleSurface(props: OperationalModuleSurfaceProps): 
         <span>International Community School · Main Campus</span>
         <time dateTime={pilotTimestamp}>Evidence current at {pilotTimestamp}</time>
       </header>
-      <MetricStrip page={props.page} />
-      <ActionBar page={props.page} currentPath={props.path} />
+      {props.role === 'guardian' ? null : (
+        <>
+          <MetricStrip page={props.page} />
+          <ActionBar page={props.page} currentPath={props.path} />
+        </>
+      )}
       {bodyForPath(props.path)}
       <aside className="operational-pilot-note" id="operational-pilot-action-boundary">
         <strong>Pilot boundary</strong>
