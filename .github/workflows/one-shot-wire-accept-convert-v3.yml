@@ -1,0 +1,67 @@
+name: one-shot wire admissions accept convert v3
+
+on:
+  push:
+    branches:
+      - codex/admissions-accept-convert-20260810
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/admissions-accept-convert-20260810
+          fetch-depth: 0
+      - name: Run tested wiring patch
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          workflow = Path('.github/workflows/one-shot-wire-accept-convert-v2.yml').read_text().splitlines()
+          start = None
+          end = None
+          for index, line in enumerate(workflow):
+              if line.strip() == '- name: Run corrected wiring patch':
+                  for cursor in range(index + 1, len(workflow)):
+                      if workflow[cursor].strip() == 'run: |':
+                          start = cursor + 1
+                          break
+              if start is not None and index > start and line.strip() == '- name: Commit wiring':
+                  end = index
+                  break
+          if start is None or end is None:
+              raise SystemExit('v2 wiring block not found')
+          block = []
+          for line in workflow[start:end]:
+              if line.startswith('          '):
+                  block.append(line[10:])
+              elif line.strip() == '':
+                  block.append('')
+              else:
+                  raise SystemExit(f'unexpected v2 indentation: {line!r}')
+          Path('/tmp/wire-accept-convert-v3.sh').write_text('\n'.join(block) + '\n')
+          PY
+          bash /tmp/wire-accept-convert-v3.sh
+      - name: Commit product wiring without workflow file
+        shell: bash
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add \
+            infra/database/post-integration-migration-manifest.json \
+            infra/database/post-integration-migrations/202608100101_PILOT-15_admissions_accept_convert_commands.sql \
+            tests/integration/verify-auth-durable-context.sh \
+            tests/integration/verify-production-runtime.sh \
+            apps/platform-api/src/operator-domain-commands.ts \
+            apps/platform-api/src/database-operator-domain-command-store.ts \
+            apps/platform-api/src/production-operator-command-api.ts \
+            apps/platform-api/src/operator-domain-commands.test.ts \
+            apps/platform-api/src/database-operator-domain-command-store.test.ts \
+            apps/platform-api/src/production-operator-command-api.test.ts
+          git commit -m 'feat(admissions): wire offer acceptance and applicant conversion'
+          git push origin HEAD:codex/admissions-accept-convert-20260810
