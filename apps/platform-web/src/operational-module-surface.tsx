@@ -2961,7 +2961,7 @@ export function OperationalModuleSurface(props: OperationalModuleSurfaceProps): 
         <span>International Community School · Main Campus</span>
         <time dateTime={pilotTimestamp}>Evidence current at {pilotTimestamp}</time>
       </header>
-      {props.role === 'guardian' ? null : (
+      {props.role === 'guardian' || props.role === 'teacher' ? null : (
         <>
           <MetricStrip page={props.page} />
           <ActionBar page={props.page} currentPath={props.path} />
