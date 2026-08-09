@@ -6,13 +6,9 @@
   --line: #cbd6de;
   --action: #006d77;
   --action-strong: #004f57;
-  --focus: #0b63ce;
   --info: #e7f2f8;
-  --info-text: #16445f;
   --success: #e5f4ec;
-  --success-text: #145c36;
   --warning: #fff1cf;
-  --warning-text: #714900;
   --error: #fde8e7;
   --error-text: #8a1c17;
   display: grid;
@@ -22,7 +18,7 @@
 
 .guardian-workspace :is(a, button, input):focus-visible,
 .guardian-workspace__table-frame:focus-visible {
-  outline: 3px solid var(--focus);
+  outline: 3px solid #0b63ce;
   outline-offset: 3px;
 }
 
@@ -322,7 +318,7 @@
   padding: 0.2rem 0.45rem;
   border-radius: 8px;
   background: var(--info);
-  color: var(--info-text);
+  color: #16445f;
   font-size: 0.78rem;
   font-weight: 750;
   text-transform: capitalize;
@@ -333,23 +329,16 @@
   color: var(--error-text);
 }
 
-[data-state='due'],
-[data-state='due-soon'] {
-  --task-surface: var(--warning);
-  --task-text: var(--warning-text);
-}
-
-[data-state='due'] .guardian-workspace__status,
-[data-state='due-soon'] .guardian-workspace__status {
-  background: var(--task-surface);
-  color: var(--task-text);
+:is([data-state='due'], [data-state='due-soon']) .guardian-workspace__status {
+  background: var(--warning);
+  color: #714900;
 }
 
 [data-state='complete'] .guardian-workspace__status,
 [data-state='clear'] .guardian-workspace__status,
 [data-state='credit'] .guardian-workspace__status {
   background: var(--success);
-  color: var(--success-text);
+  color: #145c36;
 }
 
 .guardian-workspace__primary {
