@@ -28,14 +28,8 @@ function formatDateTime(locale: string, value: string): string {
   }).format(parsed);
 }
 
-function DocumentsView(
-  props: Omit<StudentPublishedRecordsWorkspaceProps, 'view'>,
-): ReactElement {
-  const scopedDocuments = selectStudentItems(
-    props.documents,
-    props.studentId,
-    props.capabilities,
-  );
+function DocumentsView(props: Omit<StudentPublishedRecordsWorkspaceProps, 'view'>): ReactElement {
+  const scopedDocuments = selectStudentItems(props.documents, props.studentId, props.capabilities);
   const documents = scopedDocuments
     .filter((document) => document.publicationState !== 'unpublished')
     .sort((left, right) => {
@@ -45,10 +39,7 @@ function DocumentsView(
     });
 
   return (
-    <section
-      className="student-workspace__section"
-      aria-labelledby="student-documents-heading"
-    >
+    <section className="student-workspace__section" aria-labelledby="student-documents-heading">
       <header>
         <h2 id="student-documents-heading">My documents</h2>
         <p>Only published documents authorised for your student profile are available.</p>
@@ -81,9 +72,7 @@ function DocumentsView(
   );
 }
 
-function MessagesView(
-  props: Omit<StudentPublishedRecordsWorkspaceProps, 'view'>,
-): ReactElement {
+function MessagesView(props: Omit<StudentPublishedRecordsWorkspaceProps, 'view'>): ReactElement {
   const conversations = selectStudentItems(
     props.conversations,
     props.studentId,
@@ -97,10 +86,7 @@ function MessagesView(
   });
 
   return (
-    <section
-      className="student-workspace__section"
-      aria-labelledby="student-messages-heading"
-    >
+    <section className="student-workspace__section" aria-labelledby="student-messages-heading">
       <header>
         <h2 id="student-messages-heading">My messages</h2>
         <p>Only secure conversations authorised for your student role are shown.</p>
