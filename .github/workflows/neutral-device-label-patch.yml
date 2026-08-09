@@ -1,0 +1,60 @@
+name: Neutral device label patch
+
+on:
+  push:
+    branches:
+      - codex/neutral-device-label-20260809
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: codex/neutral-device-label-20260809
+      - name: Replace visible pilot device label
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          portal_files = [
+              Path('apps/platform-web/src/portals/admin.tsx'),
+              Path('apps/platform-web/src/portals/teacher.tsx'),
+              Path('apps/platform-web/src/portals/guardian.tsx'),
+              Path('apps/platform-web/src/portals/student.tsx'),
+          ]
+          for path in portal_files:
+              text = path.read_text()
+              old = "deviceLabel: 'Pilot browser'"
+              new = "deviceLabel: 'Web browser'"
+              if text.count(old) != 1:
+                  raise SystemExit(f'expected exactly one device label in {path}')
+              path.write_text(text.replace(old, new, 1))
+
+          coverage = Path('tests/browser/full-role-route-coverage.spec.ts')
+          text = coverage.read_text()
+          anchor = "        await expect(page.getByRole('link', { name: 'Change role' })).toBeVisible();"
+          extra = "        await expect(page.getByText('Pilot browser', { exact: true })).toHaveCount(0);"
+          if extra not in text:
+              if anchor not in text:
+                  raise SystemExit('published route browser anchor not found')
+              text = text.replace(anchor, anchor + '\n' + extra, 1)
+          coverage.write_text(text)
+          PY
+          npx prettier --write apps/platform-web/src/portals/admin.tsx apps/platform-web/src/portals/teacher.tsx apps/platform-web/src/portals/guardian.tsx apps/platform-web/src/portals/student.tsx tests/browser/full-role-route-coverage.spec.ts
+          changed="$(git diff --name-only | sort)"
+          expected="$(printf '%s\n' apps/platform-web/src/portals/admin.tsx apps/platform-web/src/portals/guardian.tsx apps/platform-web/src/portals/student.tsx apps/platform-web/src/portals/teacher.tsx tests/browser/full-role-route-coverage.spec.ts | sort)"
+          if [ -z "$changed" ]; then exit 0; fi
+          test "$changed" = "$expected"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add apps/platform-web/src/portals/admin.tsx apps/platform-web/src/portals/teacher.tsx apps/platform-web/src/portals/guardian.tsx apps/platform-web/src/portals/student.tsx tests/browser/full-role-route-coverage.spec.ts
+          git commit -m "fix(ux): neutralize core device label"
+          git push origin HEAD:codex/neutral-device-label-20260809
