@@ -456,7 +456,7 @@ export function OperatorPortal(props: {
       </a>
       <header className="pilot-entry__masthead">
         <div>
-          <p className="pilot-kicker">Scoped operator persona · synthetic pilot data</p>
+          <p className="pilot-kicker">Ozzyl International Demo School · Staging workspace</p>
           <h1>{title}</h1>
           <p>{description}</p>
         </div>
@@ -499,10 +499,10 @@ export function OperatorPortal(props: {
 
             {isHome ? (
               <section className="pilot-demo-note" aria-label="Controlled pilot mutation">
-                <strong>Audited pilot evidence</strong>
+                <strong>Environment audit evidence</strong>
                 <span>
-                  This control records non-production evidence only. It does not change live
-                  financial or student records.
+                  This control records staging audit evidence only. It does not change school
+                  finance or student records.
                 </span>
                 <button
                   type="button"

@@ -89,6 +89,12 @@ for (const [role, routes] of Object.entries(routeMatrix) as [
         await expect(page.getByRole('heading', { name: route.heading, exact: true })).toBeVisible();
         await expect(page.getByRole('link', { name: 'Change role' })).toBeVisible();
         await expect(page.getByText('Page not available in this pilot')).toHaveCount(0);
+        await expect(page.getByText('Scoped operator persona · synthetic pilot data')).toHaveCount(
+          0,
+        );
+        if (route.path !== operatorRoots[role]) {
+          await expect(page.getByText('Current scoped register')).toBeVisible();
+        }
       });
     }
   });

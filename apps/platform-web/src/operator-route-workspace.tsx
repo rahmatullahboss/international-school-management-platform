@@ -161,7 +161,7 @@ export function OperatorRouteWorkspace(props: {
     >
       <header className="operator-register__header">
         <div>
-          <p>Synthetic staging register</p>
+          <p>Current scoped register</p>
           <h2 id="operator-register-title">{definition.title}</h2>
           <span>{definition.description}</span>
         </div>

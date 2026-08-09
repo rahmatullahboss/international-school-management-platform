@@ -12,6 +12,7 @@ import {
   loadProductionOperatorWorkQueue,
   type ProductionOperatorWorkQueue,
 } from './production-operator-work-queue';
+import './operator-route-workspace.css';
 import './pilot.css';
 import './styles.css';
 
@@ -504,13 +505,6 @@ export function ProductionOperatorPortal(props: {
             </a>
           ))}
         </nav>
-        <section className="pilot-demo-note">
-          <strong>Database-authorized production surface</strong>
-          <span>
-            Only current database-owned work is actionable here. Approved writes use durable
-            commands and server-owned scope; the browser cannot elevate its tenant, campus or role.
-          </span>
-        </section>
         <OperatorCommandPanel
           role={role}
           pathname={props.pathname}

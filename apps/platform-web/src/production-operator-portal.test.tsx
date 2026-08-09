@@ -36,5 +36,6 @@ describe('ProductionOperatorPortal', () => {
     expect(markup).toContain('Access &amp; security');
     expect(markup).not.toContain('Capabilities for this signed-in account');
     expect(markup).not.toContain('authenticated production QA');
+    expect(markup).not.toContain('Database-authorized production surface');
   });
 });

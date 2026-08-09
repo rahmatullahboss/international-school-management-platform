@@ -116,3 +116,21 @@
     min-width: 0;
   }
 }
+
+.operator-entry .pilot-entry__masthead {
+  padding: 1rem 2rem;
+}
+
+.operator-entry .pilot-entry__masthead h1 {
+  max-width: none;
+  font-family: inherit;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+
+.operator-entry .pilot-entry__main {
+  gap: 1.25rem;
+  padding: 1.25rem 2rem 2rem;
+}
