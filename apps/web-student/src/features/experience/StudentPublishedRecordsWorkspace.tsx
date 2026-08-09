@@ -31,17 +31,27 @@ function formatDateTime(locale: string, value: string): string {
 function DocumentsView(
   props: Omit<StudentPublishedRecordsWorkspaceProps, 'view'>,
 ): ReactElement {
-  const documents = selectStudentItems(props.documents, props.studentId, props.capabilities)
+  const scopedDocuments = selectStudentItems(
+    props.documents,
+    props.studentId,
+    props.capabilities,
+  );
+  const documents = scopedDocuments
     .filter((document) => document.publicationState !== 'unpublished')
-    .sort((left, right) => (right.publishedAt ?? '').localeCompare(left.publishedAt ?? ''));
+    .sort((left, right) => {
+      const rightPublishedAt = right.publishedAt ?? '';
+      const leftPublishedAt = left.publishedAt ?? '';
+      return rightPublishedAt.localeCompare(leftPublishedAt);
+    });
 
   return (
-    <section className="student-workspace__section" aria-labelledby="student-documents-heading">
+    <section
+      className="student-workspace__section"
+      aria-labelledby="student-documents-heading"
+    >
       <header>
         <h2 id="student-documents-heading">My documents</h2>
-        <p>
-          Only published documents authorised for your own student profile are available here.
-        </p>
+        <p>Only published documents authorised for your student profile are available.</p>
       </header>
       {documents.length === 0 ? (
         <div className="student-workspace__empty" role="status">
@@ -79,16 +89,21 @@ function MessagesView(
     props.studentId,
     props.capabilities,
   ).sort((left, right) => {
-    const unreadDifference = Number(right.unreadCount > 0) - Number(left.unreadCount > 0);
+    const rightUnread = Number(right.unreadCount > 0);
+    const leftUnread = Number(left.unreadCount > 0);
+    const unreadDifference = rightUnread - leftUnread;
     if (unreadDifference !== 0) return unreadDifference;
     return right.lastMessageAt.localeCompare(left.lastMessageAt);
   });
 
   return (
-    <section className="student-workspace__section" aria-labelledby="student-messages-heading">
+    <section
+      className="student-workspace__section"
+      aria-labelledby="student-messages-heading"
+    >
       <header>
         <h2 id="student-messages-heading">My messages</h2>
-        <p>Only secure conversations authorised for your own student role are shown.</p>
+        <p>Only secure conversations authorised for your student role are shown.</p>
       </header>
       {conversations.length === 0 ? (
         <div className="student-workspace__empty" role="status">
