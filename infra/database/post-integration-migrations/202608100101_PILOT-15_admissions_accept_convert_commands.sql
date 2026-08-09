@@ -548,15 +548,6 @@ BEGIN
 
   IF EXISTS (
     SELECT 1
-    FROM admissions.applicant_conversion AS conversion
-    WHERE conversion.tenant_id = session_context.tenant_id
-      AND conversion.idempotency_key = p_idempotency_key
-      AND conversion.application_id <> p_application_id
-  ) THEN
-    RETURN jsonb_build_object('accepted', false, 'reason', 'idempotency-conflict');
-  END IF;
-  IF EXISTS (
-    SELECT 1
     FROM student_lifecycle.enrollment AS enrollment
     WHERE enrollment.tenant_id = session_context.tenant_id
       AND enrollment.idempotency_key = p_idempotency_key || ':enrollment'
