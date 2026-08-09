@@ -1,0 +1,68 @@
+name: Neutral workspace copy patch
+
+on:
+  push:
+    branches:
+      - codex/neutral-workspace-copy-20260809
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: codex/neutral-workspace-copy-20260809
+      - name: Replace residual visible pilot copy
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          shared = Path('apps/platform-web/src/portal-shared.tsx')
+          text = shared.read_text()
+          replacements = {
+              "label: 'Pilot seed data'": "label: 'Initial scoped data'",
+              "'A scoped staging snapshot will replace this seed without blocking the page.'": "'A scoped staging snapshot will replace this initial view without blocking the page.'",
+              '<strong>Pilot information</strong>': '<strong>Workspace information</strong>',
+              'This workspace uses synthetic staging records. Live payments, publication, restricted-data\n          changes and final approvals remain disabled.': 'This staging workspace uses sample school records. Payment submission, publication, restricted-data\n          changes and final approvals remain unavailable here.',
+              '<p>Page not available in this pilot</p>': '<p>Page not available</p>',
+              '<h2>This task has not been connected to the pilot workspace yet.</h2>': '<h2>This task is not available in your current workspace.</h2>',
+          }
+          for old, new in replacements.items():
+              if old not in text:
+                  raise SystemExit(f'missing shared-copy target: {old}')
+              text = text.replace(old, new, 1)
+          shared.write_text(text)
+
+          coverage = Path('tests/browser/full-role-route-coverage.spec.ts')
+          text = coverage.read_text()
+          old = "await expect(page.getByRole('alert')).toContainText('Page not available in this pilot');"
+          new = "await expect(page.getByRole('alert')).toContainText('Page not available');"
+          if old not in text:
+              raise SystemExit('fail-closed browser contract not found')
+          coverage.write_text(text.replace(old, new, 1))
+
+          persona = Path('tests/browser/product-persona-v2.e2e.spec.ts')
+          text = persona.read_text()
+          old = "await expect(page.getByText('Page not available in this pilot')).toHaveCount(0);"
+          new = "await expect(page.getByText('Page not available', { exact: true })).toHaveCount(0);"
+          if old not in text:
+              raise SystemExit('known-route browser contract not found')
+          persona.write_text(text.replace(old, new, 1))
+          PY
+          npx prettier --write apps/platform-web/src/portal-shared.tsx tests/browser/full-role-route-coverage.spec.ts tests/browser/product-persona-v2.e2e.spec.ts
+          changed="$(git diff --name-only | sort)"
+          expected="$(printf '%s\n' apps/platform-web/src/portal-shared.tsx tests/browser/full-role-route-coverage.spec.ts tests/browser/product-persona-v2.e2e.spec.ts | sort)"
+          if [ -z "$changed" ]; then exit 0; fi
+          test "$changed" = "$expected"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add apps/platform-web/src/portal-shared.tsx tests/browser/full-role-route-coverage.spec.ts tests/browser/product-persona-v2.e2e.spec.ts
+          git commit -m "fix(ux): neutralize residual workspace copy"
+          git push origin HEAD:codex/neutral-workspace-copy-20260809
