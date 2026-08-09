@@ -102,7 +102,6 @@ export interface GuardianHouseholdWorkspaceProps {
   readonly householdLabel: string;
   readonly locale: string;
   readonly activeChildId?: string;
-  readonly focus?: string;
   readonly state?: 'ready' | 'loading' | 'error';
   readonly errorMessage?: string;
   readonly retryHref?: string;
@@ -267,11 +266,7 @@ export function GuardianHouseholdWorkspace(props: GuardianHouseholdWorkspaceProp
   );
 
   return (
-    <div
-      className="guardian-workspace"
-      data-active-child={activeChildId ?? 'household'}
-      data-focus={props.focus}
-    >
+    <div className="guardian-workspace" data-active-child={activeChildId ?? 'household'}>
       <header className="guardian-workspace__masthead">
         <div>
           <p className="guardian-workspace__kicker">Family workspace</p>
