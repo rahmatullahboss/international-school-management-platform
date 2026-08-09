@@ -91,7 +91,7 @@ export default function StudentPortal(props: StudentPortalProps): ReactElement {
           locale="en-BD"
           date={resource.updatedAt}
           ageBand="secondary"
-          focus={focus}
+          {...(focus === undefined ? {} : { focus })}
           capabilities={resource.capabilities}
           lessons={overview.lessons}
           attendance={overview.attendance}
