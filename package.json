@@ -20,7 +20,7 @@
     "clean": "npm run clean --workspaces --if-present",
     "dev": "npm run dev --workspace=@school/platform-api",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format:check": "prettier --check . || (prettier --write apps/web-student/src/features/experience/StudentPublishedRecordsWorkspace.tsx && git diff -- apps/web-student/src/features/experience/StudentPublishedRecordsWorkspace.tsx && exit 1)",
     "licenses:check": "node scripts/check-licenses.mjs",
     "lint": "eslint . --max-warnings=0",
     "provenance:generate": "node scripts/generate-provenance.mjs",
