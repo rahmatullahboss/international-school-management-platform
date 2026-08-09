@@ -120,6 +120,51 @@ for (const [role, root] of Object.entries(operatorRoots) as [PilotOperatorRole, 
   });
 }
 
+test('operator task route stays usable while staging refresh is slow', async ({ page }) => {
+  await configureLivePilotApi(page);
+  await page.route(`${liveApiUrl}/pilot/v1/sessions/admissions`, async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 900));
+    await route.continue();
+  });
+
+  await page.goto('/admissions/applications');
+  await expect(page.getByText('Current scoped register')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Application review register' })).toBeVisible();
+  await expect(page.getByText('Nabil Noor').first()).toBeVisible();
+  await expect(page.getByText('Checking for updates')).toBeVisible();
+  await expect(page.getByText('Current from staging API')).toBeVisible();
+});
+
+test('operator session failure keeps task data and uses neutral service language', async ({
+  page,
+}) => {
+  await configureLivePilotApi(page);
+  await page.route(`${liveApiUrl}/pilot/v1/sessions/support`, async (route) => {
+    await route.fulfill({
+      status: 503,
+      headers: { 'access-control-allow-origin': '*' },
+      contentType: 'application/json',
+      body: JSON.stringify({ error: 'temporarily_unavailable' }),
+    });
+  });
+
+  await page.goto('/support/access');
+  await expect(page.getByText('Current scoped register')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Privileged access requests' })).toBeVisible();
+  await expect(page.getByText('No active grant')).toBeVisible();
+  await expect(page.getByText('Using saved data')).toBeVisible();
+  await expect(page.getByText('Staging session returned 503.')).toBeVisible();
+  await expect(page.getByText(/Pilot session API/u)).toHaveCount(0);
+});
+
+test('operator register exposes an explicit empty state after filtering', async ({ page }) => {
+  await page.goto('/admissions/enquiries');
+  await page.getByRole('searchbox', { name: 'Search' }).fill('no-family-matches-this-query');
+
+  await expect(page.getByText('No records match the current filters.')).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Enquiry register table' })).toBeVisible();
+});
+
 test('operator sessions cannot be replayed across operator or core roles', async ({ request }) => {
   const admissionsToken = await issueSession(request, 'admissions');
 
