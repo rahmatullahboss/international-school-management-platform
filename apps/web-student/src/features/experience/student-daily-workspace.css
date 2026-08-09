@@ -8,11 +8,8 @@
   --student-action-strong: #004f57;
   --student-focus: #0b63ce;
   --student-info-surface: #e7f2f8;
-  --student-info-text: #16445f;
   --student-success-surface: #e5f4ec;
   --student-success-text: #145c36;
-  --student-warning-surface: #fff1cf;
-  --student-warning-text: #714900;
   --student-error-surface: #fde8e7;
   --student-error-text: #8a1c17;
   display: grid;
@@ -312,14 +309,14 @@
   background: var(--student-error-surface);
 }
 
-.student-workspace[data-focus='documents'] > :not([data-focus-group='documents']),
-.student-workspace[data-focus='messages'] > :not([data-focus-item='messages']),
-.student-workspace[data-focus='documents'] [data-focus-item='requests'] {
+[data-focus='documents'] > :not([data-focus-group]),
+[data-focus='messages'] > :not([data-focus-item='messages']),
+[data-focus='documents'] [data-focus-item='requests'] {
   display: none;
 }
 
-.student-workspace[data-focus='documents'] [data-focus-group='documents'] {
-  grid-template-columns: minmax(0, 1fr);
+[data-focus='documents'] [data-focus-group] {
+  grid-template-columns: 1fr;
 }
 
 .student-workspace[data-age-band='primary'] {
@@ -351,12 +348,6 @@
   .student-workspace__tasks > li > a,
   .student-workspace__messages > li > a {
     grid-column: 1;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .student-workspace * {
-    scroll-behavior: auto !important;
   }
 }
 
