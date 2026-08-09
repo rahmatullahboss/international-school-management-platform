@@ -1,10 +1,6 @@
 import type { ReactElement } from 'react';
 
-import {
-  StudentDailyWorkspace,
-  StudentExperienceShell,
-  StudentPublishedRecordsWorkspace,
-} from '@school/web-student/experience';
+import { StudentDailyWorkspace, StudentExperienceShell } from '@school/web-student/experience';
 
 import {
   modulePages,
@@ -45,6 +41,17 @@ export default function StudentPortal(props: StudentPortalProps): ReactElement {
     props.connectivity,
   );
   const overview = resource.data;
+  const focus =
+    props.path === '/student/documents'
+      ? 'documents'
+      : props.path === '/student/messages'
+        ? 'messages'
+        : undefined;
+  const usesDailyWorkspace =
+    props.path === '/student' ||
+    props.path === '/student/resources' ||
+    props.path === '/student/requests' ||
+    focus !== undefined;
 
   return (
     <StudentExperienceShell
@@ -75,9 +82,7 @@ export default function StudentPortal(props: StudentPortalProps): ReactElement {
         message={resource.message}
         onRefresh={resource.refresh}
       />
-      {props.path === '/student' ||
-      props.path === '/student/resources' ||
-      props.path === '/student/requests' ? (
+      {usesDailyWorkspace ? (
         <StudentDailyWorkspace
           studentId="student-1"
           studentName="Samira Noor"
@@ -86,21 +91,13 @@ export default function StudentPortal(props: StudentPortalProps): ReactElement {
           locale="en-BD"
           date={resource.updatedAt}
           ageBand="secondary"
+          focus={focus}
           capabilities={resource.capabilities}
           lessons={overview.lessons}
           attendance={overview.attendance}
           results={overview.results}
           resources={overview.resources}
           requests={overview.requests}
-          documents={overview.documents}
-          conversations={overview.conversations}
-        />
-      ) : props.path === '/student/documents' || props.path === '/student/messages' ? (
-        <StudentPublishedRecordsWorkspace
-          view={props.path === '/student/documents' ? 'documents' : 'messages'}
-          studentId="student-1"
-          locale="en-BD"
-          capabilities={resource.capabilities}
           documents={overview.documents}
           conversations={overview.conversations}
         />
