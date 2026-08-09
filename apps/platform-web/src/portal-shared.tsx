@@ -70,9 +70,9 @@ export function PilotDataStatus(props: {
                 detail: 'Tenant, campus, role and subject scope were verified by the Worker.',
               }
             : {
-                label: 'Pilot seed data',
+                label: 'Initial scoped data',
                 detail:
-                  'A scoped staging snapshot will replace this seed without blocking the page.',
+                  'A scoped staging snapshot will replace this initial view without blocking the page.',
               };
 
   return (
@@ -177,10 +177,10 @@ export function PilotModuleSurface(props: { readonly page: PilotModulePage }): R
       </section>
 
       <aside className="pilot-demo-note">
-        <strong>Pilot information</strong>
+        <strong>Workspace information</strong>
         <span>
-          This workspace uses synthetic staging records. Live payments, publication, restricted-data
-          changes and final approvals remain disabled.
+          This staging workspace uses sample school records. Payment submission, publication,
+          restricted-data changes and final approvals remain unavailable here.
         </span>
       </aside>
     </div>
@@ -190,8 +190,8 @@ export function PilotModuleSurface(props: { readonly page: PilotModulePage }): R
 export function UnknownRoute(props: { readonly homeHref: string }): ReactElement {
   return (
     <section className="pilot-unknown" role="alert">
-      <p>Page not available in this pilot</p>
-      <h2>This task has not been connected to the pilot workspace yet.</h2>
+      <p>Page not available</p>
+      <h2>This task is not available in your current workspace.</h2>
       <a href={props.homeHref}>Return to workspace home</a>
     </section>
   );
