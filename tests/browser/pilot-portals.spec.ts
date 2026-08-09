@@ -158,6 +158,8 @@ test('admin portal groups tasks and filters them using school language', async (
   await expect(page.getByRole('link', { name: /Academics & attendance/u })).toBeVisible();
   await expect(page.getByRole('link', { name: /Fees & accounting/u })).toBeVisible();
   await expect(page.getByText('Three registers are not finalised')).toBeVisible();
+  await expect(page.getByText('Scoped readiness projection').first()).toBeVisible();
+  await expect(page.getByText('Pilot readiness projection')).toHaveCount(0);
 
   await page.getByRole('searchbox', { name: 'Find a task' }).fill('payments');
   await expect(page.getByRole('link', { name: /Fees & accounting/u })).toBeVisible();
@@ -205,6 +207,10 @@ test('teacher portal exposes daily work and assigned tasks', async ({ page }) =>
   await expect(page).toHaveURL(/\/teacher\/gradebook$/u);
   await expect(page.getByRole('heading', { name: 'Gradebook tasks' }).first()).toBeVisible();
   await expect(page.getByText(/21 of 28 entered/u)).toBeVisible();
+
+  await page.goto('/teacher/attendance');
+  await expect(page.getByText(/register data unavailable/u)).toBeVisible();
+  await expect(page.getByText(/register fixture not loaded/u)).toHaveCount(0);
 });
 
 test('guardian and student portals remain scoped to their own records', async ({ page }) => {
