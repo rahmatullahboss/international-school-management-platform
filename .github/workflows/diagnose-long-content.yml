@@ -21,6 +21,19 @@ jobs:
           node-version: 22.22.2
           cache: npm
       - run: npm ci
+      - name: Instrument missing shell diagnostics
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('tests/browser/ux-hardening.spec.ts')
+          text = path.read_text()
+          old = "    await expect(main, route).toBeVisible();\n\n    const textTarget = main.locator('h2, h3, p').first();"
+          new = "    if ((await main.count()) === 0) {\n      console.log(`DIAG route=${route} url=${page.url()}`);\n      console.log((await page.locator('body').innerText()).slice(0, 3000));\n    }\n    await expect(main, route).toBeVisible();\n\n    const textTarget = main.locator('h2, h3, p').first();"
+          if old not in text:
+              raise SystemExit('diagnostic insertion target not found')
+          path.write_text(text.replace(old, new, 1))
+          PY
       - run: npx playwright install --with-deps chromium
       - name: Run long-content test only
         run: npx playwright test tests/browser/ux-hardening.spec.ts --grep "long translated task content" --reporter=line
