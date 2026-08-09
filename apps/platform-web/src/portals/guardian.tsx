@@ -40,7 +40,6 @@ export default function GuardianPortal(props: GuardianPortalProps): ReactElement
     props.connectivity,
   );
   const overview = resource.data;
-  const isHome = props.path === '/family';
 
   return (
     <GuardianExperienceShell
@@ -71,13 +70,13 @@ export default function GuardianPortal(props: GuardianPortalProps): ReactElement
         message={resource.message}
         onRefresh={resource.refresh}
       />
-      {isHome || page !== undefined ? (
+      {props.path === '/family' || page ? (
         <GuardianHouseholdWorkspace
           guardianName="Farhana Noor"
           householdLabel="Noor household"
           locale="en-BD"
           activeChildId="student-1"
-          {...(isHome ? {} : { focus: props.path.slice(8) })}
+          focus={props.path.slice(8)}
           capabilities={resource.capabilities}
           children={overview.children}
           applications={overview.applications}
