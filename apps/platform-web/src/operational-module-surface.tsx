@@ -214,7 +214,7 @@ function PilotUnavailableAction(props: {
 }): ReactElement {
   return (
     <button
-      aria-describedby="operational-pilot-action-boundary"
+      aria-describedby="operational-action-availability"
       className={props.primary ? 'operational-primary' : undefined}
       disabled
       type="button"
@@ -1292,7 +1292,7 @@ function TeacherAttendance(): ReactElement {
           <strong>Year 8A Mathematics</strong>
           <span>08:00 · 28/28 marked · synced</span>
         </button>
-        <button type="button" disabled aria-describedby="operational-pilot-action-boundary">
+        <button type="button" disabled aria-describedby="operational-action-availability">
           <strong>Year 9B Mathematics</strong>
           <span>10:00 · 0/26 marked · register fixture not loaded</span>
         </button>
@@ -2968,15 +2968,9 @@ export function OperationalModuleSurface(props: OperationalModuleSurfaceProps): 
         </>
       )}
       {bodyForPath(props.path)}
-      <aside className="operational-pilot-note" id="operational-pilot-action-boundary">
-        <strong>Pilot boundary</strong>
-        <span>
-          Records shown here are synthetic. Controls that would write, send, publish, approve,
-          download or fetch privileged production data stay disabled unless an existing safe route
-          contract is wired. Local attendance marking can be saved on this device without sending a
-          production write.
-        </span>
-      </aside>
+      <span className="operational-sr-only" id="operational-action-availability">
+        This action is unavailable in the current environment.
+      </span>
     </div>
   );
 }
