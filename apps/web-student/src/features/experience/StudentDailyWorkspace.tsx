@@ -239,11 +239,7 @@ export function StudentDailyWorkspace(props: StudentDailyWorkspaceProps): ReactE
   );
 
   return (
-    <div
-      className="student-workspace"
-      data-age-band={props.ageBand}
-      data-focus={props.focus}
-    >
+    <div className="student-workspace" data-age-band={props.ageBand} data-focus={props.focus}>
       <header className="student-workspace__masthead">
         <div>
           <p className="student-workspace__kicker">My school day</p>
