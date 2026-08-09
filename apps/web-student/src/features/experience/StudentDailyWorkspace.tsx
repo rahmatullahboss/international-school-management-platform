@@ -413,10 +413,7 @@ export function StudentDailyWorkspace(props: StudentDailyWorkspaceProps): ReactE
       </section>
 
       <div className="student-workspace__split">
-        <section
-          className="student-workspace__section"
-          aria-labelledby="student-requests-heading"
-        >
+        <section className="student-workspace__section" aria-labelledby="student-requests-heading">
           <header>
             <h3 id="student-requests-heading">My requests</h3>
             <p>Submit and track only the requests available for your age and role.</p>
@@ -452,10 +449,7 @@ export function StudentDailyWorkspace(props: StudentDailyWorkspaceProps): ReactE
           )}
         </section>
 
-        <section
-          className="student-workspace__section"
-          aria-labelledby="student-documents-heading"
-        >
+        <section className="student-workspace__section" aria-labelledby="student-documents-heading">
           <header>
             <h3 id="student-documents-heading">My authorised documents</h3>
             <p>Only published documents authorised for your own student profile are available.</p>
@@ -485,10 +479,7 @@ export function StudentDailyWorkspace(props: StudentDailyWorkspaceProps): ReactE
         </section>
       </div>
 
-      <section
-        className="student-workspace__section"
-        aria-labelledby="student-messages-heading"
-      >
+      <section className="student-workspace__section" aria-labelledby="student-messages-heading">
         <header>
           <h3 id="student-messages-heading">Secure school messages</h3>
           <p>Only conversations authorised for your own student role are shown.</p>
