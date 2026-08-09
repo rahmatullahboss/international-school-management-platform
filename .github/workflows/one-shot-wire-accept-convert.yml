@@ -1,0 +1,186 @@
+name: one-shot wire admissions accept convert
+
+on:
+  push:
+    branches:
+      - codex/admissions-accept-convert-20260810
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/admissions-accept-convert-20260810
+          fetch-depth: 0
+      - name: Wire commands and verification
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+
+          def replace_once(path, old, new):
+              p = Path(path)
+              text = p.read_text()
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected one match, found {count}')
+              p.write_text(text.replace(old, new, 1))
+
+          manifest_path = Path('infra/database/post-integration-migration-manifest.json')
+          manifest = json.loads(manifest_path.read_text())
+          if manifest.get('gate') != 'GATE-PILOT-ADMISSIONS-OFFER-COMMAND-V1' or len(manifest.get('migrations', [])) != 14:
+              raise SystemExit('unexpected post-integration manifest baseline')
+          manifest['gate'] = 'GATE-PILOT-ADMISSIONS-ACCEPT-CONVERT-COMMANDS-V1'
+          manifest['migrations'].append({
+              'order': 15,
+              'id': '202608100101_PILOT-15_admissions_accept_convert_commands',
+              'stream': 'PILOT-15',
+              'path': 'infra/database/post-integration-migrations/202608100101_PILOT-15_admissions_accept_convert_commands.sql',
+          })
+          manifest_path.write_text(json.dumps(manifest, indent=2) + '\n')
+
+          auth_path = Path('tests/integration/verify-auth-durable-context.sh')
+          auth = auth_path.read_text()
+          replacements = [
+              ('GATE-PILOT-ADMISSIONS-OFFER-COMMAND-V1', 'GATE-PILOT-ADMISSIONS-ACCEPT-CONVERT-COMMANDS-V1'),
+              ('migrations.length !== 14', 'migrations.length !== 15'),
+              ('expected fourteen post-integration migrations', 'expected fifteen post-integration migrations'),
+              ('count(*) FROM platform.schema_migration) <> 54', 'count(*) FROM platform.schema_migration) <> 55'),
+              ('expected 54 total migration ledger rows', 'expected 55 total migration ledger rows'),
+          ]
+          for old, new in replacements:
+              if auth.count(old) != 1:
+                  raise SystemExit(f'auth verifier anchor mismatch for {old}: {auth.count(old)}')
+              auth = auth.replace(old, new, 1)
+          stream_tail = "'PILOT-13', 'PILOT-14'"
+          if auth.count(stream_tail) != 3:
+              raise SystemExit(f'auth verifier expected three stream tails, found {auth.count(stream_tail)}')
+          auth = auth.replace(stream_tail, "'PILOT-13', 'PILOT-14', 'PILOT-15'")
+          procedure_anchor = "     OR to_regprocedure('admissions.issue_application_offer_command(uuid,uuid,bigint,uuid,uuid,uuid,timestamptz,text,uuid)') IS NULL\n"
+          procedure_add = procedure_anchor + "     OR to_regprocedure('admissions.accept_application_offer_command(uuid,uuid,bigint,text,uuid)') IS NULL\n     OR to_regprocedure('admissions.convert_accepted_applicant_command(uuid,uuid,bigint,date,text,uuid)') IS NULL\n"
+          if auth.count(procedure_anchor) != 1:
+              raise SystemExit('auth verifier offer procedure anchor mismatch')
+          auth = auth.replace(procedure_anchor, procedure_add, 1)
+          auth_path.write_text(auth)
+
+          replace_once('tests/integration/verify-production-runtime.sh',
+              'IF (SELECT count(*) FROM platform.schema_migration) <> 58 THEN',
+              'IF (SELECT count(*) FROM platform.schema_migration) <> 59 THEN')
+          replace_once('tests/integration/verify-production-runtime.sh',
+              'expected 58 total migration ledger rows after production hardening',
+              'expected 59 total migration ledger rows after production hardening')
+
+          ci_anchor = "      - name: Verify admissions offer command transactions\n        env:\n          PGHOST: 127.0.0.1\n          PGPORT: 5432\n          PGUSER: postgres\n          PGDATABASE: postgres\n        run: bash tests/integration/verify-admissions-offer-command.sh\n"
+          ci_add = ci_anchor + "      - name: Verify admissions offer acceptance and applicant conversion\n        env:\n          PGHOST: 127.0.0.1\n          PGPORT: 5432\n          PGUSER: postgres\n          PGDATABASE: postgres\n        run: bash tests/integration/verify-admissions-accept-convert.sh\n"
+          replace_once('.github/workflows/ci.yml', ci_anchor, ci_add)
+
+          path = 'apps/platform-api/src/operator-domain-commands.ts'
+          replace_once(path,
+              "  | 'admissions.application.offer.issue'\n  | 'finance.bank-line.reconcile';".replace(';', ''),
+              "  | 'admissions.application.offer.issue'\n  | 'admissions.application.offer.accept'\n  | 'admissions.application.applicant.convert'\n  | 'finance.bank-line.reconcile'")
+          replace_once(path,
+              "export interface FinanceBankLineReconcileCommand extends OperatorDomainCommandBase {",
+              "export interface AdmissionsApplicationOfferAcceptCommand extends OperatorDomainCommandBase {\n  readonly command: 'admissions.application.offer.accept';\n  readonly applicationId: string;\n  readonly expectedVersion: number;\n}\n\nexport interface AdmissionsApplicantConvertCommand extends OperatorDomainCommandBase {\n  readonly command: 'admissions.application.applicant.convert';\n  readonly applicationId: string;\n  readonly expectedVersion: number;\n  readonly effectiveFrom: string;\n}\n\nexport interface FinanceBankLineReconcileCommand extends OperatorDomainCommandBase {")
+          replace_once(path,
+              "  | AdmissionsApplicationOfferIssueCommand\n  | FinanceBankLineReconcileCommand",
+              "  | AdmissionsApplicationOfferIssueCommand\n  | AdmissionsApplicationOfferAcceptCommand\n  | AdmissionsApplicantConvertCommand\n  | FinanceBankLineReconcileCommand")
+          replace_once(path,
+              "const ADMISSIONS_RECOMMENDATIONS = new Set(['admit', 'waitlist', 'decline', 'more-information']);",
+              "const ADMISSIONS_RECOMMENDATIONS = new Set(['admit', 'waitlist', 'decline', 'more-information']);\nconst DATE_ONLY_PATTERN = /^\\d{4}-\\d{2}-\\d{2}$/u;")
+          replace_once(path,
+              "function validCommon(value: Record<string, unknown>): boolean {",
+              "function validDateOnly(value: unknown): value is string {\n  if (typeof value !== 'string' || !DATE_ONLY_PATTERN.test(value)) return false;\n  const parsed = new Date(`${value}T00:00:00.000Z`);\n  return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;\n}\n\nfunction validCommon(value: Record<string, unknown>): boolean {")
+          finance_anchor = "function validateFinance(\n"
+          validators = "function validateAdmissionsOfferAccept(\n  value: Record<string, unknown>,\n): AdmissionsApplicationOfferAcceptCommand | undefined {\n  const expectedKeys = [\n    'sessionId',\n    'idempotencyKey',\n    'correlationId',\n    'command',\n    'applicationId',\n    'expectedVersion',\n  ];\n  if (!hasExactKeys(value, expectedKeys) || !validCommon(value)) return undefined;\n  if (\n    value.command !== 'admissions.application.offer.accept' ||\n    !validUuid(value.applicationId) ||\n    typeof value.expectedVersion !== 'number' ||\n    !Number.isSafeInteger(value.expectedVersion) ||\n    value.expectedVersion < 1\n  ) {\n    return undefined;\n  }\n  return value as unknown as AdmissionsApplicationOfferAcceptCommand;\n}\n\nfunction validateAdmissionsConvert(\n  value: Record<string, unknown>,\n): AdmissionsApplicantConvertCommand | undefined {\n  const expectedKeys = [\n    'sessionId',\n    'idempotencyKey',\n    'correlationId',\n    'command',\n    'applicationId',\n    'expectedVersion',\n    'effectiveFrom',\n  ];\n  if (!hasExactKeys(value, expectedKeys) || !validCommon(value)) return undefined;\n  if (\n    value.command !== 'admissions.application.applicant.convert' ||\n    !validUuid(value.applicationId) ||\n    typeof value.expectedVersion !== 'number' ||\n    !Number.isSafeInteger(value.expectedVersion) ||\n    value.expectedVersion < 1 ||\n    !validDateOnly(value.effectiveFrom)\n  ) {\n    return undefined;\n  }\n  return value as unknown as AdmissionsApplicantConvertCommand;\n}\n\nfunction validateFinance(\n"
+          replace_once(path, finance_anchor, validators)
+          replace_once(path,
+              "  if (value.command === 'admissions.application.offer.issue') return validateAdmissionsOffer(value);\n  if (value.command === 'finance.bank-line.reconcile')",
+              "  if (value.command === 'admissions.application.offer.issue') return validateAdmissionsOffer(value);\n  if (value.command === 'admissions.application.offer.accept')\n    return validateAdmissionsOfferAccept(value);\n  if (value.command === 'admissions.application.applicant.convert')\n    return validateAdmissionsConvert(value);\n  if (value.command === 'finance.bank-line.reconcile')")
+
+          path = 'apps/platform-api/src/database-operator-domain-command-store.ts'
+          replace_once(path,
+              "  'admissions.application.offer.issue',\n  'finance.bank-line.reconcile',",
+              "  'admissions.application.offer.issue',\n  'admissions.application.offer.accept',\n  'admissions.application.applicant.convert',\n  'finance.bank-line.reconcile',")
+          replace_once(path,
+              "    } else if (input.command === 'finance.bank-line.reconcile') {",
+              "    } else if (input.command === 'admissions.application.offer.accept') {\n      rows = await this.#database.query<OperatorDomainCommandRow>(\n        `SELECT admissions.accept_application_offer_command(\n           $1::uuid, $2::uuid, $3::bigint, $4::text, $5::uuid\n         ) AS value`,\n        [\n          input.sessionId,\n          input.applicationId,\n          input.expectedVersion,\n          input.idempotencyKey,\n          input.correlationId,\n        ],\n      );\n    } else if (input.command === 'admissions.application.applicant.convert') {\n      rows = await this.#database.query<OperatorDomainCommandRow>(\n        `SELECT admissions.convert_accepted_applicant_command(\n           $1::uuid, $2::uuid, $3::bigint, $4::date, $5::text, $6::uuid\n         ) AS value`,\n        [\n          input.sessionId,\n          input.applicationId,\n          input.expectedVersion,\n          input.effectiveFrom,\n          input.idempotencyKey,\n          input.correlationId,\n        ],\n      );\n    } else if (input.command === 'finance.bank-line.reconcile') {")
+
+          path = 'apps/platform-api/src/production-operator-command-api.ts'
+          replace_once(path,
+              "  | {\n      readonly command: 'finance.bank-line.reconcile';",
+              "  | {\n      readonly command: 'admissions.application.offer.accept';\n      readonly applicationId: string;\n      readonly expectedVersion: number;\n    }\n  | {\n      readonly command: 'admissions.application.applicant.convert';\n      readonly applicationId: string;\n      readonly expectedVersion: number;\n      readonly effectiveFrom: string;\n    }\n  | {\n      readonly command: 'finance.bank-line.reconcile';")
+          replace_once(path,
+              "const ADMISSIONS_RECOMMENDATIONS = new Set(['admit', 'waitlist', 'decline', 'more-information']);",
+              "const ADMISSIONS_RECOMMENDATIONS = new Set(['admit', 'waitlist', 'decline', 'more-information']);\nconst DATE_ONLY_PATTERN = /^\\d{4}-\\d{2}-\\d{2}$/u;")
+          replace_once(path,
+              "function parseBrowserBody(value: unknown): BrowserOperatorCommandBody | undefined {",
+              "function validDateOnly(value: unknown): value is string {\n  if (typeof value !== 'string' || !DATE_ONLY_PATTERN.test(value)) return false;\n  const parsed = new Date(`${value}T00:00:00.000Z`);\n  return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;\n}\n\nfunction parseBrowserBody(value: unknown): BrowserOperatorCommandBody | undefined {")
+          replace_once(path,
+              "  if (value.command === 'finance.bank-line.reconcile') {",
+              "  if (value.command === 'admissions.application.offer.accept') {\n    if (\n      !hasExactKeys(value, ['command', 'applicationId', 'expectedVersion']) ||\n      typeof value.applicationId !== 'string' ||\n      !UUID_PATTERN.test(value.applicationId) ||\n      typeof value.expectedVersion !== 'number' ||\n      !Number.isSafeInteger(value.expectedVersion) ||\n      value.expectedVersion < 1\n    ) {\n      return undefined;\n    }\n    return value as unknown as BrowserOperatorCommandBody;\n  }\n\n  if (value.command === 'admissions.application.applicant.convert') {\n    if (\n      !hasExactKeys(value, ['command', 'applicationId', 'expectedVersion', 'effectiveFrom']) ||\n      typeof value.applicationId !== 'string' ||\n      !UUID_PATTERN.test(value.applicationId) ||\n      typeof value.expectedVersion !== 'number' ||\n      !Number.isSafeInteger(value.expectedVersion) ||\n      value.expectedVersion < 1 ||\n      !validDateOnly(value.effectiveFrom)\n    ) {\n      return undefined;\n    }\n    return value as unknown as BrowserOperatorCommandBody;\n  }\n\n  if (value.command === 'finance.bank-line.reconcile') {")
+          replace_once(path,
+              "    command === 'admissions.application.review.record' ||\n    command === 'admissions.application.offer.issue'",
+              "    command === 'admissions.application.review.record' ||\n    command === 'admissions.application.offer.issue' ||\n    command === 'admissions.application.offer.accept' ||\n    command === 'admissions.application.applicant.convert'")
+
+          path = 'apps/platform-api/src/operator-domain-commands.test.ts'
+          replace_once(path,
+              "function financeInput() {",
+              "function admissionsAcceptInput() {\n  return {\n    sessionId,\n    idempotencyKey: 'admissions-accept-0001',\n    correlationId,\n    command: 'admissions.application.offer.accept' as const,\n    applicationId,\n    expectedVersion: 5,\n  };\n}\n\nfunction admissionsConvertInput() {\n  return {\n    sessionId,\n    idempotencyKey: 'admissions-convert-0001',\n    correlationId,\n    command: 'admissions.application.applicant.convert' as const,\n    applicationId,\n    expectedVersion: 6,\n    effectiveFrom: '2026-09-15',\n  };\n}\n\nfunction financeInput() {")
+          replace_once(path,
+              "      admissionsOfferInput(),\n      financeInput(),",
+              "      admissionsOfferInput(),\n      admissionsAcceptInput(),\n      admissionsConvertInput(),\n      financeInput(),")
+          replace_once(path,
+              "      { ...admissionsOfferInput(), expiresAt: 'not-a-timestamp' },",
+              "      { ...admissionsOfferInput(), expiresAt: 'not-a-timestamp' },\n      { ...admissionsAcceptInput(), expectedVersion: 0 },\n      { ...admissionsAcceptInput(), campusId: 'browser-selected-campus' },\n      { ...admissionsConvertInput(), expectedVersion: 0 },\n      { ...admissionsConvertInput(), effectiveFrom: '2026-02-30' },\n      { ...admissionsConvertInput(), effectiveFrom: 'not-a-date' },\n      { ...admissionsConvertInput(), campusId: 'browser-selected-campus' },")
+
+          path = 'apps/platform-api/src/database-operator-domain-command-store.test.ts'
+          finance_test_anchor = "  it('calls only the reviewed finance reconciliation function', async () => {"
+          store_tests = "  it('calls only the server-scoped admissions offer acceptance function', async () => {\n    const acceptReceipt = {\n      ...receipt,\n      command: 'admissions.application.offer.accept' as const,\n      domainEvidenceId: '71000000-0000-4000-8000-000000000013',\n      idempotencyKey: 'admissions-accept-0001',\n    };\n    const database = databaseWith({ accepted: true, replayed: false, receipt: acceptReceipt });\n    const store = new DatabaseOperatorDomainCommandStore(database);\n    const input = {\n      sessionId,\n      idempotencyKey: 'admissions-accept-0001',\n      correlationId,\n      command: 'admissions.application.offer.accept' as const,\n      applicationId,\n      expectedVersion: 5,\n    };\n\n    await expect(store.submit(input)).resolves.toEqual({\n      accepted: true,\n      replayed: false,\n      receipt: acceptReceipt,\n    });\n    expect(database.query).toHaveBeenCalledWith(\n      expect.stringContaining('admissions.accept_application_offer_command'),\n      [sessionId, applicationId, 5, input.idempotencyKey, correlationId],\n    );\n  });\n\n  it('calls only the server-scoped accepted-applicant conversion function', async () => {\n    const conversionReceipt = {\n      ...receipt,\n      command: 'admissions.application.applicant.convert' as const,\n      domainEvidenceId: '71000000-0000-4000-8000-000000000014',\n      idempotencyKey: 'admissions-convert-0001',\n    };\n    const database = databaseWith({ accepted: true, replayed: false, receipt: conversionReceipt });\n    const store = new DatabaseOperatorDomainCommandStore(database);\n    const input = {\n      sessionId,\n      idempotencyKey: 'admissions-convert-0001',\n      correlationId,\n      command: 'admissions.application.applicant.convert' as const,\n      applicationId,\n      expectedVersion: 6,\n      effectiveFrom: '2026-09-15',\n    };\n\n    await expect(store.submit(input)).resolves.toEqual({\n      accepted: true,\n      replayed: false,\n      receipt: conversionReceipt,\n    });\n    expect(database.query).toHaveBeenCalledWith(\n      expect.stringContaining('admissions.convert_accepted_applicant_command'),\n      [sessionId, applicationId, 6, input.effectiveFrom, input.idempotencyKey, correlationId],\n    );\n  });\n\n  it('calls only the reviewed finance reconciliation function', async () => {"
+          replace_once(path, finance_test_anchor, store_tests)
+
+          path = 'apps/platform-api/src/production-operator-command-api.test.ts'
+          replace_once(path,
+              "function dependencies(options?: {",
+              "function acceptBody() {\n  return {\n    command: 'admissions.application.offer.accept',\n    applicationId,\n    expectedVersion: 5,\n  };\n}\n\nfunction convertBody() {\n  return {\n    command: 'admissions.application.applicant.convert',\n    applicationId,\n    expectedVersion: 6,\n    effectiveFrom: '2026-09-15',\n  };\n}\n\nfunction dependencies(options?: {")
+          cross_role_anchor = "  it('denies cross-role command replay even with a valid session', async () => {"
+          api_test = "  it('submits offer acceptance and conversion without browser-selected scope', async () => {\n    for (const [body, key] of [\n      [acceptBody(), 'admissions-accept-qa-0001'],\n      [convertBody(), 'admissions-convert-qa-0001'],\n    ] as const) {\n      const deps = dependencies();\n      const response = await handleProductionOperatorCommandRequest(\n        request(body, { 'idempotency-key': key }),\n        environment,\n        deps.value,\n      );\n      expect(response?.status).toBe(202);\n      expect(deps.submit).toHaveBeenCalledWith(\n        environment.DATABASE_URL,\n        expect.objectContaining({\n          ...body,\n          sessionId,\n          idempotencyKey: key,\n          correlationId,\n        }),\n      );\n\n      const invalid = await handleProductionOperatorCommandRequest(\n        request(\n          { ...body, campusId: activeSession.context.campusId },\n          { 'idempotency-key': `${key}-scope` },\n        ),\n        environment,\n        dependencies().value,\n      );\n      expect(invalid?.status).toBe(400);\n    }\n\n    const invalidDate = await handleProductionOperatorCommandRequest(\n      request(\n        { ...convertBody(), effectiveFrom: '2026-02-30' },\n        { 'idempotency-key': 'admissions-convert-qa-invalid-date' },\n      ),\n      environment,\n      dependencies().value,\n    );\n    expect(invalidDate?.status).toBe(400);\n  });\n\n  it('denies cross-role command replay even with a valid session', async () => {"
+          replace_once(path, cross_role_anchor, api_test)
+          PY
+
+          npx prettier --write \
+            infra/database/post-integration-migration-manifest.json \
+            apps/platform-api/src/operator-domain-commands.ts \
+            apps/platform-api/src/database-operator-domain-command-store.ts \
+            apps/platform-api/src/production-operator-command-api.ts \
+            apps/platform-api/src/operator-domain-commands.test.ts \
+            apps/platform-api/src/database-operator-domain-command-store.test.ts \
+            apps/platform-api/src/production-operator-command-api.test.ts
+          git diff --check
+          npx vitest run \
+            apps/platform-api/src/operator-domain-commands.test.ts \
+            apps/platform-api/src/database-operator-domain-command-store.test.ts \
+            apps/platform-api/src/production-operator-command-api.test.ts
+      - name: Commit wiring
+        shell: bash
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add \
+            infra/database/post-integration-migration-manifest.json \
+            tests/integration/verify-auth-durable-context.sh \
+            tests/integration/verify-production-runtime.sh \
+            .github/workflows/ci.yml \
+            apps/platform-api/src/operator-domain-commands.ts \
+            apps/platform-api/src/database-operator-domain-command-store.ts \
+            apps/platform-api/src/production-operator-command-api.ts \
+            apps/platform-api/src/operator-domain-commands.test.ts \
+            apps/platform-api/src/database-operator-domain-command-store.test.ts \
+            apps/platform-api/src/production-operator-command-api.test.ts
+          git commit -m 'feat(admissions): wire offer acceptance and applicant conversion'
+          git push origin HEAD:codex/admissions-accept-convert-20260810
