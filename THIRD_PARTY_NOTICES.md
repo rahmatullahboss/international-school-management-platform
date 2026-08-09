@@ -308,7 +308,7 @@ Package source distributions remain the authoritative location for full licence 
 | miniflare | 5.20260730.0-alpha | MIT | yes | no |
 | minimatch | 10.2.6 | BlueOak-1.0.0 | yes | no |
 | ms | 2.1.3 | MIT | yes | no |
-| nanoid | 3.3.16 | MIT | yes | no |
+| nanoid | 3.3.18 | MIT | yes | no |
 | natural-compare | 1.4.0 | MIT | yes | no |
 | node-releases | 2.0.51 | MIT | yes | no |
 | obug | 2.1.4 | MIT | yes | no |

@@ -91,6 +91,7 @@ export interface StudentDailyWorkspaceProps {
   readonly locale: string;
   readonly date: string;
   readonly ageBand: 'primary' | 'secondary' | 'senior';
+  readonly focus?: 'documents' | 'messages';
   readonly state?: 'ready' | 'loading' | 'error';
   readonly errorMessage?: string;
   readonly retryHref?: string;
@@ -238,7 +239,7 @@ export function StudentDailyWorkspace(props: StudentDailyWorkspaceProps): ReactE
   );
 
   return (
-    <div className="student-workspace" data-age-band={props.ageBand}>
+    <div className="student-workspace" data-age-band={props.ageBand} data-focus={props.focus}>
       <header className="student-workspace__masthead">
         <div>
           <p className="student-workspace__kicker">My school day</p>
@@ -411,8 +412,12 @@ export function StudentDailyWorkspace(props: StudentDailyWorkspaceProps): ReactE
         )}
       </section>
 
-      <div className="student-workspace__split">
-        <section className="student-workspace__section" aria-labelledby="student-requests-heading">
+      <div className="student-workspace__split" data-focus-group="documents">
+        <section
+          className="student-workspace__section"
+          aria-labelledby="student-requests-heading"
+          data-focus-item="requests"
+        >
           <header>
             <h3 id="student-requests-heading">My requests</h3>
             <p>Submit and track only the requests available for your age and role.</p>
@@ -448,7 +453,11 @@ export function StudentDailyWorkspace(props: StudentDailyWorkspaceProps): ReactE
           )}
         </section>
 
-        <section className="student-workspace__section" aria-labelledby="student-documents-heading">
+        <section
+          className="student-workspace__section"
+          aria-labelledby="student-documents-heading"
+          data-focus-item="documents"
+        >
           <header>
             <h3 id="student-documents-heading">My authorised documents</h3>
             <p>Only published documents authorised for your own student profile are available.</p>
@@ -478,7 +487,11 @@ export function StudentDailyWorkspace(props: StudentDailyWorkspaceProps): ReactE
         </section>
       </div>
 
-      <section className="student-workspace__section" aria-labelledby="student-messages-heading">
+      <section
+        className="student-workspace__section"
+        aria-labelledby="student-messages-heading"
+        data-focus-item="messages"
+      >
         <header>
           <h3 id="student-messages-heading">Secure school messages</h3>
           <p>Only conversations authorised for your own student role are shown.</p>
