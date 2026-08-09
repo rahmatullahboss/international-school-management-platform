@@ -91,7 +91,7 @@ export interface StudentDailyWorkspaceProps {
   readonly locale: string;
   readonly date: string;
   readonly ageBand: 'primary' | 'secondary' | 'senior';
-  readonly focus?: 'documents' | 'messages';
+  readonly focus?: string;
   readonly state?: 'ready' | 'loading' | 'error';
   readonly errorMessage?: string;
   readonly retryHref?: string;
@@ -412,11 +412,10 @@ export function StudentDailyWorkspace(props: StudentDailyWorkspaceProps): ReactE
         )}
       </section>
 
-      <div className="student-workspace__split" data-focus-group="documents">
+      <div className="student-workspace__split">
         <section
           className="student-workspace__section"
           aria-labelledby="student-requests-heading"
-          data-focus-item="requests"
         >
           <header>
             <h3 id="student-requests-heading">My requests</h3>
@@ -456,7 +455,6 @@ export function StudentDailyWorkspace(props: StudentDailyWorkspaceProps): ReactE
         <section
           className="student-workspace__section"
           aria-labelledby="student-documents-heading"
-          data-focus-item="documents"
         >
           <header>
             <h3 id="student-documents-heading">My authorised documents</h3>
@@ -490,7 +488,6 @@ export function StudentDailyWorkspace(props: StudentDailyWorkspaceProps): ReactE
       <section
         className="student-workspace__section"
         aria-labelledby="student-messages-heading"
-        data-focus-item="messages"
       >
         <header>
           <h3 id="student-messages-heading">Secure school messages</h3>
