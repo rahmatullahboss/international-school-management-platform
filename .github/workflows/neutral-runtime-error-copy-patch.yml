@@ -43,25 +43,28 @@ jobs:
           browser = Path('tests/browser/pilot-portals.spec.ts')
           text = browser.read_text()
           anchor = "test('a failed signed refresh keeps the last safe role data instead of showing a loading page', async ({\n  page,\n}) => {"
-          test_block = '''test('staging session failures use neutral service language', async ({ page }) => {
-  await configurePilotApi(page);
-  await page.route('https://pilot-api.test/pilot/v1/sessions/admin', async (route) => {
-    await route.fulfill({
-      status: 503,
-      headers: { 'access-control-allow-origin': '*' },
-      contentType: 'application/json',
-      body: JSON.stringify({ error: 'temporarily_unavailable' }),
-    });
-  });
-
-  await page.goto('/admin');
-  await expect(page.getByText('Using saved data')).toBeVisible();
-  await expect(page.getByText(/Staging session service returned 503/u)).toBeVisible();
-  await expect(page.getByText(/Pilot session API/u)).toHaveCount(0);
-});
-
-'''
-          if test_block not in text:
+          lines = [
+              "test('staging session failures use neutral service language', async ({ page }) => {",
+              "  await configurePilotApi(page);",
+              "  await page.route('https://pilot-api.test/pilot/v1/sessions/admin', async (route) => {",
+              "    await route.fulfill({",
+              "      status: 503,",
+              "      headers: { 'access-control-allow-origin': '*' },",
+              "      contentType: 'application/json',",
+              "      body: JSON.stringify({ error: 'temporarily_unavailable' }),",
+              "    });",
+              "  });",
+              "",
+              "  await page.goto('/admin');",
+              "  await expect(page.getByText('Using saved data')).toBeVisible();",
+              "  await expect(page.getByText(/Staging session service returned 503/u)).toBeVisible();",
+              "  await expect(page.getByText(/Pilot session API/u)).toHaveCount(0);",
+              "});",
+              "",
+              "",
+          ]
+          test_block = '\n'.join(lines)
+          if "staging session failures use neutral service language" not in text:
               if anchor not in text:
                   raise SystemExit('browser failure-test insertion point not found')
               text = text.replace(anchor, test_block + anchor, 1)
