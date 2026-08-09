@@ -41,16 +41,13 @@ export default function StudentPortal(props: StudentPortalProps): ReactElement {
     props.connectivity,
   );
   const overview = resource.data;
+  const routeSegment = props.path.slice('/student/'.length);
   const focus =
-    props.path === '/student/documents'
-      ? 'documents'
-      : props.path === '/student/messages'
-        ? 'messages'
-        : undefined;
+    routeSegment === 'documents' || routeSegment === 'messages' ? routeSegment : undefined;
   const usesDailyWorkspace =
     props.path === '/student' ||
-    props.path === '/student/resources' ||
-    props.path === '/student/requests' ||
+    routeSegment === 'resources' ||
+    routeSegment === 'requests' ||
     focus !== undefined;
 
   return (
