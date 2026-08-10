@@ -21,15 +21,15 @@ jobs:
           node-version: '22.22.2'
           cache: npm
       - run: npm ci
-      - name: Apply semantic hardening
+      - name: Apply semantic regression fixtures
         run: python3 .github/scripts/admissions-lifecycle-semantic-hardening.py
       - name: Format touched TypeScript
-        run: npx prettier --write apps/platform-api/src/database-operator-domain-command-store.ts apps/platform-api/src/database-operator-domain-command-store.test.ts apps/platform-api/src/database-operator-work-queue-store.ts apps/platform-web/src/production-operator-work-queue.ts apps/platform-web/src/production-admissions-lifecycle.tsx
-      - name: Commit semantic hardening
+        run: npx prettier --write apps/platform-api/src/database-operator-domain-command-store.test.ts apps/platform-api/src/database-operator-work-queue-store.test.ts apps/platform-api/src/production-operator-work-queue-api.test.ts apps/platform-web/src/production-operator-work-queue.test.ts
+      - name: Commit semantic regression fixtures
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add infra/database/post-integration-migrations/202608100201_PROD-05_admissions_lifecycle_work_queue.sql apps/platform-api/src/database-operator-domain-command-store.ts apps/platform-api/src/database-operator-domain-command-store.test.ts apps/platform-api/src/database-operator-work-queue-store.ts apps/platform-web/src/production-operator-work-queue.ts apps/platform-web/src/production-admissions-lifecycle.tsx
+          git add apps/platform-api/src/database-operator-domain-command-store.test.ts apps/platform-api/src/database-operator-work-queue-store.test.ts apps/platform-api/src/production-operator-work-queue-api.test.ts apps/platform-web/src/production-operator-work-queue.test.ts tests/integration/verify-admissions-lifecycle-work-queue.sh
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "fix(admissions): harden lifecycle placement bounds"
+          git commit -m "test(admissions): lock lifecycle placement bounds"
           git push origin HEAD:codex/admissions-operational-lifecycle-ui-20260810
