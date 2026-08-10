@@ -22,24 +22,8 @@ jobs:
           from pathlib import Path
           path = Path('apps/platform-web/src/production-operator-portal.tsx')
           text = path.read_text()
-          old = """    } else {
-      body = {
-        command,
-        reason: formString(form, 'reason'),
-        requestedMinutes: Number(formString(form, 'requestedMinutes')),
-      };
-    }
-"""
-          new = """    } else if (command === 'support.break-glass.request') {
-      body = {
-        command,
-        reason: formString(form, 'reason'),
-        requestedMinutes: Number(formString(form, 'requestedMinutes')),
-      };
-    } else {
-      return;
-    }
-"""
+          old = "    } else {\n      body = {\n        command,\n        reason: formString(form, 'reason'),\n        requestedMinutes: Number(formString(form, 'requestedMinutes')),\n      };\n    }\n"
+          new = "    } else if (command === 'support.break-glass.request') {\n      body = {\n        command,\n        reason: formString(form, 'reason'),\n        requestedMinutes: Number(formString(form, 'requestedMinutes')),\n      };\n    } else {\n      return;\n    }\n"
           if old not in text:
               raise SystemExit('expected fallback command block not found')
           path.write_text(text.replace(old, new, 1))
