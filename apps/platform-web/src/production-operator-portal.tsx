@@ -325,12 +325,14 @@ function OperatorCommandPanel(props: {
         paymentId: candidate.paymentId,
         reason: formString(form, 'reason'),
       };
-    } else {
+    } else if (command === 'support.break-glass.request') {
       body = {
         command,
         reason: formString(form, 'reason'),
         requestedMinutes: Number(formString(form, 'requestedMinutes')),
       };
+    } else {
+      return;
     }
 
     setPending(true);
