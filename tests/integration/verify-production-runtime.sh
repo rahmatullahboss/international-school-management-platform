@@ -37,8 +37,8 @@ done
 "${PSQL[@]}" <<'SQL'
 DO $verification$
 BEGIN
-  IF (SELECT count(*) FROM platform.schema_migration) <> 59 THEN
-    RAISE EXCEPTION 'expected 59 total migration ledger rows after production hardening';
+  IF (SELECT count(*) FROM platform.schema_migration) <> 60 THEN
+    RAISE EXCEPTION 'expected 60 total migration ledger rows after production hardening';
   END IF;
   IF to_regprocedure('iam.resolve_browser_workspace(uuid)') IS NULL THEN
     RAISE EXCEPTION 'browser workspace resolver is missing';
