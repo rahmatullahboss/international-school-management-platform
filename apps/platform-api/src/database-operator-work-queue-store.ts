@@ -5,10 +5,7 @@ const POSITIVE_INTEGER_PATTERN = /^[1-9][0-9]*$/u;
 const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/u;
 
 export type AdmissionsLifecycleAction =
-  | 'review'
-  | 'issue-offer'
-  | 'accept-offer'
-  | 'convert-applicant';
+  'review' | 'issue-offer' | 'accept-offer' | 'convert-applicant';
 
 export interface AdmissionsPlacementOption {
   readonly programId: string;
@@ -76,10 +73,7 @@ function validDateOnly(value: string): boolean {
 
 function boundedLabel(value: unknown): value is string {
   return (
-    typeof value === 'string' &&
-    value.length >= 1 &&
-    value.length <= 160 &&
-    value.trim() === value
+    typeof value === 'string' && value.length >= 1 && value.length <= 160 && value.trim() === value
   );
 }
 
@@ -141,15 +135,21 @@ function validateAdmissionsCandidate(value: unknown): AdmissionsLifecycleCandida
     typeof version !== 'number' ||
     !Number.isSafeInteger(version) ||
     version < 1 ||
-    !(submittedAt === null ||
-      (typeof submittedAt === 'string' && validIsoTimestamp(submittedAt))) ||
+    !(
+      submittedAt === null ||
+      (typeof submittedAt === 'string' && validIsoTimestamp(submittedAt))
+    ) ||
     !['review', 'issue-offer', 'accept-offer', 'convert-applicant'].includes(String(action)) ||
     !Array.isArray(placementOptions) ||
     placementOptions.length > 50 ||
-    !(offerExpiresAt === null ||
-      (typeof offerExpiresAt === 'string' && validIsoTimestamp(offerExpiresAt))) ||
-    !(suggestedEffectiveFrom === null ||
-      (typeof suggestedEffectiveFrom === 'string' && validDateOnly(suggestedEffectiveFrom)))
+    !(
+      offerExpiresAt === null ||
+      (typeof offerExpiresAt === 'string' && validIsoTimestamp(offerExpiresAt))
+    ) ||
+    !(
+      suggestedEffectiveFrom === null ||
+      (typeof suggestedEffectiveFrom === 'string' && validDateOnly(suggestedEffectiveFrom))
+    )
   ) {
     throw new Error('Operator work queue returned an invalid admissions candidate.');
   }
