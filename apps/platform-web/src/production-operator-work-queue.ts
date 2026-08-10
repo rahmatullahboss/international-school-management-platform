@@ -1,8 +1,5 @@
 export type AdmissionsLifecycleAction =
-  | 'review'
-  | 'issue-offer'
-  | 'accept-offer'
-  | 'convert-applicant';
+  'review' | 'issue-offer' | 'accept-offer' | 'convert-applicant';
 
 export interface AdmissionsPlacementOption {
   readonly programId: string;
@@ -69,7 +66,9 @@ function validDate(value: string): boolean {
 }
 
 function boundedLabel(value: unknown): value is string {
-  return typeof value === 'string' && value.length > 0 && value.length <= 160 && value.trim() === value;
+  return (
+    typeof value === 'string' && value.length > 0 && value.length <= 160 && value.trim() === value
+  );
 }
 
 function placementOption(value: unknown): AdmissionsPlacementOption | undefined {
@@ -112,10 +111,18 @@ function admissionsCandidate(value: unknown): AdmissionsLifecycleCandidate | und
     typeof value.version !== 'number' ||
     !Number.isSafeInteger(value.version) ||
     value.version < 1 ||
-    !(value.submittedAt === null || (typeof value.submittedAt === 'string' && validTimestamp(value.submittedAt))) ||
-    !['review', 'issue-offer', 'accept-offer', 'convert-applicant'].includes(String(value.action)) ||
+    !(
+      value.submittedAt === null ||
+      (typeof value.submittedAt === 'string' && validTimestamp(value.submittedAt))
+    ) ||
+    !['review', 'issue-offer', 'accept-offer', 'convert-applicant'].includes(
+      String(value.action),
+    ) ||
     value.placementOptions.length > 50 ||
-    !(value.offerExpiresAt === null || (typeof value.offerExpiresAt === 'string' && validTimestamp(value.offerExpiresAt))) ||
+    !(
+      value.offerExpiresAt === null ||
+      (typeof value.offerExpiresAt === 'string' && validTimestamp(value.offerExpiresAt))
+    ) ||
     !(
       value.suggestedEffectiveFrom === null ||
       (typeof value.suggestedEffectiveFrom === 'string' && validDate(value.suggestedEffectiveFrom))

@@ -5,10 +5,7 @@ const POSITIVE_INTEGER_PATTERN = /^[1-9][0-9]*$/u;
 const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/u;
 
 export type AdmissionsLifecycleAction =
-  | 'review'
-  | 'issue-offer'
-  | 'accept-offer'
-  | 'convert-applicant';
+  'review' | 'issue-offer' | 'accept-offer' | 'convert-applicant';
 
 export interface AdmissionsPlacementOption {
   readonly programId: string;
@@ -76,17 +73,21 @@ function validDateOnly(value: string): boolean {
 
 function boundedLabel(value: unknown): value is string {
   return (
-    typeof value === 'string' &&
-    value.length >= 1 &&
-    value.length <= 160 &&
-    value.trim() === value
+    typeof value === 'string' && value.length >= 1 && value.length <= 160 && value.trim() === value
   );
 }
 
 function validatePlacementOption(value: unknown): AdmissionsPlacementOption {
-  if (!isRecord(value)) throw new Error('Operator work queue returned an invalid placement option.');
-  const { programId, programName, academicYearId, academicYearName, gradeLevelId, gradeLevelLabel } =
-    value;
+  if (!isRecord(value))
+    throw new Error('Operator work queue returned an invalid placement option.');
+  const {
+    programId,
+    programName,
+    academicYearId,
+    academicYearName,
+    gradeLevelId,
+    gradeLevelLabel,
+  } = value;
   if (
     typeof programId !== 'string' ||
     !UUID_PATTERN.test(programId) ||
@@ -100,7 +101,14 @@ function validatePlacementOption(value: unknown): AdmissionsPlacementOption {
   ) {
     throw new Error('Operator work queue returned an invalid placement option.');
   }
-  return { programId, programName, academicYearId, academicYearName, gradeLevelId, gradeLevelLabel };
+  return {
+    programId,
+    programName,
+    academicYearId,
+    academicYearName,
+    gradeLevelId,
+    gradeLevelLabel,
+  };
 }
 
 function validateAdmissionsCandidate(value: unknown): AdmissionsLifecycleCandidate {
@@ -127,11 +135,17 @@ function validateAdmissionsCandidate(value: unknown): AdmissionsLifecycleCandida
     typeof version !== 'number' ||
     !Number.isSafeInteger(version) ||
     version < 1 ||
-    !(submittedAt === null || (typeof submittedAt === 'string' && validIsoTimestamp(submittedAt))) ||
+    !(
+      submittedAt === null ||
+      (typeof submittedAt === 'string' && validIsoTimestamp(submittedAt))
+    ) ||
     !['review', 'issue-offer', 'accept-offer', 'convert-applicant'].includes(String(action)) ||
     !Array.isArray(placementOptions) ||
     placementOptions.length > 50 ||
-    !(offerExpiresAt === null || (typeof offerExpiresAt === 'string' && validIsoTimestamp(offerExpiresAt))) ||
+    !(
+      offerExpiresAt === null ||
+      (typeof offerExpiresAt === 'string' && validIsoTimestamp(offerExpiresAt))
+    ) ||
     !(
       suggestedEffectiveFrom === null ||
       (typeof suggestedEffectiveFrom === 'string' && validDateOnly(suggestedEffectiveFrom))
@@ -141,11 +155,28 @@ function validateAdmissionsCandidate(value: unknown): AdmissionsLifecycleCandida
   }
   const options = placementOptions.map(validatePlacementOption);
   const validStage =
-    (action === 'review' && (status === 'submitted' || status === 'under-review') && options.length === 0 && offerExpiresAt === null && suggestedEffectiveFrom === null) ||
-    (action === 'issue-offer' && status === 'under-review' && options.length > 0 && offerExpiresAt === null && suggestedEffectiveFrom === null) ||
-    (action === 'accept-offer' && status === 'offered' && options.length === 0 && typeof offerExpiresAt === 'string' && suggestedEffectiveFrom === null) ||
-    (action === 'convert-applicant' && status === 'accepted' && options.length === 0 && offerExpiresAt === null && typeof suggestedEffectiveFrom === 'string');
-  if (!validStage) throw new Error('Operator work queue returned an invalid admissions lifecycle stage.');
+    (action === 'review' &&
+      (status === 'submitted' || status === 'under-review') &&
+      options.length === 0 &&
+      offerExpiresAt === null &&
+      suggestedEffectiveFrom === null) ||
+    (action === 'issue-offer' &&
+      status === 'under-review' &&
+      options.length > 0 &&
+      offerExpiresAt === null &&
+      suggestedEffectiveFrom === null) ||
+    (action === 'accept-offer' &&
+      status === 'offered' &&
+      options.length === 0 &&
+      typeof offerExpiresAt === 'string' &&
+      suggestedEffectiveFrom === null) ||
+    (action === 'convert-applicant' &&
+      status === 'accepted' &&
+      options.length === 0 &&
+      offerExpiresAt === null &&
+      typeof suggestedEffectiveFrom === 'string');
+  if (!validStage)
+    throw new Error('Operator work queue returned an invalid admissions lifecycle stage.');
   return {
     applicationId,
     applicationNumber,
@@ -191,15 +222,21 @@ function validateAdmissionsQueue(value: unknown): DatabaseOperatorWorkQueue {
   ) {
     throw new Error('Operator work queue returned an invalid Admissions database response.');
   }
-  if (value.items.length > 25) throw new Error('Operator work queue exceeded the bounded candidate limit.');
-  return { schemaVersion: 2, role: 'admissions', items: value.items.map(validateAdmissionsCandidate) };
+  if (value.items.length > 25)
+    throw new Error('Operator work queue exceeded the bounded candidate limit.');
+  return {
+    schemaVersion: 2,
+    role: 'admissions',
+    items: value.items.map(validateAdmissionsCandidate),
+  };
 }
 
 function validateLegacyQueue(value: unknown): DatabaseOperatorWorkQueue {
   if (!isRecord(value) || value.schemaVersion !== 1 || !Array.isArray(value.items)) {
     throw new Error('Operator work queue returned an invalid database response.');
   }
-  if (value.items.length > 25) throw new Error('Operator work queue exceeded the bounded candidate limit.');
+  if (value.items.length > 25)
+    throw new Error('Operator work queue exceeded the bounded candidate limit.');
   if (value.role === 'finance') {
     return { schemaVersion: 1, role: 'finance', items: value.items.map(validateFinanceCandidate) };
   }

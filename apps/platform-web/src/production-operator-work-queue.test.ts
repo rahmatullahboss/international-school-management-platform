@@ -204,7 +204,10 @@ describe('production operator work queue browser client', () => {
         { status: 403, headers: { 'content-type': 'application/json' } },
       ),
     ];
-    vi.stubGlobal('fetch', vi.fn().mockImplementation(() => responses.shift()));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation(() => responses.shift()),
+    );
     await expect(loadProductionOperatorWorkQueue()).resolves.toEqual({
       state: 'denied',
       message: 'No operator work queue is available.',

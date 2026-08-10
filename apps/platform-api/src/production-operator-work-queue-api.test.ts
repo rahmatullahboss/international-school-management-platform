@@ -66,9 +66,9 @@ function dependencies(options?: {
   return {
     resolveSession: vi.fn().mockResolvedValue(options?.session ?? activeSession),
     resolveWorkspaceRole: vi.fn().mockResolvedValue(role),
-    resolveQueue: vi.fn().mockResolvedValue(
-      options?.queue ?? (role === 'finance' ? financeQueue : admissionsQueue),
-    ),
+    resolveQueue: vi
+      .fn()
+      .mockResolvedValue(options?.queue ?? (role === 'finance' ? financeQueue : admissionsQueue)),
   };
 }
 
@@ -112,7 +112,11 @@ describe('production operator work queue API', () => {
     expect(response?.status).toBe(200);
     expect(response?.headers.get('cache-control')).toBe('no-store');
     await expect(response?.json()).resolves.toEqual(admissionsQueue);
-    expect(deps.resolveQueue).toHaveBeenCalledWith(environment.DATABASE_URL, sessionId, 'admissions');
+    expect(deps.resolveQueue).toHaveBeenCalledWith(
+      environment.DATABASE_URL,
+      sessionId,
+      'admissions',
+    );
   });
 
   it('passes the server-resolved finance role to legacy queue storage', async () => {

@@ -35,7 +35,9 @@ function resultMessage(result: ProductionOperatorCommandResult): ReactElement {
   if (result.state === 'accepted') {
     return (
       <div className="pilot-demo-note" role="status">
-        <strong>{result.replayed ? 'Existing receipt verified' : 'Lifecycle action accepted'}</strong>
+        <strong>
+          {result.replayed ? 'Existing receipt verified' : 'Lifecycle action accepted'}
+        </strong>
         <span>Command {result.commandId}</span>
         <span>Evidence {result.evidenceId}</span>
         <span>{new Date(result.acceptedAt).toLocaleString()}</span>
@@ -83,7 +85,9 @@ function queueMessage(queue: ProductionOperatorWorkQueue | undefined): ReactElem
     return (
       <div className="pilot-demo-note" role="status">
         <strong>No actionable admissions work</strong>
-        <span>No review, offer, acceptance or conversion action is ready in this campus scope.</span>
+        <span>
+          No review, offer, acceptance or conversion action is ready in this campus scope.
+        </span>
       </div>
     );
   }
@@ -102,10 +106,7 @@ function buildBody(
       applicationId: candidate.applicationId,
       expectedVersion: candidate.version,
       recommendation: formString(form, 'recommendation') as
-        | 'admit'
-        | 'waitlist'
-        | 'decline'
-        | 'more-information',
+        'admit' | 'waitlist' | 'decline' | 'more-information',
       score: scoreValue === '' ? null : Number(scoreValue),
       notes: notesValue === '' ? null : notesValue,
     };
@@ -147,7 +148,11 @@ function buildBody(
   };
 }
 
-function CandidateSummary({ candidate }: { readonly candidate: AdmissionsLifecycleCandidate }): ReactElement {
+function CandidateSummary({
+  candidate,
+}: {
+  readonly candidate: AdmissionsLifecycleCandidate;
+}): ReactElement {
   return (
     <div className="pilot-demo-note" data-admissions-stage={candidate.action}>
       <strong>{candidate.applicationNumber}</strong>
@@ -207,7 +212,10 @@ export function ProductionAdmissionsLifecyclePanel(props: {
     if (pending || candidate === undefined || !allowed) return;
     const body = buildBody(candidate, new FormData(event.currentTarget));
     if (body === undefined) {
-      setResult({ state: 'unavailable', message: 'Select a valid server-authorized placement and required values.' });
+      setResult({
+        state: 'unavailable',
+        message: 'Select a valid server-authorized placement and required values.',
+      });
       return;
     }
     setPending(true);
@@ -227,8 +235,9 @@ export function ProductionAdmissionsLifecyclePanel(props: {
         <p>Server-owned admissions lifecycle</p>
         <h2 id="admissions-lifecycle-title">Applications requiring action</h2>
         <span>
-          Tenant and campus scope, record versions, lifecycle stage, program, academic year and grade
-          identities come from the database. The browser cannot submit arbitrary placement IDs.
+          Tenant and campus scope, record versions, lifecycle stage, program, academic year and
+          grade identities come from the database. The browser cannot submit arbitrary placement
+          IDs.
         </span>
       </div>
       {queueMessage(queue)}
@@ -287,7 +296,8 @@ export function ProductionAdmissionsLifecyclePanel(props: {
                           key={`${option.programId}:${option.academicYearId}:${option.gradeLevelId}`}
                           value={`${option.programId}:${option.academicYearId}:${option.gradeLevelId}`}
                         >
-                          {option.programName} · {option.academicYearName} · {option.gradeLevelLabel}
+                          {option.programName} · {option.academicYearName} ·{' '}
+                          {option.gradeLevelLabel}
                         </option>
                       ))}
                     </select>
@@ -300,8 +310,8 @@ export function ProductionAdmissionsLifecyclePanel(props: {
               ) : null}
               {candidate.action === 'accept-offer' ? (
                 <p>
-                  Checklist and contract requirements are already verified by the server-owned queue.
-                  Confirm to record acceptance of this unexpired offer.
+                  Checklist and contract requirements are already verified by the server-owned
+                  queue. Confirm to record acceptance of this unexpired offer.
                 </p>
               ) : null}
               {candidate.action === 'convert-applicant' ? (
