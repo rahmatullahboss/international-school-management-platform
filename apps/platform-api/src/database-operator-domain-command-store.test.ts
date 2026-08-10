@@ -87,7 +87,7 @@ describe('database operator domain command store', () => {
       receipt: offerReceipt,
     });
     expect(database.query).toHaveBeenCalledWith(
-      expect.stringContaining('admissions.issue_application_offer_command'),
+      expect.stringContaining('admissions.issue_application_offer_catalog_command'),
       [
         sessionId,
         applicationId,

@@ -12,19 +12,19 @@ import { existsSync, readFileSync } from 'node:fs';
 
 const manifestPath = process.argv[2];
 const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
-if (manifest.gate !== 'GATE-PILOT-ADMISSIONS-ACCEPT-CONVERT-COMMANDS-V1') {
+if (manifest.gate !== 'GATE-PROD-ADMISSIONS-LIFECYCLE-WORK-QUEUE-V1') {
   throw new Error(`unexpected post-integration gate: ${manifest.gate}`);
 }
 if (manifest.baseManifest !== 'infra/database/migration-manifest.json') {
   throw new Error('post-integration manifest must name the canonical base manifest');
 }
 const migrations = manifest.migrations ?? [];
-if (migrations.length !== 15) {
-  throw new Error(`expected fifteen post-integration migrations, got ${migrations.length}`);
+if (migrations.length !== 16) {
+  throw new Error(`expected sixteen post-integration migrations, got ${migrations.length}`);
 }
 for (const [index, migration] of migrations.entries()) {
   if (migration.order !== index + 1) throw new Error('AUTH migration orders are not contiguous');
-  if (!['AUTH-03', 'AUTH-07', 'AUTH-08', 'PILOT-04', 'PILOT-05', 'PILOT-06', 'PILOT-07', 'PILOT-08', 'PILOT-09', 'PILOT-10', 'PILOT-11', 'PILOT-12', 'PILOT-13', 'PILOT-14', 'PILOT-15'].includes(migration.stream)) throw new Error(`unexpected stream: ${migration.stream}`);
+  if (!['AUTH-03', 'AUTH-07', 'AUTH-08', 'PILOT-04', 'PILOT-05', 'PILOT-06', 'PILOT-07', 'PILOT-08', 'PILOT-09', 'PILOT-10', 'PILOT-11', 'PILOT-12', 'PILOT-13', 'PILOT-14', 'PILOT-15', 'PROD-05'].includes(migration.stream)) throw new Error(`unexpected stream: ${migration.stream}`);
   if (!existsSync(migration.path)) throw new Error(`missing migration: ${migration.path}`);
   console.log(migration.path);
 }
@@ -38,8 +38,8 @@ done
 "${PSQL[@]}" <<'SQL'
 DO $verification$
 BEGIN
-  IF (SELECT count(*) FROM platform.schema_migration) <> 55 THEN
-    RAISE EXCEPTION 'expected 55 total migration ledger rows';
+  IF (SELECT count(*) FROM platform.schema_migration) <> 56 THEN
+    RAISE EXCEPTION 'expected 56 total migration ledger rows';
   END IF;
   IF (SELECT count(*) FROM platform.schema_migration WHERE stream_id = 'AUTH-03') <> 1 THEN
     RAISE EXCEPTION 'expected three AUTH migrations ledger row';
