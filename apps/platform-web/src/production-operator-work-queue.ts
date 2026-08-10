@@ -20,6 +20,7 @@ export interface AdmissionsLifecycleCandidate {
   readonly placementOptions: readonly AdmissionsPlacementOption[];
   readonly offerExpiresAt: string | null;
   readonly suggestedEffectiveFrom: string | null;
+  readonly effectiveFromMax: string | null;
 }
 
 export interface FinanceReconciliationCandidate {
@@ -126,6 +127,10 @@ function admissionsCandidate(value: unknown): AdmissionsLifecycleCandidate | und
     !(
       value.suggestedEffectiveFrom === null ||
       (typeof value.suggestedEffectiveFrom === 'string' && validDate(value.suggestedEffectiveFrom))
+    ) ||
+    !(
+      value.effectiveFromMax === null ||
+      (typeof value.effectiveFromMax === 'string' && validDate(value.effectiveFromMax))
     )
   ) {
     return undefined;
@@ -135,22 +140,27 @@ function admissionsCandidate(value: unknown): AdmissionsLifecycleCandidate | und
       (value.status === 'submitted' || value.status === 'under-review') &&
       options.length === 0 &&
       value.offerExpiresAt === null &&
-      value.suggestedEffectiveFrom === null) ||
+      value.suggestedEffectiveFrom === null &&
+      value.effectiveFromMax === null) ||
     (value.action === 'issue-offer' &&
       value.status === 'under-review' &&
       options.length > 0 &&
       value.offerExpiresAt === null &&
-      value.suggestedEffectiveFrom === null) ||
+      value.suggestedEffectiveFrom === null &&
+      value.effectiveFromMax === null) ||
     (value.action === 'accept-offer' &&
       value.status === 'offered' &&
       options.length === 0 &&
       typeof value.offerExpiresAt === 'string' &&
-      value.suggestedEffectiveFrom === null) ||
+      value.suggestedEffectiveFrom === null &&
+      value.effectiveFromMax === null) ||
     (value.action === 'convert-applicant' &&
       value.status === 'accepted' &&
       options.length === 0 &&
       value.offerExpiresAt === null &&
-      typeof value.suggestedEffectiveFrom === 'string');
+      typeof value.suggestedEffectiveFrom === 'string' &&
+      typeof value.effectiveFromMax === 'string' &&
+      value.suggestedEffectiveFrom <= value.effectiveFromMax);
   if (!stageValid) return undefined;
   return {
     applicationId: value.applicationId,
@@ -162,6 +172,7 @@ function admissionsCandidate(value: unknown): AdmissionsLifecycleCandidate | und
     placementOptions: options as AdmissionsPlacementOption[],
     offerExpiresAt: value.offerExpiresAt,
     suggestedEffectiveFrom: value.suggestedEffectiveFrom,
+    effectiveFromMax: value.effectiveFromMax,
   };
 }
 

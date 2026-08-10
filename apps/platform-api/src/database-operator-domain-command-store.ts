@@ -216,7 +216,7 @@ export class DatabaseOperatorDomainCommandStore implements OperatorDomainCommand
       );
     } else if (input.command === 'admissions.application.applicant.convert') {
       rows = await this.#database.query<OperatorDomainCommandRow>(
-        `SELECT admissions.convert_accepted_applicant_command(
+        `SELECT admissions.convert_accepted_applicant_catalog_command(
            $1::uuid, $2::uuid, $3::bigint, $4::date, $5::text, $6::uuid
          ) AS value`,
         [

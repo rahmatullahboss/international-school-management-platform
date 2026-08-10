@@ -26,6 +26,7 @@ export interface AdmissionsLifecycleCandidate {
   readonly placementOptions: readonly AdmissionsPlacementOption[];
   readonly offerExpiresAt: string | null;
   readonly suggestedEffectiveFrom: string | null;
+  readonly effectiveFromMax: string | null;
 }
 
 export interface FinanceReconciliationCandidate {
@@ -123,6 +124,7 @@ function validateAdmissionsCandidate(value: unknown): AdmissionsLifecycleCandida
     placementOptions,
     offerExpiresAt,
     suggestedEffectiveFrom,
+    effectiveFromMax,
   } = value;
   if (
     typeof applicationId !== 'string' ||
@@ -149,6 +151,10 @@ function validateAdmissionsCandidate(value: unknown): AdmissionsLifecycleCandida
     !(
       suggestedEffectiveFrom === null ||
       (typeof suggestedEffectiveFrom === 'string' && validDateOnly(suggestedEffectiveFrom))
+    ) ||
+    !(
+      effectiveFromMax === null ||
+      (typeof effectiveFromMax === 'string' && validDateOnly(effectiveFromMax))
     )
   ) {
     throw new Error('Operator work queue returned an invalid admissions candidate.');
@@ -159,22 +165,27 @@ function validateAdmissionsCandidate(value: unknown): AdmissionsLifecycleCandida
       (status === 'submitted' || status === 'under-review') &&
       options.length === 0 &&
       offerExpiresAt === null &&
-      suggestedEffectiveFrom === null) ||
+      suggestedEffectiveFrom === null &&
+      effectiveFromMax === null) ||
     (action === 'issue-offer' &&
       status === 'under-review' &&
       options.length > 0 &&
       offerExpiresAt === null &&
-      suggestedEffectiveFrom === null) ||
+      suggestedEffectiveFrom === null &&
+      effectiveFromMax === null) ||
     (action === 'accept-offer' &&
       status === 'offered' &&
       options.length === 0 &&
       typeof offerExpiresAt === 'string' &&
-      suggestedEffectiveFrom === null) ||
+      suggestedEffectiveFrom === null &&
+      effectiveFromMax === null) ||
     (action === 'convert-applicant' &&
       status === 'accepted' &&
       options.length === 0 &&
       offerExpiresAt === null &&
-      typeof suggestedEffectiveFrom === 'string');
+      typeof suggestedEffectiveFrom === 'string' &&
+      typeof effectiveFromMax === 'string' &&
+      suggestedEffectiveFrom <= effectiveFromMax);
   if (!validStage)
     throw new Error('Operator work queue returned an invalid admissions lifecycle stage.');
   return {
@@ -187,6 +198,7 @@ function validateAdmissionsCandidate(value: unknown): AdmissionsLifecycleCandida
     placementOptions: options,
     offerExpiresAt,
     suggestedEffectiveFrom,
+    effectiveFromMax,
   };
 }
 

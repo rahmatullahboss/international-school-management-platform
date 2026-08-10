@@ -322,6 +322,7 @@ export function ProductionAdmissionsLifecyclePanel(props: {
                     type="date"
                     required
                     min={candidate.suggestedEffectiveFrom ?? undefined}
+                    max={candidate.effectiveFromMax ?? undefined}
                     defaultValue={candidate.suggestedEffectiveFrom ?? undefined}
                   />
                 </label>

@@ -156,7 +156,7 @@ describe('database operator domain command store', () => {
       receipt: conversionReceipt,
     });
     expect(database.query).toHaveBeenCalledWith(
-      expect.stringContaining('admissions.convert_accepted_applicant_command'),
+      expect.stringContaining('admissions.convert_accepted_applicant_catalog_command'),
       [sessionId, applicationId, 6, input.effectiveFrom, input.idempotencyKey, correlationId],
     );
   });
