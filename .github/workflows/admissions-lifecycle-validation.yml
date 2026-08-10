@@ -19,5 +19,6 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run format:check
+      - run: npm run lint
       - run: npm run typecheck
       - run: npx vitest run apps/platform-api/src/database-operator-work-queue-store.test.ts apps/platform-api/src/production-operator-work-queue-api.test.ts apps/platform-api/src/database-operator-domain-command-store.test.ts apps/platform-web/src/production-operator-work-queue.test.ts apps/platform-web/src/production-operator-command.test.ts apps/platform-web/src/production-operator-portal.test.tsx
