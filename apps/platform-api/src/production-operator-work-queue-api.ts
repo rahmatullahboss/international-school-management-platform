@@ -29,6 +29,7 @@ interface ProductionOperatorWorkQueueDependencies {
   readonly resolveQueue: (
     databaseUrl: string,
     sessionId: string,
+    role: 'admissions' | 'finance',
   ) => Promise<DatabaseOperatorWorkQueue | undefined>;
 }
 
@@ -91,8 +92,9 @@ const defaultDependencies: ProductionOperatorWorkQueueDependencies = {
     );
     return workspace?.role;
   },
-  async resolveQueue(databaseUrl, sessionId) {
-    return new DatabaseOperatorWorkQueueStore(createHttpDatabase(databaseUrl)).resolve(sessionId);
+  async resolveQueue(databaseUrl, sessionId, role) {
+    const store = new DatabaseOperatorWorkQueueStore(createHttpDatabase(databaseUrl));
+    return role === 'admissions' ? store.resolveAdmissions(sessionId) : store.resolve(sessionId);
   },
 };
 
@@ -133,7 +135,7 @@ export async function handleProductionOperatorWorkQueueRequest(
 
   let queue: DatabaseOperatorWorkQueue | undefined;
   try {
-    queue = await dependencies.resolveQueue(databaseUrl, session.context.sessionId);
+    queue = await dependencies.resolveQueue(databaseUrl, session.context.sessionId, workspaceRole);
   } catch {
     return errorResponse('operator_work_queue_unavailable', 'The work queue is unavailable.', 503);
   }
