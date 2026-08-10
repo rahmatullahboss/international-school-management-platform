@@ -9,387 +9,136 @@ def replace(path: str, old: str, new: str, count: int = 1) -> None:
     target.write_text(text.replace(old, new, count))
 
 
-sql = "infra/database/post-integration-migrations/202608100201_PROD-05_admissions_lifecycle_work_queue.sql"
+def add_max_after_nulls(path: str) -> None:
+    target = Path(path)
+    text = target.read_text()
+    text = text.replace(
+        "suggestedEffectiveFrom: null,\n",
+        "suggestedEffectiveFrom: null,\n              effectiveFromMax: null,\n",
+    )
+    target.write_text(text)
 
+
+for path in [
+    "apps/platform-api/src/database-operator-work-queue-store.test.ts",
+    "apps/platform-api/src/production-operator-work-queue-api.test.ts",
+    "apps/platform-web/src/production-operator-work-queue.test.ts",
+]:
+    add_max_after_nulls(path)
+
+for path in [
+    "apps/platform-api/src/database-operator-work-queue-store.test.ts",
+    "apps/platform-web/src/production-operator-work-queue.test.ts",
+]:
+    replace(
+        path,
+        "suggestedEffectiveFrom: '2026-02-30',\n",
+        "suggestedEffectiveFrom: '2026-02-30',\n            effectiveFromMax: '2027-06-30',\n",
+    )
+
+verify = "tests/integration/verify-admissions-lifecycle-work-queue.sh"
 replace(
-    sql,
-    """    JOIN academics.academic_year AS academic_year
-      ON academic_year.tenant_id = program.tenant_id
-     AND academic_year.academic_year_id = p_academic_year_id
-     AND academic_year.publication_state = 'published'
-    WHERE choice.tenant_id = session_context.tenant_id
+    verify,
+    """INSERT INTO academics.academic_year (
+  tenant_id, academic_year_id, year_code, year_name, starts_on, ends_on, publication_state
+) VALUES (
+  '95000000-0000-4000-8000-000000000001',
+  '95500000-0000-4000-8000-000000000303',
+  'LIFECYCLE-2026',
+  'Lifecycle Academic Year',
+  current_date - 30,
+  current_date + 300,
+  'published'
+)
+ON CONFLICT (tenant_id, academic_year_id) DO NOTHING;
 """,
-    """    JOIN academics.academic_year AS academic_year
-      ON academic_year.tenant_id = program.tenant_id
-     AND academic_year.academic_year_id = p_academic_year_id
-     AND academic_year.publication_state = 'published'
-     AND academic_year.ends_on >= current_date
-    JOIN academics.instructional_calendar AS calendar
-      ON calendar.tenant_id = academic_year.tenant_id
-     AND calendar.academic_year_id = academic_year.academic_year_id
-     AND calendar.campus_id = session_context.campus_id
-     AND calendar.publication_state = 'published'
-    WHERE choice.tenant_id = session_context.tenant_id
+    """INSERT INTO academics.academic_year (
+  tenant_id, academic_year_id, year_code, year_name, starts_on, ends_on, publication_state
+) VALUES
+  (
+    '95000000-0000-4000-8000-000000000001',
+    '95500000-0000-4000-8000-000000000303',
+    'LIFECYCLE-2026',
+    'Lifecycle Academic Year',
+    current_date - 30,
+    current_date + 300,
+    'published'
+  ),
+  (
+    '95000000-0000-4000-8000-000000000001',
+    '95500000-0000-4000-8000-000000000305',
+    'LIFECYCLE-NO-CALENDAR',
+    'Lifecycle Year Without Campus Calendar',
+    current_date - 10,
+    current_date + 200,
+    'published'
+  )
+ON CONFLICT (tenant_id, academic_year_id) DO NOTHING;
+
+INSERT INTO academics.instructional_calendar (
+  tenant_id, calendar_id, academic_year_id, campus_id, timezone, publication_state
+) VALUES (
+  '95000000-0000-4000-8000-000000000001',
+  '95500000-0000-4000-8000-000000000304',
+  '95500000-0000-4000-8000-000000000303',
+  '95000000-0000-4000-8000-000000000003',
+  'Asia/Dhaka',
+  'published'
+)
+ON CONFLICT (tenant_id, academic_year_id, campus_id) DO NOTHING;
 """,
 )
 
-marker = "CREATE OR REPLACE FUNCTION platform.resolve_admissions_lifecycle_work_queue(p_session_id uuid)\n"
-wrapper = """CREATE OR REPLACE FUNCTION admissions.convert_accepted_applicant_catalog_command(
-  p_session_id uuid,
-  p_application_id uuid,
-  p_expected_version bigint,
-  p_effective_from date,
-  p_idempotency_key text,
-  p_correlation_id uuid
-)
-RETURNS jsonb
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = pg_catalog, platform, admissions, academics
-AS $function$
-DECLARE
-  session_context record;
-  placement_date_valid boolean;
-BEGIN
-  IF p_effective_from IS NULL THEN
-    RETURN admissions.convert_accepted_applicant_command(
-      p_session_id,
-      p_application_id,
-      p_expected_version,
-      p_effective_from,
-      p_idempotency_key,
-      p_correlation_id
-    );
-  END IF;
-
-  SELECT * INTO session_context
-  FROM platform.resolve_operator_domain_command_session(p_session_id);
-  IF NOT FOUND THEN
-    RETURN jsonb_build_object('accepted', false, 'reason', 'session-inactive');
-  END IF;
-
-  SELECT EXISTS (
-    SELECT 1
-    FROM admissions.offer AS offer
-    JOIN academics.academic_year AS academic_year
-      ON academic_year.tenant_id = offer.tenant_id
-     AND academic_year.academic_year_id = offer.academic_year_id
-     AND academic_year.publication_state = 'published'
-    JOIN academics.instructional_calendar AS calendar
-      ON calendar.tenant_id = academic_year.tenant_id
-     AND calendar.academic_year_id = academic_year.academic_year_id
-     AND calendar.campus_id = session_context.campus_id
-     AND calendar.publication_state = 'published'
-    WHERE offer.tenant_id = session_context.tenant_id
-      AND offer.application_id = p_application_id
-      AND offer.campus_id = session_context.campus_id
-      AND offer.status = 'accepted'
-      AND p_effective_from BETWEEN academic_year.starts_on AND academic_year.ends_on
-  ) INTO placement_date_valid;
-
-  IF placement_date_valid IS NOT TRUE THEN
-    RETURN jsonb_build_object('accepted', false, 'reason', 'domain-conflict');
-  END IF;
-
-  RETURN admissions.convert_accepted_applicant_command(
-    p_session_id,
-    p_application_id,
-    p_expected_version,
-    p_effective_from,
-    p_idempotency_key,
-    p_correlation_id
-  );
-END
-$function$;
-
-REVOKE ALL ON FUNCTION admissions.convert_accepted_applicant_catalog_command(
-  uuid, uuid, bigint, date, text, uuid
-) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION admissions.convert_accepted_applicant_catalog_command(
-  uuid, uuid, bigint, date, text, uuid
-) TO app_runtime;
-
+issue_guard = """if [[ "$schema_version" != "2" || "$queue_role" != "admissions" || "$issue_action" != "issue-offer" || "$issue_version" != "2" || "$program_id" != "95500000-0000-4000-8000-000000000302" || "$academic_year_id" != "95500000-0000-4000-8000-000000000303" || -z "$grade_level_id" || ( "$grade_level_label" != "Grade 7" && "$grade_level_label" != "Grade 8" ) ]]; then
+  echo "Unexpected issue-offer lifecycle stage: $issue_stage" >&2
+  exit 1
+fi
 """
-replace(sql, marker, wrapper + marker)
-
 replace(
-    sql,
-    """        'suggestedEffectiveFrom', CASE
-          WHEN staged.next_action = 'convert-applicant' THEN to_char(
-            GREATEST(current_date, staged.created_at::date + 1),
-            'YYYY-MM-DD'
-          )
-          ELSE NULL
-        END
-""",
-    """        'suggestedEffectiveFrom', CASE
-          WHEN staged.next_action = 'convert-applicant' THEN to_char(
-            GREATEST(current_date, staged.created_at::date + 1, staged.academic_year_starts_on),
-            'YYYY-MM-DD'
-          )
-          ELSE NULL
-        END,
-        'effectiveFromMax', CASE
-          WHEN staged.next_action = 'convert-applicant' THEN to_char(
-            staged.academic_year_ends_on,
-            'YYYY-MM-DD'
-          )
-          ELSE NULL
-        END
+    verify,
+    issue_guard,
+    issue_guard
+    + """
+no_calendar_option_count="$("${PSQL[@]}" -Atqc "SET ROLE app_runtime; WITH resolved AS (SELECT platform.resolve_admissions_lifecycle_work_queue('95500000-0000-4000-8000-000000000001'::uuid) AS queue), candidate AS (SELECT item FROM resolved CROSS JOIN LATERAL jsonb_array_elements(queue->'items') AS item WHERE item->>'applicationId'='95500000-0000-4000-8000-000000000203') SELECT count(*) FROM candidate CROSS JOIN LATERAL jsonb_array_elements(item->'placementOptions') AS option WHERE option->>'academicYearId'='95500000-0000-4000-8000-000000000305';")"
+if [[ "$no_calendar_option_count" != "0" ]]; then
+  echo "Academic year without selected-campus calendar leaked into placement options: $no_calendar_option_count" >&2
+  exit 1
+fi
+
+no_calendar_offer="$("${PSQL[@]}" -Atqc "SET ROLE app_runtime; SELECT admissions.issue_application_offer_catalog_command('95500000-0000-4000-8000-000000000001'::uuid,'95500000-0000-4000-8000-000000000203'::uuid,2,'95500000-0000-4000-8000-000000000302'::uuid,'95500000-0000-4000-8000-000000000305'::uuid,'$grade_level_id'::uuid,clock_timestamp()+interval '30 days','admissions-lifecycle-no-calendar-0001','95500000-0000-4000-8000-000000000405'::uuid)->>'reason';")"
+if [[ "$no_calendar_offer" != "domain-conflict" ]]; then
+  echo "Expected academic year without selected-campus calendar to fail closed, got: $no_calendar_offer" >&2
+  exit 1
+fi
 """,
 )
 
 replace(
-    sql,
-    """        application.updated_at,
-        offer.expires_at AS offer_expires_at,
-        CASE
+    verify,
+    """convert_stage="$("${PSQL[@]}" -AtqF '|' -c "SET ROLE app_runtime; WITH resolved AS (SELECT platform.resolve_admissions_lifecycle_work_queue('95500000-0000-4000-8000-000000000001'::uuid) AS queue), candidate AS (SELECT item FROM resolved CROSS JOIN LATERAL jsonb_array_elements(queue->'items') AS item WHERE item->>'applicationId'='95500000-0000-4000-8000-000000000203') SELECT item->>'action', item->>'version', item->>'suggestedEffectiveFrom' FROM candidate;")"
+IFS='|' read -r convert_action convert_version effective_from <<<"$convert_stage"
+if [[ "$convert_action" != "convert-applicant" || "$convert_version" != "4" || ! "$effective_from" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+  echo "Unexpected convert-applicant lifecycle stage: $convert_stage" >&2
+  exit 1
+fi
+
+convert_result="$("${PSQL[@]}" -AtqF '|' -c "SET ROLE app_runtime; WITH result AS (SELECT admissions.convert_accepted_applicant_command('95500000-0000-4000-8000-000000000001'::uuid,'95500000-0000-4000-8000-000000000203'::uuid,4,'$effective_from'::date,'admissions-lifecycle-convert-0001','95500000-0000-4000-8000-000000000404'::uuid) AS value) SELECT value->>'accepted', value->>'replayed', value->'receipt'->>'command' FROM result;")"
 """,
-    """        application.updated_at,
-        offer.expires_at AS offer_expires_at,
-        offered_year.starts_on AS academic_year_starts_on,
-        offered_year.ends_on AS academic_year_ends_on,
-        CASE
+    """convert_stage="$("${PSQL[@]}" -AtqF '|' -c "SET ROLE app_runtime; WITH resolved AS (SELECT platform.resolve_admissions_lifecycle_work_queue('95500000-0000-4000-8000-000000000001'::uuid) AS queue), candidate AS (SELECT item FROM resolved CROSS JOIN LATERAL jsonb_array_elements(queue->'items') AS item WHERE item->>'applicationId'='95500000-0000-4000-8000-000000000203') SELECT item->>'action', item->>'version', item->>'suggestedEffectiveFrom', item->>'effectiveFromMax' FROM candidate;")"
+IFS='|' read -r convert_action convert_version effective_from effective_max <<<"$convert_stage"
+if [[ "$convert_action" != "convert-applicant" || "$convert_version" != "4" || ! "$effective_from" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ || ! "$effective_max" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ || "$effective_from" > "$effective_max" ]]; then
+  echo "Unexpected convert-applicant lifecycle stage: $convert_stage" >&2
+  exit 1
+fi
+
+outside_year="$("${PSQL[@]}" -Atqc "SET ROLE app_runtime; SELECT admissions.convert_accepted_applicant_catalog_command('95500000-0000-4000-8000-000000000001'::uuid,'95500000-0000-4000-8000-000000000203'::uuid,4,('$effective_max'::date + 1),'admissions-lifecycle-outside-year-0001','95500000-0000-4000-8000-000000000406'::uuid)->>'reason';")"
+if [[ "$outside_year" != "domain-conflict" ]]; then
+  echo "Expected conversion outside offered academic year to fail closed, got: $outside_year" >&2
+  exit 1
+fi
+
+convert_result="$("${PSQL[@]}" -AtqF '|' -c "SET ROLE app_runtime; WITH result AS (SELECT admissions.convert_accepted_applicant_catalog_command('95500000-0000-4000-8000-000000000001'::uuid,'95500000-0000-4000-8000-000000000203'::uuid,4,'$effective_from'::date,'admissions-lifecycle-convert-0001','95500000-0000-4000-8000-000000000404'::uuid) AS value) SELECT value->>'accepted', value->>'replayed', value->'receipt'->>'command' FROM result;")"
 """,
 )
 
-replace(
-    sql,
-    """          WHEN application.status = 'accepted'
-               AND offer.status = 'accepted'
-               AND conversion.conversion_id IS NULL
-               AND can_convert
-            THEN 'convert-applicant'
-""",
-    """          WHEN application.status = 'accepted'
-               AND offer.status = 'accepted'
-               AND offered_year.academic_year_id IS NOT NULL
-               AND offered_calendar.calendar_id IS NOT NULL
-               AND GREATEST(
-                 current_date,
-                 application.created_at::date + 1,
-                 offered_year.starts_on
-               ) <= offered_year.ends_on
-               AND conversion.conversion_id IS NULL
-               AND can_convert
-            THEN 'convert-applicant'
-""",
-)
-
-replace(
-    sql,
-    """      LEFT JOIN admissions.offer AS offer
-        ON offer.tenant_id = application.tenant_id
-       AND offer.application_id = application.application_id
-      LEFT JOIN admissions.applicant_conversion AS conversion
-""",
-    """      LEFT JOIN admissions.offer AS offer
-        ON offer.tenant_id = application.tenant_id
-       AND offer.application_id = application.application_id
-      LEFT JOIN academics.academic_year AS offered_year
-        ON offered_year.tenant_id = offer.tenant_id
-       AND offered_year.academic_year_id = offer.academic_year_id
-       AND offered_year.publication_state = 'published'
-      LEFT JOIN academics.instructional_calendar AS offered_calendar
-        ON offered_calendar.tenant_id = offered_year.tenant_id
-       AND offered_calendar.academic_year_id = offered_year.academic_year_id
-       AND offered_calendar.campus_id = selected_campus_id
-       AND offered_calendar.publication_state = 'published'
-      LEFT JOIN admissions.applicant_conversion AS conversion
-""",
-)
-
-replace(
-    sql,
-    """        CROSS JOIN academics.academic_year AS academic_year
-        WHERE choice.tenant_id = selected_tenant_id
-          AND choice.application_id = staged.application_id
-          AND academic_year.tenant_id = selected_tenant_id
-          AND academic_year.publication_state = 'published'
-          AND academic_year.ends_on >= current_date
-""",
-    """        JOIN academics.academic_year AS academic_year
-          ON academic_year.tenant_id = selected_tenant_id
-         AND academic_year.publication_state = 'published'
-         AND academic_year.ends_on >= current_date
-        JOIN academics.instructional_calendar AS calendar
-          ON calendar.tenant_id = academic_year.tenant_id
-         AND calendar.academic_year_id = academic_year.academic_year_id
-         AND calendar.campus_id = selected_campus_id
-         AND calendar.publication_state = 'published'
-        WHERE choice.tenant_id = selected_tenant_id
-          AND choice.application_id = staged.application_id
-""",
-)
-
-replace(
-    "apps/platform-api/src/database-operator-domain-command-store.ts",
-    "admissions.convert_accepted_applicant_command(",
-    "admissions.convert_accepted_applicant_catalog_command(",
-)
-replace(
-    "apps/platform-api/src/database-operator-domain-command-store.test.ts",
-    "expect.stringContaining('admissions.convert_accepted_applicant_command')",
-    "expect.stringContaining('admissions.convert_accepted_applicant_catalog_command')",
-)
-
-api_queue = "apps/platform-api/src/database-operator-work-queue-store.ts"
-replace(
-    api_queue,
-    "  readonly suggestedEffectiveFrom: string | null;\n}",
-    "  readonly suggestedEffectiveFrom: string | null;\n  readonly effectiveFromMax: string | null;\n}",
-)
-replace(
-    api_queue,
-    """    offerExpiresAt,
-    suggestedEffectiveFrom,
-  } = value;
-""",
-    """    offerExpiresAt,
-    suggestedEffectiveFrom,
-    effectiveFromMax,
-  } = value;
-""",
-)
-replace(
-    api_queue,
-    """    !(
-      suggestedEffectiveFrom === null ||
-      (typeof suggestedEffectiveFrom === 'string' && validDateOnly(suggestedEffectiveFrom))
-    )
-""",
-    """    !(
-      suggestedEffectiveFrom === null ||
-      (typeof suggestedEffectiveFrom === 'string' && validDateOnly(suggestedEffectiveFrom))
-    ) ||
-    !(
-      effectiveFromMax === null ||
-      (typeof effectiveFromMax === 'string' && validDateOnly(effectiveFromMax))
-    )
-""",
-)
-replace(
-    api_queue,
-    """      offerExpiresAt === null &&
-      suggestedEffectiveFrom === null) ||
-""",
-    """      offerExpiresAt === null &&
-      suggestedEffectiveFrom === null &&
-      effectiveFromMax === null) ||
-""",
-    2,
-)
-replace(
-    api_queue,
-    """      typeof offerExpiresAt === 'string' &&
-      suggestedEffectiveFrom === null) ||
-""",
-    """      typeof offerExpiresAt === 'string' &&
-      suggestedEffectiveFrom === null &&
-      effectiveFromMax === null) ||
-""",
-)
-replace(
-    api_queue,
-    """      offerExpiresAt === null &&
-      typeof suggestedEffectiveFrom === 'string');
-""",
-    """      offerExpiresAt === null &&
-      typeof suggestedEffectiveFrom === 'string' &&
-      typeof effectiveFromMax === 'string' &&
-      suggestedEffectiveFrom <= effectiveFromMax);
-""",
-)
-replace(
-    api_queue,
-    """    offerExpiresAt,
-    suggestedEffectiveFrom,
-  };
-""",
-    """    offerExpiresAt,
-    suggestedEffectiveFrom,
-    effectiveFromMax,
-  };
-""",
-)
-
-web_queue = "apps/platform-web/src/production-operator-work-queue.ts"
-replace(
-    web_queue,
-    "  readonly suggestedEffectiveFrom: string | null;\n}",
-    "  readonly suggestedEffectiveFrom: string | null;\n  readonly effectiveFromMax: string | null;\n}",
-)
-replace(
-    web_queue,
-    """    !(
-      value.suggestedEffectiveFrom === null ||
-      (typeof value.suggestedEffectiveFrom === 'string' && validDate(value.suggestedEffectiveFrom))
-    )
-""",
-    """    !(
-      value.suggestedEffectiveFrom === null ||
-      (typeof value.suggestedEffectiveFrom === 'string' && validDate(value.suggestedEffectiveFrom))
-    ) ||
-    !(
-      value.effectiveFromMax === null ||
-      (typeof value.effectiveFromMax === 'string' && validDate(value.effectiveFromMax))
-    )
-""",
-)
-replace(
-    web_queue,
-    """      value.offerExpiresAt === null &&
-      value.suggestedEffectiveFrom === null) ||
-""",
-    """      value.offerExpiresAt === null &&
-      value.suggestedEffectiveFrom === null &&
-      value.effectiveFromMax === null) ||
-""",
-    2,
-)
-replace(
-    web_queue,
-    """      typeof value.offerExpiresAt === 'string' &&
-      value.suggestedEffectiveFrom === null) ||
-""",
-    """      typeof value.offerExpiresAt === 'string' &&
-      value.suggestedEffectiveFrom === null &&
-      value.effectiveFromMax === null) ||
-""",
-)
-replace(
-    web_queue,
-    """      value.offerExpiresAt === null &&
-      typeof value.suggestedEffectiveFrom === 'string');
-""",
-    """      value.offerExpiresAt === null &&
-      typeof value.suggestedEffectiveFrom === 'string' &&
-      typeof value.effectiveFromMax === 'string' &&
-      value.suggestedEffectiveFrom <= value.effectiveFromMax);
-""",
-)
-replace(
-    web_queue,
-    """    offerExpiresAt: value.offerExpiresAt,
-    suggestedEffectiveFrom: value.suggestedEffectiveFrom,
-  };
-""",
-    """    offerExpiresAt: value.offerExpiresAt,
-    suggestedEffectiveFrom: value.suggestedEffectiveFrom,
-    effectiveFromMax: value.effectiveFromMax,
-  };
-""",
-)
-
-replace(
-    "apps/platform-web/src/production-admissions-lifecycle.tsx",
-    """                    min={candidate.suggestedEffectiveFrom ?? undefined}
-                    defaultValue={candidate.suggestedEffectiveFrom ?? undefined}
-""",
-    """                    min={candidate.suggestedEffectiveFrom ?? undefined}
-                    max={candidate.effectiveFromMax ?? undefined}
-                    defaultValue={candidate.suggestedEffectiveFrom ?? undefined}
-""",
-)
-
-print("semantic hardening source patch applied")
+print("semantic regression fixture patch applied")
