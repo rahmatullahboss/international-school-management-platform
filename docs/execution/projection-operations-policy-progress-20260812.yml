@@ -1,0 +1,69 @@
+workstream: projection_operations_production_policy
+updated_at: 2026-08-12T10:50:00Z
+status: implementation_in_progress
+branch: task/projection-operations-policy-20260812
+base_commit: dfedbcffca7db6d27a57097df8aa607704558ca4
+production_authorized: false
+
+dependencies:
+  monitor: PILOT-12
+  controlled_recovery: PROD-06
+  recovery_credential_readiness: PROD-07
+
+design:
+  policy_doc: docs/execution/56-projection-operations-production-policy-v1.md
+  runbook: docs/execution/57-projection-recovery-operator-runbook-v1.md
+  machine_policy: config/production/projection-operations-policy.json
+  poll_interval_seconds: 60
+  warning_age_seconds: 300
+  stale_source_seconds: 900
+  warning_consecutive_snapshots: 2
+  critical_consecutive_snapshots: 1
+  alert_dedup_window_seconds: 900
+  recovery:
+    automatic: false
+    secondary_human_approval_required: true
+    eligible_error_codes:
+      - source-unavailable
+      - processor-error
+    prohibited_error_codes:
+      - invalid-event
+      - projection-state-conflict
+
+implementation:
+  design_docs: complete
+  progress_yaml: complete
+  previous_prod_07_progress_reconciliation: pending
+  machine_policy: pending
+  policy_validator: pending
+  validator_tests: pending
+  ci_gate: pending
+  production_backlog_reconciliation: pending
+
+verification_required_before_merge:
+  - policy_exact_key_allowlist
+  - monitor_thresholds_within_database_contract
+  - recovery_error_allowlist_exact
+  - prohibited_error_codes_exact
+  - automatic_recovery_false
+  - secondary_human_approval_true
+  - payload_and_identity_redaction_required
+  - production_authorized_false
+  - external_bindings_required_but_not_embedded
+  - full_ci
+  - existing_recovery_and_credential_rehearsals
+  - live_neon
+  - cloudflare_production_dry_run
+  - browser_e2e
+  - execution_artifact_validation
+
+remaining_external_activation_work:
+  - provision_monitor_login_and_secret
+  - provision_recovery_login_and_secret
+  - bind_approved_cron_or_poller
+  - configure_primary_and_secondary_alert_destinations
+  - assign_primary_and_secondary_operations_owners
+  - rehearse_alert_delivery
+  - rehearse_credential_rotation_and_revocation
+  - rehearse_controlled_recovery_in_isolated_production_like_environment
+  - explicit_owner_and_security_production_authorization
