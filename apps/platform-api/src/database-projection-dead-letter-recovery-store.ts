@@ -10,8 +10,7 @@ interface RecoveryRow extends Record<string, unknown> {
   readonly value: unknown;
 }
 
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
 const ERROR_CODES = new Set(['source-unavailable', 'processor-error']);
 const REJECTION_REASONS = new Set<RuntimeProjectionDeadLetterRecoveryRejectionReason>([
   'permission-not-granted',
@@ -33,7 +32,9 @@ function exactKeys(value: Record<string, unknown>, expected: readonly string[]):
 }
 
 function invalidResponse(): Error {
-  return new Error('Runtime projection dead-letter recovery returned an invalid database response.');
+  return new Error(
+    'Runtime projection dead-letter recovery returned an invalid database response.',
+  );
 }
 
 function validUuid(value: unknown): value is string {
