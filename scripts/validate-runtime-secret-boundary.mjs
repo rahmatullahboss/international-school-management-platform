@@ -67,19 +67,13 @@ export function auditRuntimeSource(file, source) {
     const exceptionName = match[1];
     if (exceptionName === undefined) continue;
     const start = match.index ?? 0;
-    const inspectionWindow = source.slice(
-      start,
-      Math.min(source.length, start + 1200),
-    );
+    const inspectionWindow = source.slice(start, Math.min(source.length, start + 1200));
     const escapedName = escapeRegExp(exceptionName);
     const detailPattern = new RegExp(
       `\\b${escapedName}\\s*(?:\\.\\s*(?:message|stack|cause)\\b|\\)|,)`,
       'u',
     );
-    const stringPattern = new RegExp(
-      `\\bString\\s*\\(\\s*${escapedName}\\s*\\)`,
-      'u',
-    );
+    const stringPattern = new RegExp(`\\bString\\s*\\(\\s*${escapedName}\\s*\\)`, 'u');
     if (detailPattern.test(inspectionWindow) || stringPattern.test(inspectionWindow)) {
       violations.push({
         file,
@@ -95,7 +89,7 @@ export function auditRuntimeSource(file, source) {
 function runSelfTests() {
   const clean = auditRuntimeSource(
     'clean.ts',
-    "try { await work(); } catch { return stableInternalErrorResponse(); }\nJSON.stringify({ ok: true });",
+    'try { await work(); } catch { return stableInternalErrorResponse(); }\nJSON.stringify({ ok: true });',
   );
   if (clean.length !== 0) {
     throw new Error('runtime secret-boundary clean self-test failed');
@@ -119,9 +113,7 @@ function runSelfTests() {
   for (const testCase of cases) {
     const violations = auditRuntimeSource('unsafe.ts', testCase.source);
     if (!violations.some((violation) => violation.reason === testCase.reason)) {
-      throw new Error(
-        `runtime secret-boundary self-test missed ${testCase.reason}`,
-      );
+      throw new Error(`runtime secret-boundary self-test missed ${testCase.reason}`);
     }
   }
 }
