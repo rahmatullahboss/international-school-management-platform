@@ -1,6 +1,6 @@
 workstream: production_activation_evidence_contract
-updated_at: 2026-08-12T11:27:00Z
-status: implementation_in_progress
+updated_at: 2026-08-12T11:32:00Z
+status: implementation_complete_pending_ci
 branch: task/production-activation-evidence-contract-20260812
 base_commit: 47c43ad0ad460bcdf94d01f2beae25d5e46fdb6a
 production_authorized: false
@@ -38,13 +38,14 @@ design:
 implementation:
   prior_pr_150_progress_reconciliation: complete
   design_doc: complete
-  template: pending
-  validator: pending
-  adversarial_self_tests: pending
-  package_script: pending
-  ci_gate: pending
+  template: complete
+  validator: complete
+  positive_authorized_candidate_self_test: complete
+  adversarial_self_tests: complete
+  package_script: complete
+  ci_gate: complete
 
-verification_required_before_merge:
+validator_guards:
   - committed_template_is_non_authorized_and_all_external_gates_pending
   - exact_top_level_and_nested_key_allowlists
   - exact_required_gate_set
@@ -57,9 +58,27 @@ verification_required_before_merge:
   - security_authorization_requires_security_role
   - owner_and_security_evidence_must_be_distinct
   - unknown_gate_or_unknown_field_rejected
-  - full_ci
+
+verification_required_before_merge:
+  - format
+  - lint
+  - architecture_boundaries
+  - projection_operations_policy_validator
+  - production_activation_evidence_validator_and_self_tests
+  - typecheck
+  - full_tests
+  - canonical_and_auth_migrations
+  - persona_and_production_runtime_gates
+  - runtime_and_recovery_credential_identity
+  - operator_work_queues
+  - projection_recovery_rehearsal
+  - admissions_lifecycle
   - live_neon
+  - build
   - cloudflare_production_dry_run
+  - experience_budget
+  - npm_audit
+  - license_and_provenance
   - browser_e2e
   - execution_artifact_validation
 
