@@ -1,6 +1,7 @@
 import { StrictMode, useEffect, useState, type FormEvent, type ReactElement } from 'react';
 import { createRoot } from 'react-dom/client';
 
+import { ProductionAdmissionsLifecyclePanel } from './production-admissions-lifecycle';
 import type { ProductionWorkspace } from './production-gateway';
 import {
   newOperatorIdempotencyKey,
@@ -324,12 +325,14 @@ function OperatorCommandPanel(props: {
         paymentId: candidate.paymentId,
         reason: formString(form, 'reason'),
       };
-    } else {
+    } else if (command === 'support.break-glass.request') {
       body = {
         command,
         reason: formString(form, 'reason'),
         requestedMinutes: Number(formString(form, 'requestedMinutes')),
       };
+    } else {
+      return;
     }
 
     setPending(true);
@@ -505,11 +508,15 @@ export function ProductionOperatorPortal(props: {
             </a>
           ))}
         </nav>
-        <OperatorCommandPanel
-          role={role}
-          pathname={props.pathname}
-          capabilities={props.workspace.capabilities}
-        />
+        {role === 'admissions' && props.pathname === '/admissions/applications' ? (
+          <ProductionAdmissionsLifecyclePanel capabilities={props.workspace.capabilities} />
+        ) : (
+          <OperatorCommandPanel
+            role={role}
+            pathname={props.pathname}
+            capabilities={props.workspace.capabilities}
+          />
+        )}
         <details className="pilot-demo-note" data-secondary-context="true">
           <summary>
             <strong>Access & security</strong>

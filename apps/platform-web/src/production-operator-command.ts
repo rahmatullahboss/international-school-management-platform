@@ -8,6 +8,26 @@ export type ProductionOperatorCommandBody =
       readonly notes: string | null;
     }
   | {
+      readonly command: 'admissions.application.offer.issue';
+      readonly applicationId: string;
+      readonly expectedVersion: number;
+      readonly programId: string;
+      readonly academicYearId: string;
+      readonly gradeLevelId: string;
+      readonly expiresAt: string;
+    }
+  | {
+      readonly command: 'admissions.application.offer.accept';
+      readonly applicationId: string;
+      readonly expectedVersion: number;
+    }
+  | {
+      readonly command: 'admissions.application.applicant.convert';
+      readonly applicationId: string;
+      readonly expectedVersion: number;
+      readonly effectiveFrom: string;
+    }
+  | {
       readonly command: 'finance.bank-line.reconcile';
       readonly bankStatementLineId: string;
       readonly paymentId: string;
@@ -121,21 +141,17 @@ export async function submitProductionOperatorCommand(
       }
     );
   } catch {
-    return {
-      state: 'unavailable',
-      message: 'The command service could not be reached.',
-    };
+    return { state: 'unavailable', message: 'The command service could not be reached.' };
   }
 }
 
 export function newOperatorIdempotencyKey(
   command: ProductionOperatorCommandBody['command'],
 ): string {
-  const prefix =
-    command === 'admissions.application.review.record'
-      ? 'admissions'
-      : command === 'finance.bank-line.reconcile'
-        ? 'finance'
-        : 'support';
+  const prefix = command.startsWith('admissions.')
+    ? 'admissions'
+    : command === 'finance.bank-line.reconcile'
+      ? 'finance'
+      : 'support';
   return `${prefix}:${crypto.randomUUID()}`;
 }

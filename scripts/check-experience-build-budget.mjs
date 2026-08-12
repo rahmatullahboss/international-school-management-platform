@@ -10,7 +10,9 @@ const indexPath = path.join(distDirectory, 'index.html');
 const budgets = Object.freeze({
   initialJavascriptBytes: 250_000,
   initialCssBytes: 50_000,
-  totalJavascriptBytes: 410_000,
+  // Rebaselined after the production Admissions lifecycle became an intentional shipped route.
+  // Keep the initial-load guard unchanged; this cap covers all route chunks with modest headroom.
+  totalJavascriptBytes: 425_000,
   totalCssBytes: 100_000,
 });
 const requiredPwaFiles = [

@@ -185,7 +185,7 @@ export class DatabaseOperatorDomainCommandStore implements OperatorDomainCommand
       );
     } else if (input.command === 'admissions.application.offer.issue') {
       rows = await this.#database.query<OperatorDomainCommandRow>(
-        `SELECT admissions.issue_application_offer_command(
+        `SELECT admissions.issue_application_offer_catalog_command(
            $1::uuid, $2::uuid, $3::bigint, $4::uuid, $5::uuid,
            $6::uuid, $7::timestamptz, $8::text, $9::uuid
          ) AS value`,
@@ -216,7 +216,7 @@ export class DatabaseOperatorDomainCommandStore implements OperatorDomainCommand
       );
     } else if (input.command === 'admissions.application.applicant.convert') {
       rows = await this.#database.query<OperatorDomainCommandRow>(
-        `SELECT admissions.convert_accepted_applicant_command(
+        `SELECT admissions.convert_accepted_applicant_catalog_command(
            $1::uuid, $2::uuid, $3::bigint, $4::date, $5::text, $6::uuid
          ) AS value`,
         [

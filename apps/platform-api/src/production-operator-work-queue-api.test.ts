@@ -30,7 +30,7 @@ const activeSession = {
 };
 
 const admissionsQueue = {
-  schemaVersion: 1 as const,
+  schemaVersion: 2 as const,
   role: 'admissions' as const,
   items: [
     {
@@ -39,8 +39,19 @@ const admissionsQueue = {
       status: 'submitted' as const,
       version: 1,
       submittedAt: '2026-08-01T08:30:00.000Z',
+      action: 'review' as const,
+      placementOptions: [],
+      offerExpiresAt: null,
+      suggestedEffectiveFrom: null,
+      effectiveFromMax: null,
     },
   ],
+};
+
+const financeQueue = {
+  schemaVersion: 1 as const,
+  role: 'finance' as const,
+  items: [],
 };
 
 function request(method = 'GET'): Request {
@@ -49,13 +60,16 @@ function request(method = 'GET'): Request {
 
 function dependencies(options?: {
   role?: 'admin' | 'admissions' | 'finance' | 'support';
-  queue?: typeof admissionsQueue | undefined;
+  queue?: typeof admissionsQueue | typeof financeQueue | undefined;
   session?: typeof activeSession | { ok: false; status: 401; code: string; message: string };
 }) {
+  const role = options?.role ?? 'admissions';
   return {
     resolveSession: vi.fn().mockResolvedValue(options?.session ?? activeSession),
-    resolveWorkspaceRole: vi.fn().mockResolvedValue(options?.role ?? 'admissions'),
-    resolveQueue: vi.fn().mockResolvedValue(options?.queue ?? admissionsQueue),
+    resolveWorkspaceRole: vi.fn().mockResolvedValue(role),
+    resolveQueue: vi
+      .fn()
+      .mockResolvedValue(options?.queue ?? (role === 'finance' ? financeQueue : admissionsQueue)),
   };
 }
 
@@ -93,13 +107,25 @@ describe('production operator work queue API', () => {
     expect(deps.resolveSession).not.toHaveBeenCalled();
   });
 
-  it('returns only a queue matching the current database workspace role', async () => {
+  it('passes the server-resolved admissions role to lifecycle queue storage', async () => {
     const deps = dependencies();
     const response = await handleProductionOperatorWorkQueueRequest(request(), environment, deps);
     expect(response?.status).toBe(200);
     expect(response?.headers.get('cache-control')).toBe('no-store');
     await expect(response?.json()).resolves.toEqual(admissionsQueue);
-    expect(deps.resolveQueue).toHaveBeenCalledWith(environment.DATABASE_URL, sessionId);
+    expect(deps.resolveQueue).toHaveBeenCalledWith(
+      environment.DATABASE_URL,
+      sessionId,
+      'admissions',
+    );
+  });
+
+  it('passes the server-resolved finance role to legacy queue storage', async () => {
+    const deps = dependencies({ role: 'finance' });
+    const response = await handleProductionOperatorWorkQueueRequest(request(), environment, deps);
+    expect(response?.status).toBe(200);
+    await expect(response?.json()).resolves.toEqual(financeQueue);
+    expect(deps.resolveQueue).toHaveBeenCalledWith(environment.DATABASE_URL, sessionId, 'finance');
   });
 
   it.each(['admin', 'support'] as const)('denies unsupported role %s', async (role) => {
