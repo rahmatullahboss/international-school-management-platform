@@ -1,0 +1,88 @@
+workstream: production_activation_evidence_contract
+updated_at: 2026-08-12T11:32:00Z
+status: implementation_complete_pending_ci
+branch: task/production-activation-evidence-contract-20260812
+base_commit: 47c43ad0ad460bcdf94d01f2beae25d5e46fdb6a
+production_authorized: false
+
+design:
+  contract_doc: docs/execution/58-production-activation-evidence-contract-v1.md
+  template: config/production/activation-evidence.template.json
+  validator: scripts/validate-production-activation-evidence.mjs
+  repository_contains_real_activation_manifest: false
+  evidence_reference_scheme: evidence://
+  digest: sha256
+  allowed_verifier_roles:
+    - engineering
+    - operations
+    - security
+    - owner
+    - data-protection
+  required_gates:
+    - realExternalOidc
+    - productionRuntimeCredential
+    - deployedSevenPersonaE2e
+    - projectionCredentialsAndSchedule
+    - alertDestinationsAndOwners
+    - monitorAlertRehearsal
+    - controlledRecoveryRehearsal
+    - credentialRotationRevocation
+    - securityPrivacyReview
+    - backupRestoreRollback
+    - ownerUat
+    - incidentOperationsAcceptance
+  explicit_authorizations:
+    - ownerAuthorization
+    - securityAuthorization
+
+implementation:
+  prior_pr_150_progress_reconciliation: complete
+  design_doc: complete
+  template: complete
+  validator: complete
+  positive_authorized_candidate_self_test: complete
+  adversarial_self_tests: complete
+  package_script: complete
+  ci_gate: complete
+
+validator_guards:
+  - committed_template_is_non_authorized_and_all_external_gates_pending
+  - exact_top_level_and_nested_key_allowlists
+  - exact_required_gate_set
+  - production_authorized_rejected_when_any_gate_pending
+  - authorized_manifest_requires_exact_release_commit
+  - optional_expected_commit_mismatch_rejected
+  - verified_gate_requires_evidence_reference_sha256_utc_timestamp_and_allowed_role
+  - raw_http_urls_query_fragments_and_secret_like_values_rejected
+  - owner_authorization_requires_owner_role
+  - security_authorization_requires_security_role
+  - owner_and_security_evidence_must_be_distinct
+  - unknown_gate_or_unknown_field_rejected
+
+verification_required_before_merge:
+  - format
+  - lint
+  - architecture_boundaries
+  - projection_operations_policy_validator
+  - production_activation_evidence_validator_and_self_tests
+  - typecheck
+  - full_tests
+  - canonical_and_auth_migrations
+  - persona_and_production_runtime_gates
+  - runtime_and_recovery_credential_identity
+  - operator_work_queues
+  - projection_recovery_rehearsal
+  - admissions_lifecycle
+  - live_neon
+  - build
+  - cloudflare_production_dry_run
+  - experience_budget
+  - npm_audit
+  - license_and_provenance
+  - browser_e2e
+  - execution_artifact_validation
+
+remaining_external_activation_work:
+  - all_required_evidence_gates_remain_pending_external
+  - real_activation_manifest_must_remain_external_to_repository
+  - explicit_owner_and_security_authorization_not_present

@@ -40,6 +40,8 @@ jobs:
       - run: npm run check:boundaries
       - name: Validate projection operations production policy
         run: npm run validate:projection-operations-policy
+      - name: Validate production activation evidence contract
+        run: npm run validate:production-activation-evidence
       - run: npm run typecheck
       - run: npm run test
       - name: Verify all Wave 2 migrations on fresh PostgreSQL
