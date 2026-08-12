@@ -1,0 +1,47 @@
+name: Dependabot Provenance Export
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    if: >-
+      github.actor == 'dependabot[bot]' &&
+      github.event.pull_request.user.login == 'dependabot[bot]' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      startsWith(github.event.pull_request.head.ref, 'dependabot/npm_and_yarn/')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout trusted base generator
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: trusted-base
+          persist-credentials: false
+
+      - name: Checkout Dependabot candidate as data
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: candidate
+          persist-credentials: false
+
+      - name: Generate candidate provenance with trusted base script
+        working-directory: candidate
+        run: node "$GITHUB_WORKSPACE/trusted-base/scripts/generate-provenance.mjs"
+
+      - name: Export generated supply-chain artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependabot-provenance-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+          path: |
+            candidate/artifacts/dependency-licenses.json
+            candidate/artifacts/sbom.cdx.json
+            candidate/THIRD_PARTY_NOTICES.md
+          if-no-files-found: error
+          retention-days: 7
