@@ -35,7 +35,11 @@ jobs:
           node-version: '22.22.2'
           cache: npm
       - run: npm ci
-      - run: npm run format:check
+      - name: Diagnostic exact Prettier output for incident policy validator
+        run: |
+          npx prettier scripts/validate-incident-response-evidence-retention-policy.mjs --write
+          git diff -- scripts/validate-incident-response-evidence-retention-policy.mjs
+          exit 1
       - run: npm run lint
       - run: npm run check:boundaries
       - name: Validate runtime secret boundary
