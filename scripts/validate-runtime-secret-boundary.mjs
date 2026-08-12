@@ -13,7 +13,11 @@ function runtimeSourceFiles(directory) {
       continue;
     }
     if (!entry.isFile() || extname(entry.name) !== '.ts') continue;
-    if (entry.name.endsWith('.test.ts') || entry.name.endsWith('.spec.ts') || entry.name.endsWith('.d.ts')) {
+    if (
+      entry.name.endsWith('.test.ts') ||
+      entry.name.endsWith('.spec.ts') ||
+      entry.name.endsWith('.d.ts')
+    ) {
       continue;
     }
     files.push(path);
@@ -63,13 +67,19 @@ export function auditRuntimeSource(file, source) {
     const exceptionName = match[1];
     if (exceptionName === undefined) continue;
     const start = match.index ?? 0;
-    const inspectionWindow = source.slice(start, Math.min(source.length, start + 1200));
+    const inspectionWindow = source.slice(
+      start,
+      Math.min(source.length, start + 1200),
+    );
     const escapedName = escapeRegExp(exceptionName);
     const detailPattern = new RegExp(
       `\\b${escapedName}\\s*(?:\\.\\s*(?:message|stack|cause)\\b|\\)|,)`,
       'u',
     );
-    const stringPattern = new RegExp(`\\bString\\s*\\(\\s*${escapedName}\\s*\\)`, 'u');
+    const stringPattern = new RegExp(
+      `\\bString\\s*\\(\\s*${escapedName}\\s*\\)`,
+      'u',
+    );
     if (detailPattern.test(inspectionWindow) || stringPattern.test(inspectionWindow)) {
       violations.push({
         file,
@@ -87,7 +97,9 @@ function runSelfTests() {
     'clean.ts',
     "try { await work(); } catch { return stableInternalErrorResponse(); }\nJSON.stringify({ ok: true });",
   );
-  if (clean.length !== 0) throw new Error('runtime secret-boundary clean self-test failed');
+  if (clean.length !== 0) {
+    throw new Error('runtime secret-boundary clean self-test failed');
+  }
 
   const cases = [
     {
@@ -107,7 +119,9 @@ function runSelfTests() {
   for (const testCase of cases) {
     const violations = auditRuntimeSource('unsafe.ts', testCase.source);
     if (!violations.some((violation) => violation.reason === testCase.reason)) {
-      throw new Error(`runtime secret-boundary self-test missed ${testCase.reason}`);
+      throw new Error(
+        `runtime secret-boundary self-test missed ${testCase.reason}`,
+      );
     }
   }
 }
@@ -127,7 +141,9 @@ if (violations.length > 0) {
     .join('\n');
   process.stderr.write(`Runtime secret-boundary violations:\n${rendered}\n`);
   if (violations.length > MAX_REPORTED_VIOLATIONS) {
-    process.stderr.write(`... ${violations.length - MAX_REPORTED_VIOLATIONS} additional violations omitted.\n`);
+    process.stderr.write(
+      `... ${violations.length - MAX_REPORTED_VIOLATIONS} additional violations omitted.\n`,
+    );
   }
   process.exit(1);
 }
