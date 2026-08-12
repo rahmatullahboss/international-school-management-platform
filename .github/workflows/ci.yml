@@ -38,6 +38,8 @@ jobs:
       - run: npm run format:check
       - run: npm run lint
       - run: npm run check:boundaries
+      - name: Validate projection operations production policy
+        run: npm run validate:projection-operations-policy
       - run: npm run typecheck
       - run: npm run test
       - name: Verify all Wave 2 migrations on fresh PostgreSQL
