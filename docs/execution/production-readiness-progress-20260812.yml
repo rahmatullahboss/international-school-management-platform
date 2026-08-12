@@ -1,8 +1,8 @@
 program: international-school-platform-v1
-updated_at: 2026-08-12T13:35:00Z
+updated_at: 2026-08-12T14:11:00Z
 status: production_not_authorized
 base_branch: main
-base_commit: 399b2b3e57256dbcc72553f70ad17138b1ff8bbd
+base_commit: 64cb93322bb571ec8d9754b508b0076d4d33490b
 
 completed_this_cycle:
   admissions_production_lifecycle:
@@ -95,14 +95,31 @@ completed_this_cycle:
       - direct_runtime_console_prohibited_except_exact_reviewed_sink
       - aggregate_projection_telemetry_typed_sink
       - raw_request_environment_and_exception_detail_output_prohibited
+  runtime_secret_boundary_reconciliation:
+    pull_request: 158
+    merge_commit: 64cb93322bb571ec8d9754b508b0076d4d33490b
+    status: merged_verified
+    final_ci_run: 31602039385
 
 active_workstream:
-  runtime_secret_boundary_reconciliation:
-    branch: task/runtime-secret-boundary-reconcile-20260812
-    status: in_progress
+  incident_response_evidence_retention_contract:
+    branch: task/incident-response-evidence-retention-20260812
+    status: implementation_complete_pending_ci
     objective: >-
-      Record PR 157 merged evidence and hand off the next safe repository-side security workstream
-      without changing production authorization.
+      Add a secret-free machine-verifiable incident-response and evidence-retention policy plus
+      operator runbook without embedding real people, destinations, evidence or production approval.
+    controls:
+      - exact_sev1_to_sev4_response_targets
+      - critical_security_categories_default_to_sev1
+      - unknown_incidents_fail_closed_at_sev2_minimum
+      - no_automatic_production_mutation
+      - destructive_actions_require_distinct_secondary_approval
+      - projection_recovery_delegates_to_existing_reviewed_runbook
+      - evidence_uri_sha256_utc_and_redaction_contract
+      - append_only_timeline_and_preservation_hold
+      - pinned_operational_retention_minimums
+      - lifecycle_and_closure_fail_closed_contract
+      - real_bindings_external_only
 
 performance_budget:
   initial_javascript_bytes: 250000
@@ -186,19 +203,24 @@ remaining_production_blockers:
       - deployed_worker_release_rollback_rehearsal
       - owner_and_security_acceptance
   security_privacy_operations:
-    status: repository_runtime_secret_boundary_complete_external_review_open
+    status: repository_incident_response_contract_in_progress_external_review_open
     external_required:
       - deployed_targeted_security_review
       - real_idp_and_credential_security_review
       - deployed_log_and_trace_redaction_verification
       - infrastructure_provider_log_policy_review
       - external_penetration_or_abuse_testing_as_required
+      - named_incident_and_security_owners
+      - real_incident_system_and_alert_destinations
+      - real_evidence_store_and_access_controls
+      - deployed_incident_detection_and_escalation_rehearsal
+      - deployed_evidence_preservation_and_disposal_rehearsal
       - incident_response_and_evidence_retention_acceptance
   owner_uat_and_authorization:
     status: open
 
 next_repository_actions:
-  - implement_machine_verifiable_incident_response_and_evidence_retention_contract
+  - run_full_ci_for_incident_response_evidence_retention_contract_and_merge_only_if_green
   - keep_people_destinations_real_evidence_and_acceptance_external
   - keep_major_dependency_upgrades_isolated_from_core_work
   - enable_repository_dependabot_security_alerts_when_repository_settings_access_is_available
