@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { BROWSER_SESSION_COOKIE_NAME, issueBrowserSession } from '@school/policy';
-
-const databaseQuery = vi.hoisted(() => vi.fn());
-vi.mock('@school/database', () => ({
-  createHttpDatabase: () => ({ query: databaseQuery }),
-}));
+const runtimeEnvironmentParser = vi.hoisted(() => vi.fn());
+vi.mock('@school/platform', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@school/platform')>();
+  return {
+    ...actual,
+    parseRuntimeEnvironment: runtimeEnvironmentParser,
+  };
+});
 
 import worker from './entry.js';
 
@@ -21,33 +23,11 @@ const environment = {
   DATABASE_URL: databaseUrl,
 };
 
-async function browserCookie(): Promise<string> {
-  const issued = await issueBrowserSession({
-    secret: sessionSecret,
-    identity: {
-      issuer: 'https://identity.school.test',
-      subject: 'provider-user-redaction-test',
-      assurance: 'aal2',
-      issuedAt: Math.floor(Date.now() / 1000),
-      expiresAt: Math.floor(Date.now() / 1000) + 600,
-    },
-    membership: {
-      membershipId: '71000000-0000-4000-8000-000000000001',
-      principalId: '71000000-0000-4000-8000-000000000002',
-      tenantId: '71000000-0000-4000-8000-000000000003',
-      campusId: '71000000-0000-4000-8000-000000000004',
-      roleIds: ['71000000-0000-4000-8000-000000000005'],
-    },
-  });
-  if (!issued.ok) throw new Error('Synthetic browser session issuance failed.');
-  return `${BROWSER_SESSION_COOKIE_NAME}=${issued.token}`;
-}
-
 const executionContext = {} as ExecutionContext;
 
 describe('runtime unexpected-error secret boundary', () => {
   beforeEach(() => {
-    databaseQuery.mockReset();
+    runtimeEnvironmentParser.mockReset();
   });
 
   it('returns a stable 500 without reflecting request, environment or exception sentinels', async () => {
@@ -59,18 +39,16 @@ describe('runtime unexpected-error secret boundary', () => {
 
     const failure = new Error(`${exceptionSentinel} ${databaseUrl}`);
     failure.stack = `${stackSentinel}\n${failure.message}`;
-    databaseQuery.mockRejectedValueOnce(failure);
+    runtimeEnvironmentParser.mockImplementation(() => {
+      throw failure;
+    });
 
-    const cookie = await browserCookie();
-    const request = new Request(
-      `https://school.test/auth/v1/session?access_token=${querySentinel}`,
-      {
-        headers: {
-          authorization: `Bearer ${authorizationSentinel}`,
-          cookie: `${cookie}; attacker_cookie=${cookieSentinel}`,
-        },
+    const request = new Request(`https://school.test/health?access_token=${querySentinel}`, {
+      headers: {
+        authorization: `Bearer ${authorizationSentinel}`,
+        cookie: `session=${sessionSecret}; attacker_cookie=${cookieSentinel}`,
       },
-    );
+    });
 
     const response = await worker.fetch(request, environment, executionContext);
     const responseText = await response.text();
