@@ -1,4 +1,4 @@
-# System-wide SECURITY DEFININER Hygiene Audit v1
+# System-wide SECURITY DEFINER Hygiene Audit v1
 
 **Program:** `international-school-platform-v1`  
 **Status:** implemented and verified on branch; production activation is not authorized
