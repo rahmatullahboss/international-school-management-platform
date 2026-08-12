@@ -1,8 +1,9 @@
 workstream: projection_operations_production_policy
-updated_at: 2026-08-12T10:50:00Z
-status: implementation_in_progress
+updated_at: 2026-08-12T11:03:00Z
+status: verified_pending_merge
 branch: task/projection-operations-policy-20260812
 base_commit: dfedbcffca7db6d27a57097df8aa607704558ca4
+pull_request: 149
 production_authorized: false
 
 dependencies:
@@ -33,29 +34,43 @@ design:
 implementation:
   design_docs: complete
   progress_yaml: complete
-  previous_prod_07_progress_reconciliation: pending
-  machine_policy: pending
-  policy_validator: pending
-  validator_tests: pending
-  ci_gate: pending
-  production_backlog_reconciliation: pending
+  previous_prod_07_progress_reconciliation: complete
+  machine_policy: complete
+  policy_validator: complete
+  validator_adversarial_self_tests: complete
+  ci_gate: complete
+  production_readiness_progress_reconciliation: complete
+  docs_52_production_readiness_backlog_reconciliation: pending_follow_up
 
-verification_required_before_merge:
-  - policy_exact_key_allowlist
-  - monitor_thresholds_within_database_contract
-  - recovery_error_allowlist_exact
-  - prohibited_error_codes_exact
-  - automatic_recovery_false
-  - secondary_human_approval_true
-  - payload_and_identity_redaction_required
-  - production_authorized_false
-  - external_bindings_required_but_not_embedded
-  - full_ci
-  - existing_recovery_and_credential_rehearsals
-  - live_neon
-  - cloudflare_production_dry_run
-  - browser_e2e
-  - execution_artifact_validation
+verification:
+  first_full_ci_run: 31589787569
+  first_full_ci_result: green
+  final_ci_after_progress_update: pending
+  passed:
+    - policy_exact_key_allowlist
+    - monitor_thresholds_within_database_contract
+    - recovery_error_allowlist_exact
+    - prohibited_error_codes_exact
+    - automatic_recovery_false
+    - secondary_human_approval_true
+    - payload_and_identity_redaction_required
+    - production_authorized_false
+    - external_bindings_required_but_not_embedded
+    - format_lint_boundaries_typecheck_tests
+    - canonical_and_auth_migrations
+    - persona_and_production_runtime_gates
+    - production_runtime_credential_identity
+    - operator_work_queues
+    - existing_recovery_and_recovery_credential_rehearsals
+    - admissions_lifecycle
+    - live_neon
+    - build
+    - cloudflare_production_dry_run
+    - experience_budget
+    - npm_audit
+    - license_and_provenance
+    - browser_e2e
+    - execution_artifact_validation
 
 remaining_external_activation_work:
   - provision_monitor_login_and_secret
