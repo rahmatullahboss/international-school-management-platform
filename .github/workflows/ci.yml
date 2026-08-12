@@ -88,19 +88,7 @@ jobs:
           PGPORT: 5432
           PGUSER: postgres
           PGDATABASE: postgres
-        run: |
-          set +e
-          npm run verify:projection-recovery > /tmp/projection-recovery.log 2>&1
-          status=$?
-          cat /tmp/projection-recovery.log
-          if [ "$status" -ne 0 ]; then
-            diagnostic="$(tail -n 60 /tmp/projection-recovery.log)"
-            diagnostic="${diagnostic//'%'/'%25'}"
-            diagnostic="${diagnostic//$'\r'/'%0D'}"
-            diagnostic="${diagnostic//$'\n'/'%0A'}"
-            echo "::error title=Projection recovery diagnostic::$diagnostic"
-          fi
-          exit "$status"
+        run: npm run verify:projection-recovery
       - name: Verify admissions offer command transactions
         env:
           PGHOST: 127.0.0.1
