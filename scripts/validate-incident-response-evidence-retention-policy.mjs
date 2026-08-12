@@ -19,10 +19,7 @@ function assertExactKeys(value, expectedKeys, path) {
   assertPlainObject(value, path);
   const actual = Object.keys(value).sort();
   const expected = [...expectedKeys].sort();
-  if (
-    actual.length !== expected.length ||
-    actual.some((key, index) => key !== expected[index])
-  ) {
+  if (actual.length !== expected.length || actual.some((key, index) => key !== expected[index])) {
     fail(`${path} keys must be exactly ${expected.join(', ')}`);
   }
 }
@@ -91,21 +88,9 @@ const retentionMinimums = {
   communicationsMetadata: 365,
 };
 
-const allowedOwnerRoles = [
-  'engineering',
-  'operations',
-  'security',
-  'owner',
-  'data-protection',
-];
+const allowedOwnerRoles = ['engineering', 'operations', 'security', 'owner', 'data-protection'];
 
-const lifecycleStates = [
-  'detected',
-  'triaged',
-  'contained',
-  'recovered',
-  'review-complete',
-];
+const lifecycleStates = ['detected', 'triaged', 'contained', 'recovered', 'review-complete'];
 
 const externalBindingKeys = [
   'incidentSystem',
@@ -136,20 +121,12 @@ export function validateIncidentResponseEvidenceRetentionPolicy(policy) {
   );
 
   assertEqual(policy.schemaVersion, 1, 'schemaVersion');
-  assertEqual(
-    policy.policyId,
-    'incident-response-evidence-retention-v1',
-    'policyId',
-  );
+  assertEqual(policy.policyId, 'incident-response-evidence-retention-v1', 'policyId');
   assertEqual(policy.productionAuthorized, false, 'productionAuthorized');
 
   assertExactKeys(policy.severity, Object.keys(severityTargets), 'severity');
   for (const [severity, expected] of Object.entries(severityTargets)) {
-    assertExactKeys(
-      policy.severity[severity],
-      Object.keys(expected),
-      `severity.${severity}`,
-    );
+    assertExactKeys(policy.severity[severity], Object.keys(expected), `severity.${severity}`);
     for (const [key, value] of Object.entries(expected)) {
       assertEqual(policy.severity[severity][key], value, `severity.${severity}.${key}`);
     }
@@ -172,11 +149,7 @@ export function validateIncidentResponseEvidenceRetentionPolicy(policy) {
       `classification.categoryDefaultSeverity.${category}`,
     );
   }
-  assertEqual(
-    policy.classification.unknownFailsClosed,
-    true,
-    'classification.unknownFailsClosed',
-  );
+  assertEqual(policy.classification.unknownFailsClosed, true, 'classification.unknownFailsClosed');
   assertEqual(
     policy.classification.unknownMinimumSeverity,
     'sev2',
@@ -252,7 +225,11 @@ export function validateIncidentResponseEvidenceRetentionPolicy(policy) {
   assertEqual(policy.evidence.referenceScheme, 'evidence://', 'evidence.referenceScheme');
   assertEqual(policy.evidence.sha256Required, true, 'evidence.sha256Required');
   assertEqual(policy.evidence.utcTimestampRequired, true, 'evidence.utcTimestampRequired');
-  assertExactArray(policy.evidence.allowedOwnerRoles, allowedOwnerRoles, 'evidence.allowedOwnerRoles');
+  assertExactArray(
+    policy.evidence.allowedOwnerRoles,
+    allowedOwnerRoles,
+    'evidence.allowedOwnerRoles',
+  );
   assertEqual(policy.evidence.redactionRequired, true, 'evidence.redactionRequired');
   assertEqual(policy.evidence.rawPayloadsProhibited, true, 'evidence.rawPayloadsProhibited');
   assertEqual(
@@ -362,26 +339,126 @@ function expectRejected(base, label, mutate) {
 
 function runSelfTests(base) {
   const cases = [
-    ['unknown top-level key', (candidate) => { candidate.unreviewed = true; }],
-    ['production authorization enabled', (candidate) => { candidate.productionAuthorized = true; }],
-    ['sev1 acknowledgement weakened', (candidate) => { candidate.severity.sev1.acknowledgeWithinMinutes = 11; }],
-    ['cross-tenant severity downgraded', (candidate) => { candidate.classification.categoryDefaultSeverity['cross-tenant-boundary'] = 'sev2'; }],
-    ['unknown class fail-closed disabled', (candidate) => { candidate.classification.unknownFailsClosed = false; }],
-    ['automatic production mutation enabled', (candidate) => { candidate.response.automaticProductionMutation = true; }],
-    ['secondary approval removed', (candidate) => { candidate.response.destructiveActionSecondaryApprovalRequired = false; }],
-    ['same primary and secondary allowed', (candidate) => { candidate.response.primaryAndSecondaryMustDiffer = false; }],
-    ['projection runbook changed', (candidate) => { candidate.response.projectionRecoveryRunbook = 'docs/unsafe.md'; }],
-    ['raw URL evidence scheme', (candidate) => { candidate.evidence.referenceScheme = 'https://'; }],
-    ['redaction disabled', (candidate) => { candidate.evidence.redactionRequired = false; }],
-    ['raw payload allowed', (candidate) => { candidate.evidence.rawPayloadsProhibited = false; }],
-    ['credentials allowed', (candidate) => { candidate.evidence.tokensCredentialsPasswordsProhibited = false; }],
-    ['preservation hold bypass', (candidate) => { candidate.evidence.preservationHoldOverridesDisposal = false; }],
-    ['recovery retention shortened', (candidate) => { candidate.evidence.minimumRetentionDays.recoveryEvidence = 364; }],
-    ['unknown owner role', (candidate) => { candidate.evidence.allowedOwnerRoles[0] = 'administrator'; }],
-    ['lifecycle closure removed', (candidate) => { candidate.closure.requiredLifecycleStates.pop(); }],
-    ['business impact allowed at closure', (candidate) => { candidate.closure.unresolvedBusinessImpactBlocksClosure = false; }],
-    ['real incident system binding', (candidate) => { candidate.externalBindings.incidentSystem = 'https://incident.example.test'; }],
-    ['real owner binding', (candidate) => { candidate.externalBindings.securityOwner = 'security@example.test'; }],
+    [
+      'unknown top-level key',
+      (candidate) => {
+        candidate.unreviewed = true;
+      },
+    ],
+    [
+      'production authorization enabled',
+      (candidate) => {
+        candidate.productionAuthorized = true;
+      },
+    ],
+    [
+      'sev1 acknowledgement weakened',
+      (candidate) => {
+        candidate.severity.sev1.acknowledgeWithinMinutes = 11;
+      },
+    ],
+    [
+      'cross-tenant severity downgraded',
+      (candidate) => {
+        candidate.classification.categoryDefaultSeverity['cross-tenant-boundary'] = 'sev2';
+      },
+    ],
+    [
+      'unknown class fail-closed disabled',
+      (candidate) => {
+        candidate.classification.unknownFailsClosed = false;
+      },
+    ],
+    [
+      'automatic production mutation enabled',
+      (candidate) => {
+        candidate.response.automaticProductionMutation = true;
+      },
+    ],
+    [
+      'secondary approval removed',
+      (candidate) => {
+        candidate.response.destructiveActionSecondaryApprovalRequired = false;
+      },
+    ],
+    [
+      'same primary and secondary allowed',
+      (candidate) => {
+        candidate.response.primaryAndSecondaryMustDiffer = false;
+      },
+    ],
+    [
+      'projection runbook changed',
+      (candidate) => {
+        candidate.response.projectionRecoveryRunbook = 'docs/unsafe.md';
+      },
+    ],
+    [
+      'raw URL evidence scheme',
+      (candidate) => {
+        candidate.evidence.referenceScheme = 'https://';
+      },
+    ],
+    [
+      'redaction disabled',
+      (candidate) => {
+        candidate.evidence.redactionRequired = false;
+      },
+    ],
+    [
+      'raw payload allowed',
+      (candidate) => {
+        candidate.evidence.rawPayloadsProhibited = false;
+      },
+    ],
+    [
+      'credentials allowed',
+      (candidate) => {
+        candidate.evidence.tokensCredentialsPasswordsProhibited = false;
+      },
+    ],
+    [
+      'preservation hold bypass',
+      (candidate) => {
+        candidate.evidence.preservationHoldOverridesDisposal = false;
+      },
+    ],
+    [
+      'recovery retention shortened',
+      (candidate) => {
+        candidate.evidence.minimumRetentionDays.recoveryEvidence = 364;
+      },
+    ],
+    [
+      'unknown owner role',
+      (candidate) => {
+        candidate.evidence.allowedOwnerRoles[0] = 'administrator';
+      },
+    ],
+    [
+      'lifecycle closure removed',
+      (candidate) => {
+        candidate.closure.requiredLifecycleStates.pop();
+      },
+    ],
+    [
+      'business impact allowed at closure',
+      (candidate) => {
+        candidate.closure.unresolvedBusinessImpactBlocksClosure = false;
+      },
+    ],
+    [
+      'real incident system binding',
+      (candidate) => {
+        candidate.externalBindings.incidentSystem = 'https://incident.example.test';
+      },
+    ],
+    [
+      'real owner binding',
+      (candidate) => {
+        candidate.externalBindings.securityOwner = 'security@example.test';
+      },
+    ],
   ];
 
   for (const [label, mutate] of cases) {
