@@ -1,5 +1,5 @@
 program: international-school-platform-v1
-updated_at: 2026-08-12T13:07:00Z
+updated_at: 2026-08-12T13:27:00Z
 status: production_not_authorized
 base_branch: main
 base_commit: 8685ef23e0213b40c98f7dd14acdb669418a7b93
@@ -86,10 +86,21 @@ completed_this_cycle:
 active_workstream:
   runtime_log_redaction_secret_leakage_audit:
     branch: task/log-redaction-secret-leakage-audit-20260812
-    status: implementation_complete_pending_ci
+    pull_request: 157
+    status: verified_pending_final_ci
+    first_full_ci_run: 31600605694
+    first_full_ci_result: green
     objective: >-
-      Add a stable unexpected-error response boundary, synthetic secret-leak negative test and a
-      fail-closed static runtime source audit without introducing or reading real production secrets.
+      Preserve existing safe dependency responses, add a stable global unexpected-error boundary,
+      synthetic secret-leak negative test, reviewed aggregate projection telemetry sink and a
+      fail-closed static runtime source audit without reading real production secrets.
+    controls:
+      - stable_internal_error_500_no_store_and_correlation_id
+      - exception_object_not_read_or_logged_by_global_boundary
+      - synthetic_request_environment_and_exception_sentinels_not_reflected
+      - direct_runtime_console_prohibited_except_exact_reviewed_sink
+      - reviewed_projection_log_sink_structurally_and_semantically_pinned
+      - raw_request_environment_and_exception_detail_output_prohibited
 
 performance_budget:
   initial_javascript_bytes: 250000
@@ -172,7 +183,7 @@ remaining_production_blockers:
       - deployed_worker_release_rollback_rehearsal
       - owner_and_security_acceptance
   security_privacy_operations:
-    status: repository_secret_leakage_audit_in_progress_external_review_open
+    status: repository_secret_leakage_audit_verified_pending_merge_external_review_open
     external_required:
       - deployed_targeted_security_review
       - real_idp_and_credential_security_review
@@ -184,7 +195,7 @@ remaining_production_blockers:
     status: open
 
 next_repository_actions:
-  - finish_runtime_log_redaction_secret_leakage_audit_and_merge_only_after_full_ci
+  - run_final_doc_state_full_ci_for_pr_157_then_merge_only_if_green_and_review_threads_clean
   - keep_major_dependency_upgrades_isolated_from_core_work
   - enable_repository_dependabot_security_alerts_when_repository_settings_access_is_available
   - do_not_claim_production_ready_until_external_activation_evidence_contract_is_fully_verified
