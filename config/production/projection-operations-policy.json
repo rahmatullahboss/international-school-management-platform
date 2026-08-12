@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "policyId": "projection-operations-production-v1",
+  "productionAuthorized": false,
+  "monitor": {
+    "pollIntervalSeconds": 60,
+    "warningAgeSeconds": 300,
+    "staleSourceSeconds": 900,
+    "warningConsecutiveSnapshots": 2,
+    "criticalConsecutiveSnapshots": 1,
+    "alertDedupWindowSeconds": 900,
+    "tenantScopedRequired": true,
+    "payloadRedactionRequired": true,
+    "exactEventAllowlistRequired": true,
+    "functionOnlyAccessRequired": true
+  },
+  "response": {
+    "warning": {
+      "acknowledgeWithinMinutes": 30,
+      "investigateWithinMinutes": 60
+    },
+    "critical": {
+      "acknowledgeWithinMinutes": 10,
+      "investigateWithinMinutes": 15
+    }
+  },
+  "recovery": {
+    "automatic": false,
+    "oneDeadLetterAtATime": true,
+    "secondaryHumanApprovalRequired": true,
+    "dedicatedCredentialRequired": true,
+    "aal2PermissionRequired": true,
+    "repeatReplayProhibited": true,
+    "eligibleErrorCodes": ["source-unavailable", "processor-error"],
+    "prohibitedErrorCodes": ["invalid-event", "projection-state-conflict"]
+  },
+  "evidence": {
+    "retentionDays": 365,
+    "beforeAfterRedactedSnapshotsRequired": true,
+    "incidentRecordRequired": true,
+    "recoveryReceiptRequired": true,
+    "payloadsProhibited": true,
+    "tokensAndCredentialsProhibited": true,
+    "personIdentifiersProhibited": true
+  },
+  "externalBindings": {
+    "monitorCredential": "required-external",
+    "recoveryCredential": "required-external",
+    "pollerSchedule": "required-external",
+    "primaryAlertDestination": "required-external",
+    "secondaryAlertDestination": "required-external",
+    "primaryOperationsOwner": "required-external",
+    "secondaryOperationsOwner": "required-external"
+  }
+}
