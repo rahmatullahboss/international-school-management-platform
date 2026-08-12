@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const runtimeEnvironmentParser = vi.hoisted(() => vi.fn());
 vi.mock('@school/platform', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@school/platform')>();
+  const actual = await importOriginal<Record<string, unknown>>();
   return {
     ...actual,
     parseRuntimeEnvironment: runtimeEnvironmentParser,
