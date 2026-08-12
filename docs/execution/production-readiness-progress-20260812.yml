@@ -1,5 +1,5 @@
 program: international-school-platform-v1
-updated_at: 2026-08-12T05:00:00Z
+updated_at: 2026-08-12T05:03:00Z
 status: production_not_authorized
 base_branch: main
 base_commit: 62b61fb3821f8f78c22d3e28d040e09ba626955c
@@ -47,6 +47,13 @@ completed_this_cycle:
   ux_operational_erp:
     issue: 97
     status: closed_completed
+  dependabot_ci_secret_boundary:
+    status: implementation_in_review
+    branch: task/production-readiness-reconcile-20260812
+    policy: >-
+      Dependabot-triggered pull requests do not receive repository Actions secrets. The live Neon
+      step is skipped only for dependabot[bot], while every secret-independent verification gate
+      continues. Normal pull requests and main pushes retain mandatory live Neon verification.
 
 performance_budget:
   initial_javascript_bytes: 250000
@@ -66,12 +73,18 @@ dependabot:
   safe_rebase_requested:
     - pr: 139
       dependency: wrangler
-      update: 4.118.0_to_4.119.0
+      update: 4.118.0_to_4.120.0
       class: minor
+      rebased_on: 62b61fb3821f8f78c22d3e28d040e09ba626955c
+      ci_run: 31565067082
+      ci_result: failed_only_at_live_neon_missing_dependabot_secret
     - pr: 142
       dependency: '@playwright/test'
       update: 1.62.0_to_1.62.1
       class: patch
+      rebased_on: 62b61fb3821f8f78c22d3e28d040e09ba626955c
+      ci_run: 31565065430
+      ci_result: failed_only_at_live_neon_missing_dependabot_secret
   deferred_major_updates:
     - pr: 141
       dependency: vite
@@ -126,8 +139,9 @@ remaining_production_blockers:
     status: open
 
 next_actions:
-  - verify_dependabot_pr_139_after_rebase_and_merge_only_if_full_ci_is_green
-  - verify_dependabot_pr_142_after_rebase_and_merge_only_if_full_ci_is_green
+  - merge_dependabot_ci_secret_boundary_only_after_normal_pr_ci_is_green
+  - rebase_dependabot_pr_139_after_ci_boundary_merge_and_merge_only_if_all_available_gates_are_green
+  - rebase_dependabot_pr_142_after_ci_boundary_merge_and_merge_only_if_all_available_gates_are_green
   - keep_major_dependency_upgrades_isolated_from_core_feature_work
   - enable_repository_dependabot_security_alerts_when_repository_settings_access_is_available
   - reconcile_docs_execution_52_production_readiness_backlog_with_pr_143
