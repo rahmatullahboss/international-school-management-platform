@@ -1,7 +1,7 @@
-# System-wide SECURITY DEFINER Hygiene Audit v1
+# System-wide SECURITY DEFININER Hygiene Audit v1
 
 **Program:** `international-school-platform-v1`  
-**Status:** implementation in progress; production activation is not authorized
+**Status:** implemented and verified on branch; production activation is not authorized
 
 ## Objective
 
@@ -21,7 +21,7 @@ For every application `SECURITY DEFINER` function:
 
 The audit does not replace existing per-capability role tests. A function can pass this generic hygiene gate and still fail a narrower role-separation test.
 
-## Scope
+## Scope and migration chain
 
 Application schemas are every non-system schema except:
 
@@ -30,7 +30,20 @@ Application schemas are every non-system schema except:
 - `pg_toast` and temporary/toast-temporary schemas;
 - extension-owned `public` objects, which are excluded by prohibiting application `SECURITY DEFINER` functions in `public` rather than auditing unrelated extension functions as application code.
 
-The CI database is already built through the current canonical/post-integration, production runtime and `PROD-06`/`PROD-07` recovery chain before this audit runs.
+The CI database is built through the canonical/post-integration, production runtime and `PROD-06`/`PROD-07` recovery chain before this audit runs. The security verifier then applies the forward-only `PROD-08` production-security migration from `infra/database/production-security-migration-manifest.json` and requires the exact 63-migration state before inspecting the catalog.
+
+`PROD-08` exists as a separate forward hardening layer rather than rewriting historical canonical migrations. This keeps existing deployment history reviewable while giving existing databases an explicit upgrade path.
+
+## Initial findings and remediation
+
+The first catalog run found four real `unsafe-search-path` violations:
+
+- `billing.allocate_document_number(uuid,text,text)`;
+- `ledger.post_journal_entry(uuid,text)`;
+- `ledger.close_period(uuid,text)`;
+- `ledger.reopen_period(uuid,text,text)`.
+
+Each function already used fully qualified application relation references, so the remediation did not change business behavior. `PROD-08` pins the function-level path to `pg_catalog` first, followed by the owning application schema and `pg_temp`, and explicitly revokes `PUBLIC` execute on all four functions. Existing reviewed role grants remain unchanged.
 
 ## Failure evidence
 
@@ -41,7 +54,13 @@ The verifier emits a bounded list of violating function identities and one of th
 - `unsafe-search-path`;
 - `public-schema-security-definer`.
 
-Any violation blocks CI. The correct remediation is to harden the owning migration/function definition and add explicit revocation/search-path configuration; the audit will not introduce an allowlist for convenience.
+Any violation blocks CI. The verifier also creates one intentionally unsafe function for each reason class inside a transaction, proves all four are detected, rolls the transaction back and verifies that no self-test residue remains. The audit has no convenience allowlist.
+
+## Verification evidence
+
+Remediated full CI run `31595157916` passed the system-wide SECURITY DEFINER gate, existing capability/role tests, database backup/restore/rollback rehearsal, Admissions lifecycle, secret-backed live Neon check, build, Cloudflare production dry-runs, audit/license/provenance checks, browser E2E and execution-artifact validation.
+
+A final combined-state CI run is still required after synchronizing the branch with the latest `main` before merge.
 
 ## Production boundary
 
