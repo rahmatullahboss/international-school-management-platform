@@ -35,7 +35,11 @@ jobs:
           node-version: '22.22.2'
           cache: npm
       - run: npm ci
-      - run: npm run format:check
+      - name: Capture projection policy formatter output
+        run: |
+          npx prettier --write config/production/projection-operations-policy.json scripts/validate-projection-operations-policy.mjs
+          git diff -- config/production/projection-operations-policy.json scripts/validate-projection-operations-policy.mjs
+          exit 1
       - run: npm run lint
       - run: npm run check:boundaries
       - name: Validate projection operations production policy
