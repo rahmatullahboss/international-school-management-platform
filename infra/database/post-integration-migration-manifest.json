@@ -1,6 +1,6 @@
 {
   "program": "international-school-platform-v1",
-  "gate": "GATE-PROD-ADMISSIONS-LIFECYCLE-WORK-QUEUE-V1",
+  "gate": "GATE-PROD-RUNTIME-PROJECTION-RECOVERY-V1",
   "baseManifest": "infra/database/migration-manifest.json",
   "orderingRule": "apply the reviewed 40-migration Wave 2 manifest first, then all reviewed post-integration migrations in contiguous order",
   "migrations": [
@@ -99,6 +99,12 @@
       "id": "202608100201_PROD-05_admissions_lifecycle_work_queue",
       "stream": "PROD-05",
       "path": "infra/database/post-integration-migrations/202608100201_PROD-05_admissions_lifecycle_work_queue.sql"
+    },
+    {
+      "order": 17,
+      "id": "202608120601_PROD-06_runtime_projection_dead_letter_recovery",
+      "stream": "PROD-06",
+      "path": "infra/database/post-integration-migrations/202608120601_PROD-06_runtime_projection_dead_letter_recovery.sql"
     }
   ]
 }
