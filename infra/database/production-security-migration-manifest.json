@@ -1,0 +1,14 @@
+{
+  "program": "international-school-platform-v1",
+  "gate": "GATE-PROD-SECURITY-DEFINER-HYGIENE-V1",
+  "baseManifest": "infra/database/production-readiness-migration-manifest.json",
+  "orderingRule": "apply the reviewed production-readiness manifest first, then production security migrations in contiguous order",
+  "migrations": [
+    {
+      "order": 1,
+      "id": "202608120801_PROD-08_security_definer_hygiene",
+      "stream": "PROD-08",
+      "path": "infra/database/post-integration-migrations/202608120801_PROD-08_security_definer_hygiene.sql"
+    }
+  ]
+}
