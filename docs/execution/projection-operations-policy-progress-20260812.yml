@@ -1,9 +1,10 @@
 workstream: projection_operations_production_policy
-updated_at: 2026-08-12T11:03:00Z
-status: verified_pending_merge
+updated_at: 2026-08-12T11:10:00Z
+status: merged_verified
 branch: task/projection-operations-policy-20260812
 base_commit: dfedbcffca7db6d27a57097df8aa607704558ca4
 pull_request: 149
+merged_commit: 9f32ae478efe82e42e16714f8b12d06cfb5c740f
 production_authorized: false
 
 dependencies:
@@ -40,12 +41,13 @@ implementation:
   validator_adversarial_self_tests: complete
   ci_gate: complete
   production_readiness_progress_reconciliation: complete
-  docs_52_production_readiness_backlog_reconciliation: pending_follow_up
+  docs_52_production_readiness_backlog_reconciliation: in_progress_on_follow_up_branch
 
 verification:
   first_full_ci_run: 31589787569
   first_full_ci_result: green
-  final_ci_after_progress_update: pending
+  final_full_ci_run: 31590087033
+  final_full_ci_result: green
   passed:
     - policy_exact_key_allowlist
     - monitor_thresholds_within_database_contract
