@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "policyId": "incident-response-evidence-retention-v1",
+  "productionAuthorized": false,
+  "severity": {
+    "sev1": {
+      "acknowledgeWithinMinutes": 10,
+      "incidentLeadWithinMinutes": 15,
+      "containmentPlanWithinMinutes": 30,
+      "postIncidentReviewWithinHours": 72
+    },
+    "sev2": {
+      "acknowledgeWithinMinutes": 30,
+      "incidentLeadWithinMinutes": 60,
+      "containmentPlanWithinMinutes": 120,
+      "postIncidentReviewWithinHours": 120
+    },
+    "sev3": {
+      "acknowledgeWithinMinutes": 240,
+      "incidentLeadWithinMinutes": 480,
+      "containmentPlanWithinMinutes": 1440,
+      "postIncidentReviewWithinHours": 168
+    },
+    "sev4": {
+      "acknowledgeWithinMinutes": 1440,
+      "incidentLeadWithinMinutes": 2880,
+      "containmentPlanWithinMinutes": 4320,
+      "postIncidentReviewWithinHours": 336
+    }
+  },
+  "classification": {
+    "categoryDefaultSeverity": {
+      "identity-session-compromise": "sev1",
+      "privileged-access-misuse": "sev1",
+      "cross-tenant-boundary": "sev1",
+      "data-exposure": "sev1",
+      "finance-integrity-compromise": "sev1",
+      "projection-recovery-misuse": "sev1",
+      "secret-exposure": "sev1",
+      "infrastructure-availability-recovery": "sev2"
+    },
+    "unknownFailsClosed": true,
+    "unknownMinimumSeverity": "sev2"
+  },
+  "response": {
+    "automaticProductionMutation": false,
+    "incidentRecordBeforeRecoveryRequired": true,
+    "destructiveActionSecondaryApprovalRequired": true,
+    "primaryAndSecondaryMustDiffer": true,
+    "dedicatedRecoveryCredentialRequiredWhenDomainPolicyRequires": true,
+    "customerCommunicationExternalApprovalRequired": true,
+    "projectionRecoveryRunbook": "docs/execution/57-projection-recovery-operator-runbook-v1.md"
+  },
+  "evidence": {
+    "referenceScheme": "evidence://",
+    "sha256Required": true,
+    "utcTimestampRequired": true,
+    "allowedOwnerRoles": ["engineering", "operations", "security", "owner", "data-protection"],
+    "redactionRequired": true,
+    "rawPayloadsProhibited": true,
+    "tokensCredentialsPasswordsProhibited": true,
+    "directPersonIdentifiersProhibited": true,
+    "appendOnlyIncidentTimelineRequired": true,
+    "preservationHoldOverridesDisposal": true,
+    "minimumRetentionDays": {
+      "incidentTimeline": 365,
+      "securityDecision": 730,
+      "recoveryEvidence": 365,
+      "credentialRotationRevocation": 365,
+      "auditBoundaryEvidence": 730,
+      "communicationsMetadata": 365
+    }
+  },
+  "closure": {
+    "requiredLifecycleStates": ["detected", "triaged", "contained", "recovered", "review-complete"],
+    "outcomeVerificationRequired": true,
+    "rootCauseOrContributingFactorsRequired": true,
+    "correctiveActionOwnerRoleRequired": true,
+    "unresolvedBusinessImpactBlocksClosure": true,
+    "evidenceIntegrityFailureReopensIncident": true
+  },
+  "externalBindings": {
+    "incidentSystem": "required-external",
+    "primaryIncidentOwner": "required-external",
+    "secondaryIncidentOwner": "required-external",
+    "securityOwner": "required-external",
+    "communicationsOwner": "required-external",
+    "evidenceStore": "required-external",
+    "primaryAlertDestination": "required-external",
+    "secondaryAlertDestination": "required-external"
+  }
+}
