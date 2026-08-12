@@ -1,6 +1,6 @@
 workstream: production_readiness_backlog_reconciliation
-updated_at: 2026-08-12T11:12:00Z
-status: documentation_in_progress
+updated_at: 2026-08-12T11:15:00Z
+status: implementation_complete_pending_ci
 branch: task/production-readiness-backlog-reconcile-20260812
 base_commit: 9f32ae478efe82e42e16714f8b12d06cfb5c740f
 production_authorized: false
@@ -9,6 +9,16 @@ reconciliation_targets:
   - docs/execution/52-production-readiness-backlog.md
   - docs/execution/production-readiness-progress-20260812.yml
   - docs/execution/projection-operations-policy-progress-20260812.yml
+
+completed:
+  - marked_pr_149_projection_operations_policy_merged_verified
+  - recorded_pr_149_merge_commit_9f32ae478efe82e42e16714f8b12d06cfb5c740f
+  - recorded_pr_149_final_full_ci_31590087033_green
+  - reconciled_production_readiness_progress_with_prs_143_147_148_149
+  - rewrote_docs_52_runtime_projection_section_to_repository_controls_complete_external_activation_open
+  - removed_stale_monitor_threshold_recovery_tooling_and_rehearsal_repository_gaps
+  - preserved_fail_closed_production_not_authorized_boundary
+  - preserved_dependabot_security_alerts_disabled_repository_setting_gap
 
 current_verified_main:
   admissions_lifecycle:
@@ -34,6 +44,28 @@ current_verified_main:
   dependabot_security_alerts:
     status: disabled_repository_setting
 
+verification_required_before_merge:
+  - format
+  - lint
+  - architecture_boundaries
+  - projection_operations_policy_validator
+  - typecheck
+  - full_tests
+  - canonical_and_auth_migrations
+  - persona_and_production_runtime_gates
+  - runtime_and_recovery_credential_identity
+  - operator_work_queues
+  - projection_recovery_rehearsal
+  - admissions_lifecycle
+  - live_neon
+  - build
+  - cloudflare_production_dry_run
+  - experience_budget
+  - npm_audit
+  - license_and_provenance
+  - browser_e2e
+  - execution_artifact_validation
+
 remaining_external_blockers:
   - real_external_oidc_configuration_and_real_identity_bindings
   - password_bearing_app_production_runtime_login_and_secret_binding
@@ -48,7 +80,6 @@ remaining_external_blockers:
   - owner_uat_and_explicit_owner_security_production_authorization
 
 next_steps:
-  - rewrite_docs_52_to_remove_stale_recovery_tooling_gaps
-  - preserve_external_activation_blockers_and_fail_closed_language
   - open_reconciliation_pr
   - require_full_ci_before_merge
+  - after_merge_select_next_repository_implementable_production_readiness_gap_without_inventing_external_secrets_or_identities
