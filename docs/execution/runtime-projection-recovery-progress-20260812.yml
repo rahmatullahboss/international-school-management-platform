@@ -1,0 +1,74 @@
+workstream: runtime_projection_dead_letter_recovery
+updated_at: 2026-08-12T06:10:00Z
+status: implementation_in_review
+branch: task/runtime-projection-dead-letter-recovery-20260812
+base_commit: 322008aa9efaf56c36250c17908559d9f638db38
+production_authorized: false
+
+design:
+  stream: PROD-06
+  migration: infra/database/post-integration-migrations/202608120601_PROD-06_runtime_projection_dead_letter_recovery.sql
+  permission: runtime.projection.dead-letter.recover
+  database_role: app_projection_recovery
+  access: function_only_non_http
+  eligible_error_codes:
+    - source-unavailable
+    - processor-error
+  permanently_excluded:
+    - invalid-event
+    - projection-state-conflict
+  invariants:
+    - original_dead_letter_is_append_only
+    - original_terminal_outbox_event_is_unchanged
+    - original_command_receipt_is_reused_but_never_mutated
+    - current_projection_revision_must_equal_original_expected_revision
+    - current_projection_source_must_exist
+    - original_command_must_not_already_be_applied
+    - one_recovery_receipt_per_dead_letter
+    - replacement_event_preserves_original_command_envelope
+    - recovery_receipt_and_audit_are_append_only
+
+implementation:
+  database_migration: complete
+  typed_application_boundary: complete
+  database_store_validation: complete
+  unit_tests: authored
+  postgres_recovery_rehearsal: authored
+  post_integration_manifest: updated_to_17_migrations
+  auth_manifest_verifier: pending_branch_patcher
+  package_script: pending_branch_patcher
+  ci_gate: pending_branch_patcher
+  design_doc: docs/execution/54-runtime-projection-dead-letter-recovery-v1.md
+
+verification_required_before_merge:
+  - format
+  - lint
+  - architecture_boundaries
+  - typecheck
+  - unit_and_integration_tests
+  - canonical_migrations
+  - post_integration_migrations_57_total
+  - auth_and_revocation_contracts
+  - persona_e2e
+  - production_runtime_hardening
+  - production_database_credential_contract
+  - operator_work_queues
+  - admissions_lifecycle
+  - runtime_projection_dead_letter_recovery_rehearsal
+  - live_neon
+  - build
+  - cloudflare_production_dry_run
+  - experience_budget
+  - npm_audit
+  - license_and_provenance
+  - browser_e2e
+  - execution_artifact_validation
+
+remaining_external_activation_work:
+  - provision_and_secret_manage_a_password_bearing_recovery_login
+  - grant_only_reviewed_projection_recovery_role_to_that_login
+  - define_operator_approval_and_escalation_runbook
+  - configure_projection_monitor_alert_thresholds_and_owners
+  - rehearse_credential_rotation_and_revocation
+  - rehearse_deployed_backup_restore_rollback_and_dead_letter_recovery
+  - explicit_owner_and_security_production_authorization
