@@ -62,13 +62,7 @@ function auditReviewedOperationalLogSink(file, source) {
     /\b(?:DATABASE_URL|authorization|cookie|password|secret|token|request|environment)\b/giu,
   ];
   for (const expression of forbiddenSinkPatterns) {
-    addRegexViolations(
-      violations,
-      file,
-      source,
-      'reviewed-log-sink-sensitive-field',
-      expression,
-    );
+    addRegexViolations(violations, file, source, 'reviewed-log-sink-sensitive-field', expression);
   }
 
   return violations;
