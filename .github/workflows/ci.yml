@@ -35,7 +35,11 @@ jobs:
           node-version: '22.22.2'
           cache: npm
       - run: npm ci
-      - run: npm run format:check
+      - name: Show runtime secret validator Prettier diff
+        run: |
+          npx prettier --write scripts/validate-runtime-secret-boundary.mjs
+          git diff -- scripts/validate-runtime-secret-boundary.mjs
+          exit 1
       - run: npm run lint
       - run: npm run check:boundaries
       - name: Validate runtime secret boundary
