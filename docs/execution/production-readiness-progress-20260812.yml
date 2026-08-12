@@ -1,8 +1,8 @@
 program: international-school-platform-v1
-updated_at: 2026-08-12T10:52:00Z
+updated_at: 2026-08-12T11:11:00Z
 status: production_not_authorized
 base_branch: main
-base_commit: dfedbcffca7db6d27a57097df8aa607704558ca4
+base_commit: 9f32ae478efe82e42e16714f8b12d06cfb5c740f
 
 completed_this_cycle:
   admissions_production_lifecycle:
@@ -64,22 +64,33 @@ completed_this_cycle:
       - unexpected_security_definer_execute_rejected
     final_ci_run: 31588604900
     final_ci_result: green
-
-active_workstream:
   projection_operations_production_policy:
-    branch: task/projection-operations-policy-20260812
-    status: implementation_in_review
+    pull_request: 149
+    merge_commit: 9f32ae478efe82e42e16714f8b12d06cfb5c740f
+    status: merged_verified
     design_doc: docs/execution/56-projection-operations-production-policy-v1.md
     runbook: docs/execution/57-projection-recovery-operator-runbook-v1.md
     machine_policy: config/production/projection-operations-policy.json
-    target_controls:
+    controls:
       - deterministic_monitor_polling_and_thresholds
       - warning_debounce_and_critical_immediate_escalation
       - no_automatic_recovery
       - second_human_approval_for_production_recovery
+      - exact_transient_recovery_allowlist
+      - exact_permanent_recovery_prohibition
       - redacted_before_after_evidence
       - external_only_credentials_destinations_and_named_owners
       - ci_adversarial_policy_validation
+    final_ci_run: 31590087033
+    final_ci_result: green
+
+active_workstream:
+  production_readiness_backlog_reconciliation:
+    branch: task/production-readiness-backlog-reconcile-20260812
+    status: in_progress
+    objective: >-
+      Reconcile docs/execution/52-production-readiness-backlog.md and continuation evidence with
+      the merged Admissions, projection recovery, recovery credential and operations-policy state.
 
 performance_budget:
   initial_javascript_bytes: 250000
@@ -144,12 +155,15 @@ remaining_production_blockers:
     issue: 78
     status: blocked_on_real_idp_and_deployed_secrets
   runtime_projection_operations:
-    status: repository_recovery_controls_complete_policy_in_review_external_activation_blocked
+    status: repository_controls_complete_external_activation_blocked
     completed:
       - redacted_tenant_scoped_monitor
       - controlled_transient_dead_letter_recovery
       - recovery_login_credential_readiness_contract
       - isolated_postgres_recovery_rehearsal
+      - machine_verifiable_monitoring_and_recovery_policy
+      - operator_recovery_runbook
+      - adversarial_policy_ci_gate
     external_required:
       - password_bearing_monitor_login_and_secret
       - password_bearing_recovery_login_and_secret
@@ -170,10 +184,10 @@ remaining_production_blockers:
     status: open
 
 next_actions:
-  - merge_projection_operations_policy_only_after_full_ci_is_green
+  - finish_docs_execution_52_production_readiness_backlog_reconciliation
   - keep_major_dependency_upgrades_isolated_from_core_feature_work
   - enable_repository_dependabot_security_alerts_when_repository_settings_access_is_available
-  - reconcile_docs_execution_52_production_readiness_backlog_after_projection_policy_merge
   - choose_and_configure_real_external_oidc_provider_before_claiming_production_depth_e2e
   - provision_least_privilege_production_database_and_projection_credentials_before_activation
   - bind_real_alert_destinations_and_named_owners_then_rehearse_deployed_monitoring_and_recovery
+  - execute_targeted_security_review_backup_restore_rollback_and_owner_uat_before_production_authorization
