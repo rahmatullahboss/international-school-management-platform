@@ -1,0 +1,14 @@
+{
+  "program": "international-school-platform-v1",
+  "gate": "GATE-PROD-RUNTIME-PROJECTION-RECOVERY-V1",
+  "baseManifest": "infra/database/production-migration-manifest.json",
+  "orderingRule": "apply the reviewed production runtime manifest first, then production-readiness migrations in contiguous order",
+  "migrations": [
+    {
+      "order": 1,
+      "id": "202608120601_PROD-06_runtime_projection_dead_letter_recovery",
+      "stream": "PROD-06",
+      "path": "infra/database/post-integration-migrations/202608120601_PROD-06_runtime_projection_dead_letter_recovery.sql"
+    }
+  ]
+}

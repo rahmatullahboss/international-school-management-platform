@@ -82,6 +82,13 @@ jobs:
           PGUSER: postgres
           PGDATABASE: postgres
         run: bash tests/integration/verify-production-operator-work-queue.sh
+      - name: Verify runtime projection dead-letter recovery
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: 5432
+          PGUSER: postgres
+          PGDATABASE: postgres
+        run: npm run verify:projection-recovery
       - name: Verify admissions offer command transactions
         env:
           PGHOST: 127.0.0.1
