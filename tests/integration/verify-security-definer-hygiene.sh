@@ -2,6 +2,54 @@
 set -euo pipefail
 
 PSQL=(psql -X -v ON_ERROR_STOP=1 -d "${PGDATABASE:-postgres}")
+SECURITY_MANIFEST="infra/database/production-security-migration-manifest.json"
+
+mapfile -t security_migrations < <(
+  node --input-type=module - "$SECURITY_MANIFEST" <<'NODE'
+import { existsSync, readFileSync } from 'node:fs';
+
+const manifestPath = process.argv[2];
+const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+if (manifest.gate !== 'GATE-PROD-SECURITY-DEFINER-HYGIENE-V1') {
+  throw new Error(`unexpected production security gate: ${manifest.gate}`);
+}
+if (manifest.baseManifest !== 'infra/database/production-readiness-migration-manifest.json') {
+  throw new Error('production security manifest must extend the reviewed production-readiness manifest');
+}
+const migrations = manifest.migrations ?? [];
+if (migrations.length !== 1) {
+  throw new Error(`expected one production security migration, got ${migrations.length}`);
+}
+const migration = migrations[0];
+if (migration.order !== 1 || migration.stream !== 'PROD-08') {
+  throw new Error('production security migration order/stream is invalid');
+}
+if (!existsSync(migration.path)) throw new Error(`missing migration: ${migration.path}`);
+console.log(migration.path);
+NODE
+)
+
+pre_migration_count="$("${PSQL[@]}" -Atqc "SELECT count(*) FROM platform.schema_migration;")"
+pre_prod08_count="$("${PSQL[@]}" -Atqc "SELECT count(*) FROM platform.schema_migration WHERE stream_id = 'PROD-08';")"
+if [[ "$pre_migration_count" == "62" && "$pre_prod08_count" == "0" ]]; then
+  :
+elif [[ "$pre_migration_count" == "63" && "$pre_prod08_count" == "1" ]]; then
+  :
+else
+  echo "SECURITY DEFINER hygiene audit requires the reviewed 62-migration readiness database or the exact 63-migration PROD-08 state; found total=${pre_migration_count}, PROD-08=${pre_prod08_count}." >&2
+  exit 1
+fi
+
+for migration in "${security_migrations[@]}"; do
+  "${PSQL[@]}" -f "$migration" >/dev/null
+done
+
+migration_count="$("${PSQL[@]}" -Atqc "SELECT count(*) FROM platform.schema_migration;")"
+prod08_count="$("${PSQL[@]}" -Atqc "SELECT count(*) FROM platform.schema_migration WHERE stream_id = 'PROD-08';")"
+if [[ "$migration_count" != "63" || "$prod08_count" != "1" ]]; then
+  echo "SECURITY DEFINER hygiene audit requires exact PROD-08 migration state; found total=${migration_count}, PROD-08=${prod08_count}." >&2
+  exit 1
+fi
 
 AUDIT_SQL=$(cat <<'SQL'
 WITH security_definer AS (
@@ -84,12 +132,6 @@ FROM violations
 ORDER BY reason, schema_name, function_name, identity_arguments;
 SQL
 )
-
-migration_count="$("${PSQL[@]}" -Atqc "SELECT count(*) FROM platform.schema_migration;")"
-if [[ "$migration_count" != "62" ]]; then
-  echo "SECURITY DEFINER hygiene audit requires the current 62-migration production-readiness database; found ${migration_count}." >&2
-  exit 1
-fi
 
 violations="$("${PSQL[@]}" -Atqc "$AUDIT_SQL")"
 if [[ -n "$violations" ]]; then
