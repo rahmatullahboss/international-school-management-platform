@@ -1,6 +1,7 @@
 import { createHttpDatabase } from '@school/database';
 
 import { DatabaseProjectionWorkerStore } from './database-projection-worker-store.js';
+import { emitRuntimeProjectionBatchObservation } from './runtime-operational-log.js';
 import {
   processRuntimeProjectionBatch,
   resolveRuntimeProjectionWorkerReadiness,
@@ -70,10 +71,7 @@ export function scheduleRuntimeProjectionWorker(
   storeFactory: RuntimeProjectionStoreFactory = defaultStoreFactory,
 ): void {
   const processing = runRuntimeProjectionScheduled(bindings, storeFactory).then((resolution) => {
-    const observation = resolution.ok
-      ? { event: 'runtime_projection_batch', ok: true, ...resolution.result }
-      : { event: 'runtime_projection_batch', ok: false, code: resolution.code };
-    console.log(JSON.stringify(observation));
+    emitRuntimeProjectionBatchObservation(resolution);
     return resolution;
   });
   executionContext.waitUntil(processing);
