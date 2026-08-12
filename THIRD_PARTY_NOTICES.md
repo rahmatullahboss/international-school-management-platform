@@ -138,7 +138,7 @@ Package source distributions remain the authoritative location for full licence 
 | @napi-rs/wasm-runtime | 1.1.6 | MIT | yes | yes |
 | @neondatabase/serverless | 1.1.0 | MIT | no | no |
 | @oxc-project/types | 0.139.0 | MIT | yes | no |
-| @playwright/test | 1.62.0 | Apache-2.0 | yes | no |
+| @playwright/test | 1.62.1 | Apache-2.0 | yes | no |
 | @poppinss/colors | 4.1.6 | MIT | yes | no |
 | @poppinss/dumper | 0.6.5 | MIT | yes | no |
 | @poppinss/dumper/node_modules/supports-color | 10.2.2 | MIT | yes | no |
@@ -321,8 +321,8 @@ Package source distributions remain the authoritative location for full licence 
 | pathe | 2.0.3 | MIT | yes | no |
 | picocolors | 1.1.1 | ISC | yes | no |
 | picomatch | 4.0.5 | MIT | yes | no |
-| playwright | 1.62.0 | Apache-2.0 | yes | no |
-| playwright-core | 1.62.0 | Apache-2.0 | yes | no |
+| playwright | 1.62.1 | Apache-2.0 | yes | no |
+| playwright-core | 1.62.1 | Apache-2.0 | yes | no |
 | postcss | 8.5.23 | MIT | yes | no |
 | prelude-ls | 1.2.1 | MIT | yes | no |
 | prettier | 3.9.6 | MIT | yes | no |

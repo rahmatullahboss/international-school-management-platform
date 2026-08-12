@@ -903,11 +903,11 @@
     },
     {
       "name": "@playwright/test",
-      "version": "1.62.0",
+      "version": "1.62.1",
       "license": "Apache-2.0",
       "development": true,
       "optional": false,
-      "purl": "pkg:npm/%40playwright/test@1.62.0"
+      "purl": "pkg:npm/%40playwright/test@1.62.1"
     },
     {
       "name": "@poppinss/colors",
@@ -2367,19 +2367,19 @@
     },
     {
       "name": "playwright",
-      "version": "1.62.0",
+      "version": "1.62.1",
       "license": "Apache-2.0",
       "development": true,
       "optional": false,
-      "purl": "pkg:npm/playwright@1.62.0"
+      "purl": "pkg:npm/playwright@1.62.1"
     },
     {
       "name": "playwright-core",
-      "version": "1.62.0",
+      "version": "1.62.1",
       "license": "Apache-2.0",
       "development": true,
       "optional": false,
-      "purl": "pkg:npm/playwright-core@1.62.0"
+      "purl": "pkg:npm/playwright-core@1.62.1"
     },
     {
       "name": "postcss",
