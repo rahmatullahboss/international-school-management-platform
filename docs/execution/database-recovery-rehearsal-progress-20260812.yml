@@ -1,8 +1,10 @@
 workstream: database_backup_restore_rollback_rehearsal
-updated_at: 2026-08-12T11:52:00Z
-status: verified_pending_combined_state_ci
+updated_at: 2026-08-12T11:58:00Z
+status: merged_verified
 branch: task/backup-restore-rollback-rehearsal-20260812
 base_commit: a27af6732d295e1a748c1d24fb5f81b37e61449c
+pull_request: 153
+merged_commit: bb95580aa7f513ccc46ef5b02a5871dd2d7008e6
 production_authorized: false
 
 design:
@@ -49,7 +51,11 @@ verification:
   first_full_ci_run: 31592792086
   first_full_ci_result: green
   first_full_ci_head: 8fca63f846b1ca3f95d01538f98b7fe5271677e3
-  first_full_ci_passed:
+  combined_state_main_commit: 9fd10f932fe0910d82f049533ba665c446e6dd26
+  final_combined_state_ci_run: 31593333792
+  final_combined_state_ci_result: green
+  final_combined_state_head: 002388207cd284504227d3d2799b9c42abdc0bc4
+  passed:
     - format
     - lint
     - architecture_boundaries
@@ -70,8 +76,6 @@ verification:
     - license_and_provenance
     - browser_e2e
     - execution_artifact_validation
-  combined_state_main_commit: 9fd10f932fe0910d82f049533ba665c446e6dd26
-  combined_state_ci: pending
 
 remaining_external_activation_work:
   - real_backup_schedule_and_retention
