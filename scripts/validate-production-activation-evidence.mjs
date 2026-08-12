@@ -23,7 +23,13 @@ const REQUIRED_GATES = [
 
 const REQUIRED_AUTHORIZATIONS = ['ownerAuthorization', 'securityAuthorization'];
 const RECORD_KEYS = ['status', 'evidenceRef', 'evidenceSha256', 'verifiedAt', 'verifiedByRole'];
-const ALLOWED_ROLES = new Set(['engineering', 'operations', 'security', 'owner', 'data-protection']);
+const ALLOWED_ROLES = new Set([
+  'engineering',
+  'operations',
+  'security',
+  'owner',
+  'data-protection',
+]);
 const RELEASE_COMMIT_PATTERN = /^[0-9a-f]{40}$/;
 const SHA256_PATTERN = /^[0-9a-f]{64}$/;
 const EVIDENCE_REF_PATTERN = /^evidence:\/\/[A-Za-z0-9][A-Za-z0-9._/-]{2,255}$/;
@@ -163,7 +169,10 @@ export function validateProductionActivationEvidence(manifest, options = {}) {
   if (ownerAuthorization.status === 'verified' && ownerAuthorization.verifiedByRole !== 'owner') {
     fail('ownerAuthorization must be verified by the owner role');
   }
-  if (securityAuthorization.status === 'verified' && securityAuthorization.verifiedByRole !== 'security') {
+  if (
+    securityAuthorization.status === 'verified' &&
+    securityAuthorization.verifiedByRole !== 'security'
+  ) {
     fail('securityAuthorization must be verified by the security role');
   }
 
@@ -279,12 +288,9 @@ function runSelfTests(template) {
   expectRejected(authorized, 'authorized manifest without release commit', (candidate) => {
     candidate.releaseCommit = null;
   });
-  expectRejected(
-    authorized,
-    'release commit mismatch',
-    () => {},
-    { expectedCommit: 'b'.repeat(40) },
-  );
+  expectRejected(authorized, 'release commit mismatch', () => {}, {
+    expectedCommit: 'b'.repeat(40),
+  });
   expectRejected(authorized, 'raw HTTP evidence URL', (candidate) => {
     candidate.gates.realExternalOidc.evidenceRef = 'https://example.invalid/evidence';
   });
@@ -323,9 +329,14 @@ function runSelfTests(template) {
   expectRejected(authorized, 'secret-like material embedded in evidence reference', (candidate) => {
     candidate.gates.realExternalOidc.evidenceRef = 'evidence://release/sk-proj-abcdef123456';
   });
-  expectRejected(template, 'committed template authorization drift', (candidate) => {
-    candidate.productionAuthorized = true;
-  }, { requireTemplate: true });
+  expectRejected(
+    template,
+    'committed template authorization drift',
+    (candidate) => {
+      candidate.productionAuthorized = true;
+    },
+    { requireTemplate: true },
+  );
 }
 
 function parseArguments(argv) {
