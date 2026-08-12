@@ -1,16 +1,17 @@
 name: Task Runtime Projection Recovery Patch
 
 on:
-  push:
-    branches:
-      - task/runtime-projection-dead-letter-recovery-20260812
+  pull_request:
+    types: [opened, reopened, synchronize]
 
 permissions:
   contents: write
 
 jobs:
   patch:
-    if: github.actor != 'github-actions[bot]'
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref == 'task/runtime-projection-dead-letter-recovery-20260812'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
