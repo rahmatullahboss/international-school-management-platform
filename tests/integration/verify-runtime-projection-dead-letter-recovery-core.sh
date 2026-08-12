@@ -2,6 +2,13 @@
 set -euo pipefail
 
 PSQL=(psql -X -v ON_ERROR_STOP=1 -d "${PGDATABASE:-postgres}")
+TENANT_ID="97000000-0000-4000-8000-000000000001"
+ACCOUNT_ID="97000000-0000-4000-8000-000000000004"
+MEMBERSHIP_ID="97000000-0000-4000-8000-000000000006"
+COMMAND_ID="97000000-0000-4000-8000-000000000009"
+DEAD_LETTER_ID="97000000-0000-4000-8000-00000000000c"
+ORIGINAL_EVENT_ID="97000000-0000-4000-8000-00000000000b"
+CORRELATION_ID="97000000-0000-4000-8000-00000000000a"
 
 "${PSQL[@]}" <<'SQL'
 INSERT INTO platform.tenant (
@@ -214,7 +221,7 @@ INSERT INTO platform.runtime_projection_dead_letter (
 ON CONFLICT (dead_letter_id) DO NOTHING;
 SQL
 
-permission_denied="$("${PSQL[@]}" -Atqc "SET ROLE app_projection_recovery; SELECT platform.recover_runtime_projection_dead_letter('97000000-0000-4000-8000-000000000001'::uuid,'97000000-0000-4000-8000-00000000000c'::uuid,'97000000-0000-4000-8000-000000000004'::uuid,'recovery-request-0001','Source repaired after upstream publication completed.','97000000-0000-4000-8000-00000000000d'::uuid)->>'reason';")"
+permission_denied="$("${PSQL[@]}" -Atqc "SET ROLE app_projection_recovery; SELECT platform.recover_runtime_projection_dead_letter('${TENANT_ID}'::uuid,'${DEAD_LETTER_ID}'::uuid,'${ACCOUNT_ID}'::uuid,'recovery-request-0001','Source repaired after upstream publication completed.','97000000-0000-4000-8000-00000000000d'::uuid)->>'reason';")"
 if [[ "$permission_denied" != "permission-not-granted" ]]; then
   echo "Expected permission-not-granted before operator permission assignment, got: $permission_denied" >&2
   exit 1
@@ -230,7 +237,7 @@ VALUES (
 ON CONFLICT DO NOTHING;
 SQL
 
-missing_source="$("${PSQL[@]}" -Atqc "SET ROLE app_projection_recovery; SELECT platform.recover_runtime_projection_dead_letter('97000000-0000-4000-8000-000000000001'::uuid,'97000000-0000-4000-8000-00000000000c'::uuid,'97000000-0000-4000-8000-000000000004'::uuid,'recovery-request-0001','Source repaired after upstream publication completed.','97000000-0000-4000-8000-00000000000d'::uuid)->>'reason';")"
+missing_source="$("${PSQL[@]}" -Atqc "SET ROLE app_projection_recovery; SELECT platform.recover_runtime_projection_dead_letter('${TENANT_ID}'::uuid,'${DEAD_LETTER_ID}'::uuid,'${ACCOUNT_ID}'::uuid,'recovery-request-0001','Source repaired after upstream publication completed.','97000000-0000-4000-8000-00000000000d'::uuid)->>'reason';")"
 if [[ "$missing_source" != "source-unavailable" ]]; then
   echo "Expected source-unavailable before source repair, got: $missing_source" >&2
   exit 1
@@ -258,122 +265,93 @@ INSERT INTO platform.runtime_projection_source (
 ON CONFLICT (source_id) DO NOTHING;
 SQL
 
-accepted="$("${PSQL[@]}" -Atqc "SET ROLE app_projection_recovery; SELECT platform.recover_runtime_projection_dead_letter('97000000-0000-4000-8000-000000000001'::uuid,'97000000-0000-4000-8000-00000000000c'::uuid,'97000000-0000-4000-8000-000000000004'::uuid,'recovery-request-0001','Source repaired after upstream publication completed.','97000000-0000-4000-8000-00000000000d'::uuid);")"
+accepted="$("${PSQL[@]}" -Atqc "SET ROLE app_projection_recovery; SELECT platform.recover_runtime_projection_dead_letter('${TENANT_ID}'::uuid,'${DEAD_LETTER_ID}'::uuid,'${ACCOUNT_ID}'::uuid,'recovery-request-0001','Source repaired after upstream publication completed.','97000000-0000-4000-8000-00000000000d'::uuid);")"
 if [[ "$(jq -r '.accepted' <<<"$accepted")" != "true" || "$(jq -r '.replayed' <<<"$accepted")" != "false" ]]; then
   echo "Expected accepted recovery request, got: $accepted" >&2
   exit 1
 fi
 replacement_event_id="$(jq -r '.receipt.replacementEventId' <<<"$accepted")"
-if [[ -z "$replacement_event_id" || "$replacement_event_id" == "null" ]]; then
-  echo "Recovery did not return a replacement event id" >&2
+if [[ ! "$replacement_event_id" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$ ]]; then
+  echo "Recovery returned an invalid replacement event id: $replacement_event_id" >&2
   exit 1
 fi
 
-replayed="$("${PSQL[@]}" -Atqc "SET ROLE app_projection_recovery; SELECT platform.recover_runtime_projection_dead_letter('97000000-0000-4000-8000-000000000001'::uuid,'97000000-0000-4000-8000-00000000000c'::uuid,'97000000-0000-4000-8000-000000000004'::uuid,'recovery-request-0001','Source repaired after upstream publication completed.','97000000-0000-4000-8000-00000000000d'::uuid);")"
+replayed="$("${PSQL[@]}" -Atqc "SET ROLE app_projection_recovery; SELECT platform.recover_runtime_projection_dead_letter('${TENANT_ID}'::uuid,'${DEAD_LETTER_ID}'::uuid,'${ACCOUNT_ID}'::uuid,'recovery-request-0001','Source repaired after upstream publication completed.','97000000-0000-4000-8000-00000000000d'::uuid);")"
 if [[ "$(jq -r '.accepted' <<<"$replayed")" != "true" || "$(jq -r '.replayed' <<<"$replayed")" != "true" || "$(jq -r '.receipt.replacementEventId' <<<"$replayed")" != "$replacement_event_id" ]]; then
   echo "Recovery idempotency replay failed: $replayed" >&2
   exit 1
 fi
 
-already_recovered="$("${PSQL[@]}" -Atqc "SET ROLE app_projection_recovery; SELECT platform.recover_runtime_projection_dead_letter('97000000-0000-4000-8000-000000000001'::uuid,'97000000-0000-4000-8000-00000000000c'::uuid,'97000000-0000-4000-8000-000000000004'::uuid,'recovery-request-0002','Source repaired after upstream publication completed.','97000000-0000-4000-8000-00000000000f'::uuid)->>'reason';")"
+already_recovered="$("${PSQL[@]}" -Atqc "SET ROLE app_projection_recovery; SELECT platform.recover_runtime_projection_dead_letter('${TENANT_ID}'::uuid,'${DEAD_LETTER_ID}'::uuid,'${ACCOUNT_ID}'::uuid,'recovery-request-0002','Source repaired after upstream publication completed.','97000000-0000-4000-8000-00000000000f'::uuid)->>'reason';")"
 if [[ "$already_recovered" != "already-recovered" ]]; then
   echo "Expected already-recovered for a second recovery identity, got: $already_recovered" >&2
   exit 1
 fi
 
-"${PSQL[@]}" -v replacement_event_id="$replacement_event_id" <<'SQL'
-DO $verification$
-DECLARE
-  replacement uuid := :'replacement_event_id'::uuid;
-BEGIN
-  IF has_function_privilege('app_runtime', 'platform.recover_runtime_projection_dead_letter(uuid,uuid,uuid,text,text,uuid)', 'EXECUTE')
-     OR has_function_privilege('app_projection_monitor', 'platform.recover_runtime_projection_dead_letter(uuid,uuid,uuid,text,text,uuid)', 'EXECUTE')
-     OR NOT has_function_privilege('app_projection_recovery', 'platform.recover_runtime_projection_dead_letter(uuid,uuid,uuid,text,text,uuid)', 'EXECUTE') THEN
-    RAISE EXCEPTION 'projection recovery function privileges are not least-privilege';
-  END IF;
+least_privilege="$("${PSQL[@]}" -Atqc "SELECT (NOT has_function_privilege('app_runtime','platform.recover_runtime_projection_dead_letter(uuid,uuid,uuid,text,text,uuid)','EXECUTE') AND NOT has_function_privilege('app_projection_monitor','platform.recover_runtime_projection_dead_letter(uuid,uuid,uuid,text,text,uuid)','EXECUTE') AND has_function_privilege('app_projection_recovery','platform.recover_runtime_projection_dead_letter(uuid,uuid,uuid,text,text,uuid)','EXECUTE'))::int;")"
+if [[ "$least_privilege" != "1" ]]; then
+  echo "Projection recovery function privileges are not least-privilege" >&2
+  exit 1
+fi
 
-  IF (SELECT count(*) FROM platform.runtime_projection_dead_letter WHERE dead_letter_id = '97000000-0000-4000-8000-00000000000c') <> 1 THEN
-    RAISE EXCEPTION 'original dead-letter evidence changed';
-  END IF;
-  IF NOT EXISTS (
-    SELECT 1
-    FROM integration_core.outbox_event
-    WHERE tenant_id = '97000000-0000-4000-8000-000000000001'
-      AND event_id = '97000000-0000-4000-8000-00000000000b'
-      AND published_at IS NOT NULL
-      AND attempt_count = 5
-      AND last_error = 'source-unavailable'
-  ) THEN
-    RAISE EXCEPTION 'original outbox terminal evidence changed';
-  END IF;
-  IF (SELECT count(*) FROM platform.runtime_projection_recovery_receipt WHERE tenant_id = '97000000-0000-4000-8000-000000000001') <> 1 THEN
-    RAISE EXCEPTION 'expected exactly one append-only recovery receipt';
-  END IF;
-  IF NOT EXISTS (
-    SELECT 1
-    FROM integration_core.outbox_event
-    WHERE tenant_id = '97000000-0000-4000-8000-000000000001'
-      AND event_id = replacement
-      AND published_at IS NULL
-      AND attempt_count = 0
-      AND last_error IS NULL
-      AND correlation_id = '97000000-0000-4000-8000-00000000000a'
-      AND causation_id = '97000000-0000-4000-8000-000000000009'
-  ) THEN
-    RAISE EXCEPTION 'replacement event did not preserve the original command envelope';
-  END IF;
-  IF NOT EXISTS (
-    SELECT 1
-    FROM audit.audit_event
-    WHERE tenant_id = '97000000-0000-4000-8000-000000000001'
-      AND actor_account_id = '97000000-0000-4000-8000-000000000004'
-      AND action = 'runtime.snapshot.refresh.dead_letter.recovery_requested'
-      AND subject_id = '97000000-0000-4000-8000-00000000000c'
-  ) THEN
-    RAISE EXCEPTION 'recovery audit evidence is missing';
-  END IF;
-END
-$verification$;
-SQL
+original_dead_letter_count="$("${PSQL[@]}" -Atqc "SELECT count(*) FROM platform.runtime_projection_dead_letter WHERE tenant_id='${TENANT_ID}'::uuid AND dead_letter_id='${DEAD_LETTER_ID}'::uuid AND event_id='${ORIGINAL_EVENT_ID}'::uuid AND command_id='${COMMAND_ID}'::uuid AND error_code='source-unavailable' AND attempt_count=5;")"
+if [[ "$original_dead_letter_count" != "1" ]]; then
+  echo "Original dead-letter evidence changed" >&2
+  exit 1
+fi
 
-worker_result="$("${PSQL[@]}" -Atqc "SET ROLE app_runtime; SELECT platform.process_runtime_projection_refresh_batch('recovery-worker-02', 10, 5);")"
-if [[ "$(jq -r '.completed' <<<"$worker_result")" != "1" ]]; then
-  echo "Expected recovered event to complete exactly once, got: $worker_result" >&2
+original_event_count="$("${PSQL[@]}" -Atqc "SELECT count(*) FROM integration_core.outbox_event WHERE tenant_id='${TENANT_ID}'::uuid AND event_id='${ORIGINAL_EVENT_ID}'::uuid AND published_at IS NOT NULL AND attempt_count=5 AND last_error='source-unavailable';")"
+if [[ "$original_event_count" != "1" ]]; then
+  echo "Original terminal outbox evidence changed" >&2
+  exit 1
+fi
+
+receipt_count="$("${PSQL[@]}" -Atqc "SELECT count(*) FROM platform.runtime_projection_recovery_receipt WHERE tenant_id='${TENANT_ID}'::uuid AND dead_letter_id='${DEAD_LETTER_ID}'::uuid AND replacement_event_id='${replacement_event_id}'::uuid;")"
+if [[ "$receipt_count" != "1" ]]; then
+  echo "Expected exactly one recovery receipt" >&2
+  exit 1
+fi
+
+replacement_count="$("${PSQL[@]}" -Atqc "SELECT count(*) FROM integration_core.outbox_event WHERE tenant_id='${TENANT_ID}'::uuid AND event_id='${replacement_event_id}'::uuid AND published_at IS NULL AND attempt_count=0 AND last_error IS NULL AND correlation_id='${CORRELATION_ID}' AND causation_id='${COMMAND_ID}';")"
+if [[ "$replacement_count" != "1" ]]; then
+  echo "Replacement event did not preserve the original command envelope" >&2
+  exit 1
+fi
+
+audit_count="$("${PSQL[@]}" -Atqc "SELECT count(*) FROM audit.audit_event WHERE tenant_id='${TENANT_ID}'::uuid AND actor_account_id='${ACCOUNT_ID}'::uuid AND action='runtime.snapshot.refresh.dead_letter.recovery_requested' AND subject_id='${DEAD_LETTER_ID}';")"
+if [[ "$audit_count" != "1" ]]; then
+  echo "Recovery audit evidence is missing" >&2
+  exit 1
+fi
+
+worker_result="$("${PSQL[@]}" -Atqc "SET ROLE app_runtime; SELECT platform.process_runtime_projection_refresh_batch('recovery-worker-02', 50, 5);")"
+if [[ "$(jq -r '.completed' <<<"$worker_result")" -lt 1 ]]; then
+  echo "Recovery worker did not complete any projection refresh: $worker_result" >&2
+  exit 1
+fi
+
+applied_count="$("${PSQL[@]}" -Atqc "SELECT count(*) FROM platform.runtime_projection_applied_command WHERE tenant_id='${TENANT_ID}'::uuid AND command_id='${COMMAND_ID}'::uuid AND event_id='${replacement_event_id}'::uuid;")"
+if [[ "$applied_count" != "1" ]]; then
+  echo "Recovered command was not applied exactly once" >&2
+  exit 1
+fi
+
+projection_count="$("${PSQL[@]}" -Atqc "SELECT count(*) FROM platform.runtime_read_model_projection WHERE tenant_id='${TENANT_ID}'::uuid AND membership_id='${MEMBERSHIP_ID}'::uuid AND campus_id='97000000-0000-4000-8000-000000000003'::uuid AND projection_key='home' AND revision=4 AND payload='{"state":"after-source-repair"}'::jsonb;")"
+if [[ "$projection_count" != "1" ]]; then
+  echo "Recovered projection was not applied at the expected revision" >&2
+  exit 1
+fi
+
+set +e
+mutation_output="$("${PSQL[@]}" -Atqc "UPDATE platform.runtime_projection_recovery_receipt SET reason='mutation must fail' WHERE tenant_id='${TENANT_ID}'::uuid AND dead_letter_id='${DEAD_LETTER_ID}'::uuid;" 2>&1)"
+mutation_status=$?
+set -e
+if [[ "$mutation_status" -eq 0 || "$mutation_output" != *"audit records are append-only"* ]]; then
+  echo "Recovery receipt append-only guard did not reject mutation: $mutation_output" >&2
   exit 1
 fi
 
 "${PSQL[@]}" <<'SQL'
-DO $post_recovery$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1
-    FROM platform.runtime_read_model_projection
-    WHERE tenant_id = '97000000-0000-4000-8000-000000000001'
-      AND membership_id = '97000000-0000-4000-8000-000000000006'
-      AND campus_id = '97000000-0000-4000-8000-000000000003'
-      AND revision = 4
-      AND payload = '{"state":"after-source-repair"}'::jsonb
-  ) THEN
-    RAISE EXCEPTION 'recovered projection was not applied at the expected revision';
-  END IF;
-  IF (SELECT count(*) FROM platform.runtime_projection_applied_command WHERE command_id = '97000000-0000-4000-8000-000000000009') <> 1 THEN
-    RAISE EXCEPTION 'recovered command was not deduplicated exactly once';
-  END IF;
-
-  BEGIN
-    UPDATE platform.runtime_projection_recovery_receipt
-    SET reason = 'mutation must fail'
-    WHERE dead_letter_id = '97000000-0000-4000-8000-00000000000c';
-    RAISE EXCEPTION 'recovery receipt mutation unexpectedly succeeded';
-  EXCEPTION
-    WHEN OTHERS THEN
-      IF SQLERRM <> 'audit records are append-only' THEN
-        RAISE;
-      END IF;
-  END;
-END
-$post_recovery$;
-
 INSERT INTO integration_core.outbox_event (
   tenant_id, event_id, event_type, schema_version, aggregate_type,
   aggregate_id, aggregate_version, correlation_id, causation_id,
@@ -395,7 +373,10 @@ INSERT INTO integration_core.outbox_event (
     'expectedRevision', 3,
     'reason', 'Permanent conflict must not be replayed.'
   ),
-  clock_timestamp(), clock_timestamp(), clock_timestamp(), 1,
+  clock_timestamp(),
+  clock_timestamp(),
+  clock_timestamp(),
+  1,
   'projection-state-conflict'
 )
 ON CONFLICT (tenant_id, event_id) DO NOTHING;
@@ -415,7 +396,7 @@ INSERT INTO platform.runtime_projection_dead_letter (
 ON CONFLICT (dead_letter_id) DO NOTHING;
 SQL
 
-permanent_rejection="$("${PSQL[@]}" -Atqc "SET ROLE app_projection_recovery; SELECT platform.recover_runtime_projection_dead_letter('97000000-0000-4000-8000-000000000001'::uuid,'97000000-0000-4000-8000-000000000011'::uuid,'97000000-0000-4000-8000-000000000004'::uuid,'recovery-request-0003','Permanent conflict should stay terminal.','97000000-0000-4000-8000-000000000012'::uuid)->>'reason';")"
+permanent_rejection="$("${PSQL[@]}" -Atqc "SET ROLE app_projection_recovery; SELECT platform.recover_runtime_projection_dead_letter('${TENANT_ID}'::uuid,'97000000-0000-4000-8000-000000000011'::uuid,'${ACCOUNT_ID}'::uuid,'recovery-request-0003','Permanent conflict should stay terminal.','97000000-0000-4000-8000-000000000012'::uuid)->>'reason';")"
 if [[ "$permanent_rejection" != "dead-letter-not-recoverable" ]]; then
   echo "Expected permanent dead letter to remain non-recoverable, got: $permanent_rejection" >&2
   exit 1
