@@ -38,6 +38,8 @@ jobs:
       - run: npm run format:check
       - run: npm run lint
       - run: npm run check:boundaries
+      - name: Validate runtime secret boundary
+        run: npm run validate:runtime-secret-boundary
       - name: Validate projection operations production policy
         run: npm run validate:projection-operations-policy
       - name: Validate production activation evidence contract
