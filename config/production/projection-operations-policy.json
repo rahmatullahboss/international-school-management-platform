@@ -31,14 +31,8 @@
     "dedicatedCredentialRequired": true,
     "aal2PermissionRequired": true,
     "repeatReplayProhibited": true,
-    "eligibleErrorCodes": [
-      "source-unavailable",
-      "processor-error"
-    ],
-    "prohibitedErrorCodes": [
-      "invalid-event",
-      "projection-state-conflict"
-    ]
+    "eligibleErrorCodes": ["source-unavailable", "processor-error"],
+    "prohibitedErrorCodes": ["invalid-event", "projection-state-conflict"]
   },
   "evidence": {
     "retentionDays": 365,
