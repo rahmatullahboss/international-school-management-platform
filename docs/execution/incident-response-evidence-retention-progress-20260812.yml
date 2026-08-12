@@ -1,0 +1,52 @@
+workstream: incident_response_evidence_retention_contract
+updated_at: 2026-08-12T13:45:00Z
+status: implementation_in_progress
+branch: task/incident-response-evidence-retention-20260812
+base_commit: 64cb93322bb571ec8d9754b508b0076d4d33490b
+production_authorized: false
+
+design:
+  policy_doc: docs/execution/63-incident-response-evidence-retention-policy-v1.md
+  runbook: docs/execution/64-security-incident-operator-runbook-v1.md
+  machine_policy: config/production/incident-response-evidence-retention-policy.json
+  production_acceptance: external_only
+  real_people_destinations_and_evidence: prohibited_in_repository
+
+implementation:
+  design_doc: complete
+  operator_runbook: complete
+  machine_policy: complete
+  validator: pending
+  adversarial_self_tests: pending
+  package_script: pending
+  ci_gate: pending
+  production_readiness_reconciliation: pending
+
+policy_guards:
+  - production_authorized_false
+  - exact_severity_response_targets
+  - conservative_category_default_severity
+  - unknown_incidents_fail_closed_at_sev2_minimum
+  - automatic_production_mutation_prohibited
+  - incident_record_required_before_recovery
+  - destructive_action_secondary_approval_required
+  - primary_and_secondary_approvers_must_differ
+  - projection_recovery_delegates_to_existing_reviewed_runbook
+  - evidence_reference_scheme_evidence_uri_only
+  - sha256_and_utc_timestamp_required
+  - redaction_required
+  - raw_payloads_tokens_credentials_passwords_and_direct_person_identifiers_prohibited
+  - append_only_incident_timeline_required
+  - preservation_hold_overrides_disposal
+  - retention_minimums_pinned
+  - lifecycle_and_closure_requirements_pinned
+  - all_real_bindings_required_external
+
+remaining_external_activation_work:
+  - named_incident_and_security_owners
+  - real_incident_system_and_alert_destinations
+  - real_evidence_store_and_access_controls
+  - deployed_incident_detection_and_escalation_rehearsal
+  - deployed_evidence_preservation_and_disposal_rehearsal
+  - incident_response_acceptance
+  - owner_and_security_production_authorization
