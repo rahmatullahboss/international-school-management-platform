@@ -1,0 +1,47 @@
+workstream: system_wide_security_definer_hygiene
+updated_at: 2026-08-12T12:05:00Z
+status: implementation_in_progress
+branch: task/security-definer-hygiene-audit-20260812
+base_commit: bb95580aa7f513ccc46ef5b02a5871dd2d7008e6
+production_authorized: false
+
+design:
+  document: docs/execution/60-security-definer-hygiene-audit-v1.md
+  scope: all_application_security_definer_functions
+  application_schema_detection: non_system_catalog_schemas
+  public_schema_security_definer: prohibited
+  required_invariants:
+    - no_public_execute
+    - explicit_function_search_path
+    - normalized_search_path_begins_with_pg_catalog
+    - no_application_security_definer_in_public_schema
+  convenience_allowlist: prohibited
+
+implementation:
+  design_doc: complete
+  catalog_audit_script: pending
+  package_script: pending
+  ci_gate: pending
+  violations_found: unknown_until_ci
+  remediations: pending_if_violations_found
+
+verification_required_before_merge:
+  - audit_runs_after_current_prod_06_07_database_chain
+  - audit_rejects_public_execute
+  - audit_rejects_missing_search_path
+  - audit_rejects_non_pg_catalog_first_search_path
+  - audit_rejects_public_schema_security_definer
+  - existing_per_capability_role_tests_remain_green
+  - full_ci
+  - database_backup_restore_rollback_rehearsal
+  - live_neon
+  - cloudflare_production_dry_run
+  - browser_e2e
+  - execution_artifact_validation
+
+remaining_external_security_work:
+  - deployed_targeted_security_review
+  - real_idp_and_credential_security_review
+  - deployed_log_and_trace_redaction_verification
+  - external_penetration_or_abuse_testing_as_required
+  - explicit_security_and_owner_production_authorization
