@@ -52,10 +52,17 @@ export type RuntimeProjectionDeadLetterRecoveryResolution =
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
 const IDEMPOTENCY_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$/u;
-const CONTROL_PATTERN = /[\u0000-\u001f\u007f]/u;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function hasControlCharacter(value: string): boolean {
+  for (let index = 0; index < value.length; index += 1) {
+    const code = value.charCodeAt(index);
+    if (code <= 0x1f || code === 0x7f) return true;
+  }
+  return false;
 }
 
 function validateInput(value: unknown): RuntimeProjectionDeadLetterRecoveryInput | undefined {
@@ -87,7 +94,7 @@ function validateInput(value: unknown): RuntimeProjectionDeadLetterRecoveryInput
     value.reason.length < 1 ||
     value.reason.length > 500 ||
     value.reason !== value.reason.trim() ||
-    CONTROL_PATTERN.test(value.reason)
+    hasControlCharacter(value.reason)
   ) {
     return undefined;
   }
