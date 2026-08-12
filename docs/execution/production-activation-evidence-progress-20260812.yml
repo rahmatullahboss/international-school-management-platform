@@ -1,8 +1,10 @@
 workstream: production_activation_evidence_contract
-updated_at: 2026-08-12T11:32:00Z
-status: implementation_complete_pending_ci
+updated_at: 2026-08-12T11:36:00Z
+status: merged_verified
 branch: task/production-activation-evidence-contract-20260812
 base_commit: 47c43ad0ad460bcdf94d01f2beae25d5e46fdb6a
+pull_request: 151
+merged_commit: a27af6732d295e1a748c1d24fb5f81b37e61449c
 production_authorized: false
 
 design:
@@ -59,30 +61,39 @@ validator_guards:
   - owner_and_security_evidence_must_be_distinct
   - unknown_gate_or_unknown_field_rejected
 
-verification_required_before_merge:
-  - format
-  - lint
-  - architecture_boundaries
-  - projection_operations_policy_validator
-  - production_activation_evidence_validator_and_self_tests
-  - typecheck
-  - full_tests
-  - canonical_and_auth_migrations
-  - persona_and_production_runtime_gates
-  - runtime_and_recovery_credential_identity
-  - operator_work_queues
-  - projection_recovery_rehearsal
-  - admissions_lifecycle
-  - live_neon
-  - build
-  - cloudflare_production_dry_run
-  - experience_budget
-  - npm_audit
-  - license_and_provenance
-  - browser_e2e
-  - execution_artifact_validation
+verification:
+  final_full_ci_run: 31591811725
+  final_full_ci_result: green
+  passed:
+    - format
+    - lint
+    - architecture_boundaries
+    - projection_operations_policy_validator
+    - production_activation_evidence_validator_and_self_tests
+    - typecheck
+    - full_tests
+    - canonical_and_auth_migrations
+    - persona_and_production_runtime_gates
+    - runtime_and_recovery_credential_identity
+    - operator_work_queues
+    - projection_recovery_rehearsal
+    - admissions_lifecycle
+    - live_neon
+    - build
+    - cloudflare_production_dry_run
+    - experience_budget
+    - npm_audit
+    - license_and_provenance
+    - browser_e2e
+    - execution_artifact_validation
 
 remaining_external_activation_work:
   - all_required_evidence_gates_remain_pending_external
   - real_activation_manifest_must_remain_external_to_repository
   - explicit_owner_and_security_authorization_not_present
+
+next_repository_workstream:
+  objective: isolated_backup_restore_rollback_rehearsal
+  rationale: >-
+    No existing repository backup/restore/rollback rehearsal tooling was found. A safe ephemeral
+    PostgreSQL rehearsal can reduce repository-side recovery risk without touching real production data.
