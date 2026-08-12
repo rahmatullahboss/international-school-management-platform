@@ -45,6 +45,7 @@
     "verify:auth-migrations": "bash tests/integration/verify-auth-durable-context.sh",
     "verify:persona-e2e": "bash tests/integration/verify-product-persona-e2e.sh",
     "verify:projection-recovery": "bash tests/integration/verify-runtime-projection-dead-letter-recovery.sh",
+    "verify:security-definer-hygiene": "bash tests/integration/verify-security-definer-hygiene.sh",
     "verify": "npm run format:check && npm run lint && npm run check:boundaries && npm run validate:projection-operations-policy && npm run validate:production-activation-evidence && npm run typecheck && npm run test && npm run build && npm run check:experience-budget && npm run validate:artifacts"
   },
   "devDependencies": {

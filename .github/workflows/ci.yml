@@ -93,6 +93,13 @@ jobs:
           PGUSER: postgres
           PGDATABASE: postgres
         run: npm run verify:projection-recovery
+      - name: Verify system-wide SECURITY DEFINER hygiene
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: 5432
+          PGUSER: postgres
+          PGDATABASE: postgres
+        run: npm run verify:security-definer-hygiene
       - name: Verify isolated database backup restore rollback
         env:
           PGHOST: 127.0.0.1
