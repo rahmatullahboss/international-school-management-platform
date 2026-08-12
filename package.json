@@ -22,6 +22,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "licenses:check": "node scripts/check-licenses.mjs",
+    "lint": "eslint . --max-warnings=0",
     "provenance:generate": "node scripts/generate-provenance.mjs",
     "test": "vitest run",
     "test:unit": "vitest run tests/unit packages apps",
