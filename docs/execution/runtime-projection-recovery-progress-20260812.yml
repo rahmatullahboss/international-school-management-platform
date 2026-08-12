@@ -1,8 +1,10 @@
 workstream: runtime_projection_dead_letter_recovery
-updated_at: 2026-08-12T06:10:00Z
-status: implementation_in_review
+updated_at: 2026-08-12T10:34:07Z
+status: merged_verified
 branch: task/runtime-projection-dead-letter-recovery-20260812
 base_commit: 322008aa9efaf56c36250c17908559d9f638db38
+merged_pr: 147
+merged_commit: 560d591843b9d523cb0b85c712fd1a3499f1ca87
 production_authorized: false
 
 design:
@@ -32,37 +34,38 @@ implementation:
   database_migration: complete
   typed_application_boundary: complete
   database_store_validation: complete
-  unit_tests: authored
-  postgres_recovery_rehearsal: authored
-  post_integration_manifest: updated_to_17_migrations
-  auth_manifest_verifier: pending_branch_patcher
-  package_script: pending_branch_patcher
-  ci_gate: pending_branch_patcher
+  unit_tests: complete
+  postgres_recovery_rehearsal: complete
+  production_readiness_manifest: complete
+  package_script: complete
+  ci_gate: complete
   design_doc: docs/execution/54-runtime-projection-dead-letter-recovery-v1.md
 
-verification_required_before_merge:
-  - format
-  - lint
-  - architecture_boundaries
-  - typecheck
-  - unit_and_integration_tests
-  - canonical_migrations
-  - post_integration_migrations_57_total
-  - auth_and_revocation_contracts
-  - persona_e2e
-  - production_runtime_hardening
-  - production_database_credential_contract
-  - operator_work_queues
-  - admissions_lifecycle
-  - runtime_projection_dead_letter_recovery_rehearsal
-  - live_neon
-  - build
-  - cloudflare_production_dry_run
-  - experience_budget
-  - npm_audit
-  - license_and_provenance
-  - browser_e2e
-  - execution_artifact_validation
+verification:
+  final_clean_ci_run: 31587634225
+  result: green
+  passed:
+    - format
+    - lint
+    - architecture_boundaries
+    - typecheck
+    - unit_and_integration_tests
+    - canonical_migrations
+    - auth_and_revocation_contracts
+    - persona_e2e
+    - production_runtime_hardening
+    - production_database_credential_contract
+    - operator_work_queues
+    - runtime_projection_dead_letter_recovery_rehearsal
+    - admissions_lifecycle
+    - live_neon
+    - build
+    - cloudflare_production_dry_run
+    - experience_budget
+    - npm_audit
+    - license_and_provenance
+    - browser_e2e
+    - execution_artifact_validation
 
 remaining_external_activation_work:
   - provision_and_secret_manage_a_password_bearing_recovery_login
