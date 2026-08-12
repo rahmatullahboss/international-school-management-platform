@@ -107,6 +107,14 @@ jobs:
           PGUSER: postgres
           PGDATABASE: postgres
         run: npm run verify:database-recovery
+      - name: Verify PROD-08 survives isolated database recovery
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: 5432
+          PGUSER: postgres
+          PGDATABASE: postgres
+          PROD08_RECOVERY_EPHEMERAL: '1'
+        run: npm run verify:prod08-recovery
       - name: Verify admissions offer command transactions
         env:
           PGHOST: 127.0.0.1
