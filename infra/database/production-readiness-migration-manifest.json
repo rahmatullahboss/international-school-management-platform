@@ -1,6 +1,6 @@
 {
   "program": "international-school-platform-v1",
-  "gate": "GATE-PROD-RUNTIME-PROJECTION-RECOVERY-V1",
+  "gate": "GATE-PROD-RUNTIME-PROJECTION-RECOVERY-V2",
   "baseManifest": "infra/database/production-migration-manifest.json",
   "orderingRule": "apply the reviewed production runtime manifest first, then production-readiness migrations in contiguous order",
   "migrations": [
@@ -9,6 +9,12 @@
       "id": "202608120601_PROD-06_runtime_projection_dead_letter_recovery",
       "stream": "PROD-06",
       "path": "infra/database/post-integration-migrations/202608120601_PROD-06_runtime_projection_dead_letter_recovery.sql"
+    },
+    {
+      "order": 2,
+      "id": "202608120701_PROD-07_projection_recovery_credential_readiness",
+      "stream": "PROD-07",
+      "path": "infra/database/post-integration-migrations/202608120701_PROD-07_projection_recovery_credential_readiness.sql"
     }
   ]
 }
