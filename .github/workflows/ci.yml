@@ -104,12 +104,15 @@ jobs:
           PGDATABASE: postgres
         run: bash tests/integration/verify-admissions-lifecycle-work-queue.sh
       - name: Verify live Neon serverless driver
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        if: github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
           test -n "$DATABASE_URL"
           npm run test:neon
+      - name: Record Dependabot live Neon boundary
+        if: github.actor == 'dependabot[bot]'
+        run: echo "Live Neon verification is intentionally skipped for Dependabot because repository Actions secrets are not exposed to Dependabot-triggered workflows; all secret-independent gates continue."
       - run: npm run build
       - name: Validate production Cloudflare bundles
         run: |
