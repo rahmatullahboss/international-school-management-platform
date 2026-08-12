@@ -1,0 +1,76 @@
+workstream: database_backup_restore_rollback_rehearsal
+updated_at: 2026-08-12T11:40:00Z
+status: implementation_in_progress
+branch: task/backup-restore-rollback-rehearsal-20260812
+base_commit: a27af6732d295e1a748c1d24fb5f81b37e61449c
+production_authorized: false
+
+design:
+  document: docs/execution/59-database-backup-restore-rollback-rehearsal-v1.md
+  environment: ephemeral_postgresql_only
+  production_database_access: prohibited
+  source_build_chain:
+    - canonical_wave2_and_post_integration_to_56
+    - PROD-01_through_PROD-04_to_60
+    - PROD-06_and_PROD-07_production_readiness
+  backup_format: pg_dump_custom
+  backup_owner_neutral: true
+  dump_digest: sha256
+  restore_exit_on_error: true
+  rollback_model: drop_drifted_restore_and_restore_same_immutable_backup_again
+  cluster_global_role_backup: excluded_and_external
+
+implementation:
+  design_doc: complete
+  progress_yaml: complete
+  backup_restore_script: pending
+  deterministic_fingerprint: pending
+  sentinel_fixture: pending
+  rollback_drift_rehearsal: pending
+  package_script: pending
+  ci_gate: pending
+
+required_guards:
+  - never_use_caller_pgdatabase_as_temporary_database
+  - reject_postgres_template0_template1_as_temporary_names
+  - unique_process_scoped_database_names
+  - restrictive_temporary_dump_directory
+  - cleanup_source_restore_databases_and_dump_on_exit
+  - no_raw_database_url_or_secret_logging
+  - source_fingerprint_unchanged_after_restore_drift
+  - first_restore_matches_source_before_drift
+  - drifted_restore_differs_from_source
+  - second_restore_matches_source_after_rollback
+  - rollback_drift_marker_absent_after_second_restore
+  - current_migration_ledger_and_prod_06_07_present
+  - representative_rls_and_privileged_functions_preserved
+
+verification_required_before_merge:
+  - format
+  - lint
+  - architecture_boundaries
+  - projection_operations_policy_validator
+  - production_activation_evidence_validator
+  - typecheck
+  - full_tests
+  - canonical_and_auth_migrations
+  - production_runtime_and_credential_gates
+  - projection_recovery_rehearsal
+  - database_backup_restore_rollback_rehearsal
+  - admissions_lifecycle
+  - live_neon
+  - build
+  - cloudflare_production_dry_run
+  - experience_budget
+  - npm_audit
+  - license_and_provenance
+  - browser_e2e
+  - execution_artifact_validation
+
+remaining_external_activation_work:
+  - real_backup_schedule_and_retention
+  - encrypted_backup_storage_and_access_control
+  - isolated_production_like_restore_rehearsal
+  - measured_recovery_timing_and_accepted_rto_rpo
+  - deployed_worker_release_rollback_rehearsal
+  - owner_and_security_acceptance_of_external_backup_restore_rollback_evidence
