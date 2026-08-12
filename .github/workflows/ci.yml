@@ -35,6 +35,11 @@ jobs:
           node-version: '22.22.2'
           cache: npm
       - run: npm ci
+      - name: Capture exact recovery-store Prettier diff
+        run: |
+          npx prettier --write apps/platform-api/src/database-projection-dead-letter-recovery-store.ts
+          git diff -- apps/platform-api/src/database-projection-dead-letter-recovery-store.ts
+          exit 1
       - run: npm run format:check
       - run: npm run lint
       - run: npm run check:boundaries
