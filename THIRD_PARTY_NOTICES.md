@@ -51,11 +51,11 @@ Package source distributions remain the authoritative location for full licence 
 | @bcoe/v8-coverage | 1.0.2 | MIT | yes | no |
 | @cloudflare/kv-asset-handler | 0.5.0 | MIT OR Apache-2.0 | yes | no |
 | @cloudflare/unenv-preset | 2.16.1 | MIT OR Apache-2.0 | yes | no |
-| @cloudflare/workerd-darwin-64 | 1.20260730.1 | Apache-2.0 | yes | yes |
-| @cloudflare/workerd-darwin-arm64 | 1.20260730.1 | Apache-2.0 | yes | yes |
-| @cloudflare/workerd-linux-64 | 1.20260730.1 | Apache-2.0 | yes | yes |
-| @cloudflare/workerd-linux-arm64 | 1.20260730.1 | Apache-2.0 | yes | yes |
-| @cloudflare/workerd-windows-64 | 1.20260730.1 | Apache-2.0 | yes | yes |
+| @cloudflare/workerd-darwin-64 | 1.20260801.1 | Apache-2.0 | yes | yes |
+| @cloudflare/workerd-darwin-arm64 | 1.20260801.1 | Apache-2.0 | yes | yes |
+| @cloudflare/workerd-linux-64 | 1.20260801.1 | Apache-2.0 | yes | yes |
+| @cloudflare/workerd-linux-arm64 | 1.20260801.1 | Apache-2.0 | yes | yes |
+| @cloudflare/workerd-windows-64 | 1.20260801.1 | Apache-2.0 | yes | yes |
 | @cloudflare/workers-types | 5.20260804.1 | MIT OR Apache-2.0 | yes | no |
 | @cspotcode/source-map-support | 0.8.1 | MIT | yes | no |
 | @cspotcode/source-map-support/node_modules/@jridgewell/trace-mapping | 0.3.9 | MIT | yes | no |
@@ -185,7 +185,7 @@ Package source distributions remain the authoritative location for full licence 
 | @rollup/rollup-win32-x64-gnu | 4.62.3 | MIT | yes | yes |
 | @rollup/rollup-win32-x64-msvc | 4.62.3 | MIT | yes | yes |
 | @sindresorhus/is | 7.2.0 | MIT | yes | no |
-| @speed-highlight/core | 1.2.23 | CC0-1.0 | yes | no |
+| @speed-highlight/core | 1.2.24 | CC0-1.0 | yes | no |
 | @standard-schema/spec | 1.1.0 | MIT | yes | no |
 | @tybys/wasm-util | 0.10.3 | MIT | yes | yes |
 | @types/babel__core | 7.20.5 | MIT | yes | no |
@@ -305,7 +305,7 @@ Package source distributions remain the authoritative location for full licence 
 | magic-string | 0.30.21 | MIT | yes | no |
 | magicast | 0.5.3 | MIT | yes | no |
 | make-dir | 4.0.0 | MIT | yes | no |
-| miniflare | 5.20260730.0-alpha | MIT | yes | no |
+| miniflare | 5.20260801.1-alpha | MIT | yes | no |
 | minimatch | 10.2.6 | BlueOak-1.0.0 | yes | no |
 | ms | 2.1.3 | MIT | yes | no |
 | nanoid | 3.3.18 | MIT | yes | no |
@@ -366,8 +366,8 @@ Package source distributions remain the authoritative location for full licence 
 | which | 2.0.2 | ISC | yes | no |
 | why-is-node-running | 2.3.0 | MIT | yes | no |
 | word-wrap | 1.2.5 | MIT | yes | no |
-| workerd | 1.20260730.1 | Apache-2.0 | yes | no |
-| wrangler | 4.118.0 | MIT OR Apache-2.0 | yes | no |
+| workerd | 1.20260801.1 | Apache-2.0 | yes | no |
+| wrangler | 4.120.0 | MIT OR Apache-2.0 | yes | no |
 | wrangler/node_modules/fsevents | 2.3.3 | MIT | yes | yes |
 | ws | 8.21.0 | MIT | yes | no |
 | yallist | 3.1.1 | ISC | yes | no |

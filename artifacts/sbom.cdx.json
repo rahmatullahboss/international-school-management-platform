@@ -489,9 +489,9 @@
     {
       "type": "library",
       "name": "@cloudflare/workerd-darwin-64",
-      "version": "1.20260730.1",
-      "purl": "pkg:npm/%40cloudflare/workerd-darwin-64@1.20260730.1",
-      "bom-ref": "pkg:npm/%40cloudflare/workerd-darwin-64@1.20260730.1",
+      "version": "1.20260801.1",
+      "purl": "pkg:npm/%40cloudflare/workerd-darwin-64@1.20260801.1",
+      "bom-ref": "pkg:npm/%40cloudflare/workerd-darwin-64@1.20260801.1",
       "scope": "optional",
       "licenses": [
         {
@@ -508,9 +508,9 @@
     {
       "type": "library",
       "name": "@cloudflare/workerd-darwin-arm64",
-      "version": "1.20260730.1",
-      "purl": "pkg:npm/%40cloudflare/workerd-darwin-arm64@1.20260730.1",
-      "bom-ref": "pkg:npm/%40cloudflare/workerd-darwin-arm64@1.20260730.1",
+      "version": "1.20260801.1",
+      "purl": "pkg:npm/%40cloudflare/workerd-darwin-arm64@1.20260801.1",
+      "bom-ref": "pkg:npm/%40cloudflare/workerd-darwin-arm64@1.20260801.1",
       "scope": "optional",
       "licenses": [
         {
@@ -527,9 +527,9 @@
     {
       "type": "library",
       "name": "@cloudflare/workerd-linux-64",
-      "version": "1.20260730.1",
-      "purl": "pkg:npm/%40cloudflare/workerd-linux-64@1.20260730.1",
-      "bom-ref": "pkg:npm/%40cloudflare/workerd-linux-64@1.20260730.1",
+      "version": "1.20260801.1",
+      "purl": "pkg:npm/%40cloudflare/workerd-linux-64@1.20260801.1",
+      "bom-ref": "pkg:npm/%40cloudflare/workerd-linux-64@1.20260801.1",
       "scope": "optional",
       "licenses": [
         {
@@ -546,9 +546,9 @@
     {
       "type": "library",
       "name": "@cloudflare/workerd-linux-arm64",
-      "version": "1.20260730.1",
-      "purl": "pkg:npm/%40cloudflare/workerd-linux-arm64@1.20260730.1",
-      "bom-ref": "pkg:npm/%40cloudflare/workerd-linux-arm64@1.20260730.1",
+      "version": "1.20260801.1",
+      "purl": "pkg:npm/%40cloudflare/workerd-linux-arm64@1.20260801.1",
+      "bom-ref": "pkg:npm/%40cloudflare/workerd-linux-arm64@1.20260801.1",
       "scope": "optional",
       "licenses": [
         {
@@ -565,9 +565,9 @@
     {
       "type": "library",
       "name": "@cloudflare/workerd-windows-64",
-      "version": "1.20260730.1",
-      "purl": "pkg:npm/%40cloudflare/workerd-windows-64@1.20260730.1",
-      "bom-ref": "pkg:npm/%40cloudflare/workerd-windows-64@1.20260730.1",
+      "version": "1.20260801.1",
+      "purl": "pkg:npm/%40cloudflare/workerd-windows-64@1.20260801.1",
+      "bom-ref": "pkg:npm/%40cloudflare/workerd-windows-64@1.20260801.1",
       "scope": "optional",
       "licenses": [
         {
@@ -3035,9 +3035,9 @@
     {
       "type": "library",
       "name": "@speed-highlight/core",
-      "version": "1.2.23",
-      "purl": "pkg:npm/%40speed-highlight/core@1.2.23",
-      "bom-ref": "pkg:npm/%40speed-highlight/core@1.2.23",
+      "version": "1.2.24",
+      "purl": "pkg:npm/%40speed-highlight/core@1.2.24",
+      "bom-ref": "pkg:npm/%40speed-highlight/core@1.2.24",
       "scope": "required",
       "licenses": [
         {
@@ -5315,9 +5315,9 @@
     {
       "type": "library",
       "name": "miniflare",
-      "version": "5.20260730.0-alpha",
-      "purl": "pkg:npm/miniflare@5.20260730.0-alpha",
-      "bom-ref": "pkg:npm/miniflare@5.20260730.0-alpha",
+      "version": "5.20260801.1-alpha",
+      "purl": "pkg:npm/miniflare@5.20260801.1-alpha",
+      "bom-ref": "pkg:npm/miniflare@5.20260801.1-alpha",
       "scope": "required",
       "licenses": [
         {
@@ -6474,9 +6474,9 @@
     {
       "type": "library",
       "name": "workerd",
-      "version": "1.20260730.1",
-      "purl": "pkg:npm/workerd@1.20260730.1",
-      "bom-ref": "pkg:npm/workerd@1.20260730.1",
+      "version": "1.20260801.1",
+      "purl": "pkg:npm/workerd@1.20260801.1",
+      "bom-ref": "pkg:npm/workerd@1.20260801.1",
       "scope": "required",
       "licenses": [
         {
@@ -6493,9 +6493,9 @@
     {
       "type": "library",
       "name": "wrangler",
-      "version": "4.118.0",
-      "purl": "pkg:npm/wrangler@4.118.0",
-      "bom-ref": "pkg:npm/wrangler@4.118.0",
+      "version": "4.120.0",
+      "purl": "pkg:npm/wrangler@4.120.0",
+      "bom-ref": "pkg:npm/wrangler@4.120.0",
       "scope": "required",
       "licenses": [
         {
