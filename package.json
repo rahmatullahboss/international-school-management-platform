@@ -40,6 +40,7 @@
     "validate:artifacts": "python3 scripts/validate_execution_artifacts.py",
     "validate:production-activation-evidence": "node scripts/validate-production-activation-evidence.mjs --template --self-test",
     "validate:projection-operations-policy": "node scripts/validate-projection-operations-policy.mjs --self-test",
+    "validate:runtime-secret-boundary": "node scripts/validate-runtime-secret-boundary.mjs",
     "verify:database-recovery": "bash tests/integration/verify-database-backup-restore-rollback.sh",
     "verify:migrations": "bash tests/integration/verify-wave2-migrations.sh",
     "verify:auth-migrations": "bash tests/integration/verify-auth-durable-context.sh",
@@ -47,7 +48,7 @@
     "verify:prod08-recovery": "bash tests/integration/verify-prod08-database-recovery.sh",
     "verify:projection-recovery": "bash tests/integration/verify-runtime-projection-dead-letter-recovery.sh",
     "verify:security-definer-hygiene": "bash tests/integration/verify-security-definer-hygiene.sh",
-    "verify": "npm run format:check && npm run lint && npm run check:boundaries && npm run validate:projection-operations-policy && npm run validate:production-activation-evidence && npm run typecheck && npm run test && npm run build && npm run check:experience-budget && npm run validate:artifacts"
+    "verify": "npm run format:check && npm run lint && npm run check:boundaries && npm run validate:projection-operations-policy && npm run validate:production-activation-evidence && npm run validate:runtime-secret-boundary && npm run typecheck && npm run test && npm run build && npm run check:experience-budget && npm run validate:artifacts"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260727.1",
