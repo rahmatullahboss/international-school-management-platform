@@ -1,0 +1,54 @@
+workstream: production_readiness_backlog_reconciliation
+updated_at: 2026-08-12T11:12:00Z
+status: documentation_in_progress
+branch: task/production-readiness-backlog-reconcile-20260812
+base_commit: 9f32ae478efe82e42e16714f8b12d06cfb5c740f
+production_authorized: false
+
+reconciliation_targets:
+  - docs/execution/52-production-readiness-backlog.md
+  - docs/execution/production-readiness-progress-20260812.yml
+  - docs/execution/projection-operations-policy-progress-20260812.yml
+
+current_verified_main:
+  admissions_lifecycle:
+    pr: 143
+    status: merged_verified
+  projection_dead_letter_recovery:
+    pr: 147
+    stream: PROD-06
+    status: merged_verified
+  projection_recovery_credential_readiness:
+    pr: 148
+    stream: PROD-07
+    status: merged_verified
+  projection_operations_policy:
+    pr: 149
+    status: merged_verified
+    final_ci_run: 31590087033
+  dependabot_safe_updates:
+    status: merged_verified
+    prs:
+      - 139
+      - 142
+  dependabot_security_alerts:
+    status: disabled_repository_setting
+
+remaining_external_blockers:
+  - real_external_oidc_configuration_and_real_identity_bindings
+  - password_bearing_app_production_runtime_login_and_secret_binding
+  - deployed_seven_persona_production_like_e2e
+  - monitor_and_recovery_password_bearing_logins_and_secrets
+  - approved_projection_poller_or_cron_binding
+  - primary_and_secondary_alert_destinations_and_named_owners
+  - deployed_monitor_alert_and_controlled_recovery_rehearsal
+  - credential_rotation_and_revocation_rehearsal
+  - targeted_security_and_privacy_review
+  - backup_restore_and_rollback_rehearsal
+  - owner_uat_and_explicit_owner_security_production_authorization
+
+next_steps:
+  - rewrite_docs_52_to_remove_stale_recovery_tooling_gaps
+  - preserve_external_activation_blockers_and_fail_closed_language
+  - open_reconciliation_pr
+  - require_full_ci_before_merge
