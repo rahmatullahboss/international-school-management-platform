@@ -1,6 +1,6 @@
 workstream: incident_response_evidence_retention_contract
-updated_at: 2026-08-12T13:45:00Z
-status: implementation_in_progress
+updated_at: 2026-08-12T14:11:00Z
+status: implementation_complete_pending_ci
 branch: task/incident-response-evidence-retention-20260812
 base_commit: 64cb93322bb571ec8d9754b508b0076d4d33490b
 production_authorized: false
@@ -16,11 +16,11 @@ implementation:
   design_doc: complete
   operator_runbook: complete
   machine_policy: complete
-  validator: pending
-  adversarial_self_tests: pending
-  package_script: pending
-  ci_gate: pending
-  production_readiness_reconciliation: pending
+  validator: complete
+  adversarial_self_tests: complete
+  package_script: complete
+  ci_gate: complete
+  production_readiness_reconciliation: complete
 
 policy_guards:
   - production_authorized_false
@@ -41,6 +41,51 @@ policy_guards:
   - retention_minimums_pinned
   - lifecycle_and_closure_requirements_pinned
   - all_real_bindings_required_external
+
+validator_adversarial_guards:
+  - unknown_top_level_key_rejected
+  - production_authorization_rejected
+  - sev1_response_weakening_rejected
+  - critical_category_downgrade_rejected
+  - unknown_fail_closed_disable_rejected
+  - automatic_mutation_rejected
+  - secondary_approval_removal_rejected
+  - same_primary_secondary_rejected
+  - projection_runbook_drift_rejected
+  - raw_url_evidence_reference_rejected
+  - redaction_disable_rejected
+  - raw_payload_or_credential_allowance_rejected
+  - preservation_hold_bypass_rejected
+  - retention_shortening_rejected
+  - owner_role_drift_rejected
+  - lifecycle_or_closure_weakening_rejected
+  - real_external_binding_rejected
+
+verification_required_before_merge:
+  - format
+  - lint
+  - architecture_boundaries
+  - runtime_secret_boundary
+  - incident_response_evidence_retention_policy_and_self_tests
+  - projection_operations_policy
+  - production_activation_evidence_contract
+  - typecheck
+  - full_tests
+  - canonical_and_auth_migrations
+  - production_runtime_and_credential_gates
+  - projection_recovery_rehearsal
+  - security_definer_hygiene
+  - broad_database_recovery
+  - prod08_database_recovery_alignment
+  - admissions_lifecycle
+  - live_neon
+  - build
+  - cloudflare_production_dry_run
+  - experience_budget
+  - npm_audit
+  - license_and_provenance
+  - browser_e2e
+  - execution_artifact_validation
 
 remaining_external_activation_work:
   - named_incident_and_security_owners
