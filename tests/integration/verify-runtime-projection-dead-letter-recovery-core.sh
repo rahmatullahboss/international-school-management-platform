@@ -336,7 +336,7 @@ if [[ "$applied_count" != "1" ]]; then
   exit 1
 fi
 
-projection_count="$("${PSQL[@]}" -Atqc "SELECT count(*) FROM platform.runtime_read_model_projection WHERE tenant_id='${TENANT_ID}'::uuid AND membership_id='${MEMBERSHIP_ID}'::uuid AND campus_id='97000000-0000-4000-8000-000000000003'::uuid AND projection_key='home' AND revision=4 AND payload='{"state":"after-source-repair"}'::jsonb;")"
+projection_count="$("${PSQL[@]}" -Atqc "SELECT count(*) FROM platform.runtime_read_model_projection WHERE tenant_id='${TENANT_ID}'::uuid AND membership_id='${MEMBERSHIP_ID}'::uuid AND campus_id='97000000-0000-4000-8000-000000000003'::uuid AND projection_key='home' AND revision=4 AND payload=jsonb_build_object('state','after-source-repair');")"
 if [[ "$projection_count" != "1" ]]; then
   echo "Recovered projection was not applied at the expected revision" >&2
   exit 1
