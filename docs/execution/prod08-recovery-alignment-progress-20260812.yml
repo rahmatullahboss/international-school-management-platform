@@ -1,8 +1,10 @@
 workstream: prod08_database_recovery_alignment
-updated_at: 2026-08-12T12:51:00Z
-status: verified_pending_final_ci
+updated_at: 2026-08-12T13:00:00Z
+status: merged_verified
 branch: task/prod08-recovery-alignment-20260812
 base_commit: 8b6be240a5a6888965e1e3c2016c8a30983db3ac
+pull_request: 156
+merged_commit: 8685ef23e0213b40c98f7dd14acdb669418a7b93
 production_authorized: false
 
 design:
@@ -42,6 +44,9 @@ verification:
   first_full_ci_run: 31596716753
   first_full_ci_result: green
   first_full_ci_head: d6187fe349e7e1d4ecfa1777f5b471cd25a8ae54
+  final_full_ci_run: 31597073801
+  final_full_ci_result: green
+  final_full_ci_head: 3f3bbd328b3efbdfe4787f407f77532dbb704c7f
   passed:
     - format
     - lint
@@ -65,7 +70,13 @@ verification:
     - license_and_provenance
     - browser_e2e
     - execution_artifact_validation
-  final_doc_state_ci: pending
+
+next_repository_workstream:
+  objective: runtime_log_redaction_secret_leakage_audit
+  rationale: >-
+    The current API avoids direct runtime logging, but an explicit unhandled-error sanitizer and
+    negative source gate are needed so request, environment and exception secrets cannot be
+    accidentally reflected or logged by future changes.
 
 remaining_external_activation_work:
   - real_backup_schedule_and_retention
