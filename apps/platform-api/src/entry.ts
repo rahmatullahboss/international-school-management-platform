@@ -18,6 +18,7 @@ import {
   handleProductionOperatorWorkQueueRequest,
   type ProductionOperatorWorkQueueBindings,
 } from './production-operator-work-queue-api.js';
+import { runtimeInternalErrorResponse } from './runtime-error-boundary.js';
 
 interface WorkerEnvironment
   extends
@@ -44,6 +45,8 @@ interface CoreWorker {
   ): void | Promise<void>;
 }
 
+coreWorkerModule.onError(() => runtimeInternalErrorResponse());
+
 const coreWorker = coreWorkerModule as unknown as CoreWorker;
 
 const worker = {
@@ -52,32 +55,36 @@ const worker = {
     environment: WorkerEnvironment,
     executionContext: ExecutionContext,
   ): Promise<Response> {
-    const rateLimitResponse = await enforceProductionPreAuthRateLimit(request, environment);
-    if (rateLimitResponse !== undefined) return rateLimitResponse;
+    try {
+      const rateLimitResponse = await enforceProductionPreAuthRateLimit(request, environment);
+      if (rateLimitResponse !== undefined) return rateLimitResponse;
 
-    const databaseCredentialResponse = await enforceProductionDatabaseCredential(
-      request,
-      environment,
-    );
-    if (databaseCredentialResponse !== undefined) return databaseCredentialResponse;
+      const databaseCredentialResponse = await enforceProductionDatabaseCredential(
+        request,
+        environment,
+      );
+      if (databaseCredentialResponse !== undefined) return databaseCredentialResponse;
 
-    const authResponse = await handleAuthLoginRequest(request, environment);
-    if (authResponse !== undefined) return authResponse;
-    const productionWorkQueueResponse = await handleProductionOperatorWorkQueueRequest(
-      request,
-      environment,
-    );
-    if (productionWorkQueueResponse !== undefined) return productionWorkQueueResponse;
-    const productionOperatorResponse = await handleProductionOperatorCommandRequest(
-      request,
-      environment,
-    );
-    if (productionOperatorResponse !== undefined) return productionOperatorResponse;
-    const productionBoundary = enforceProductionPilotBoundary(request, environment);
-    if (productionBoundary !== undefined) return productionBoundary;
-    const operatorResponse = await handlePilotOperatorRequest(request, environment);
-    if (operatorResponse !== undefined) return operatorResponse;
-    return coreWorker.fetch(request, environment, executionContext);
+      const authResponse = await handleAuthLoginRequest(request, environment);
+      if (authResponse !== undefined) return authResponse;
+      const productionWorkQueueResponse = await handleProductionOperatorWorkQueueRequest(
+        request,
+        environment,
+      );
+      if (productionWorkQueueResponse !== undefined) return productionWorkQueueResponse;
+      const productionOperatorResponse = await handleProductionOperatorCommandRequest(
+        request,
+        environment,
+      );
+      if (productionOperatorResponse !== undefined) return productionOperatorResponse;
+      const productionBoundary = enforceProductionPilotBoundary(request, environment);
+      if (productionBoundary !== undefined) return productionBoundary;
+      const operatorResponse = await handlePilotOperatorRequest(request, environment);
+      if (operatorResponse !== undefined) return operatorResponse;
+      return await coreWorker.fetch(request, environment, executionContext);
+    } catch {
+      return runtimeInternalErrorResponse();
+    }
   },
 
   scheduled(
