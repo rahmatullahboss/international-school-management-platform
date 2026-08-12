@@ -1,14 +1,14 @@
-name: Dependabot Provenance Export
+name: Dependabot Provenance Sync
 
 on:
   pull_request:
     types: [opened, synchronize, reopened]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  export:
+  sync:
     if: >-
       github.actor == 'dependabot[bot]' &&
       github.event.pull_request.user.login == 'dependabot[bot]' &&
@@ -16,6 +16,8 @@ jobs:
       startsWith(github.event.pull_request.head.ref, 'dependabot/npm_and_yarn/')
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    env:
+      DEPENDABOT_HEAD_REF: ${{ github.event.pull_request.head.ref }}
     steps:
       - name: Checkout trusted base generator
         uses: actions/checkout@v4
@@ -29,7 +31,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           path: candidate
-          persist-credentials: false
+          persist-credentials: true
 
       - name: Generate candidate provenance with trusted base script
         working-directory: candidate
@@ -45,3 +47,17 @@ jobs:
             candidate/THIRD_PARTY_NOTICES.md
           if-no-files-found: error
           retention-days: 7
+
+      - name: Commit exact generated provenance to Dependabot branch
+        working-directory: candidate
+        run: |
+          if git diff --quiet -- artifacts THIRD_PARTY_NOTICES.md; then
+            echo "Generated provenance is already current."
+            exit 0
+          fi
+          git add artifacts/dependency-licenses.json artifacts/sbom.cdx.json THIRD_PARTY_NOTICES.md
+          git diff --cached --check
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore(deps): refresh generated provenance"
+          git push origin "HEAD:${DEPENDABOT_HEAD_REF}"
