@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "contractId": "production-activation-evidence-v1",
+  "environment": "production",
+  "productionAuthorized": false,
+  "releaseCommit": null,
+  "gates": {
+    "realExternalOidc": {
+      "status": "pending-external",
+      "evidenceRef": null,
+      "evidenceSha256": null,
+      "verifiedAt": null,
+      "verifiedByRole": null
+    },
+    "productionRuntimeCredential": {
+      "status": "pending-external",
+      "evidenceRef": null,
+      "evidenceSha256": null,
+      "verifiedAt": null,
+      "verifiedByRole": null
+    },
+    "deployedSevenPersonaE2e": {
+      "status": "pending-external",
+      "evidenceRef": null,
+      "evidenceSha256": null,
+      "verifiedAt": null,
+      "verifiedByRole": null
+    },
+    "projectionCredentialsAndSchedule": {
+      "status": "pending-external",
+      "evidenceRef": null,
+      "evidenceSha256": null,
+      "verifiedAt": null,
+      "verifiedByRole": null
+    },
+    "alertDestinationsAndOwners": {
+      "status": "pending-external",
+      "evidenceRef": null,
+      "evidenceSha256": null,
+      "verifiedAt": null,
+      "verifiedByRole": null
+    },
+    "monitorAlertRehearsal": {
+      "status": "pending-external",
+      "evidenceRef": null,
+      "evidenceSha256": null,
+      "verifiedAt": null,
+      "verifiedByRole": null
+    },
+    "controlledRecoveryRehearsal": {
+      "status": "pending-external",
+      "evidenceRef": null,
+      "evidenceSha256": null,
+      "verifiedAt": null,
+      "verifiedByRole": null
+    },
+    "credentialRotationRevocation": {
+      "status": "pending-external",
+      "evidenceRef": null,
+      "evidenceSha256": null,
+      "verifiedAt": null,
+      "verifiedByRole": null
+    },
+    "securityPrivacyReview": {
+      "status": "pending-external",
+      "evidenceRef": null,
+      "evidenceSha256": null,
+      "verifiedAt": null,
+      "verifiedByRole": null
+    },
+    "backupRestoreRollback": {
+      "status": "pending-external",
+      "evidenceRef": null,
+      "evidenceSha256": null,
+      "verifiedAt": null,
+      "verifiedByRole": null
+    },
+    "ownerUat": {
+      "status": "pending-external",
+      "evidenceRef": null,
+      "evidenceSha256": null,
+      "verifiedAt": null,
+      "verifiedByRole": null
+    },
+    "incidentOperationsAcceptance": {
+      "status": "pending-external",
+      "evidenceRef": null,
+      "evidenceSha256": null,
+      "verifiedAt": null,
+      "verifiedByRole": null
+    }
+  },
+  "authorizations": {
+    "ownerAuthorization": {
+      "status": "pending-external",
+      "evidenceRef": null,
+      "evidenceSha256": null,
+      "verifiedAt": null,
+      "verifiedByRole": null
+    },
+    "securityAuthorization": {
+      "status": "pending-external",
+      "evidenceRef": null,
+      "evidenceSha256": null,
+      "verifiedAt": null,
+      "verifiedByRole": null
+    }
+  }
+}
