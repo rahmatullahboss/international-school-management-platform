@@ -87,27 +87,15 @@ export function validateProjectionOperationsPolicy(policy) {
   if (policy.monitor.staleSourceSeconds < 300 || policy.monitor.staleSourceSeconds > 604_800) {
     fail('monitor.staleSourceSeconds is outside the PILOT-12 database contract');
   }
-  assertEqual(
-    policy.monitor.warningConsecutiveSnapshots,
-    2,
-    'monitor.warningConsecutiveSnapshots',
-  );
+  assertEqual(policy.monitor.warningConsecutiveSnapshots, 2, 'monitor.warningConsecutiveSnapshots');
   assertEqual(
     policy.monitor.criticalConsecutiveSnapshots,
     1,
     'monitor.criticalConsecutiveSnapshots',
   );
-  assertEqual(
-    policy.monitor.alertDedupWindowSeconds,
-    900,
-    'monitor.alertDedupWindowSeconds',
-  );
+  assertEqual(policy.monitor.alertDedupWindowSeconds, 900, 'monitor.alertDedupWindowSeconds');
   assertEqual(policy.monitor.tenantScopedRequired, true, 'monitor.tenantScopedRequired');
-  assertEqual(
-    policy.monitor.payloadRedactionRequired,
-    true,
-    'monitor.payloadRedactionRequired',
-  );
+  assertEqual(policy.monitor.payloadRedactionRequired, true, 'monitor.payloadRedactionRequired');
   assertEqual(
     policy.monitor.exactEventAllowlistRequired,
     true,
@@ -263,30 +251,65 @@ function expectRejected(base, label, mutate) {
 
 function runSelfTests(base) {
   const cases = [
-    ['unknown top-level key', (candidate) => { candidate.unreviewed = true; }],
-    ['production authorization', (candidate) => { candidate.productionAuthorized = true; }],
-    ['monitor threshold widening', (candidate) => { candidate.monitor.warningAgeSeconds = 86_401; }],
-    ['payload redaction disabled', (candidate) => { candidate.monitor.payloadRedactionRequired = false; }],
-    ['automatic recovery', (candidate) => { candidate.recovery.automatic = true; }],
+    [
+      'unknown top-level key',
+      (candidate) => {
+        candidate.unreviewed = true;
+      },
+    ],
+    [
+      'production authorization',
+      (candidate) => {
+        candidate.productionAuthorized = true;
+      },
+    ],
+    [
+      'monitor threshold widening',
+      (candidate) => {
+        candidate.monitor.warningAgeSeconds = 86_401;
+      },
+    ],
+    [
+      'payload redaction disabled',
+      (candidate) => {
+        candidate.monitor.payloadRedactionRequired = false;
+      },
+    ],
+    [
+      'automatic recovery',
+      (candidate) => {
+        candidate.recovery.automatic = true;
+      },
+    ],
     [
       'secondary approval removed',
-      (candidate) => { candidate.recovery.secondaryHumanApprovalRequired = false; },
+      (candidate) => {
+        candidate.recovery.secondaryHumanApprovalRequired = false;
+      },
     ],
     [
       'recovery error allowlist widened',
-      (candidate) => { candidate.recovery.eligibleErrorCodes.push('invalid-event'); },
+      (candidate) => {
+        candidate.recovery.eligibleErrorCodes.push('invalid-event');
+      },
     ],
     [
       'permanent error prohibition removed',
-      (candidate) => { candidate.recovery.prohibitedErrorCodes = ['invalid-event']; },
+      (candidate) => {
+        candidate.recovery.prohibitedErrorCodes = ['invalid-event'];
+      },
     ],
     [
       'real alert destination embedded',
-      (candidate) => { candidate.externalBindings.primaryAlertDestination = 'https://example.invalid/hook'; },
+      (candidate) => {
+        candidate.externalBindings.primaryAlertDestination = 'https://example.invalid/hook';
+      },
     ],
     [
       'external owner binding omitted',
-      (candidate) => { delete candidate.externalBindings.secondaryOperationsOwner; },
+      (candidate) => {
+        delete candidate.externalBindings.secondaryOperationsOwner;
+      },
     ],
   ];
 
