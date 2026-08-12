@@ -1,7 +1,7 @@
 # System-wide SECURITY DEFINER Hygiene Audit v1
 
 **Program:** `international-school-platform-v1`  
-**Status:** implemented and verified on branch; production activation is not authorized
+**Status:** merged and verified; production activation is not authorized
 
 ## Objective
 
@@ -58,9 +58,10 @@ Any violation blocks CI. The verifier also creates one intentionally unsafe func
 
 ## Verification evidence
 
-Remediated full CI run `31595157916` passed the system-wide SECURITY DEFINER gate, existing capability/role tests, database backup/restore/rollback rehearsal, Admissions lifecycle, secret-backed live Neon check, build, Cloudflare production dry-runs, audit/license/provenance checks, browser E2E and execution-artifact validation.
-
-A final combined-state CI run is still required after synchronizing the branch with the latest `main` before merge.
+- Initial catalog CI `31594220594` failed on the four real unsafe paths above.
+- First remediated full CI `31595157916` passed after `PROD-08`.
+- Final combined-state CI `31595704313` on head `4cdcded01ae0d02252b969b7081efec11641335b` passed the security gate, existing capability/role tests, database recovery rehearsal, Admissions lifecycle, secret-backed live Neon check, build, Cloudflare production dry-runs, audit/license/provenance checks, browser E2E and execution-artifact validation.
+- PR #155 was squash-merged to `main` as `8b6be240a5a6888965e1e3c2016c8a30983db3ac`.
 
 ## Production boundary
 
