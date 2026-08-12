@@ -13,3 +13,14 @@ export function runtimeInternalErrorPayload(): RuntimeInternalErrorPayload {
     },
   };
 }
+
+export function runtimeInternalErrorResponse(): Response {
+  return new Response(JSON.stringify(runtimeInternalErrorPayload()), {
+    status: 500,
+    headers: {
+      'cache-control': 'no-store',
+      'content-type': 'application/json; charset=utf-8',
+      'x-correlation-id': crypto.randomUUID(),
+    },
+  });
+}
