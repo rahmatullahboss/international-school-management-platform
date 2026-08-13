@@ -1,0 +1,53 @@
+name: Temporary Production Public Smoke
+
+on:
+  push:
+    branches:
+      - deploy/cloudflare-production-pilot
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      API_URL: https://international-school-platform-api-production.rahmatullahzisan.workers.dev
+      WEB_URL: https://international-school-platform-web-production.rahmatullahzisan.workers.dev
+    steps:
+      - name: Verify API health and database readiness
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error "$API_URL/health" | tee /tmp/health.json
+          grep -q '"status":"ok"' /tmp/health.json
+          curl --fail --silent --show-error "$API_URL/auth/v1/database-credential/readiness" | tee /tmp/db.json
+          grep -q '"ready":true' /tmp/db.json
+
+      - name: Verify web routes
+        run: |
+          set -euo pipefail
+          for path in / /admin /teacher /family /student; do
+            curl --fail --silent --show-error "$WEB_URL$path" > /tmp/page.html
+            grep -qi '<!doctype html' /tmp/page.html
+            echo "$path PASS"
+          done
+
+      - name: Verify PWA assets
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error "$WEB_URL/manifest.webmanifest" > /tmp/manifest
+          python3 -c 'import json; d=json.load(open("/tmp/manifest")); assert d.get("name")=="International School Platform"; assert d.get("start_url")=="/"; assert d.get("display")=="standalone"'
+          curl --fail --silent --show-error "$WEB_URL/offline.html" > /tmp/offline
+          grep -qi '<!doctype html' /tmp/offline
+          curl --fail --silent --show-error "$WEB_URL/sw.js" > /tmp/sw
+          grep -q 'addEventListener' /tmp/sw
+          echo 'PWA PASS'
+
+      - name: Capture auth readiness
+        run: |
+          set -euo pipefail
+          status=$(curl --silent --show-error --output /tmp/auth.json --write-out '%{http_code}' "$API_URL/auth/v1/readiness" || true)
+          cat /tmp/auth.json
+          echo "AUTH_HTTP_STATUS=$status"
+          python3 -c 'import json; d=json.load(open("/tmp/auth.json")); print("AUTH_STATE="+str(d.get("state"))); print("AUTH_LOGIN_ENABLED="+str(d.get("loginEnabled"))); print("AUTH_MISSING="+",".join(d.get("missingConfiguration") or []))'
