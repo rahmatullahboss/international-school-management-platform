@@ -30,27 +30,24 @@ describe('runtime projection worker readiness', () => {
   });
 
   it('does not accept the shared API database credential', () => {
-    expect(
-      resolveRuntimeProjectionWorkerReadiness({
-        DATABASE_URL: 'postgresql://api-runtime.example/school',
-        RUNTIME_PROJECTION_WORKER_SOURCE: 'database',
-      }),
-    ).toEqual(
-      expect.objectContaining({
-        state: 'incomplete',
-        missingConfiguration: ['runtime-projection-database-url'],
-      }),
-    );
+    const readiness = resolveRuntimeProjectionWorkerReadiness({
+      DATABASE_URL: 'synthetic-api-db',
+      RUNTIME_PROJECTION_WORKER_SOURCE: 'database',
+    });
+
+    expect(readiness.state).toBe('incomplete');
+    expect(readiness.missingConfiguration).toEqual(['runtime-projection-database-url']);
   });
 
-  it('reports ready only for a database source and the dedicated projection credential', () => {
-    expect(
-      resolveRuntimeProjectionWorkerReadiness({
-        DATABASE_URL: 'postgresql://api-runtime.example/school',
-        RUNTIME_PROJECTION_DATABASE_URL: 'postgresql://projection-worker.example/school',
-        RUNTIME_PROJECTION_WORKER_SOURCE: 'database',
-      }),
-    ).toMatchObject({ state: 'ready', missingConfiguration: [] });
+  it('requires the dedicated projection credential before becoming ready', () => {
+    const readiness = resolveRuntimeProjectionWorkerReadiness({
+      DATABASE_URL: 'synthetic-api-db',
+      RUNTIME_PROJECTION_DATABASE_URL: 'synthetic-projection-db',
+      RUNTIME_PROJECTION_WORKER_SOURCE: 'database',
+    });
+
+    expect(readiness.state).toBe('ready');
+    expect(readiness.missingConfiguration).toEqual([]);
   });
 });
 
@@ -120,7 +117,7 @@ describe('runtime projection batch processing', () => {
     });
     expect(store.processBatch).not.toHaveBeenCalled();
 
-    store.processBatch.mockRejectedValue(new Error('database secret details'));
+    store.processBatch.mockRejectedValue(new Error('database details'));
     await expect(
       processRuntimeProjectionBatch({
         configured: true,
