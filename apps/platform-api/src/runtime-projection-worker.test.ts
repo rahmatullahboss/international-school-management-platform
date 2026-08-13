@@ -14,6 +14,7 @@ describe('runtime projection worker readiness', () => {
       state: 'disabled',
       controls: {
         databaseNativeProcessing: true,
+        dedicatedDatabaseCredential: true,
         exactEventAllowlist: true,
         concurrentSkipLockedClaims: true,
         appliedCommandDeduplication: true,
@@ -21,17 +22,31 @@ describe('runtime projection worker readiness', () => {
         deadLetterIsolation: true,
         sourceProjectionIntegrity: true,
       },
-      missingConfiguration: ['database-url', 'runtime-projection-worker-source'],
+      missingConfiguration: [
+        'runtime-projection-database-url',
+        'runtime-projection-worker-source',
+      ],
     });
   });
 
-  it('reports ready only for a database source and a configured connection', () => {
+  it('reports ready only for a database source and a dedicated projection connection', () => {
     expect(
       resolveRuntimeProjectionWorkerReadiness({
-        DATABASE_URL: 'postgresql://database.example/school',
+        RUNTIME_PROJECTION_DATABASE_URL: 'postgresql://database.example/school',
         RUNTIME_PROJECTION_WORKER_SOURCE: 'database',
       }),
     ).toMatchObject({ state: 'ready', missingConfiguration: [] });
+  });
+
+  it('does not accept the normal API database connection as projection-worker configuration', () => {
+    const apiBindings = {
+      DATABASE_URL: 'postgresql://api.example/school',
+      RUNTIME_PROJECTION_WORKER_SOURCE: 'database',
+    };
+    expect(resolveRuntimeProjectionWorkerReadiness(apiBindings)).toMatchObject({
+      state: 'incomplete',
+      missingConfiguration: ['runtime-projection-database-url'],
+    });
   });
 });
 
