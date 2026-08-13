@@ -1,8 +1,17 @@
 program: international-school-platform-v1
-updated_at: 2026-08-12T14:32:00Z
+updated_at: 2026-08-13T07:48:00Z
 status: production_not_authorized
 base_branch: main
-base_commit: dea017c4be2e8c340e9ee98b7e2a805348f60fd8
+base_commit: 6ad456ba68871cfbaf20b46d2a6012b13ebff608
+
+repository_state:
+  main_commit: 6ad456ba68871cfbaf20b46d2a6012b13ebff608
+  last_reconciliation_pull_request: 160
+  last_reconciliation_head: 79f60f5e16fdd954fae1f83c2384df52e3afcbfb
+  last_reconciliation_ci_run: 31607875655
+  last_reconciliation_ci_result: green
+  open_repository_issues:
+    - 78
 
 completed_this_cycle:
   admissions_production_lifecycle:
@@ -118,14 +127,24 @@ completed_this_cycle:
       - pinned_operational_retention_minimums
       - lifecycle_and_closure_fail_closed_contract
       - real_bindings_external_only
+  incident_response_evidence_reconciliation:
+    pull_request: 160
+    merge_commit: 6ad456ba68871cfbaf20b46d2a6012b13ebff608
+    head_commit: 79f60f5e16fdd954fae1f83c2384df52e3afcbfb
+    status: merged_verified
+    final_ci_run: 31607875655
+    final_ci_result: green
 
 active_workstream:
-  incident_response_evidence_reconciliation:
-    branch: task/incident-response-evidence-reconcile-20260812
-    status: docs_only_pending_ci
+  production_depth_activation_evidence:
+    issue: 78
+    status: blocked_on_real_external_configuration_and_deployed_evidence
+    repository_implementation_baseline: complete
     objective: >-
-      Reconcile PR 159 merge and final CI evidence without changing executable incident-response,
-      security, database or runtime behavior.
+      Preserve the verified seven-persona repository implementation while waiting for real staging IdP,
+      secret-bound deployed Worker/database paths, deployed rehearsals, owner/security acceptance and
+      explicit production authorization. Do not fabricate or substitute repository-only evidence for
+      external production-depth proof.
 
 performance_budget:
   initial_javascript_bytes: 250000
@@ -227,8 +246,9 @@ remaining_production_blockers:
     status: open
 
 next_repository_actions:
-  - merge_incident_response_evidence_reconciliation_only_after_full_ci
-  - inspect_remaining_repository_side_controls_without_claiming_external_activation
+  - keep_issue_78_open_until_real_staging_idp_worker_database_and_identity_evidence_exists
+  - do_not_replace_external_activation_evidence_with_local_fixtures_or_repository_only_claims
+  - inspect_future_repository_changes_for_new_verified_gaps_before_starting_additional_implementation
   - keep_people_destinations_real_evidence_and_acceptance_external
   - keep_major_dependency_upgrades_isolated_from_core_work
   - enable_repository_dependabot_security_alerts_when_repository_settings_access_is_available
@@ -236,5 +256,5 @@ next_repository_actions:
 
 production_authorization_boundary:
   repository_template: config/production/activation-evidence.template.json
-  current_state: unauthorized_all_external_gates_pending
+  current_state: unauthorized_external_gates_pending
   real_activation_manifest_location: external_only
