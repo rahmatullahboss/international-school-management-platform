@@ -48,7 +48,9 @@ describe('scheduled runtime projection execution', () => {
 
   it('never falls back to the normal API database connection', async () => {
     const storeFactory = vi.fn();
-    await expect(runRuntimeProjectionScheduled(apiOnlyBindings, storeFactory)).resolves.toMatchObject({
+    await expect(
+      runRuntimeProjectionScheduled(apiOnlyBindings, storeFactory),
+    ).resolves.toMatchObject({
       ok: false,
       code: 'runtime_projection_worker_configuration_invalid',
     });
