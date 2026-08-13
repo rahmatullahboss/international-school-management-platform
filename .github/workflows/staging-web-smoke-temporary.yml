@@ -1,0 +1,103 @@
+name: Temporary staging web deploy and smoke
+
+on:
+  push:
+    branches:
+      - deploy/cloudflare-staging-pilot
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temporary-staging-web-smoke
+  cancel-in-progress: true
+
+jobs:
+  deploy-web-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: cloudflare-staging
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      API_URL: https://international-school-platform-api-staging.rahmatullahzisan.workers.dev
+      WEB_URL: https://international-school-platform-web-staging.rahmatullahzisan.workers.dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.2'
+          cache: npm
+
+      - name: Require staging credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          test -n "$CLOUDFLARE_API_TOKEN"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build staging web Worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          VITE_PLATFORM_API_URL="$API_URL" npm run build --workspace=@school/platform-web
+
+      - name: Deploy staging web Worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler deploy --config apps/platform-web/wrangler.jsonc --env staging
+
+      - name: Smoke test deployed staging pair
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          fetch_with_retry() {
+            local url="$1"
+            local output="$2"
+            for attempt in {1..12}; do
+              if curl --location --fail --silent --show-error "$url" --output "$output"; then
+                return 0
+              fi
+              if [[ "$attempt" == '12' ]]; then
+                return 1
+              fi
+              sleep 5
+            done
+          }
+
+          fetch_with_retry "$API_URL/health" api-health.json
+          fetch_with_retry "$API_URL/auth/v1/readiness" auth-readiness.json
+          fetch_with_retry "$WEB_URL/" web-index.html
+          fetch_with_retry "$WEB_URL/admin" web-admin.html
+          fetch_with_retry "$WEB_URL/teacher" web-teacher.html
+          fetch_with_retry "$WEB_URL/family" web-family.html
+          fetch_with_retry "$WEB_URL/student" web-student.html
+          fetch_with_retry "$WEB_URL/manifest.webmanifest" web-manifest.json
+          fetch_with_retry "$WEB_URL/offline.html" web-offline.html
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          health = json.loads(Path('api-health.json').read_text(encoding='utf-8'))
+          assert health.get('status') == 'ok', health
+          assert health.get('environment') == 'staging', health
+
+          readiness = json.loads(Path('auth-readiness.json').read_text(encoding='utf-8'))
+          assert readiness.get('schemaVersion') == 1, readiness
+          assert readiness.get('mode') == 'oidc-bff', readiness
+
+          for path in ['web-index.html', 'web-admin.html', 'web-teacher.html', 'web-family.html', 'web-student.html']:
+              text = Path(path).read_text(encoding='utf-8').lower()
+              assert '<!doctype html' in text, path
+
+          manifest = json.loads(Path('web-manifest.json').read_text(encoding='utf-8'))
+          assert manifest.get('name'), manifest
+          assert manifest.get('start_url') is not None, manifest
+          PY
