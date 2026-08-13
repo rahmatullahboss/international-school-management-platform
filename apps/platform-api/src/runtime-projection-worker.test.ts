@@ -13,6 +13,7 @@ describe('runtime projection worker readiness', () => {
       schemaVersion: 1,
       state: 'disabled',
       controls: {
+        dedicatedDatabaseCredential: true,
         databaseNativeProcessing: true,
         exactEventAllowlist: true,
         concurrentSkipLockedClaims: true,
@@ -21,14 +22,32 @@ describe('runtime projection worker readiness', () => {
         deadLetterIsolation: true,
         sourceProjectionIntegrity: true,
       },
-      missingConfiguration: ['database-url', 'runtime-projection-worker-source'],
+      missingConfiguration: [
+        'runtime-projection-database-url',
+        'runtime-projection-worker-source',
+      ],
     });
   });
 
-  it('reports ready only for a database source and a configured connection', () => {
+  it('does not accept the shared API database credential', () => {
     expect(
       resolveRuntimeProjectionWorkerReadiness({
-        DATABASE_URL: 'postgresql://database.example/school',
+        DATABASE_URL: 'postgresql://api-runtime.example/school',
+        RUNTIME_PROJECTION_WORKER_SOURCE: 'database',
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        state: 'incomplete',
+        missingConfiguration: ['runtime-projection-database-url'],
+      }),
+    );
+  });
+
+  it('reports ready only for a database source and the dedicated projection credential', () => {
+    expect(
+      resolveRuntimeProjectionWorkerReadiness({
+        DATABASE_URL: 'postgresql://api-runtime.example/school',
+        RUNTIME_PROJECTION_DATABASE_URL: 'postgresql://projection-worker.example/school',
         RUNTIME_PROJECTION_WORKER_SOURCE: 'database',
       }),
     ).toMatchObject({ state: 'ready', missingConfiguration: [] });
