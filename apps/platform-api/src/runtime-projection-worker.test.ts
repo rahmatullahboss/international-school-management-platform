@@ -22,10 +22,7 @@ describe('runtime projection worker readiness', () => {
         deadLetterIsolation: true,
         sourceProjectionIntegrity: true,
       },
-      missingConfiguration: [
-        'runtime-projection-database-url',
-        'runtime-projection-worker-source',
-      ],
+      missingConfiguration: ['runtime-projection-database-url', 'runtime-projection-worker-source'],
     });
   });
 
