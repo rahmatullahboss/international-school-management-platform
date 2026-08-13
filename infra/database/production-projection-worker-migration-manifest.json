@@ -1,0 +1,14 @@
+{
+  "program": "international-school-platform-v1",
+  "gate": "GATE-PROD-RUNTIME-PROJECTION-WORKER-CREDENTIAL-V1",
+  "baseManifest": "infra/database/production-security-migration-manifest.json",
+  "orderingRule": "apply the reviewed production security manifest first, then projection worker credential migrations in contiguous order",
+  "migrations": [
+    {
+      "order": 1,
+      "id": "202608140001_PROD-09_projection_worker_credential",
+      "stream": "PROD-09",
+      "path": "infra/database/post-integration-migrations/202608140001_PROD-09_projection_worker_credential.sql"
+    }
+  ]
+}
