@@ -11,10 +11,13 @@ permissions:
 jobs:
   smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 12
+    environment: cloudflare-production
     env:
       API_URL: https://international-school-platform-api-production.rahmatullahzisan.workers.dev
       WEB_URL: https://international-school-platform-web-production.rahmatullahzisan.workers.dev
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
     steps:
       - name: Verify API health and database readiness
         run: |
@@ -33,30 +36,16 @@ jobs:
             echo "$path PASS"
           done
 
-      - name: Diagnose PWA assets
-        continue-on-error: true
+      - name: Verify PWA assets
         run: |
-          set -u
-          failed=0
-          for path in /manifest.webmanifest /offline.html /sw.js; do
-            headers=$(mktemp)
-            body=$(mktemp)
-            status=$(curl --silent --show-error --dump-header "$headers" --output "$body" --write-out '%{http_code}' "$WEB_URL$path" || true)
-            ctype=$(grep -i '^content-type:' "$headers" | tail -1 | tr -d '\r' || true)
-            size=$(wc -c < "$body" | tr -d ' ')
-            echo "ASSET $path HTTP=$status SIZE=$size $ctype"
-            head -c 240 "$body" | tr '\n' ' ' || true
-            echo
-            [[ "$status" == "200" ]] || failed=1
-            if [[ "$path" == "/manifest.webmanifest" ]]; then
-              python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print("MANIFEST name=",d.get("name"),"start_url=",d.get("start_url"),"display=",d.get("display")); assert d.get("name")=="International School Platform"; assert d.get("start_url")=="/"; assert d.get("display")=="standalone"' "$body" || failed=1
-            elif [[ "$path" == "/offline.html" ]]; then
-              grep -qi '<!doctype html' "$body" || failed=1
-            else
-              grep -q 'addEventListener' "$body" || failed=1
-            fi
-          done
-          [[ "$failed" == "0" ]]
+          set -euo pipefail
+          curl --fail --silent --show-error "$WEB_URL/manifest.webmanifest" > /tmp/manifest
+          python3 -c 'import json; d=json.load(open("/tmp/manifest")); assert d.get("name")=="International School Platform"; assert d.get("start_url")=="/"; assert d.get("display")=="standalone"'
+          curl --location --fail --silent --show-error "$WEB_URL/offline.html" > /tmp/offline
+          grep -qi '<!doctype html' /tmp/offline
+          curl --fail --silent --show-error "$WEB_URL/sw.js" > /tmp/sw
+          grep -q 'addEventListener' /tmp/sw
+          echo 'PWA PASS'
 
       - name: Capture auth readiness
         run: |
@@ -66,3 +55,26 @@ jobs:
           echo
           echo "AUTH_HTTP_STATUS=$status"
           python3 -c 'import json; d=json.load(open("/tmp/auth.json")); print("AUTH_STATE="+str(d.get("state"))); print("AUTH_LOGIN_ENABLED="+str(d.get("loginEnabled"))); print("AUTH_MISSING="+",".join(d.get("missingConfiguration") or []))'
+
+      - name: Inventory Cloudflare cron triggers read-only
+        run: |
+          set -euo pipefail
+          [[ -n "${CLOUDFLARE_ACCOUNT_ID:-}" ]]
+          [[ -n "${CLOUDFLARE_API_TOKEN:-}" ]]
+          base="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts"
+          auth="Authorization: Bearer $CLOUDFLARE_API_TOKEN"
+          curl --fail --silent --show-error -H "$auth" "$base" > /tmp/scripts.json
+          python3 -c 'import json; d=json.load(open("/tmp/scripts.json")); [print(x.get("id") or x.get("name")) for x in (d.get("result") or []) if (x.get("id") or x.get("name"))]' > /tmp/scripts.txt
+          total=0
+          while IFS= read -r script; do
+            [[ -n "$script" ]] || continue
+            enc=$(python3 -c 'import sys,urllib.parse; print(urllib.parse.quote(sys.argv[1],safe=""))' "$script")
+            curl --fail --silent --show-error -H "$auth" "$base/$enc/schedules" > /tmp/schedules.json
+            count=$(python3 -c 'import json; d=json.load(open("/tmp/schedules.json")); print(len((d.get("result") or {}).get("schedules") or []))')
+            if [[ "$count" -gt 0 ]]; then
+              crons=$(python3 -c 'import json; d=json.load(open("/tmp/schedules.json")); print(",".join(x.get("cron","") for x in ((d.get("result") or {}).get("schedules") or [])))')
+              echo "CRON|$script|$count|$crons"
+              total=$((total + count))
+            fi
+          done < /tmp/scripts.txt
+          echo "CRON_TOTAL|$total"
