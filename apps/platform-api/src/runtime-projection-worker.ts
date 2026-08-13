@@ -4,6 +4,10 @@ export interface RuntimeProjectionWorkerBindings {
   readonly RUNTIME_PROJECTION_WORKER_SOURCE?: string;
 }
 
+type RuntimeProjectionWorkerMissingConfiguration =
+  | 'runtime-projection-database-url'
+  | 'runtime-projection-worker-source';
+
 export interface RuntimeProjectionWorkerReadiness {
   readonly schemaVersion: 1;
   readonly state: 'disabled' | 'incomplete' | 'ready';
@@ -17,10 +21,7 @@ export interface RuntimeProjectionWorkerReadiness {
     readonly deadLetterIsolation: true;
     readonly sourceProjectionIntegrity: true;
   };
-  readonly missingConfiguration: readonly (
-    | 'runtime-projection-database-url'
-    | 'runtime-projection-worker-source'
-  )[];
+  readonly missingConfiguration: readonly RuntimeProjectionWorkerMissingConfiguration[];
 }
 
 export interface RuntimeProjectionBatchResult {
@@ -81,10 +82,7 @@ function validBatchResult(value: RuntimeProjectionBatchResult, batchSize: number
 export function resolveRuntimeProjectionWorkerReadiness(
   bindings: RuntimeProjectionWorkerBindings,
 ): RuntimeProjectionWorkerReadiness {
-  const missingConfiguration: (
-    | 'runtime-projection-database-url'
-    | 'runtime-projection-worker-source'
-  )[] = [];
+  const missingConfiguration: RuntimeProjectionWorkerMissingConfiguration[] = [];
   if (configuredValue(bindings.RUNTIME_PROJECTION_DATABASE_URL) === undefined) {
     missingConfiguration.push('runtime-projection-database-url');
   }
