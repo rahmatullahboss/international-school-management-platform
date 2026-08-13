@@ -1,0 +1,47 @@
+name: Temporary Projection Format
+
+on:
+  push:
+    branches:
+      - fix/production-projection-worker-credential-v2
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/production-projection-worker-credential-v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.2'
+          cache: npm
+      - run: npm ci
+      - run: >-
+          npx prettier --write
+          apps/platform-api/src/runtime-projection-worker.ts
+          apps/platform-api/src/runtime-projection-worker.test.ts
+          apps/platform-api/src/runtime-projection-scheduled.ts
+          apps/platform-api/src/runtime-projection-scheduled.test.ts
+      - name: Commit formatter output
+        run: |
+          if git diff --quiet -- \
+            apps/platform-api/src/runtime-projection-worker.ts \
+            apps/platform-api/src/runtime-projection-worker.test.ts \
+            apps/platform-api/src/runtime-projection-scheduled.ts \
+            apps/platform-api/src/runtime-projection-scheduled.test.ts; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            apps/platform-api/src/runtime-projection-worker.ts \
+            apps/platform-api/src/runtime-projection-worker.test.ts \
+            apps/platform-api/src/runtime-projection-scheduled.ts \
+            apps/platform-api/src/runtime-projection-scheduled.test.ts
+          git commit -m "style(runtime): apply formatter"
+          git push origin HEAD:fix/production-projection-worker-credential-v2
