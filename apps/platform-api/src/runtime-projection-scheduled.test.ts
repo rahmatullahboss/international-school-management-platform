@@ -13,6 +13,11 @@ const configuredBindings = {
   RUNTIME_PROJECTION_WORKER_MAX_ATTEMPTS: '4',
 };
 
+const apiOnlyBindings = {
+  DATABASE_URL: 'postgresql://api.example/school',
+  RUNTIME_PROJECTION_WORKER_SOURCE: 'database',
+};
+
 describe('scheduled runtime projection execution', () => {
   it('does not construct a database store while unconfigured', async () => {
     const storeFactory = vi.fn();
@@ -43,15 +48,7 @@ describe('scheduled runtime projection execution', () => {
 
   it('never falls back to the normal API database connection', async () => {
     const storeFactory = vi.fn();
-    await expect(
-      runRuntimeProjectionScheduled(
-        {
-          DATABASE_URL: 'postgresql://api.example/school',
-          RUNTIME_PROJECTION_WORKER_SOURCE: 'database',
-        },
-        storeFactory,
-      ),
-    ).resolves.toMatchObject({
+    await expect(runRuntimeProjectionScheduled(apiOnlyBindings, storeFactory)).resolves.toMatchObject({
       ok: false,
       code: 'runtime_projection_worker_configuration_invalid',
     });
