@@ -43,7 +43,7 @@ export async function runRuntimeProjectionScheduled(
   storeFactory: RuntimeProjectionStoreFactory = defaultStoreFactory,
 ): Promise<RuntimeProjectionBatchResolution> {
   const readiness = resolveRuntimeProjectionWorkerReadiness(bindings);
-  const databaseUrl = configuredValue(bindings.DATABASE_URL);
+  const databaseUrl = configuredValue(bindings.RUNTIME_PROJECTION_DATABASE_URL);
   const configured = readiness.state === 'ready' && databaseUrl !== undefined;
   const workerId =
     configuredValue(bindings.RUNTIME_PROJECTION_WORKER_ID) ?? 'runtime-projection-worker';
@@ -53,8 +53,7 @@ export async function runRuntimeProjectionScheduled(
   const unavailableStore: RuntimeProjectionBatchStore = {
     processBatch: () => Promise.reject(new Error('Projection worker is not configured.')),
   };
-  const store =
-    configured && databaseUrl !== undefined ? storeFactory(databaseUrl) : unavailableStore;
+  const store = configured && databaseUrl !== undefined ? storeFactory(databaseUrl) : unavailableStore;
 
   return processRuntimeProjectionBatch({
     configured,
