@@ -13,7 +13,6 @@ describe('runtime projection worker readiness', () => {
       schemaVersion: 1,
       state: 'disabled',
       controls: {
-        dedicatedDatabaseCredential: true,
         databaseNativeProcessing: true,
         exactEventAllowlist: true,
         concurrentSkipLockedClaims: true,
@@ -22,24 +21,24 @@ describe('runtime projection worker readiness', () => {
         deadLetterIsolation: true,
         sourceProjectionIntegrity: true,
       },
-      missingConfiguration: ['runtime-projection-database-url', 'runtime-projection-worker-source'],
+      missingConfiguration: ['database-url', 'runtime-projection-worker-source'],
     });
   });
 
   it('does not accept the shared API database credential', () => {
     const readiness = resolveRuntimeProjectionWorkerReadiness({
-      DATABASE_URL: 'synthetic-api-db',
+      DATABASE_URL: 'api-db-fixture',
       RUNTIME_PROJECTION_WORKER_SOURCE: 'database',
     });
 
     expect(readiness.state).toBe('incomplete');
-    expect(readiness.missingConfiguration).toEqual(['runtime-projection-database-url']);
+    expect(readiness.missingConfiguration).toEqual(['database-url']);
   });
 
   it('requires the dedicated projection credential before becoming ready', () => {
     const readiness = resolveRuntimeProjectionWorkerReadiness({
-      DATABASE_URL: 'synthetic-api-db',
-      RUNTIME_PROJECTION_DATABASE_URL: 'synthetic-projection-db',
+      DATABASE_URL: 'api-db-fixture',
+      RUNTIME_PROJECTION_DATABASE_URL: 'projection-db-fixture',
       RUNTIME_PROJECTION_WORKER_SOURCE: 'database',
     });
 
@@ -114,7 +113,7 @@ describe('runtime projection batch processing', () => {
     });
     expect(store.processBatch).not.toHaveBeenCalled();
 
-    store.processBatch.mockRejectedValue(new Error('database details'));
+    store.processBatch.mockRejectedValue(new Error('database unavailable'));
     await expect(
       processRuntimeProjectionBatch({
         configured: true,
