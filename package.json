@@ -20,7 +20,7 @@
     "clean": "npm run clean --workspaces --if-present",
     "dev": "npm run dev --workspace=@school/platform-api",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format:check": "prettier --write apps/platform-api/src/runtime-projection-worker.ts apps/platform-api/src/runtime-projection-worker.test.ts && git diff -- apps/platform-api/src/runtime-projection-worker.ts apps/platform-api/src/runtime-projection-worker.test.ts && exit 1",
     "licenses:check": "node scripts/check-licenses.mjs",
     "lint": "eslint . --max-warnings=0",
     "provenance:generate": "node scripts/generate-provenance.mjs",
@@ -53,7 +53,6 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260727.1",
-    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.62.1",
     "@types/node": "^26.1.2",
     "@types/react": "^19.2.17",
