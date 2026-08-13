@@ -5,8 +5,7 @@ export interface RuntimeProjectionWorkerBindings {
 }
 
 type RuntimeProjectionWorkerMissingConfiguration =
-  | 'runtime-projection-database-url'
-  | 'runtime-projection-worker-source';
+  'runtime-projection-database-url' | 'runtime-projection-worker-source';
 
 export interface RuntimeProjectionWorkerReadiness {
   readonly schemaVersion: 1;
