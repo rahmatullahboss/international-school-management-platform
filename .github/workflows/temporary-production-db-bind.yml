@@ -1,0 +1,150 @@
+name: Temporary production DB bind
+
+on:
+  push:
+    branches:
+      - docs/production-deployment-checkpoint-20260813
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temporary-production-db-bind
+  cancel-in-progress: true
+
+jobs:
+  bind-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: cloudflare-staging
+    env:
+      OWNER_DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      API_URL: https://international-school-platform-api-production.rahmatullahzisan.workers.dev
+      EXPECTED_NEON_PROJECT_ID: lingering-brook-52999532
+      EXPECTED_NEON_BRANCH_ID: br-cool-wildflower-axsot8l1
+      EXPECTED_DATABASE: neondb
+      RUNTIME_ROLE: app_production_runtime_login
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.2'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify source credential targets exact Neon production database
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$OWNER_DATABASE_URL"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          test -n "$CLOUDFLARE_API_TOKEN"
+          command -v psql >/dev/null
+
+          test "$(psql "$OWNER_DATABASE_URL" -Atqc "SELECT current_database()")" = "$EXPECTED_DATABASE"
+          test "$(psql "$OWNER_DATABASE_URL" -Atqc "SELECT current_setting('neon.project_id', true)")" = "$EXPECTED_NEON_PROJECT_ID"
+          test "$(psql "$OWNER_DATABASE_URL" -Atqc "SELECT current_setting('neon.branch_id', true)")" = "$EXPECTED_NEON_BRANCH_ID"
+
+          test "$(psql "$OWNER_DATABASE_URL" -Atqc "SELECT rolcanlogin AND NOT rolsuper AND NOT rolcreatedb AND NOT rolcreaterole AND NOT rolreplication AND NOT rolbypassrls FROM pg_roles WHERE rolname = '$RUNTIME_ROLE'")" = 't'
+          test "$(psql "$OWNER_DATABASE_URL" -Atqc "SELECT count(*) = 1 AND bool_and(parent.rolname = 'app_production_runtime') FROM pg_auth_members m JOIN pg_roles parent ON parent.oid=m.roleid JOIN pg_roles member ON member.oid=m.member WHERE member.rolname='$RUNTIME_ROLE'")" = 't'
+
+      - name: Rotate runtime password and construct runtime-only URL
+        shell: bash
+        run: |
+          set -euo pipefail
+          runtime_password="$(openssl rand -hex 32)"
+          echo "::add-mask::$runtime_password"
+
+          psql "$OWNER_DATABASE_URL" -v ON_ERROR_STOP=1 -c "ALTER ROLE $RUNTIME_ROLE PASSWORD '$runtime_password';" >/dev/null
+
+          export RUNTIME_PASSWORD="$runtime_password"
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          from urllib.parse import quote, urlsplit, urlunsplit
+
+          source = urlsplit(os.environ['OWNER_DATABASE_URL'])
+          if source.scheme not in {'postgres', 'postgresql'}:
+              raise SystemExit('unexpected database URL scheme')
+          host = source.hostname
+          if not host:
+              raise SystemExit('database host missing')
+          port = f':{source.port}' if source.port else ''
+          user = quote(os.environ['RUNTIME_ROLE'], safe='')
+          password = quote(os.environ['RUNTIME_PASSWORD'], safe='')
+          runtime = urlunsplit((source.scheme, f'{user}:{password}@{host}{port}', source.path, source.query, ''))
+          path = Path('/tmp/runtime-database-url')
+          path.write_text(runtime, encoding='utf-8')
+          path.chmod(0o600)
+          PY
+
+          runtime_url="$(cat /tmp/runtime-database-url)"
+          echo "::add-mask::$runtime_url"
+          test "$(psql "$runtime_url" -Atqc "SELECT session_user")" = "$RUNTIME_ROLE"
+          test "$(psql "$runtime_url" -Atqc "SELECT current_setting('neon.branch_id', true)")" = "$EXPECTED_NEON_BRANCH_ID"
+          test "$(psql "$runtime_url" -Atqc "SELECT platform.production_runtime_credential_ready()")" = 't'
+
+      - name: Bind runtime-only DATABASE_URL to production Worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          runtime_url="$(cat /tmp/runtime-database-url)"
+          echo "::add-mask::$runtime_url"
+          printf '%s' "$runtime_url" | npx wrangler secret put DATABASE_URL --config apps/platform-api/wrangler.jsonc --env production
+
+      - name: Verify live production database gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          ready=false
+          for attempt in {1..18}; do
+            status="$(curl --location --silent --show-error --output db-readiness.json --write-out '%{http_code}' "$API_URL/auth/v1/database-credential/readiness")"
+            if [[ "$status" == '200' ]] && python3 - <<'PY'
+          import json
+          from pathlib import Path
+          payload = json.loads(Path('db-readiness.json').read_text(encoding='utf-8'))
+          raise SystemExit(0 if payload == {'schemaVersion': 1, 'ready': True} else 1)
+          PY
+            then
+              ready=true
+              break
+            fi
+            sleep 5
+          done
+          test "$ready" = true
+
+          status="$(curl --location --silent --show-error --output login-check.json --write-out '%{http_code}' "$API_URL/auth/v1/login")"
+          test "$status" = '503'
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          payload = json.loads(Path('login-check.json').read_text(encoding='utf-8'))
+          code = payload.get('error', {}).get('code')
+          assert code == 'oidc_login_unavailable', payload
+          PY
+
+          curl --location --fail --silent --show-error "$API_URL/health" --output health.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          health = json.loads(Path('health.json').read_text(encoding='utf-8'))
+          assert health.get('status') == 'ok', health
+          assert health.get('environment') == 'production', health
+          PY
+
+      - name: Record checkpoint
+        run: |
+          {
+            echo '### Production database credential checkpoint'
+            echo '- exact Neon project/main branch preflight passed'
+            echo '- existing least-privilege runtime login password rotated'
+            echo '- production Worker DATABASE_URL bound to runtime-only login'
+            echo '- live database credential readiness returned ready=true'
+            echo '- auth progressed past database gate and remains blocked only by external OIDC configuration'
+          } >> "$GITHUB_STEP_SUMMARY"
