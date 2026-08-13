@@ -17,8 +17,7 @@ export interface RuntimeProjectionWorkerReadiness {
     readonly sourceProjectionIntegrity: true;
   };
   readonly missingConfiguration: readonly (
-    | 'runtime-projection-database-url'
-    | 'runtime-projection-worker-source'
+    'runtime-projection-database-url' | 'runtime-projection-worker-source'
   )[];
 }
 
@@ -81,8 +80,7 @@ export function resolveRuntimeProjectionWorkerReadiness(
   bindings: RuntimeProjectionWorkerBindings,
 ): RuntimeProjectionWorkerReadiness {
   const missingConfiguration: (
-    | 'runtime-projection-database-url'
-    | 'runtime-projection-worker-source'
+    'runtime-projection-database-url' | 'runtime-projection-worker-source'
   )[] = [];
   if (configuredValue(bindings.RUNTIME_PROJECTION_DATABASE_URL) === undefined) {
     missingConfiguration.push('runtime-projection-database-url');
