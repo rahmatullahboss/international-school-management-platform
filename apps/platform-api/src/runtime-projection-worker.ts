@@ -1,5 +1,5 @@
 export interface RuntimeProjectionWorkerBindings {
-  readonly DATABASE_URL?: string;
+  readonly RUNTIME_PROJECTION_DATABASE_URL?: string;
   readonly RUNTIME_PROJECTION_WORKER_SOURCE?: string;
 }
 
@@ -8,6 +8,7 @@ export interface RuntimeProjectionWorkerReadiness {
   readonly state: 'disabled' | 'incomplete' | 'ready';
   readonly controls: {
     readonly databaseNativeProcessing: true;
+    readonly dedicatedDatabaseCredential: true;
     readonly exactEventAllowlist: true;
     readonly concurrentSkipLockedClaims: true;
     readonly appliedCommandDeduplication: true;
@@ -15,7 +16,10 @@ export interface RuntimeProjectionWorkerReadiness {
     readonly deadLetterIsolation: true;
     readonly sourceProjectionIntegrity: true;
   };
-  readonly missingConfiguration: readonly ('database-url' | 'runtime-projection-worker-source')[];
+  readonly missingConfiguration: readonly (
+    | 'runtime-projection-database-url'
+    | 'runtime-projection-worker-source'
+  )[];
 }
 
 export interface RuntimeProjectionBatchResult {
@@ -76,9 +80,12 @@ function validBatchResult(value: RuntimeProjectionBatchResult, batchSize: number
 export function resolveRuntimeProjectionWorkerReadiness(
   bindings: RuntimeProjectionWorkerBindings,
 ): RuntimeProjectionWorkerReadiness {
-  const missingConfiguration: ('database-url' | 'runtime-projection-worker-source')[] = [];
-  if (configuredValue(bindings.DATABASE_URL) === undefined) {
-    missingConfiguration.push('database-url');
+  const missingConfiguration: (
+    | 'runtime-projection-database-url'
+    | 'runtime-projection-worker-source'
+  )[] = [];
+  if (configuredValue(bindings.RUNTIME_PROJECTION_DATABASE_URL) === undefined) {
+    missingConfiguration.push('runtime-projection-database-url');
   }
   if (configuredValue(bindings.RUNTIME_PROJECTION_WORKER_SOURCE) !== 'database') {
     missingConfiguration.push('runtime-projection-worker-source');
@@ -94,6 +101,7 @@ export function resolveRuntimeProjectionWorkerReadiness(
           : 'ready',
     controls: {
       databaseNativeProcessing: true,
+      dedicatedDatabaseCredential: true,
       exactEventAllowlist: true,
       concurrentSkipLockedClaims: true,
       appliedCommandDeduplication: true,
