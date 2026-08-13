@@ -4,14 +4,12 @@ export interface RuntimeProjectionWorkerBindings {
   readonly RUNTIME_PROJECTION_WORKER_SOURCE?: string;
 }
 
-type RuntimeProjectionWorkerMissingConfiguration =
-  'runtime-projection-database-url' | 'runtime-projection-worker-source';
+type RuntimeProjectionWorkerMissingConfiguration = 'database-url' | 'runtime-projection-worker-source';
 
 export interface RuntimeProjectionWorkerReadiness {
   readonly schemaVersion: 1;
   readonly state: 'disabled' | 'incomplete' | 'ready';
   readonly controls: {
-    readonly dedicatedDatabaseCredential: true;
     readonly databaseNativeProcessing: true;
     readonly exactEventAllowlist: true;
     readonly concurrentSkipLockedClaims: true;
@@ -83,7 +81,7 @@ export function resolveRuntimeProjectionWorkerReadiness(
 ): RuntimeProjectionWorkerReadiness {
   const missingConfiguration: RuntimeProjectionWorkerMissingConfiguration[] = [];
   if (configuredValue(bindings.RUNTIME_PROJECTION_DATABASE_URL) === undefined) {
-    missingConfiguration.push('runtime-projection-database-url');
+    missingConfiguration.push('database-url');
   }
   if (configuredValue(bindings.RUNTIME_PROJECTION_WORKER_SOURCE) !== 'database') {
     missingConfiguration.push('runtime-projection-worker-source');
@@ -98,7 +96,6 @@ export function resolveRuntimeProjectionWorkerReadiness(
           ? 'incomplete'
           : 'ready',
     controls: {
-      dedicatedDatabaseCredential: true,
       databaseNativeProcessing: true,
       exactEventAllowlist: true,
       concurrentSkipLockedClaims: true,
