@@ -140,6 +140,15 @@ jobs:
           PGUSER: postgres
           PGDATABASE: postgres
         run: bash tests/integration/verify-admissions-lifecycle-work-queue.sh
+      - name: Verify production projection worker credential boundary
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: 5432
+          PGUSER: postgres
+          PGDATABASE: postgres
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f infra/database/post-integration-migrations/202608140001_PROD-09_projection_worker_credential.sql
+          test "$(psql -X -Atqc "SELECT count(*) FROM platform.schema_migration WHERE stream_id = 'PROD-09';")" = "1"
       - name: Verify live Neon serverless driver
         if: github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
         env:
