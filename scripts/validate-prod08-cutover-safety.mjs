@@ -14,7 +14,9 @@ for (const requirement of [
   'continue',
 ]) {
   if (!runner.includes(requirement)) {
-    throw new Error(`canonical Neon runner no longer prevents applied-migration replay: ${requirement}`);
+    throw new Error(
+      `canonical Neon runner no longer prevents applied-migration replay: ${requirement}`,
+    );
   }
 }
 
@@ -29,7 +31,9 @@ for (const requirement of [
   'REVOKE EXECUTE ON FUNCTION ledger.reopen_period(uuid, text, text) FROM PUBLIC;',
 ]) {
   if (!prod08.includes(requirement)) {
-    throw new Error(`PROD-08 no longer enforces reviewed privileged-function hygiene: ${requirement}`);
+    throw new Error(
+      `PROD-08 no longer enforces reviewed privileged-function hygiene: ${requirement}`,
+    );
   }
 }
 
