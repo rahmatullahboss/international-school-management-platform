@@ -124,7 +124,7 @@ BEGIN
 END
 $function$;
 
-ALTER FUNCTION platform.projection_worker_credential_ready() OWNER TO neondb_owner;
+ALTER FUNCTION platform.projection_worker_credential_ready() OWNER TO CURRENT_USER;
 REVOKE ALL ON FUNCTION platform.projection_worker_credential_ready()
   FROM PUBLIC, app_runtime, app_production_runtime, app_projection_recovery,
        app_projection_monitor, app_projection_admin, app_projection_publisher,
