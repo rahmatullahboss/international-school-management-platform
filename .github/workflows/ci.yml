@@ -146,9 +146,7 @@ jobs:
           PGPORT: 5432
           PGUSER: postgres
           PGDATABASE: postgres
-        run: |
-          psql -X -v ON_ERROR_STOP=1 -f infra/database/post-integration-migrations/202608140001_PROD-09_projection_worker_credential.sql
-          test "$(psql -X -Atqc "SELECT count(*) FROM platform.schema_migration WHERE stream_id = 'PROD-09';")" = "1"
+        run: bash tests/integration/verify-production-projection-worker-credential.sh
       - name: Verify live Neon serverless driver
         if: github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
         env:
