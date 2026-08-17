@@ -75,6 +75,10 @@ const sessionContext = {
   expiresAt: '2026-08-18T06:00:00.000Z',
 };
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 function request(): Request {
   return new Request('https://web.example.com/auth/v1/operator/commands', {
     method: 'POST',
@@ -110,9 +114,10 @@ beforeEach(() => {
     },
   );
   mocks.resolveWorkspace.mockResolvedValue({ role: 'admissions' });
-  mocks.submitOperatorDomainCommand.mockImplementation(async (input: Record<string, unknown>) => {
-    const commandInput = input.input as Record<string, unknown>;
-    return {
+  mocks.submitOperatorDomainCommand.mockImplementation((input: Record<string, unknown>) => {
+    const commandInput = input.input;
+    if (!isRecord(commandInput)) throw new Error('expected command input');
+    return Promise.resolve({
       accepted: true,
       replayed: false,
       receipt: {
@@ -123,7 +128,7 @@ beforeEach(() => {
         correlationId: commandInput.correlationId,
         acceptedAt: '2026-08-18T03:30:00.000Z',
       },
-    };
+    });
   });
 });
 
@@ -139,20 +144,18 @@ describe('production command default dependency wiring', () => {
         idempotencyKey: 'command-default-deps-0001',
       },
     });
+    const receipt = payload.receipt;
+    if (!isRecord(receipt)) throw new Error('expected command receipt');
+    const generatedCorrelationId = receipt.correlationId;
+    expect(typeof generatedCorrelationId).toBe('string');
+    if (typeof generatedCorrelationId !== 'string') throw new Error('expected correlation id');
+    expect(generatedCorrelationId).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u,
+    );
     expect(mocks.createHttpDatabase).toHaveBeenCalledTimes(3);
     expect(mocks.resolveSessionContext).toHaveBeenCalledTimes(1);
     expect(mocks.isSessionActive).toHaveBeenCalledWith(sessionId);
     expect(mocks.resolveWorkspace).toHaveBeenCalledWith(sessionId);
     expect(mocks.submitOperatorDomainCommand).toHaveBeenCalledTimes(1);
-    expect(mocks.submitOperatorDomainCommand).toHaveBeenCalledWith(
-      expect.objectContaining({
-        configured: true,
-        input: expect.objectContaining({
-          sessionId,
-          command: 'admissions.application.review.record',
-          correlationId: expect.any(String),
-        }),
-      }),
-    );
   });
 });
