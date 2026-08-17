@@ -82,9 +82,13 @@ function webPath(relativePath) {
 }
 
 const indexHtml = await readFile(path.join(webRoot, 'index.html'), 'utf8');
-const htmlEntryMatch = indexHtml.match(/<script\b[^>]*\btype=['"]module['"][^>]*\bsrc=['"]([^'"]+)['"]/u);
+const htmlEntryMatch = indexHtml.match(
+  /<script\b[^>]*\btype=['"]module['"][^>]*\bsrc=['"]([^'"]+)['"]/u,
+);
 if (htmlEntryMatch?.[1] === undefined) {
-  console.error('platform web reachability: no module entry found in apps/platform-web/index.html');
+  console.error(
+    'platform web reachability: no module entry found in apps/platform-web/index.html',
+  );
   process.exit(1);
 }
 const htmlEntry = path.join(webRoot, htmlEntryMatch[1].replace(/^\//u, ''));
@@ -92,7 +96,9 @@ const htmlEntry = path.join(webRoot, htmlEntryMatch[1].replace(/^\//u, ''));
 const wrangler = await readFile(path.join(webRoot, 'wrangler.jsonc'), 'utf8');
 const workerEntryMatch = wrangler.match(/"main"\s*:\s*"([^"]+)"/u);
 if (workerEntryMatch?.[1] === undefined) {
-  console.error('platform web reachability: no worker entry found in apps/platform-web/wrangler.jsonc');
+  console.error(
+    'platform web reachability: no worker entry found in apps/platform-web/wrangler.jsonc',
+  );
   process.exit(1);
 }
 const workerEntry = webPath(workerEntryMatch[1]);
@@ -100,7 +106,9 @@ const workerEntry = webPath(workerEntryMatch[1]);
 const roots = [htmlEntry, workerEntry];
 for (const entry of roots) {
   if (!(await exists(entry))) {
-    console.error(`platform web reachability: configured entry does not exist: ${path.relative(root, entry)}`);
+    console.error(
+      `platform web reachability: configured entry does not exist: ${path.relative(root, entry)}`,
+    );
     process.exit(1);
   }
 }
@@ -117,7 +125,11 @@ while (queue.length > 0) {
     const resolved = await resolveSourceImport(file, specifier);
     if (resolved === undefined) {
       const extension = path.extname(specifier.split(/[?#]/u, 1)[0] ?? '');
-      if (extension === '' || sourceExtensions.includes(extension) || extension === '.js') {
+      if (
+        extension === '' ||
+        sourceExtensions.includes(extension) ||
+        extension === '.js'
+      ) {
         unresolved.push(`${path.relative(root, file)} -> ${specifier}`);
       }
       continue;
@@ -132,7 +144,10 @@ const runtimeSources = await sourceFiles(sourceRoot);
 const orphaned = runtimeSources.filter((file) => !reachable.has(file));
 const failures = [];
 if (unresolved.length > 0) {
-  failures.push('Unresolved local source imports:', ...unresolved.map((item) => `  - ${item}`));
+  failures.push(
+    'Unresolved local source imports:',
+    ...unresolved.map((item) => `  - ${item}`),
+  );
 }
 if (orphaned.length > 0) {
   failures.push(
