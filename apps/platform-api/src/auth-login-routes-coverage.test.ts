@@ -19,7 +19,7 @@ vi.mock('@school/database', () => ({
 }));
 
 vi.mock('@school/policy', async (importOriginal) => {
-  const actual = await importOriginal();
+  const actual = await importOriginal<Record<string, unknown>>();
   return {
     ...actual,
     beginOidcLogin: mocks.beginOidcLogin,
@@ -36,7 +36,7 @@ vi.mock('@school/policy', async (importOriginal) => {
 });
 
 vi.mock('./auth-boundary.js', async (importOriginal) => {
-  const actual = await importOriginal();
+  const actual = await importOriginal<Record<string, unknown>>();
   return {
     ...actual,
     resolveAuthenticatedBrowserSessionContext: mocks.resolveSessionContext,
