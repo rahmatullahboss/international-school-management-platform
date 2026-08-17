@@ -1,14 +1,30 @@
 DO $projection_worker_role$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'app_projection_worker') THEN
-    CREATE ROLE app_projection_worker NOLOGIN NOBYPASSRLS;
+    CREATE ROLE app_projection_worker
+      NOLOGIN
+      NOSUPERUSER
+      NOCREATEDB
+      NOCREATEROLE
+      NOREPLICATION
+      NOBYPASSRLS
+      NOINHERIT;
+  ELSIF NOT EXISTS (
+    SELECT 1
+    FROM pg_roles
+    WHERE rolname = 'app_projection_worker'
+      AND NOT rolcanlogin
+      AND NOT rolsuper
+      AND NOT rolcreatedb
+      AND NOT rolcreaterole
+      AND NOT rolreplication
+      AND NOT rolbypassrls
+      AND NOT rolinherit
+  ) THEN
+    RAISE EXCEPTION 'PROJECTION_WORKER_ROLE_FLAGS_INVALID';
   END IF;
-  EXECUTE format('GRANT app_projection_worker TO %I', current_user);
 END
 $projection_worker_role$;
-
-ALTER ROLE app_projection_worker
-  NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS NOINHERIT;
 
 GRANT USAGE ON SCHEMA platform TO app_projection_worker;
 REVOKE ALL ON ALL TABLES IN SCHEMA platform FROM app_projection_worker;
