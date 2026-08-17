@@ -1,15 +1,18 @@
 program: international-school-platform-v1
-updated_at: 2026-08-13T07:48:00Z
+updated_at: 2026-08-17T17:20:00Z
 status: production_not_authorized
 base_branch: main
-base_commit: 6ad456ba68871cfbaf20b46d2a6012b13ebff608
+base_commit: 5a6c0bb72f692cc210d4e44a17cb925fb3523769
 
 repository_state:
-  main_commit: 6ad456ba68871cfbaf20b46d2a6012b13ebff608
+  main_commit: 5a6c0bb72f692cc210d4e44a17cb925fb3523769
   last_reconciliation_pull_request: 160
   last_reconciliation_head: 79f60f5e16fdd954fae1f83c2384df52e3afcbfb
   last_reconciliation_ci_run: 31607875655
   last_reconciliation_ci_result: green
+  latest_verified_feature_pull_request: 167
+  latest_verified_feature_ci_run: 32049228156
+  latest_verified_feature_ci_result: green
   open_repository_issues:
     - 78
 
@@ -134,17 +137,53 @@ completed_this_cycle:
     status: merged_verified
     final_ci_run: 31607875655
     final_ci_result: green
+  production_cutover_verification_guard:
+    pull_request: 164
+    merge_commit: ee64a81b18eee9cba0a4ea1c98889305831a5737
+    status: merged_verified
+    final_ci_run: 31707253793
+    controls:
+      - canonical_neon_runner_applied_migration_replay_prevention
+      - prod08_privileged_function_search_path_hygiene
+      - prod08_public_execute_revocation_guard
+  projection_worker_credential_isolation:
+    pull_request: 167
+    merge_commit: 5a6c0bb72f692cc210d4e44a17cb925fb3523769
+    stream: PROD-09
+    status: merged_verified_and_database_capability_activated
+    final_ci_run: 32049228156
+    final_ci_result: green
+    controls:
+      - dedicated_runtime_projection_database_url_required
+      - api_database_url_fallback_prohibited
+      - function_only_projection_worker_capability_role
+      - neon_portable_create_time_role_flags
+      - preexisting_role_flag_drift_fails_closed
+      - production_api_projection_batch_execute_prohibited
+      - direct_application_table_and_sequence_privileges_prohibited
+      - unexpected_service_role_membership_prohibited
+      - credential_readiness_fails_closed_for_database_owner
+    production_database_activation:
+      branch: br-cool-wildflower-axsot8l1
+      database: neondb
+      migration_id: 202608140001_PROD-09_projection_worker_credential
+      status: applied_postflight_verified
+      worker_login_status: not_provisioned
+      runtime_secret_status: not_bound
+      production_cron_status: not_configured
 
 active_workstream:
   production_depth_activation_evidence:
     issue: 78
     status: blocked_on_real_external_configuration_and_deployed_evidence
     repository_implementation_baseline: complete
+    projection_database_capability_baseline: active
     objective: >-
-      Preserve the verified seven-persona repository implementation while waiting for real staging IdP,
-      secret-bound deployed Worker/database paths, deployed rehearsals, owner/security acceptance and
-      explicit production authorization. Do not fabricate or substitute repository-only evidence for
-      external production-depth proof.
+      Preserve the verified seven-persona repository implementation and activated least-privilege
+      projection-worker database capability while waiting for real IdP configuration, password-bearing
+      deployment credentials and secrets, an available approved production schedule, deployed rehearsals,
+      owner/security acceptance and explicit production authorization. Do not fabricate or substitute
+      repository-only evidence for external production-depth proof.
 
 performance_budget:
   initial_javascript_bytes: 250000
@@ -188,6 +227,9 @@ repository_controls_complete:
   - prod_08_security_state_backup_restore_preservation
   - runtime_secret_leakage_boundary_and_reviewed_operational_log_sink
   - machine_verifiable_incident_response_and_evidence_retention_contract
+  - canonical_neon_cutover_replay_prevention_and_prod08_hygiene_guard
+  - dedicated_projection_worker_database_credential_boundary
+  - prod09_function_only_projection_worker_database_capability
 
 remaining_production_blockers:
   real_external_idp:
@@ -209,13 +251,21 @@ remaining_production_blockers:
     issue: 78
     status: blocked_on_real_idp_and_deployed_secrets
   runtime_projection_operations:
-    status: repository_controls_complete_external_activation_blocked
+    status: database_capability_activated_external_worker_runtime_blocked
+    completed:
+      - prod09_function_only_worker_capability_applied_to_production_neon
+      - production_api_execute_boundary_verified
+      - direct_relation_and_sequence_privilege_absence_verified
+      - database_owner_readiness_fail_closed_verified
     external_required:
+      - password_bearing_projection_worker_login_with_only_app_projection_worker
+      - runtime_projection_database_url_secret_binding
+      - approved_available_production_cron_or_poller_binding
       - password_bearing_monitor_login_and_secret
       - password_bearing_recovery_login_and_secret
-      - approved_cron_or_poller_binding
       - primary_and_secondary_alert_destinations
       - primary_and_secondary_operations_owners
+      - deployed_projection_worker_readiness_and_processing_rehearsal
       - deployed_monitor_and_alert_delivery_rehearsal
       - credential_rotation_and_revocation_rehearsal
       - controlled_recovery_rehearsal_in_isolated_production_like_environment
@@ -246,9 +296,11 @@ remaining_production_blockers:
     status: open
 
 next_repository_actions:
-  - keep_issue_78_open_until_real_staging_idp_worker_database_and_identity_evidence_exists
+  - keep_issue_78_open_until_real_idp_worker_database_and_identity_evidence_exists
   - do_not_replace_external_activation_evidence_with_local_fixtures_or_repository_only_claims
-  - inspect_future_repository_changes_for_new_verified_gaps_before_starting_additional_implementation
+  - provision_no_password_bearing_projection_login_until_a_secure_runtime_secret_binding_path_is_available
+  - bind_runtime_projection_database_url_only_to_a_dedicated_login_that_passes_database_readiness
+  - assign_or_consolidate_an_approved_production_schedule_without_dropping_existing_scheduled_work
   - keep_people_destinations_real_evidence_and_acceptance_external
   - keep_major_dependency_upgrades_isolated_from_core_work
   - enable_repository_dependabot_security_alerts_when_repository_settings_access_is_available
