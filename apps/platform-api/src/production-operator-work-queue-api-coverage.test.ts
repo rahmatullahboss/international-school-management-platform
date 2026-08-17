@@ -32,11 +32,13 @@ function request(path = '/auth/v1/operator/work-queue'): Request {
   return new Request(`https://web.example.com${path}`);
 }
 
-function dependencies(options: {
-  workspaceRole?: 'admissions' | 'finance' | undefined;
-  workspaceError?: boolean;
-  queue?: unknown;
-} = {}) {
+function dependencies(
+  options: {
+    workspaceRole?: 'admissions' | 'finance' | undefined;
+    workspaceError?: boolean;
+    queue?: unknown;
+  } = {},
+) {
   return {
     resolveSession: vi.fn().mockResolvedValue(activeSession),
     resolveWorkspaceRole: options.workspaceError
@@ -79,7 +81,11 @@ describe('production operator work queue fail-closed coverage', () => {
 
   it('bounds workspace lookup failures and missing workspace roles', async () => {
     const unavailable = dependencies({ workspaceError: true });
-    const failed = await handleProductionOperatorWorkQueueRequest(request(), environment, unavailable);
+    const failed = await handleProductionOperatorWorkQueueRequest(
+      request(),
+      environment,
+      unavailable,
+    );
     expect(failed?.status).toBe(503);
     expect(unavailable.resolveQueue).not.toHaveBeenCalled();
 
