@@ -82,18 +82,21 @@ function request(
     rawBody?: string;
   } = {},
 ): Request {
-  return new Request(`https://web.example.com${options.path ?? '/auth/v1/operator/commands'}`, {
-    method: options.method ?? 'POST',
-    headers: {
-      origin: 'https://web.example.com',
-      'content-type': 'application/json',
-      'idempotency-key': 'operator-coverage-0001',
-      ...options.headers,
+  return new Request(
+    `https://web.example.com${options.path ?? '/auth/v1/operator/commands'}`,
+    {
+      method: options.method ?? 'POST',
+      headers: {
+        origin: 'https://web.example.com',
+        'content-type': 'application/json',
+        'idempotency-key': 'operator-coverage-0001',
+        ...options.headers,
+      },
+      ...((options.method ?? 'POST') === 'GET'
+        ? {}
+        : { body: options.rawBody ?? JSON.stringify(body) }),
     },
-    ...((options.method ?? 'POST') === 'GET'
-      ? {}
-      : { body: options.rawBody ?? JSON.stringify(body) }),
-  });
+  );
 }
 
 function admissionsReviewBody() {
@@ -129,16 +132,26 @@ describe('production operator command boundary coverage', () => {
 
     const response = await requiredResponse(request({}, { method: 'GET' }));
     expect(response.status).toBe(405);
-    await expect(response.json()).resolves.toMatchObject({ error: { code: 'method_not_allowed' } });
+    await expect(response.json()).resolves.toMatchObject({
+      error: { code: 'method_not_allowed' },
+    });
   });
 
   it('rejects malformed idempotency and JSON transport inputs before session work', async () => {
     for (const req of [
-      request(admissionsReviewBody(), { headers: { 'idempotency-key': 'short' } }),
-      request(admissionsReviewBody(), { headers: { 'idempotency-key': 'invalid key spaces' } }),
-      request(admissionsReviewBody(), { headers: { 'content-type': 'text/plain' } }),
+      request(admissionsReviewBody(), {
+        headers: { 'idempotency-key': 'short' },
+      }),
+      request(admissionsReviewBody(), {
+        headers: { 'idempotency-key': 'invalid key spaces' },
+      }),
+      request(admissionsReviewBody(), {
+        headers: { 'content-type': 'text/plain' },
+      }),
       request(admissionsReviewBody(), { rawBody: '{not-json' }),
-      request(admissionsReviewBody(), { headers: { 'content-length': '5000' } }),
+      request(admissionsReviewBody(), {
+        headers: { 'content-length': '5000' },
+      }),
     ]) {
       const deps = dependencies();
       const response = await requiredResponse(req, deps);
@@ -223,7 +236,9 @@ describe('production operator command boundary coverage', () => {
       reason: 'Verified against the imported bank statement line.',
     };
     const finance = dependencies({ role: 'finance' });
-    expect((await requiredResponse(request(financeBody), finance)).status).toBe(202);
+    expect((await requiredResponse(request(financeBody), finance)).status).toBe(
+      202,
+    );
     expect(finance.submit).toHaveBeenCalledWith(
       environment.DATABASE_URL,
       expect.objectContaining({ ...financeBody, sessionId }),
@@ -235,7 +250,9 @@ describe('production operator command boundary coverage', () => {
       requestedMinutes: 15,
     };
     const support = dependencies({ role: 'support' });
-    expect((await requiredResponse(request(supportBody), support)).status).toBe(202);
+    expect((await requiredResponse(request(supportBody), support)).status).toBe(
+      202,
+    );
     expect(support.submit).toHaveBeenCalledWith(
       environment.DATABASE_URL,
       expect.objectContaining({ ...supportBody, sessionId }),
@@ -287,12 +304,36 @@ describe('production operator command boundary coverage', () => {
 
   it('maps all remaining bounded domain resolutions', async () => {
     const cases = [
-      [{ accepted: false, reason: 'invalid-command' }, 400, 'operator_command_invalid'],
-      [{ accepted: false, reason: 'session-inactive' }, 401, 'browser_session_revoked'],
-      [{ accepted: false, reason: 'permission-not-granted' }, 403, 'operator_permission_denied'],
-      [{ accepted: false, reason: 'scope-not-found' }, 404, 'operator_scope_not_found'],
-      [{ accepted: false, reason: 'command-disabled' }, 503, 'operator_command_unavailable'],
-      [{ accepted: false, reason: 'command-unavailable' }, 503, 'operator_command_unavailable'],
+      [
+        { accepted: false, reason: 'invalid-command' },
+        400,
+        'operator_command_invalid',
+      ],
+      [
+        { accepted: false, reason: 'session-inactive' },
+        401,
+        'browser_session_revoked',
+      ],
+      [
+        { accepted: false, reason: 'permission-not-granted' },
+        403,
+        'operator_permission_denied',
+      ],
+      [
+        { accepted: false, reason: 'scope-not-found' },
+        404,
+        'operator_scope_not_found',
+      ],
+      [
+        { accepted: false, reason: 'command-disabled' },
+        503,
+        'operator_command_unavailable',
+      ],
+      [
+        { accepted: false, reason: 'command-unavailable' },
+        503,
+        'operator_command_unavailable',
+      ],
     ] as const;
 
     for (const [resolution, status, code] of cases) {
@@ -315,7 +356,11 @@ describe('production operator command boundary coverage', () => {
     ];
 
     for (const env of variants) {
-      const response = await requiredResponse(request(admissionsReviewBody()), dependencies(), env);
+      const response = await requiredResponse(
+        request(admissionsReviewBody()),
+        dependencies(),
+        env,
+      );
       expect(response.status).toBe(503);
     }
   });
