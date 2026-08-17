@@ -247,7 +247,7 @@ Package source distributions remain the authoritative location for full licence 
 | esbuild | 0.28.1 | MIT | yes | no |
 | escalade | 3.2.0 | MIT | yes | no |
 | escape-string-regexp | 4.0.0 | MIT | yes | no |
-| eslint | 10.8.0 | MIT | yes | no |
+| eslint | 10.8.1 | MIT | yes | no |
 | eslint-scope | 9.1.2 | BSD-2-Clause | yes | no |
 | eslint-visitor-keys | 5.0.1 | Apache-2.0 | yes | no |
 | espree | 11.2.0 | BSD-2-Clause | yes | no |
