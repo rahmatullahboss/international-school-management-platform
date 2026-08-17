@@ -32,7 +32,7 @@ jobs:
       NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
       COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install PostgreSQL client
         run: |

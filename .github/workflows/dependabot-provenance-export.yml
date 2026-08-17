@@ -20,14 +20,14 @@ jobs:
       DEPENDABOT_HEAD_REF: ${{ github.event.pull_request.head.ref }}
     steps:
       - name: Checkout trusted base generator
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.base.sha }}
           path: trusted-base
           persist-credentials: false
 
       - name: Checkout Dependabot candidate as data
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           path: candidate
