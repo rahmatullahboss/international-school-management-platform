@@ -25,13 +25,25 @@ describe('runtime projection worker readiness', () => {
     });
   });
 
-  it('reports ready only for a database source and a configured connection', () => {
-    expect(
-      resolveRuntimeProjectionWorkerReadiness({
-        DATABASE_URL: 'postgresql://database.example/school',
-        RUNTIME_PROJECTION_WORKER_SOURCE: 'database',
-      }),
-    ).toMatchObject({ state: 'ready', missingConfiguration: [] });
+  it('does not accept the shared API database credential', () => {
+    const readiness = resolveRuntimeProjectionWorkerReadiness({
+      DATABASE_URL: 'api-db-fixture',
+      RUNTIME_PROJECTION_WORKER_SOURCE: 'database',
+    });
+
+    expect(readiness.state).toBe('incomplete');
+    expect(readiness.missingConfiguration).toEqual(['database-url']);
+  });
+
+  it('requires the dedicated projection credential before becoming ready', () => {
+    const readiness = resolveRuntimeProjectionWorkerReadiness({
+      DATABASE_URL: 'api-db-fixture',
+      RUNTIME_PROJECTION_DATABASE_URL: 'projection-db-fixture',
+      RUNTIME_PROJECTION_WORKER_SOURCE: 'database',
+    });
+
+    expect(readiness.state).toBe('ready');
+    expect(readiness.missingConfiguration).toEqual([]);
   });
 });
 
@@ -101,7 +113,7 @@ describe('runtime projection batch processing', () => {
     });
     expect(store.processBatch).not.toHaveBeenCalled();
 
-    store.processBatch.mockRejectedValue(new Error('database secret details'));
+    store.processBatch.mockRejectedValue(new Error('database unavailable'));
     await expect(
       processRuntimeProjectionBatch({
         configured: true,

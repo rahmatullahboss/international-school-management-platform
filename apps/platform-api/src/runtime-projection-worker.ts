@@ -1,7 +1,11 @@
 export interface RuntimeProjectionWorkerBindings {
   readonly DATABASE_URL?: string;
+  readonly RUNTIME_PROJECTION_DATABASE_URL?: string;
   readonly RUNTIME_PROJECTION_WORKER_SOURCE?: string;
 }
+
+type RuntimeProjectionWorkerMissingConfiguration =
+  'database-url' | 'runtime-projection-worker-source';
 
 export interface RuntimeProjectionWorkerReadiness {
   readonly schemaVersion: 1;
@@ -15,7 +19,7 @@ export interface RuntimeProjectionWorkerReadiness {
     readonly deadLetterIsolation: true;
     readonly sourceProjectionIntegrity: true;
   };
-  readonly missingConfiguration: readonly ('database-url' | 'runtime-projection-worker-source')[];
+  readonly missingConfiguration: readonly RuntimeProjectionWorkerMissingConfiguration[];
 }
 
 export interface RuntimeProjectionBatchResult {
@@ -76,8 +80,8 @@ function validBatchResult(value: RuntimeProjectionBatchResult, batchSize: number
 export function resolveRuntimeProjectionWorkerReadiness(
   bindings: RuntimeProjectionWorkerBindings,
 ): RuntimeProjectionWorkerReadiness {
-  const missingConfiguration: ('database-url' | 'runtime-projection-worker-source')[] = [];
-  if (configuredValue(bindings.DATABASE_URL) === undefined) {
+  const missingConfiguration: RuntimeProjectionWorkerMissingConfiguration[] = [];
+  if (configuredValue(bindings.RUNTIME_PROJECTION_DATABASE_URL) === undefined) {
     missingConfiguration.push('database-url');
   }
   if (configuredValue(bindings.RUNTIME_PROJECTION_WORKER_SOURCE) !== 'database') {

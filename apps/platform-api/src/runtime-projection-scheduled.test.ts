@@ -6,7 +6,8 @@ import {
 } from './runtime-projection-scheduled.js';
 
 const configuredBindings = {
-  DATABASE_URL: 'postgresql://database.example/school',
+  DATABASE_URL: 'synthetic-api-database-value',
+  RUNTIME_PROJECTION_DATABASE_URL: 'synthetic-projection-database-value',
   RUNTIME_PROJECTION_WORKER_SOURCE: 'database',
   RUNTIME_PROJECTION_WORKER_ID: 'projection-worker-staging-01',
   RUNTIME_PROJECTION_WORKER_BATCH_SIZE: '12',
@@ -24,7 +25,24 @@ describe('scheduled runtime projection execution', () => {
     expect(storeFactory).not.toHaveBeenCalled();
   });
 
-  it('passes bounded configured settings to the database store', async () => {
+  it('does not fall back to the shared API database credential', async () => {
+    const storeFactory = vi.fn();
+    await expect(
+      runRuntimeProjectionScheduled(
+        {
+          DATABASE_URL: 'synthetic-api-database-value',
+          RUNTIME_PROJECTION_WORKER_SOURCE: 'database',
+        },
+        storeFactory,
+      ),
+    ).resolves.toMatchObject({
+      ok: false,
+      code: 'runtime_projection_worker_configuration_invalid',
+    });
+    expect(storeFactory).not.toHaveBeenCalled();
+  });
+
+  it('passes bounded configured settings to the dedicated database store', async () => {
     const processBatch = vi.fn().mockResolvedValue({
       claimed: 2,
       completed: 1,
@@ -37,7 +55,7 @@ describe('scheduled runtime projection execution', () => {
       ok: true,
       result: { claimed: 2, completed: 1, retried: 0, deadLettered: 1 },
     });
-    expect(storeFactory).toHaveBeenCalledWith(configuredBindings.DATABASE_URL);
+    expect(storeFactory).toHaveBeenCalledWith(configuredBindings.RUNTIME_PROJECTION_DATABASE_URL);
     expect(processBatch).toHaveBeenCalledWith('projection-worker-staging-01', 12, 4);
   });
 
