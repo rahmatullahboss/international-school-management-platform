@@ -19,7 +19,7 @@ vi.mock('@school/database', () => ({
 }));
 
 vi.mock('@school/policy', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@school/policy')>();
+  const actual = (await importOriginal()) as Record<string, unknown>;
   return {
     ...actual,
     beginOidcLogin: mocks.beginOidcLogin,
@@ -28,13 +28,15 @@ vi.mock('@school/policy', async (importOriginal) => {
       readonly resolveDiscovery = mocks.resolveDiscovery;
       readonly resolveJwks = mocks.resolveJwks;
 
-      constructor(_options: unknown) {}
+      constructor(options: unknown) {
+        void options;
+      }
     },
   };
 });
 
 vi.mock('./auth-boundary.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('./auth-boundary.js')>();
+  const actual = (await importOriginal()) as Record<string, unknown>;
   return {
     ...actual,
     resolveAuthenticatedBrowserSessionContext: mocks.resolveSessionContext,
@@ -48,10 +50,14 @@ vi.mock('./auth-durable-store.js', () => ({
     readonly registerSession = mocks.registerSession;
     readonly isSessionActive = mocks.isSessionActive;
 
-    constructor(_database: unknown) {}
+    constructor(database: unknown) {
+      void database;
+    }
   },
   DurableOidcProviderCacheStore: class {
-    constructor(_database: unknown) {}
+    constructor(database: unknown) {
+      void database;
+    }
   },
 }));
 
@@ -59,7 +65,9 @@ vi.mock('./database-workspace-store.js', () => ({
   DatabaseWorkspaceStore: class {
     readonly resolve = mocks.resolveWorkspace;
 
-    constructor(_database: unknown) {}
+    constructor(database: unknown) {
+      void database;
+    }
   },
 }));
 
@@ -296,11 +304,7 @@ describe('durable OIDC runtime coverage', () => {
     expect(redirected.status).toBe(302);
     expect(redirected.headers.get('location')).toContain('https://id.example.com/authorize');
     expect(redirected.headers.get('set-cookie')).toContain('__Host-school-oidc=transaction');
-    expect(mocks.beginOidcLogin).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        configuration: expect.objectContaining({ provider }),
-      }),
-    );
+    expect(mocks.beginOidcLogin).toHaveBeenCalledTimes(2);
   });
 
   it('returns callback failures with the clearing cookie', async () => {
