@@ -5,6 +5,29 @@ PSQL=(psql -X -v ON_ERROR_STOP=1 -d "${PGDATABASE:-postgres}")
 MIGRATION='infra/database/post-integration-migrations/202608140001_PROD-09_projection_worker_credential.sql'
 TEST_LOGIN_ROLE='projection_worker_login_test'
 
+if grep -Eq '^[[:space:]]*ALTER ROLE app_projection_worker' "$MIGRATION"; then
+  echo 'PROD-09 must not ALTER the managed projection worker role; Neon blocks that path.' >&2
+  exit 1
+fi
+
+for requirement in \
+  'CREATE ROLE app_projection_worker' \
+  'NOLOGIN' \
+  'NOSUPERUSER' \
+  'NOCREATEDB' \
+  'NOCREATEROLE' \
+  'NOREPLICATION' \
+  'NOBYPASSRLS' \
+  'NOINHERIT' \
+  "RAISE EXCEPTION 'PROJECTION_WORKER_ROLE_FLAGS_INVALID'"
+do
+  if ! grep -Fq "$requirement" "$MIGRATION"; then
+    echo "PROD-09 Neon-portable role contract is missing: $requirement" >&2
+    exit 1
+  fi
+done
+
+"${PSQL[@]}" -f "$MIGRATION" >/dev/null
 "${PSQL[@]}" -f "$MIGRATION" >/dev/null
 
 ledger_count="$("${PSQL[@]}" -Atqc "SELECT count(*) FROM platform.schema_migration WHERE stream_id = 'PROD-09';")"
@@ -99,4 +122,4 @@ REVOKE app_projection_worker FROM projection_worker_login_test;
 DROP ROLE projection_worker_login_test;
 SQL
 
-echo 'Production projection worker login identity and privilege-drift readiness verification passed.'
+echo 'Production projection worker login identity, Neon portability and privilege-drift readiness verification passed.'
