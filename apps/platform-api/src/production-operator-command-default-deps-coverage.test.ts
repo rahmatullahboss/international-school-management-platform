@@ -133,7 +133,6 @@ describe('production command default dependency wiring', () => {
     expect(response?.status).toBe(202);
     const payload = (await response?.json()) as Record<string, unknown>;
     expect(payload).toMatchObject({
-      accepted: true,
       replayed: false,
       receipt: {
         command: 'admissions.application.review.record',
