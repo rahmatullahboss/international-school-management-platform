@@ -1,0 +1,141 @@
+name: Mobile CI
+
+on:
+  pull_request:
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/mobile-ci.yml'
+  push:
+    branches:
+      - 'module/flutter-mobile-apps'
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/mobile-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify-mobile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.44.7'
+          cache: true
+      - name: Show Flutter toolchain
+        run: flutter --version
+      - name: Resolve workspace dependencies
+        working-directory: mobile
+        run: flutter pub get
+      - name: Verify formatting
+        working-directory: mobile
+        run: |
+          dart format .
+          git diff --exit-code
+      - name: Verify generated files remain ignored
+        run: git diff --exit-code -- mobile
+      - name: Verify native application configuration
+        run: python3 mobile/tool/verify_native_projects.py
+      - name: Analyze family app
+        working-directory: mobile/apps/family_app
+        run: flutter analyze
+      - name: Analyze staff app
+        working-directory: mobile/apps/staff_app
+        run: flutter analyze
+      - name: Analyze app bootstrap
+        working-directory: mobile/packages/app_bootstrap
+        run: flutter analyze
+      - name: Analyze authentication
+        working-directory: mobile/packages/authentication
+        run: flutter analyze
+      - name: Analyze design system
+        working-directory: mobile/packages/design_system
+        run: flutter analyze
+      - name: Analyze Family domain
+        working-directory: mobile/packages/family_domain
+        run: dart analyze
+      - name: Analyze Staff domain
+        working-directory: mobile/packages/staff_domain
+        run: dart analyze
+      - name: Analyze sync engine
+        working-directory: mobile/packages/sync_engine
+        run: dart analyze
+      - name: Analyze sync storage
+        working-directory: mobile/packages/sync_storage
+        run: flutter analyze
+      - name: Analyze teacher sync
+        working-directory: mobile/packages/teacher_sync
+        run: flutter analyze
+      - name: Analyze native notifications
+        working-directory: mobile/packages/native_notifications
+        run: flutter analyze
+      - name: Analyze secure documents
+        working-directory: mobile/packages/secure_documents
+        run: flutter analyze
+      - name: Analyze mobile core
+        working-directory: mobile/packages/mobile_core
+        run: dart analyze
+      - name: Analyze API client
+        working-directory: mobile/packages/api_client
+        run: dart analyze
+      - name: Test family app
+        working-directory: mobile/apps/family_app
+        run: flutter test
+      - name: Test staff app
+        working-directory: mobile/apps/staff_app
+        run: flutter test
+      - name: Test app bootstrap
+        working-directory: mobile/packages/app_bootstrap
+        run: flutter test
+      - name: Test authentication
+        working-directory: mobile/packages/authentication
+        run: flutter test
+      - name: Test design system
+        working-directory: mobile/packages/design_system
+        run: flutter test
+      - name: Test Family domain
+        working-directory: mobile/packages/family_domain
+        run: dart test
+      - name: Test Staff domain
+        working-directory: mobile/packages/staff_domain
+        run: dart test
+      - name: Test sync engine
+        working-directory: mobile/packages/sync_engine
+        run: dart test
+      - name: Test sync storage
+        working-directory: mobile/packages/sync_storage
+        run: flutter test
+      - name: Test teacher sync
+        working-directory: mobile/packages/teacher_sync
+        run: flutter test
+      - name: Test native notifications
+        working-directory: mobile/packages/native_notifications
+        run: flutter test
+      - name: Test secure documents
+        working-directory: mobile/packages/secure_documents
+        run: flutter test
+      - name: Test mobile core
+        working-directory: mobile/packages/mobile_core
+        run: dart test
+      - name: Test API client
+        working-directory: mobile/packages/api_client
+        run: dart test
+      - name: Build family Android debug APK
+        working-directory: mobile/apps/family_app
+        run: flutter build apk --debug
+      - name: Build staff Android debug APK
+        working-directory: mobile/apps/staff_app
+        run: flutter build apk --debug
+      - name: Upload Android debug APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: mob-01-secure-documents-android-debug-apks
+          path: |
+            mobile/apps/family_app/build/app/outputs/flutter-apk/app-debug.apk
+            mobile/apps/staff_app/build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7

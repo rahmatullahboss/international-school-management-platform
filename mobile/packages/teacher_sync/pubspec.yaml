@@ -1,0 +1,23 @@
+name: school_teacher_sync
+description: Offline teacher attendance and grade draft queue orchestration.
+version: 0.1.0
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.10.0
+  flutter: '>=3.44.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  school_api_client: ^0.1.0
+  school_mobile_core: ^0.1.0
+  school_staff_domain: ^0.1.0
+  school_sync_engine: ^0.1.0
+  school_sync_storage: ^0.1.0
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter

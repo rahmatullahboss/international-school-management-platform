@@ -1,0 +1,20 @@
+name: school_authentication
+description: Native OIDC, secure token storage and session lifecycle for school mobile apps.
+version: 0.1.0
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.10.0
+  flutter: '>=3.44.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_appauth: ^12.0.2
+  flutter_secure_storage: ^10.3.1
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter

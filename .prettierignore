@@ -8,6 +8,7 @@ package-lock.json
 docs/**
 artifacts/**
 apps/platform-web/public/icons/*.svg
+mobile/apps/*/ios/Runner/Assets.xcassets/**/Contents.json
 .agents/skills/impeccable/**
 .github/skills/impeccable/**
 README.md

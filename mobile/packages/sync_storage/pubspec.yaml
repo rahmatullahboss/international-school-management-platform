@@ -1,0 +1,23 @@
+name: school_sync_storage
+description: Platform-backed encrypted persistence and key lifecycle for school mobile sync.
+version: 0.1.0
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.10.0
+  flutter: '>=3.44.0'
+
+dependencies:
+  cryptography: ^2.9.0
+  flutter:
+    sdk: flutter
+  flutter_secure_storage: ^10.3.1
+  path_provider: ^2.1.6
+  school_mobile_core: ^0.1.0
+  school_sync_engine: ^0.1.0
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter
