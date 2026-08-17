@@ -47,10 +47,10 @@ export default defineConfig({
       reporter: ['text', 'json-summary', 'html'],
       reportOnFailure: true,
       thresholds: {
-        statements: 79.7,
-        branches: 71.2,
+        statements: 79.9,
+        branches: 71.5,
         functions: 83.5,
-        lines: 83.5,
+        lines: 83.7,
       },
     },
   },
