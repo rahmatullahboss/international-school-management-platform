@@ -7,6 +7,7 @@ on:
       - '.github/workflows/mobile-ci.yml'
   push:
     branches:
+      - main
       - 'module/flutter-mobile-apps'
     paths:
       - 'mobile/**'
