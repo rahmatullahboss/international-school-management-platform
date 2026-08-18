@@ -86,9 +86,7 @@ const htmlEntryMatch = indexHtml.match(
   /<script\b[^>]*\btype=['"]module['"][^>]*\bsrc=['"]([^'"]+)['"]/u,
 );
 if (htmlEntryMatch?.[1] === undefined) {
-  console.error(
-    'platform web reachability: no module entry found in apps/platform-web/index.html',
-  );
+  console.error('platform web reachability: no module entry found in apps/platform-web/index.html');
   process.exit(1);
 }
 const htmlEntry = path.join(webRoot, htmlEntryMatch[1].replace(/^\//u, ''));
@@ -125,11 +123,7 @@ while (queue.length > 0) {
     const resolved = await resolveSourceImport(file, specifier);
     if (resolved === undefined) {
       const extension = path.extname(specifier.split(/[?#]/u, 1)[0] ?? '');
-      if (
-        extension === '' ||
-        sourceExtensions.includes(extension) ||
-        extension === '.js'
-      ) {
+      if (extension === '' || sourceExtensions.includes(extension) || extension === '.js') {
         unresolved.push(`${path.relative(root, file)} -> ${specifier}`);
       }
       continue;
@@ -144,10 +138,7 @@ const runtimeSources = await sourceFiles(sourceRoot);
 const orphaned = runtimeSources.filter((file) => !reachable.has(file));
 const failures = [];
 if (unresolved.length > 0) {
-  failures.push(
-    'Unresolved local source imports:',
-    ...unresolved.map((item) => `  - ${item}`),
-  );
+  failures.push('Unresolved local source imports:', ...unresolved.map((item) => `  - ${item}`));
 }
 if (orphaned.length > 0) {
   failures.push(
