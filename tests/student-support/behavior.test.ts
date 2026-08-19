@@ -131,6 +131,60 @@ describe('CARE-01 behavior domain', () => {
     );
   });
 
+  test('runs restorative plans through a single planned-to-completed transition', () => {
+    const service = new BehaviorService(new CareSecurityService({ now: () => now }), () => now);
+    const incident = createIncident(service);
+
+    const plan = service.createRestorativePlan(access(), {
+      tenantId: 'tenant-a',
+      incidentId: incident.incidentId,
+      goals: ['Repair the classroom relationship'],
+      participantRoleCodes: ['student', 'behavior-lead'],
+      plannedAt: new Date('2026-07-30T05:00:00.000Z'),
+    });
+    expect(plan).toMatchObject({
+      incidentId: incident.incidentId,
+      studentPersonId: 'student-1',
+      status: 'planned',
+      version: 1,
+      createdByPrincipalId: 'behavior-lead-1',
+    });
+
+    expect(() =>
+      service.completeRestorativePlan(access(), {
+        tenantId: 'tenant-a',
+        restorativePlanId: 'missing-plan',
+        outcomeSummary: 'Synthetic missing plan outcome',
+      }),
+    ).toThrowError(
+      expect.objectContaining<Partial<BehaviorDomainError>>({ code: 'BEHAVIOR_NOT_FOUND' }),
+    );
+
+    const completed = service.completeRestorativePlan(access(), {
+      tenantId: 'tenant-a',
+      restorativePlanId: plan.restorativePlanId,
+      outcomeSummary: 'Synthetic restorative outcome recorded.',
+    });
+    expect(completed).toMatchObject({
+      status: 'completed',
+      version: 2,
+      outcomeSummary: 'Synthetic restorative outcome recorded.',
+    });
+    expect(completed.completedAt).toEqual(now);
+
+    expect(() =>
+      service.completeRestorativePlan(access(), {
+        tenantId: 'tenant-a',
+        restorativePlanId: plan.restorativePlanId,
+        outcomeSummary: 'Synthetic duplicate completion',
+      }),
+    ).toThrowError(
+      expect.objectContaining<Partial<BehaviorDomainError>>({
+        code: 'BEHAVIOR_INVALID_TRANSITION',
+      }),
+    );
+  });
+
   test('records corrections without rewriting source incident fields', () => {
     const service = new BehaviorService(new CareSecurityService({ now: () => now }), () => now);
     const incident = createIncident(service);
@@ -221,6 +275,47 @@ describe('CARE-01 behavior domain', () => {
       publicationVersion: 1,
     });
     expect(JSON.stringify(view)).not.toContain('Restricted synthetic behavior narrative');
+
+    const second = service.publishSummary(
+      access({ context: context({ principalId: 'approver-1' }) }),
+      {
+        tenantId: 'tenant-a',
+        incidentId: incident.incidentId,
+        audience: 'guardian',
+        categoryLabel: 'Conduct review updated',
+        restorativeSummary: 'Restorative follow-up completed.',
+        expiresAt: new Date('2026-08-15T00:00:00.000Z'),
+      },
+    );
+    expect(second.version).toBe(2);
+    expect(() =>
+      service.readPublishedSummary(guardianAccess, 'tenant-a', publication.publicationId),
+    ).toThrowError(
+      expect.objectContaining<Partial<BehaviorDomainError>>({ code: 'BEHAVIOR_NOT_FOUND' }),
+    );
+    expect(
+      service.readPublishedSummary(guardianAccess, 'tenant-a', second.publicationId),
+    ).toMatchObject({
+      categoryLabel: 'Conduct review updated',
+      restorativeSummary: 'Restorative follow-up completed.',
+      publicationVersion: 2,
+    });
+
+    const expired = service.publishSummary(
+      access({ context: context({ principalId: 'approver-1' }) }),
+      {
+        tenantId: 'tenant-a',
+        incidentId: incident.incidentId,
+        audience: 'student',
+        categoryLabel: 'Expired conduct review',
+        expiresAt: now,
+      },
+    );
+    expect(() =>
+      service.readPublishedSummary(guardianAccess, 'tenant-a', expired.publicationId),
+    ).toThrowError(
+      expect.objectContaining<Partial<BehaviorDomainError>>({ code: 'BEHAVIOR_NOT_FOUND' }),
+    );
   });
 
   test('emits minimum events and suppresses small operational cohorts', () => {
