@@ -17,6 +17,8 @@ const reactMocks = vi.hoisted(() => ({
   startTransition: vi.fn((callback: () => void) => callback()),
 }));
 
+const portalMocks = vi.hoisted(() => ({ teacherLoads: 0 }));
+
 vi.mock('react', async (importOriginal) => {
   const actual = await importOriginal<typeof ReactTypes>();
   return {
@@ -41,6 +43,10 @@ vi.mock('react', async (importOriginal) => {
 
 vi.mock('react-dom/client', () => ({ createRoot: rootMocks.createRoot }));
 vi.mock('./pwa', () => ({ registerPlatformServiceWorker: vi.fn() }));
+vi.mock('./portals/teacher', () => {
+  portalMocks.teacherLoads += 1;
+  return { default: () => null };
+});
 
 interface AnchorOptions {
   readonly href: string;
@@ -201,6 +207,7 @@ beforeEach(() => {
   reactMocks.effects.length = 0;
   reactMocks.cleanups.length = 0;
   reactMocks.startTransition.mockClear();
+  portalMocks.teacherLoads = 0;
 });
 
 afterEach(() => {
@@ -274,5 +281,37 @@ describe('platform main browser history navigation', () => {
     expect(browser.focus).toHaveBeenCalledWith({ preventScroll: true });
     expect(browser.scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'instant' });
     expect(browser.location.href).toBe('https://school.test/?view=history');
+  });
+});
+
+describe('platform main navigation intent preloading', () => {
+  it('preloads a role workspace on pointer or focus intent and reuses the same in-flight module', async () => {
+    const browser = await mountApplication('/');
+    const pointerover = browser.documentListeners.get('pointerover');
+    const focusin = browser.documentListeners.get('focusin');
+    expect(pointerover).toBeDefined();
+    expect(focusin).toBeDefined();
+
+    const anchor = createAnchor({ href: 'https://school.test/teacher/classes' });
+    const target = new TestElement(anchor);
+    pointerover?.({ target } as unknown as Event);
+    focusin?.({ target } as unknown as Event);
+
+    await vi.waitFor(() => expect(portalMocks.teacherLoads).toBe(1));
+    expect(browser.pushState).not.toHaveBeenCalled();
+    expect(browser.replaceState).not.toHaveBeenCalled();
+  });
+
+  it('does not preload a portal for an application path without a role', async () => {
+    const browser = await mountApplication('/not-a-workspace');
+    const pointerover = browser.documentListeners.get('pointerover');
+    expect(pointerover).toBeDefined();
+
+    pointerover?.({
+      target: new TestElement(createAnchor({ href: 'https://school.test/' })),
+    } as unknown as Event);
+
+    await Promise.resolve();
+    expect(portalMocks.teacherLoads).toBe(0);
   });
 });
