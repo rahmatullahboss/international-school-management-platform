@@ -97,12 +97,6 @@ const operatorConfig: Readonly<
 };
 
 function commandConfig(role: OperatorRole, pathname: string): OperatorCommandConfig | undefined {
-  if (role === 'admissions' && pathname === '/admissions/applications') {
-    return {
-      command: 'admissions.application.review.record',
-      permission: 'admissions.application.review',
-    };
-  }
   if (role === 'finance' && pathname === '/finance/reconciliation') {
     return {
       command: 'finance.bank-line.reconcile',
@@ -185,7 +179,7 @@ function queueMessage(queue: ProductionOperatorWorkQueue | undefined): ReactElem
 }
 
 function workQueueList(queue: ProductionOperatorWorkQueue | undefined): ReactElement | null {
-  if (queue?.state !== 'ready' || queue.items.length === 0) return null;
+  if (queue?.state !== 'ready' || queue.role !== 'finance' || queue.items.length === 0) return null;
   return (
     <section className="pilot-work-queue" aria-labelledby="production-work-queue-title">
       <div>
@@ -194,35 +188,18 @@ function workQueueList(queue: ProductionOperatorWorkQueue | undefined): ReactEle
         <span>Only candidates returned for the signed-in tenant and campus are actionable.</span>
       </div>
       <ol>
-        {queue.role === 'admissions'
-          ? queue.items.map((candidate) => (
-              <li key={candidate.applicationId}>
-                <div>
-                  <strong>{candidate.applicationNumber}</strong>
-                  <span>
-                    {candidate.submittedAt === null
-                      ? 'Submission time unavailable'
-                      : `Submitted ${new Date(candidate.submittedAt).toLocaleString()}`}
-                  </span>
-                </div>
-                <span className="pilot-status">{candidate.status}</span>
-                <span>v{candidate.version}</span>
-              </li>
-            ))
-          : queue.items.map((candidate) => (
-              <li key={`${candidate.bankStatementLineId}:${candidate.paymentId}`}>
-                <div>
-                  <strong>{candidate.bookingDate}</strong>
-                  <span>
-                    Payment received {new Date(candidate.paymentReceivedAt).toLocaleString()}
-                  </span>
-                </div>
-                <span className="pilot-status">Ready to match</span>
-                <span>
-                  {candidate.currency} {candidate.amountMinor} minor units
-                </span>
-              </li>
-            ))}
+        {queue.items.map((candidate) => (
+          <li key={`${candidate.bankStatementLineId}:${candidate.paymentId}`}>
+            <div>
+              <strong>{candidate.bookingDate}</strong>
+              <span>Payment received {new Date(candidate.paymentReceivedAt).toLocaleString()}</span>
+            </div>
+            <span className="pilot-status">Ready to match</span>
+            <span>
+              {candidate.currency} {candidate.amountMinor} minor units
+            </span>
+          </li>
+        ))}
       </ol>
     </section>
   );
@@ -240,8 +217,7 @@ function OperatorCommandPanel(props: {
   const command = config?.command;
   const permission = config?.permission;
   const allowed = permission !== undefined && props.capabilities.includes(permission);
-  const needsWorkQueue =
-    command === 'admissions.application.review.record' || command === 'finance.bank-line.reconcile';
+  const needsWorkQueue = command === 'finance.bank-line.reconcile';
 
   useEffect(() => {
     let cancelled = false;
@@ -273,10 +249,7 @@ function OperatorCommandPanel(props: {
 
   const queueReadyForCommand =
     !needsWorkQueue ||
-    (workQueue?.state === 'ready' &&
-      ((command === 'admissions.application.review.record' && workQueue.role === 'admissions') ||
-        (command === 'finance.bank-line.reconcile' && workQueue.role === 'finance')) &&
-      workQueue.items.length > 0);
+    (workQueue?.state === 'ready' && workQueue.role === 'finance' && workQueue.items.length > 0);
 
   const submit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
@@ -284,29 +257,7 @@ function OperatorCommandPanel(props: {
     const form = new FormData(event.currentTarget);
     let body: ProductionOperatorCommandBody;
 
-    if (command === 'admissions.application.review.record') {
-      if (workQueue?.state !== 'ready' || workQueue.role !== 'admissions') return;
-      const applicationId = formString(form, 'candidate');
-      const candidate = workQueue.items.find((item) => item.applicationId === applicationId);
-      if (candidate === undefined) {
-        setResult({
-          state: 'unavailable',
-          message: 'The selected application is no longer in the current work queue.',
-        });
-        return;
-      }
-      const scoreValue = formString(form, 'score');
-      const notesValue = formString(form, 'notes');
-      body = {
-        command,
-        applicationId: candidate.applicationId,
-        expectedVersion: candidate.version,
-        recommendation: formString(form, 'recommendation') as
-          'admit' | 'waitlist' | 'decline' | 'more-information',
-        score: scoreValue === '' ? null : Number(scoreValue),
-        notes: notesValue === '' ? null : notesValue,
-      };
-    } else if (command === 'finance.bank-line.reconcile') {
+    if (command === 'finance.bank-line.reconcile') {
       if (workQueue?.state !== 'ready' || workQueue.role !== 'finance') return;
       const candidateKey = formString(form, 'candidate');
       const candidate = workQueue.items.find(
@@ -353,11 +304,9 @@ function OperatorCommandPanel(props: {
       <div className="pilot-section-heading">
         <p>Reviewed database command</p>
         <h2 id="operator-command-title">
-          {command === 'admissions.application.review.record'
-            ? 'Record application review'
-            : command === 'finance.bank-line.reconcile'
-              ? 'Reconcile bank statement line'
-              : 'Request privileged support access'}
+          {command === 'finance.bank-line.reconcile'
+            ? 'Reconcile bank statement line'
+            : 'Request privileged support access'}
         </h2>
         <span>
           The browser cannot choose tenant, campus, account, session or correlation scope.
@@ -368,43 +317,7 @@ function OperatorCommandPanel(props: {
       {needsWorkQueue && !queueReadyForCommand ? queueMessage(workQueue) : null}
       {queueReadyForCommand ? workQueueList(workQueue) : null}
       <form className="pilot-demo-note" onSubmit={(event) => void submit(event)}>
-        {command === 'admissions.application.review.record' ? (
-          <>
-            <label>
-              Current application
-              <select name="candidate" required defaultValue="" disabled={!queueReadyForCommand}>
-                <option value="" disabled>
-                  Select an eligible application
-                </option>
-                {workQueue?.state === 'ready' && workQueue.role === 'admissions'
-                  ? workQueue.items.map((candidate) => (
-                      <option key={candidate.applicationId} value={candidate.applicationId}>
-                        {candidate.applicationNumber} · {candidate.status} · version{' '}
-                        {candidate.version}
-                      </option>
-                    ))
-                  : null}
-              </select>
-            </label>
-            <label>
-              Recommendation
-              <select name="recommendation" defaultValue="more-information">
-                <option value="admit">Admit</option>
-                <option value="waitlist">Waitlist</option>
-                <option value="decline">Decline</option>
-                <option value="more-information">More information</option>
-              </select>
-            </label>
-            <label>
-              Score (optional)
-              <input name="score" type="number" min="0" max="100" step="0.1" />
-            </label>
-            <label>
-              Confidential review notes (optional)
-              <textarea name="notes" maxLength={2000} />
-            </label>
-          </>
-        ) : command === 'finance.bank-line.reconcile' ? (
+        {command === 'finance.bank-line.reconcile' ? (
           <>
             <label>
               Current reconciliation candidate
