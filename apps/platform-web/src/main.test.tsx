@@ -80,15 +80,18 @@ describe('platform main bootstrap', () => {
     ['/teacher/classes/', 'teacher'],
     ['/family', 'guardian'],
     ['/student/results/', 'student'],
-  ] as const)('renders the %s workspace loading shell before its lazy portal resolves', async (path, role) => {
-    installBrowser(path);
+  ] as const)(
+    'renders the %s workspace loading shell before its lazy portal resolves',
+    async (path, role) => {
+      installBrowser(path);
 
-    await importMain();
+      await importMain();
 
-    const html = renderedHtml();
-    expect(html).toContain(`data-role="${role}"`);
-    expect(html).toContain('Your workspace is almost ready');
-  });
+      const html = renderedHtml();
+      expect(html).toContain(`data-role="${role}"`);
+      expect(html).toContain('Your workspace is almost ready');
+    },
+  );
 
   it('fails clearly when the application root is missing', async () => {
     installBrowser('/', null);
