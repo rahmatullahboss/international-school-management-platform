@@ -92,12 +92,7 @@ describe('operator portal server rendering', () => {
         'Application review queue',
         'Application review register',
       ],
-      [
-        'finance',
-        '/finance/reconciliation',
-        'Reconciliation queue',
-        'Reconciliation candidates',
-      ],
+      ['finance', '/finance/reconciliation', 'Reconciliation queue', 'Reconciliation candidates'],
       ['support', '/support/access', 'Privileged access', 'Privileged access requests'],
     ] as const;
 
