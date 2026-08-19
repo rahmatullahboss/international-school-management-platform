@@ -87,9 +87,10 @@ describe('shared portal data status', () => {
     ] as const;
 
     for (const [state, label, hasRefresh] of cases) {
-      const html = renderDataStatus(state, {
-        message: state === 'stale' ? 'Temporary outage' : undefined,
-      });
+      const html =
+        state === 'stale'
+          ? renderDataStatus(state, { message: 'Temporary outage' })
+          : renderDataStatus(state);
       expect(html).toContain(label);
       expect(html.includes('Check again')).toBe(hasRefresh);
       expect(html).toContain('2026-08-19T07:00:00Z');
