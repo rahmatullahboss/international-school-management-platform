@@ -59,6 +59,7 @@ class TestElement {
 
 interface BrowserHarness {
   readonly documentListeners: Map<string, EventListener>;
+  readonly windowListeners: Map<string, EventListener>;
   readonly pushState: ReturnType<typeof vi.fn>;
   readonly replaceState: ReturnType<typeof vi.fn>;
   readonly focus: ReturnType<typeof vi.fn>;
@@ -147,7 +148,7 @@ function installBrowser(path: string): BrowserHarness {
     },
   });
 
-  return { documentListeners, pushState, replaceState, focus, scrollTo, location };
+  return { documentListeners, windowListeners, pushState, replaceState, focus, scrollTo, location };
 }
 
 function runEffects(): void {
@@ -253,5 +254,25 @@ describe('platform main navigation click interception', () => {
 
     expect(browser.pushState).not.toHaveBeenCalled();
     expect(browser.replaceState).not.toHaveBeenCalled();
+  });
+});
+
+describe('platform main browser history navigation', () => {
+  it('reconciles popstate without writing a new history entry', async () => {
+    const browser = await mountApplication('/');
+    const popstate = browser.windowListeners.get('popstate');
+    expect(popstate).toBeDefined();
+
+    browser.location.search = '?view=history';
+    browser.location.href = 'https://school.test/?view=history';
+    popstate?.(new Event('popstate'));
+
+    expect(browser.pushState).not.toHaveBeenCalled();
+    expect(browser.replaceState).not.toHaveBeenCalled();
+    expect(reactMocks.startTransition).toHaveBeenCalledOnce();
+    expect(document.title).toBe('Choose a role · International School Platform');
+    expect(browser.focus).toHaveBeenCalledWith({ preventScroll: true });
+    expect(browser.scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'instant' });
+    expect(browser.location.href).toBe('https://school.test/?view=history');
   });
 });
