@@ -22,27 +22,30 @@ const operatorMocks = vi.hoisted(() => ({
   mountProductionOperatorPortal: vi.fn(),
 }));
 
-const mainMocks = vi.hoisted(() => ({ loaded: vi.fn() }));
-
 vi.mock('react-dom/client', () => ({ createRoot: rootMocks.createRoot }));
 vi.mock('./production-gateway', () => gatewayMocks);
-vi.mock('./operator-portal', () => ({ mountOperatorPortal: operatorMocks.mountOperatorPortal }));
+vi.mock('./operator-portal', () => ({
+  mountOperatorPortal: operatorMocks.mountOperatorPortal,
+}));
 vi.mock('./production-operator-portal', () => ({
   mountProductionOperatorPortal: operatorMocks.mountProductionOperatorPortal,
 }));
-vi.mock('./main', () => {
-  mainMocks.loaded();
-  return {};
-});
+vi.mock('./main', () => ({}));
 
 interface BrowserHarness {
-  readonly assign: ReturnType<typeof vi.fn>;
   readonly replace: ReturnType<typeof vi.fn>;
   readonly addEventListener: ReturnType<typeof vi.fn>;
 }
 
 interface ProductionWorkspaceFixture {
-  readonly role: 'admin' | 'teacher' | 'guardian' | 'student' | 'admissions' | 'finance' | 'support';
+  readonly role:
+    | 'admin'
+    | 'teacher'
+    | 'guardian'
+    | 'student'
+    | 'admissions'
+    | 'finance'
+    | 'support';
   readonly path: string;
   readonly assurance: 'aal1' | 'aal2';
   readonly expiresAt: string;
@@ -80,11 +83,13 @@ function installBrowser(pathname: string, root: unknown = {}): BrowserHarness {
     addEventListener,
   });
 
-  return { assign, replace, addEventListener };
+  return { replace, addEventListener };
 }
 
 function renderedHtml(): string {
-  const element = rootMocks.render.mock.calls.at(-1)?.[0] as ReactElement | undefined;
+  const element = rootMocks.render.mock.calls.at(-1)?.[0] as
+    | ReactElement
+    | undefined;
   if (element === undefined) throw new Error('expected entry render');
   return renderToStaticMarkup(element);
 }
@@ -103,7 +108,6 @@ beforeEach(() => {
   gatewayMocks.pathBelongsToWorkspace.mockReset();
   operatorMocks.mountOperatorPortal.mockReset();
   operatorMocks.mountProductionOperatorPortal.mockReset();
-  mainMocks.loaded.mockClear();
   gatewayMocks.isProductionWebHost.mockReturnValue(false);
   gatewayMocks.pathBelongsToWorkspace.mockReturnValue(true);
 });
@@ -134,22 +138,31 @@ describe('non-production entry bootstrap', () => {
     ['/admissions/applications/', 'admissions'],
     ['/finance/receipts/', 'finance'],
     ['/support', 'support'],
-  ] as const)('mounts the %s specialist route through the operator portal', async (path, role) => {
-    installBrowser(path);
+  ] as const)(
+    'mounts the %s specialist route through the operator portal',
+    async (path, role) => {
+      installBrowser(path);
 
-    await importEntry();
+      await importEntry();
 
-    await vi.waitFor(() => expect(operatorMocks.mountOperatorPortal).toHaveBeenCalledWith(role));
-    expect(mainMocks.loaded).not.toHaveBeenCalled();
-  });
+      await vi.waitFor(() =>
+        expect(operatorMocks.mountOperatorPortal).toHaveBeenCalledWith(role),
+      );
+      expect(operatorMocks.mountProductionOperatorPortal).not.toHaveBeenCalled();
+    },
+  );
 
   it('loads the core application and installs home navigation for a principal route', async () => {
     const browser = installBrowser('/teacher/classes/');
 
     await importEntry();
 
-    expect(browser.addEventListener).toHaveBeenCalledWith('click', expect.any(Function), true);
-    await vi.waitFor(() => expect(mainMocks.loaded).toHaveBeenCalledOnce());
+    expect(browser.addEventListener).toHaveBeenCalledWith(
+      'click',
+      expect.any(Function),
+      true,
+    );
+    expect(operatorMocks.mountOperatorPortal).not.toHaveBeenCalled();
   });
 
   it('fails clearly when the landing root is missing', async () => {
@@ -167,8 +180,10 @@ describe('production entry bootstrap', () => {
 
     await importEntry();
 
-    await vi.waitFor(() => expect(gatewayMocks.mountProductionGate).toHaveBeenCalledWith('anonymous'));
-    expect(mainMocks.loaded).not.toHaveBeenCalled();
+    await vi.waitFor(() =>
+      expect(gatewayMocks.mountProductionGate).toHaveBeenCalledWith('anonymous'),
+    );
+    expect(operatorMocks.mountProductionOperatorPortal).not.toHaveBeenCalled();
   });
 
   it('redirects the production root to the resolved authorized workspace', async () => {
@@ -197,9 +212,15 @@ describe('production entry bootstrap', () => {
     await importEntry();
 
     await vi.waitFor(() =>
-      expect(gatewayMocks.pathBelongsToWorkspace).toHaveBeenCalledWith('/teacher', '/admin'),
+      expect(gatewayMocks.pathBelongsToWorkspace).toHaveBeenCalledWith(
+        '/teacher',
+        '/admin',
+      ),
     );
-    expect(gatewayMocks.mountProductionGate).toHaveBeenCalledWith('denied', adminWorkspace);
+    expect(gatewayMocks.mountProductionGate).toHaveBeenCalledWith(
+      'denied',
+      adminWorkspace,
+    );
   });
 
   it('mounts an authorized specialist workspace without loading the principal application', async () => {
@@ -223,7 +244,7 @@ describe('production entry bootstrap', () => {
         '/finance/invoices',
       ),
     );
-    expect(mainMocks.loaded).not.toHaveBeenCalled();
+    expect(gatewayMocks.mountProductionGate).not.toHaveBeenCalled();
   });
 
   it('loads an authorized principal workspace and installs home navigation', async () => {
@@ -237,9 +258,17 @@ describe('production entry bootstrap', () => {
     await importEntry();
 
     await vi.waitFor(() =>
-      expect(gatewayMocks.pathBelongsToWorkspace).toHaveBeenCalledWith('/admin/sis', '/admin'),
+      expect(gatewayMocks.pathBelongsToWorkspace).toHaveBeenCalledWith(
+        '/admin/sis',
+        '/admin',
+      ),
     );
-    expect(browser.addEventListener).toHaveBeenCalledWith('click', expect.any(Function), true);
-    await vi.waitFor(() => expect(mainMocks.loaded).toHaveBeenCalledOnce());
+    expect(browser.addEventListener).toHaveBeenCalledWith(
+      'click',
+      expect.any(Function),
+      true,
+    );
+    expect(gatewayMocks.mountProductionGate).not.toHaveBeenCalled();
+    expect(operatorMocks.mountProductionOperatorPortal).not.toHaveBeenCalled();
   });
 });
