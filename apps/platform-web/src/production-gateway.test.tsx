@@ -83,7 +83,7 @@ describe('production host and workspace path boundaries', () => {
 
 describe('production workspace resolution', () => {
   it('requests the current database-owned workspace without browser caching', async () => {
-    const fetchMock = vi.fn(async () => jsonResponse({ schemaVersion: 1, workspace }));
+    const fetchMock = vi.fn(() => Promise.resolve(jsonResponse({ schemaVersion: 1, workspace })));
     vi.stubGlobal('fetch', fetchMock);
 
     await expect(resolveProductionWorkspace()).resolves.toEqual({ state: 'current', workspace });
@@ -97,7 +97,7 @@ describe('production workspace resolution', () => {
   it('maps an unauthenticated response to the anonymous state', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => new Response(null, { status: 401 })),
+      vi.fn(() => Promise.resolve(new Response(null, { status: 401 }))),
     );
     await expect(resolveProductionWorkspace()).resolves.toEqual({ state: 'anonymous' });
   });
@@ -105,15 +105,13 @@ describe('production workspace resolution', () => {
   it('fails closed for server errors and network failures', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => new Response(null, { status: 503 })),
+      vi.fn(() => Promise.resolve(new Response(null, { status: 503 }))),
     );
     await expect(resolveProductionWorkspace()).resolves.toEqual({ state: 'unavailable' });
 
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => {
-        throw new Error('network unavailable');
-      }),
+      vi.fn(() => Promise.reject(new Error('network unavailable'))),
     );
     await expect(resolveProductionWorkspace()).resolves.toEqual({ state: 'unavailable' });
   });
@@ -137,7 +135,7 @@ describe('production workspace resolution', () => {
   ] as const)('fails closed for %s workspace payloads', async (_label, payload) => {
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => jsonResponse(payload)),
+      vi.fn(() => Promise.resolve(jsonResponse(payload))),
     );
     await expect(resolveProductionWorkspace()).resolves.toEqual({ state: 'unavailable' });
   });
@@ -155,7 +153,9 @@ describe('production workspace resolution', () => {
       const scopedWorkspace: ProductionWorkspace = { ...workspace, role, path: `/${role}` };
       vi.stubGlobal(
         'fetch',
-        vi.fn(async () => jsonResponse({ schemaVersion: 1, workspace: scopedWorkspace })),
+        vi.fn(() =>
+          Promise.resolve(jsonResponse({ schemaVersion: 1, workspace: scopedWorkspace })),
+        ),
       );
       await expect(resolveProductionWorkspace()).resolves.toEqual({
         state: 'current',
