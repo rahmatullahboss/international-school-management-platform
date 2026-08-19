@@ -95,12 +95,18 @@ describe('production workspace resolution', () => {
   });
 
   it('maps an unauthenticated response to the anonymous state', async () => {
-    vi.stubGlobal('fetch', vi.fn(async () => new Response(null, { status: 401 })));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(null, { status: 401 })),
+    );
     await expect(resolveProductionWorkspace()).resolves.toEqual({ state: 'anonymous' });
   });
 
   it('fails closed for server errors and network failures', async () => {
-    vi.stubGlobal('fetch', vi.fn(async () => new Response(null, { status: 503 })));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(null, { status: 503 })),
+    );
     await expect(resolveProductionWorkspace()).resolves.toEqual({ state: 'unavailable' });
 
     vi.stubGlobal(
@@ -112,26 +118,27 @@ describe('production workspace resolution', () => {
     await expect(resolveProductionWorkspace()).resolves.toEqual({ state: 'unavailable' });
   });
 
-  it.each(
+  it.each([
+    ['missing object', null],
+    ['wrong schema', { schemaVersion: 2, workspace }],
+    ['missing workspace', { schemaVersion: 1 }],
+    ['unknown role', { schemaVersion: 1, workspace: { ...workspace, role: 'owner' } }],
+    ['relative path', { schemaVersion: 1, workspace: { ...workspace, path: 'admin' } }],
+    ['invalid assurance', { schemaVersion: 1, workspace: { ...workspace, assurance: 'aal3' } }],
+    ['invalid expiry', { schemaVersion: 1, workspace: { ...workspace, expiresAt: 'not-a-date' } }],
     [
-      ['missing object', null],
-      ['wrong schema', { schemaVersion: 2, workspace }],
-      ['missing workspace', { schemaVersion: 1 }],
-      ['unknown role', { schemaVersion: 1, workspace: { ...workspace, role: 'owner' } }],
-      ['relative path', { schemaVersion: 1, workspace: { ...workspace, path: 'admin' } }],
-      ['invalid assurance', { schemaVersion: 1, workspace: { ...workspace, assurance: 'aal3' } }],
-      ['invalid expiry', { schemaVersion: 1, workspace: { ...workspace, expiresAt: 'not-a-date' } }],
-      [
-        'non-array capabilities',
-        { schemaVersion: 1, workspace: { ...workspace, capabilities: 'sis.people.read' } },
-      ],
-      [
-        'non-string capability',
-        { schemaVersion: 1, workspace: { ...workspace, capabilities: ['sis.people.read', 7] } },
-      ],
-    ] as const,
-  )('fails closed for %s workspace payloads', async (_label, payload) => {
-    vi.stubGlobal('fetch', vi.fn(async () => jsonResponse(payload)));
+      'non-array capabilities',
+      { schemaVersion: 1, workspace: { ...workspace, capabilities: 'sis.people.read' } },
+    ],
+    [
+      'non-string capability',
+      { schemaVersion: 1, workspace: { ...workspace, capabilities: ['sis.people.read', 7] } },
+    ],
+  ] as const)('fails closed for %s workspace payloads', async (_label, payload) => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => jsonResponse(payload)),
+    );
     await expect(resolveProductionWorkspace()).resolves.toEqual({ state: 'unavailable' });
   });
 
