@@ -99,6 +99,109 @@ describe('CARE-01 health domain', () => {
     );
   });
 
+  test('records conditions with legal-basis enforcement and explicit lifecycle status', () => {
+    const service = createService();
+    const profile = service.createProfile(access(), {
+      tenantId: 'tenant-a',
+      studentPersonId: 'student-1',
+      legalBasis,
+    });
+
+    expect(() =>
+      service.recordCondition(access(), {
+        tenantId: 'tenant-a',
+        profileId: profile.profileId,
+        studentPersonId: 'student-1',
+        code: 'condition-denied',
+        display: 'Synthetic denied condition',
+        severity: 'moderate',
+        legalBasis: { ...legalBasis, status: 'withdrawn' },
+      }),
+    ).toThrowError(
+      expect.objectContaining<Partial<HealthDomainError>>({ code: 'HEALTH_LEGAL_BASIS_INVALID' }),
+    );
+
+    const active = service.recordCondition(access(), {
+      tenantId: 'tenant-a',
+      profileId: profile.profileId,
+      studentPersonId: 'student-1',
+      code: 'condition-a',
+      display: 'Synthetic Condition A',
+      severity: 'moderate',
+      legalBasis,
+    });
+    expect(active).toMatchObject({
+      profileId: profile.profileId,
+      studentPersonId: 'student-1',
+      status: 'active',
+    });
+
+    const resolved = service.recordCondition(access(), {
+      tenantId: 'tenant-a',
+      profileId: profile.profileId,
+      studentPersonId: 'student-1',
+      code: 'condition-b',
+      display: 'Synthetic Condition B',
+      severity: 'mild',
+      status: 'resolved',
+      onsetDate: new Date('2026-07-01T00:00:00.000Z'),
+      legalBasis,
+    });
+    expect(resolved).toMatchObject({ status: 'resolved' });
+    expect(resolved.onsetDate).toEqual(new Date('2026-07-01T00:00:00.000Z'));
+  });
+
+  test('records immunization provenance and keeps health documents restricted to CARE-C3', () => {
+    const service = createService();
+    const profile = service.createProfile(access(), {
+      tenantId: 'tenant-a',
+      studentPersonId: 'student-1',
+      legalBasis,
+    });
+
+    const firstDose = service.recordImmunization(access(), {
+      tenantId: 'tenant-a',
+      profileId: profile.profileId,
+      vaccineCode: 'vaccine-a',
+      administeredOn: new Date('2026-07-15T00:00:00.000Z'),
+      doseNumber: 1,
+      evidenceReference: 'synthetic-immunization-evidence-1',
+      legalBasis,
+    });
+    expect(firstDose).toMatchObject({
+      studentPersonId: 'student-1',
+      vaccineCode: 'vaccine-a',
+      doseNumber: 1,
+      evidenceReference: 'synthetic-immunization-evidence-1',
+      status: 'active',
+    });
+
+    const doseUnspecified = service.recordImmunization(access(), {
+      tenantId: 'tenant-a',
+      profileId: profile.profileId,
+      vaccineCode: 'vaccine-b',
+      administeredOn: new Date('2026-07-20T00:00:00.000Z'),
+      evidenceReference: 'synthetic-immunization-evidence-2',
+      legalBasis,
+    });
+    expect(doseUnspecified.doseNumber).toBeUndefined();
+
+    const document = service.attachRestrictedDocument(access(), {
+      tenantId: 'tenant-a',
+      profileId: profile.profileId,
+      documentId: 'health-document-1',
+      documentType: 'clinical-evidence',
+    });
+    expect(document).toMatchObject({
+      profileId: profile.profileId,
+      studentPersonId: 'student-1',
+      documentId: 'health-document-1',
+      classification: 'CARE-C3',
+      sourceClassification: 'CARE-C3',
+      status: 'active',
+    });
+  });
+
   test('blocks medication administration when an active allergy conflicts', () => {
     const service = createService();
     const profile = service.createProfile(access(), {
@@ -142,6 +245,74 @@ describe('CARE-01 health domain', () => {
     ).toThrowError(
       expect.objectContaining<Partial<HealthDomainError>>({
         code: 'HEALTH_ALLERGY_CONTRAINDICATION',
+      }),
+    );
+  });
+
+  test('rejects medication administration outside the active order window', () => {
+    const service = createService();
+    const profile = service.createProfile(access(), {
+      tenantId: 'tenant-a',
+      studentPersonId: 'student-1',
+      legalBasis,
+    });
+
+    const futureOrder = service.orderMedication(access(), {
+      tenantId: 'tenant-a',
+      profileId: profile.profileId,
+      medicationCode: 'medicine-future',
+      display: 'Synthetic Future Medicine',
+      dose: '1 unit',
+      route: 'oral',
+      schedule: 'once',
+      startsAt: new Date('2026-07-29T05:00:00.000Z'),
+      prescriberReference: 'synthetic-prescriber-reference',
+      authorizationDocumentReference: 'synthetic-medication-authorization',
+      legalBasis,
+    });
+    expect(() =>
+      service.administerMedication(access(), {
+        tenantId: 'tenant-a',
+        medicationOrderId: futureOrder.medicationOrderId,
+        administeredAt: now,
+        dose: '1 unit',
+        route: 'oral',
+        outcome: 'given',
+        idempotencyKey: 'future-administration',
+      }),
+    ).toThrowError(
+      expect.objectContaining<Partial<HealthDomainError>>({
+        code: 'HEALTH_MEDICATION_ORDER_INACTIVE',
+      }),
+    );
+
+    const expiredOrder = service.orderMedication(access(), {
+      tenantId: 'tenant-a',
+      profileId: profile.profileId,
+      medicationCode: 'medicine-expired',
+      display: 'Synthetic Expired Medicine',
+      dose: '1 unit',
+      route: 'oral',
+      schedule: 'once',
+      startsAt: new Date('2026-07-29T02:00:00.000Z'),
+      endsAt: new Date('2026-07-29T03:00:00.000Z'),
+      prescriberReference: 'synthetic-prescriber-reference',
+      authorizationDocumentReference: 'synthetic-medication-authorization',
+      legalBasis,
+    });
+    expect(() =>
+      service.administerMedication(access(), {
+        tenantId: 'tenant-a',
+        medicationOrderId: expiredOrder.medicationOrderId,
+        administeredAt: now,
+        dose: '1 unit',
+        route: 'oral',
+        outcome: 'given',
+        idempotencyKey: 'expired-administration',
+      }),
+    ).toThrowError(
+      expect.objectContaining<Partial<HealthDomainError>>({
+        code: 'HEALTH_MEDICATION_ORDER_INACTIVE',
       }),
     );
   });
@@ -200,6 +371,26 @@ describe('CARE-01 health domain', () => {
       idempotencyKey: 'administration-2',
     });
     expect(replay).toEqual(first);
+
+    expect(() =>
+      service.correctAdministration(access(), {
+        tenantId: 'tenant-a',
+        administrationId: 'missing-administration',
+        reason: 'Synthetic missing administration correction',
+        replacementDose: '1 unit',
+      }),
+    ).toThrowError(
+      expect.objectContaining<Partial<HealthDomainError>>({ code: 'HEALTH_NOT_FOUND' }),
+    );
+    expect(() =>
+      service.correctAdministration(access(), {
+        tenantId: 'tenant-a',
+        administrationId: first.administrationId,
+        reason: 'short',
+      }),
+    ).toThrowError(
+      expect.objectContaining<Partial<HealthDomainError>>({ code: 'HEALTH_CORRECTION_INVALID' }),
+    );
 
     const correction = service.correctAdministration(access(), {
       tenantId: 'tenant-a',
@@ -281,6 +472,15 @@ describe('CARE-01 health domain', () => {
       disposition: 'returned-to-class',
     });
     expect(closed).toMatchObject({ status: 'closed', version: 2 });
+    expect(() =>
+      service.closeEncounter(access(), {
+        tenantId: 'tenant-a',
+        encounterId: 'missing-encounter',
+        disposition: 'sent-home',
+      }),
+    ).toThrowError(
+      expect.objectContaining<Partial<HealthDomainError>>({ code: 'HEALTH_NOT_FOUND' }),
+    );
     expect(() =>
       service.closeEncounter(access(), {
         tenantId: 'tenant-a',
