@@ -32,6 +32,7 @@ Security and release evidence:
 - `docs/mobile/accessibility-localization-release-evidence.md`
 - `docs/mobile/secure-document-exchange-contract.md`
 - `docs/mobile/native-notification-provider-activation.md`
+- `docs/mobile/mobile-bearer-bootstrap-activation.md`
 
 ## Localization and accessibility production tranche
 

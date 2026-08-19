@@ -38,7 +38,6 @@ abstract final class MobileBootstrapDecoder {
     locale: _requiredString(json, 'locale'),
     schools: _objectList(json, 'schools').map(_decodeTenant),
     syncCursor: _optionalString(json, 'syncCursor'),
-    timeZone: _requiredString(json, 'timeZone'),
   );
 
   static TenantAccess _decodeTenant(Map<String, Object?> json) => TenantAccess(
@@ -51,6 +50,7 @@ abstract final class MobileBootstrapDecoder {
     campusId: _requiredString(json, 'campusId'),
     campusName: _requiredString(json, 'campusName'),
     personas: _objectList(json, 'personas').map(_decodePersona),
+    timeZone: _requiredString(json, 'timeZone'),
   );
 
   static PersonaAccess _decodePersona(Map<String, Object?> json) =>

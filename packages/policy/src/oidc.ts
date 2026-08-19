@@ -62,6 +62,31 @@ export interface VerifyOidcIdTokenInput {
   readonly clockSkewSeconds?: number;
 }
 
+export interface OidcBearerConfiguration {
+  readonly issuer: string;
+  readonly audience: string;
+  readonly requiredScope: string;
+}
+
+export type OidcBearerVerificationFailureCode =
+  Exclude<OidcVerificationFailureCode, 'oidc_nonce_mismatch'> | 'oidc_scope_missing';
+
+export type OidcBearerVerificationResult =
+  | { readonly ok: true; readonly identity: OidcIdentity }
+  | {
+      readonly ok: false;
+      readonly code: OidcBearerVerificationFailureCode;
+      readonly message: string;
+    };
+
+export interface VerifyOidcBearerTokenInput {
+  readonly bearerToken: string;
+  readonly configuration: OidcBearerConfiguration;
+  readonly jwks: OidcJsonWebKeySet;
+  readonly now?: number;
+  readonly clockSkewSeconds?: number;
+}
+
 interface JwtHeader {
   readonly alg: string;
   readonly kid: string;
@@ -86,10 +111,35 @@ interface JwtClaims {
   readonly amr?: readonly string[];
 }
 
+interface JwtBearerClaims {
+  readonly iss: string;
+  readonly sub: string;
+  readonly sid?: string;
+  readonly aud: string | readonly string[];
+  readonly exp: number;
+  readonly iat: number;
+  readonly nbf?: number;
+  readonly scope?: string;
+  readonly scp?: string | readonly string[];
+  readonly auth_time?: number;
+  readonly email?: string;
+  readonly email_verified?: boolean;
+  readonly name?: string;
+  readonly acr?: string;
+  readonly amr?: readonly string[];
+}
+
 const DEFAULT_CLOCK_SKEW_SECONDS = 60;
 const MAX_TOKEN_LIFETIME_SECONDS = 60 * 60;
 
 function failure(code: OidcVerificationFailureCode, message: string): OidcVerificationResult {
+  return { ok: false, code, message };
+}
+
+function bearerFailure(
+  code: OidcBearerVerificationFailureCode,
+  message: string,
+): OidcBearerVerificationResult {
   return { ok: false, code, message };
 }
 
@@ -151,6 +201,29 @@ export function validateOidcProviderConfiguration(
   return undefined;
 }
 
+export function validateOidcBearerConfiguration(
+  configuration: OidcBearerConfiguration,
+): OidcBearerVerificationResult | undefined {
+  const issuer = configuration.issuer.trim();
+  const audience = configuration.audience.trim();
+  const requiredScope = configuration.requiredScope.trim();
+  if (
+    issuer === '' ||
+    audience === '' ||
+    requiredScope === '' ||
+    !isAllowedEndpoint(issuer) ||
+    issuer.endsWith('/') ||
+    /\s/u.test(audience) ||
+    /\s/u.test(requiredScope)
+  ) {
+    return bearerFailure(
+      'oidc_configuration_invalid',
+      'OIDC bearer configuration requires an approved issuer, audience and exact scope.',
+    );
+  }
+  return undefined;
+}
+
 function parseHeader(value: unknown): JwtHeader | undefined {
   if (!isRecord(value)) return undefined;
   if (value.alg !== 'RS256' || typeof value.kid !== 'string' || value.kid.trim() === '') {
@@ -161,6 +234,19 @@ function parseHeader(value: unknown): JwtHeader | undefined {
     alg: value.alg,
     kid: value.kid,
     ...(value.typ === 'JWT' ? { typ: value.typ } : {}),
+  };
+}
+
+function parseBearerHeader(value: unknown): JwtHeader | undefined {
+  if (!isRecord(value)) return undefined;
+  if (value.alg !== 'RS256' || typeof value.kid !== 'string' || value.kid.trim() === '') {
+    return undefined;
+  }
+  if (value.typ !== undefined && value.typ !== 'JWT' && value.typ !== 'at+jwt') return undefined;
+  return {
+    alg: value.alg,
+    kid: value.kid,
+    ...(typeof value.typ === 'string' ? { typ: value.typ } : {}),
   };
 }
 
@@ -209,6 +295,64 @@ function parseClaims(value: unknown): JwtClaims | undefined {
   return value as unknown as JwtClaims;
 }
 
+function parseBearerClaims(value: unknown): JwtBearerClaims | undefined {
+  if (!isRecord(value)) return undefined;
+  const audience = value.aud;
+  const validAudience =
+    typeof audience === 'string' ||
+    (Array.isArray(audience) &&
+      audience.length > 0 &&
+      audience.every((entry) => typeof entry === 'string'));
+  if (
+    typeof value.iss !== 'string' ||
+    typeof value.sub !== 'string' ||
+    value.sub.trim() === '' ||
+    !validAudience ||
+    typeof value.exp !== 'number' ||
+    !Number.isInteger(value.exp) ||
+    typeof value.iat !== 'number' ||
+    !Number.isInteger(value.iat)
+  ) {
+    return undefined;
+  }
+  if (
+    value.sid !== undefined &&
+    (typeof value.sid !== 'string' || value.sid.trim() === '' || value.sid.length > 512)
+  ) {
+    return undefined;
+  }
+  if (value.nbf !== undefined && (typeof value.nbf !== 'number' || !Number.isInteger(value.nbf))) {
+    return undefined;
+  }
+  if (value.scope !== undefined && typeof value.scope !== 'string') return undefined;
+  if (
+    value.scp !== undefined &&
+    typeof value.scp !== 'string' &&
+    (!Array.isArray(value.scp) || !value.scp.every((entry) => typeof entry === 'string'))
+  ) {
+    return undefined;
+  }
+  if (
+    value.auth_time !== undefined &&
+    (typeof value.auth_time !== 'number' || !Number.isInteger(value.auth_time))
+  ) {
+    return undefined;
+  }
+  if (value.email !== undefined && typeof value.email !== 'string') return undefined;
+  if (value.email_verified !== undefined && typeof value.email_verified !== 'boolean') {
+    return undefined;
+  }
+  if (value.name !== undefined && typeof value.name !== 'string') return undefined;
+  if (value.acr !== undefined && typeof value.acr !== 'string') return undefined;
+  if (
+    value.amr !== undefined &&
+    (!Array.isArray(value.amr) || !value.amr.every((entry) => typeof entry === 'string'))
+  ) {
+    return undefined;
+  }
+  return value as unknown as JwtBearerClaims;
+}
+
 function constantTimeEqual(left: string, right: string): boolean {
   const leftBytes = new TextEncoder().encode(left);
   const rightBytes = new TextEncoder().encode(right);
@@ -220,7 +364,10 @@ function constantTimeEqual(left: string, right: string): boolean {
   return difference === 0;
 }
 
-function resolveAssurance(claims: JwtClaims): AssuranceLevel {
+function resolveAssurance(claims: {
+  readonly acr?: string;
+  readonly amr?: readonly string[];
+}): AssuranceLevel {
   const methods = new Set((claims.amr ?? []).map((method) => method.toLowerCase()));
   const acr = claims.acr?.toLowerCase() ?? '';
   if (
@@ -240,6 +387,19 @@ function audienceMatches(claims: JwtClaims, clientId: string): boolean {
   if (!audiences.includes(clientId)) return false;
   if (audiences.length > 1) return claims.azp === clientId;
   return claims.azp === undefined || claims.azp === clientId;
+}
+
+function bearerAudienceMatches(claims: JwtBearerClaims, audience: string): boolean {
+  const audiences = typeof claims.aud === 'string' ? [claims.aud] : claims.aud;
+  return audiences.includes(audience);
+}
+
+function bearerScopes(claims: JwtBearerClaims): Set<string> {
+  const values: string[] = [];
+  if (claims.scope !== undefined) values.push(...claims.scope.split(/\s+/u));
+  if (typeof claims.scp === 'string') values.push(...claims.scp.split(/\s+/u));
+  if (claims.scp !== undefined && typeof claims.scp !== 'string') values.push(...claims.scp);
+  return new Set(values.map((value) => value.trim()).filter((value) => value !== ''));
 }
 
 async function verifySignature(
@@ -357,6 +517,116 @@ export async function verifyOidcIdToken(
   }
   if (claims.exp - claims.iat > MAX_TOKEN_LIFETIME_SECONDS) {
     return failure('oidc_claims_invalid', 'The OIDC ID token lifetime exceeds policy.');
+  }
+
+  return {
+    ok: true,
+    identity: {
+      issuer: claims.iss,
+      subject: claims.sub,
+      ...(claims.sid === undefined ? {} : { providerSessionId: claims.sid }),
+      ...(claims.email === undefined ? {} : { email: claims.email }),
+      ...(claims.email_verified === undefined ? {} : { emailVerified: claims.email_verified }),
+      ...(claims.name === undefined ? {} : { displayName: claims.name }),
+      assurance: resolveAssurance(claims),
+      ...(claims.auth_time === undefined ? {} : { authenticationTime: claims.auth_time }),
+      issuedAt: claims.iat,
+      expiresAt: claims.exp,
+    },
+  };
+}
+
+export async function verifyOidcBearerToken(
+  input: VerifyOidcBearerTokenInput,
+): Promise<OidcBearerVerificationResult> {
+  const configurationFailure = validateOidcBearerConfiguration(input.configuration);
+  if (configurationFailure !== undefined) return configurationFailure;
+
+  const segments = input.bearerToken.split('.');
+  const encodedHeader = segments[0];
+  const encodedClaims = segments[1];
+  const encodedSignature = segments[2];
+  if (
+    segments.length !== 3 ||
+    encodedHeader === undefined ||
+    encodedClaims === undefined ||
+    encodedSignature === undefined ||
+    encodedHeader === '' ||
+    encodedClaims === '' ||
+    encodedSignature === ''
+  ) {
+    return bearerFailure('oidc_token_malformed', 'The OIDC bearer token is malformed.');
+  }
+
+  let header: JwtHeader | undefined;
+  let claims: JwtBearerClaims | undefined;
+  try {
+    const rawHeader = decodeJson(encodedHeader);
+    if (isRecord(rawHeader) && rawHeader.alg !== 'RS256') {
+      return bearerFailure(
+        'oidc_token_algorithm_denied',
+        'The OIDC bearer token uses a denied signing algorithm.',
+      );
+    }
+    header = parseBearerHeader(rawHeader);
+    claims = parseBearerClaims(decodeJson(encodedClaims));
+  } catch {
+    return bearerFailure('oidc_token_malformed', 'The OIDC bearer token cannot be decoded.');
+  }
+  if (header === undefined || claims === undefined) {
+    return bearerFailure(
+      'oidc_claims_invalid',
+      'The OIDC bearer token header or claims are invalid.',
+    );
+  }
+
+  const signature = await verifySignature(
+    header,
+    encodedHeader,
+    encodedClaims,
+    encodedSignature,
+    input.jwks,
+  );
+  if (signature === 'key-not-found') {
+    return bearerFailure(
+      'oidc_signing_key_not_found',
+      'No approved OIDC signing key matched the bearer token.',
+    );
+  }
+  if (signature !== 'verified') {
+    return bearerFailure('oidc_signature_invalid', 'The OIDC bearer token signature is invalid.');
+  }
+
+  if (claims.iss !== input.configuration.issuer) {
+    return bearerFailure(
+      'oidc_issuer_mismatch',
+      'The OIDC bearer issuer does not match configuration.',
+    );
+  }
+  if (!bearerAudienceMatches(claims, input.configuration.audience)) {
+    return bearerFailure('oidc_audience_mismatch', 'The OIDC bearer audience is not permitted.');
+  }
+  if (!bearerScopes(claims).has(input.configuration.requiredScope)) {
+    return bearerFailure(
+      'oidc_scope_missing',
+      'The OIDC bearer token is missing the required API scope.',
+    );
+  }
+
+  const nowSeconds = Math.floor((input.now ?? Date.now()) / 1000);
+  const skew = input.clockSkewSeconds ?? DEFAULT_CLOCK_SKEW_SECONDS;
+  if (claims.exp <= nowSeconds - skew) {
+    return bearerFailure('oidc_token_expired', 'The OIDC bearer token has expired.');
+  }
+  if (
+    claims.iat > nowSeconds + skew ||
+    (claims.nbf !== undefined && claims.nbf > nowSeconds + skew) ||
+    (claims.auth_time !== undefined && claims.auth_time > nowSeconds + skew)
+  ) {
+    return bearerFailure('oidc_token_not_yet_valid', 'The OIDC bearer token is not yet valid.');
+  }
+  if (claims.exp - claims.iat > MAX_TOKEN_LIFETIME_SECONDS) {
+    return bearerFailure('oidc_claims_invalid', 'The OIDC bearer token lifetime exceeds policy.');
   }
 
   return {

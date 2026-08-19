@@ -1,7 +1,11 @@
 node_modules
 dist
 coverage
+.tooling
 .worktrees
+mobile/.dart_tool
+mobile/**/.dart_tool
+mobile/**/build
 playwright-report
 test-results
 package-lock.json

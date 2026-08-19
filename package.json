@@ -45,6 +45,7 @@
     "verify:database-recovery": "bash tests/integration/verify-database-backup-restore-rollback.sh",
     "verify:migrations": "bash tests/integration/verify-wave2-migrations.sh",
     "verify:auth-migrations": "bash tests/integration/verify-auth-durable-context.sh",
+    "verify:mobile-migrations": "bash tests/integration/verify-mobile-bearer-bootstrap.sh",
     "verify:persona-e2e": "bash tests/integration/verify-product-persona-e2e.sh",
     "verify:prod08-recovery": "bash tests/integration/verify-prod08-database-recovery.sh",
     "verify:projection-recovery": "bash tests/integration/verify-runtime-projection-dead-letter-recovery.sh",

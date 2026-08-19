@@ -99,15 +99,26 @@ export {
   exchangeOidcAuthorizationCode,
   fetchOidcJwks,
 } from './oidc-provider-client.js';
+export type { OidcJwksFetchResult } from './oidc-jwks.js';
+export { fetchOidcJwksUri } from './oidc-jwks.js';
 export type {
+  OidcBearerConfiguration,
+  OidcBearerVerificationFailureCode,
+  OidcBearerVerificationResult,
   OidcIdentity,
   OidcJsonWebKey,
   OidcJsonWebKeySet,
   OidcProviderConfiguration,
   OidcVerificationFailureCode,
   OidcVerificationResult,
+  VerifyOidcBearerTokenInput,
   VerifyOidcIdTokenInput,
 } from './oidc.js';
-export { validateOidcProviderConfiguration, verifyOidcIdToken } from './oidc.js';
+export {
+  validateOidcBearerConfiguration,
+  validateOidcProviderConfiguration,
+  verifyOidcBearerToken,
+  verifyOidcIdToken,
+} from './oidc.js';
 export type { PrivilegedAccessGrant, PrivilegedAccessRequest } from './privileged-access.js';
 export { PrivilegedAccessRegistry } from './privileged-access.js';

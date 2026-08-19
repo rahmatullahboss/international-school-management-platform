@@ -16,7 +16,6 @@ void main() {
         jsonEncode(<String, Object?>{
           'accountId': 'account-1',
           'locale': 'en-BD',
-          'timeZone': 'Asia/Dhaka',
           'syncCursor': 'cursor-1',
           'schools': <Object?>[
             <String, Object?>{
@@ -26,6 +25,7 @@ void main() {
                 <String, Object?>{
                   'campusId': 'campus-1',
                   'campusName': 'Primary Campus',
+                  'timeZone': 'Asia/Dhaka',
                   'personas': <Object?>[
                     <String, Object?>{
                       'persona': 'guardian',
@@ -74,6 +74,7 @@ void main() {
     expect(capturedRequest.headers, isNot(contains('x-persona')));
     expect(session.can(SchoolCapability.gradesReadPublished), isTrue);
     expect(session.can(SchoolCapability.billingRead), isFalse);
+    expect(session.timeZone, 'Asia/Dhaka');
     expect(bootstrap.syncCursor, 'cursor-1');
 
     client.close();
@@ -88,7 +89,6 @@ void main() {
           jsonEncode(<String, Object?>{
             'accountId': 'account-1',
             'locale': 'en-BD',
-            'timeZone': 'Asia/Dhaka',
             'schools': <Object?>[
               <String, Object?>{
                 'tenantId': 'tenant-1',
@@ -97,6 +97,7 @@ void main() {
                   <String, Object?>{
                     'campusId': 'campus-1',
                     'campusName': 'Primary Campus',
+                    'timeZone': 'Asia/Dhaka',
                     'personas': <Object?>[
                       <String, Object?>{
                         'persona': 'administrator',
@@ -121,6 +122,37 @@ void main() {
           'code',
           'INVALID_BOOTSTRAP_RESPONSE',
         ),
+      ),
+    );
+
+    client.close();
+  });
+
+  test('preserves canonical nested server errors', () async {
+    final client = SchoolApiClient(
+      accessTokenProvider: () async => 'access-token',
+      baseUri: Uri.parse('https://api.school.example/'),
+      client: MockClient(
+        (request) async => http.Response(
+          jsonEncode(<String, Object?>{
+            'error': <String, Object?>{
+              'code': 'mobile_access_unavailable',
+              'message':
+                  'No active mobile access is available for this account.',
+            },
+          }),
+          403,
+          headers: const {'content-type': 'application/json'},
+        ),
+      ),
+    );
+
+    expect(
+      () => MobileBootstrapApi(client).load(correlationId: 'correlation-error'),
+      throwsA(
+        isA<SchoolApiException>()
+            .having((error) => error.code, 'code', 'mobile_access_unavailable')
+            .having((error) => error.statusCode, 'statusCode', 403),
       ),
     );
 

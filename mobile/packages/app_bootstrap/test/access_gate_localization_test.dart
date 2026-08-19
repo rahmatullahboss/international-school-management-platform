@@ -79,13 +79,13 @@ void main() {
                   persona: option.persona,
                 ),
               ],
+              timeZone: 'Asia/Dhaka',
             ),
           ],
           tenantId: option.tenantId,
           tenantName: option.tenantName,
         ),
       ],
-      timeZone: 'Asia/Dhaka',
     );
 
     await tester.pumpWidget(

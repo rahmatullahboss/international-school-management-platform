@@ -32,8 +32,14 @@ import {
   type LogoutScope,
 } from './auth-logout.js';
 import { resolveDatabaseReadModel, RuntimeReadModelCache } from './database-read-model.js';
+import { DatabaseMobileAccessStore } from './database-mobile-access-store.js';
 import { DatabaseMutationStore } from './database-mutation-store.js';
 import { DatabaseReadModelStore } from './database-read-model-store.js';
+import {
+  authenticateMobileBearer,
+  resolveMobileAuthReadiness,
+  type MobileAuthBindings,
+} from './mobile-auth.js';
 import { isAllowedPilotWebOrigin, resolvePilotReadSnapshot } from './pilot-read-models.js';
 import { issuePilotSession, pilotSessionHeaders, verifyPilotSession } from './pilot-sessions.js';
 import { resolveRuntimeProjectionWorkerReadiness } from './runtime-projection-worker.js';
@@ -48,7 +54,7 @@ import {
   submitRuntimeSnapshotRefresh,
 } from './runtime-mutation.js';
 
-interface Bindings extends AuthBindings {
+interface Bindings extends AuthBindings, MobileAuthBindings {
   APP_ENV: string;
   APP_REGION: string;
   DATABASE_URL?: string;
@@ -116,6 +122,70 @@ app.get('/health', (context) => {
     environment: runtime.environment,
     region: runtime.region,
   });
+});
+
+app.get('/v1/mobile/readiness', (context) => {
+  context.header('cache-control', 'no-store');
+  return context.json(resolveMobileAuthReadiness(context.env));
+});
+
+app.get('/v1/mobile/bootstrap', async (context) => {
+  context.header('cache-control', 'no-store');
+  const databaseUrl = context.env.DATABASE_URL?.trim();
+  if (
+    databaseUrl === undefined ||
+    databaseUrl === '' ||
+    context.env.MOBILE_MEMBERSHIP_SOURCE?.trim() !== 'database'
+  ) {
+    return context.json(
+      {
+        error: {
+          code: 'mobile_access_configuration_unavailable',
+          message: 'Mobile account access is not configured.',
+        },
+      },
+      503,
+    );
+  }
+
+  const authentication = await authenticateMobileBearer(
+    context.env,
+    context.req.header('authorization'),
+  );
+  if (!authentication.ok) {
+    return context.json(
+      { error: { code: authentication.code, message: authentication.message } },
+      authentication.status,
+    );
+  }
+
+  try {
+    const bootstrap = await new DatabaseMobileAccessStore(
+      createHttpDatabase(databaseUrl),
+    ).loadBootstrap(authentication.identity);
+    if (bootstrap === undefined) {
+      return context.json(
+        {
+          error: {
+            code: 'mobile_access_unavailable',
+            message: 'No active mobile school access is available for this account.',
+          },
+        },
+        403,
+      );
+    }
+    return context.json(bootstrap);
+  } catch {
+    return context.json(
+      {
+        error: {
+          code: 'mobile_access_temporarily_unavailable',
+          message: 'Mobile account access is temporarily unavailable.',
+        },
+      },
+      503,
+    );
+  }
 });
 
 app.get('/auth/v1/readiness', (context) => {

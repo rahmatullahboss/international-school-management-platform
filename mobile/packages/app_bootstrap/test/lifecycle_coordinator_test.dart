@@ -238,13 +238,13 @@ MobileBootstrap _bootstrap() => MobileBootstrap(
               persona: SchoolPersona.guardian,
             ),
           ],
+          timeZone: 'Asia/Dhaka',
         ),
       ],
       tenantId: 'tenant-1',
       tenantName: 'International School',
     ),
   ],
-  timeZone: 'Asia/Dhaka',
 );
 
 final class _BootstrapLoader implements MobileBootstrapLoader {

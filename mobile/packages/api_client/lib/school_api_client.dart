@@ -133,7 +133,9 @@ final class SchoolApiClient {
     }
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      final error = decoded is Map<String, Object?> ? decoded : null;
+      final responseObject = decoded is Map<String, Object?> ? decoded : null;
+      final nested = responseObject?['error'];
+      final error = nested is Map<String, Object?> ? nested : responseObject;
       final rawCode = error?['code'];
       final rawMessage = error?['message'];
       throw SchoolApiException(

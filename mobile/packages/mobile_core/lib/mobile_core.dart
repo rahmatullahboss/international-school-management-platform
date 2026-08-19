@@ -114,10 +114,14 @@ final class CampusAccess {
     required String campusId,
     required String campusName,
     required Iterable<PersonaAccess> personas,
+    required String timeZone,
   }) {
     final normalizedId = campusId.trim();
     final normalizedName = campusName.trim();
-    if (normalizedId.isEmpty || normalizedName.isEmpty) {
+    final normalizedTimeZone = timeZone.trim();
+    if (normalizedId.isEmpty ||
+        normalizedName.isEmpty ||
+        normalizedTimeZone.isEmpty) {
       throw const BootstrapContractException(
         'BOOTSTRAP_CAMPUS_IDENTITY_REQUIRED',
       );
@@ -138,6 +142,7 @@ final class CampusAccess {
       campusId: normalizedId,
       campusName: normalizedName,
       personas: Map<SchoolPersona, PersonaAccess>.unmodifiable(byPersona),
+      timeZone: normalizedTimeZone,
     );
   }
 
@@ -145,10 +150,12 @@ final class CampusAccess {
     required this.campusId,
     required this.campusName,
     required Map<SchoolPersona, PersonaAccess> personas,
+    required this.timeZone,
   }) : _personas = personas;
 
   final String campusId;
   final String campusName;
+  final String timeZone;
   final Map<SchoolPersona, PersonaAccess> _personas;
 
   Set<SchoolPersona> get personas =>
@@ -210,15 +217,11 @@ final class MobileBootstrap {
     required String accountId,
     required String locale,
     required Iterable<TenantAccess> schools,
-    required String timeZone,
     String? syncCursor,
   }) {
     final normalizedAccountId = accountId.trim();
     final normalizedLocale = locale.trim();
-    final normalizedTimeZone = timeZone.trim();
-    if (normalizedAccountId.isEmpty ||
-        normalizedLocale.isEmpty ||
-        normalizedTimeZone.isEmpty) {
+    if (normalizedAccountId.isEmpty || normalizedLocale.isEmpty) {
       throw const BootstrapContractException(
         'BOOTSTRAP_ACCOUNT_CONTEXT_REQUIRED',
       );
@@ -240,7 +243,6 @@ final class MobileBootstrap {
       locale: normalizedLocale,
       schools: Map<String, TenantAccess>.unmodifiable(byId),
       syncCursor: syncCursor?.trim(),
-      timeZone: normalizedTimeZone,
     );
   }
 
@@ -249,12 +251,10 @@ final class MobileBootstrap {
     required this.locale,
     required Map<String, TenantAccess> schools,
     required this.syncCursor,
-    required this.timeZone,
   }) : _schools = schools;
 
   final String accountId;
   final String locale;
-  final String timeZone;
   final String? syncCursor;
   final Map<String, TenantAccess> _schools;
 
@@ -287,7 +287,7 @@ final class MobileBootstrap {
       capabilities: access.capabilities,
       locale: locale,
       tenantId: school.tenantId,
-      timeZone: timeZone,
+      timeZone: campus.timeZone,
     );
   }
 }

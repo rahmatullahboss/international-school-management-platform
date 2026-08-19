@@ -293,13 +293,13 @@ MobileBootstrap familyBootstrap({bool includeTeacher = false}) =>
                     persona: SchoolPersona.teacher,
                   ),
               ],
+              timeZone: 'Asia/Dhaka',
             ),
           ],
           tenantId: 'tenant-1',
           tenantName: 'International School',
         ),
       ],
-      timeZone: 'Asia/Dhaka',
     );
 
 final class FakeBootstrapLoader implements MobileBootstrapLoader {

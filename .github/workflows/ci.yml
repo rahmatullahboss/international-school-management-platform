@@ -62,6 +62,13 @@ jobs:
           PGUSER: postgres
           PGDATABASE: postgres
         run: npm run verify:auth-migrations
+      - name: Verify mobile bearer bootstrap migration and isolation
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: 5432
+          PGUSER: postgres
+          PGDATABASE: postgres
+        run: npm run verify:mobile-migrations
       - name: Verify all product persona authorization and persisted mutation E2E
         env:
           PGHOST: 127.0.0.1

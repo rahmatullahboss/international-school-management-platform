@@ -60,6 +60,18 @@ void main() {
                   persona: SchoolPersona.student,
                 ),
               ],
+              timeZone: 'Asia/Dhaka',
+            ),
+            CampusAccess(
+              campusId: 'campus-2',
+              campusName: 'International Campus',
+              personas: [
+                PersonaAccess(
+                  capabilities: const {SchoolCapability.timetableRead},
+                  persona: SchoolPersona.student,
+                ),
+              ],
+              timeZone: 'Europe/London',
             ),
           ],
           tenantId: 'tenant-1',
@@ -67,7 +79,6 @@ void main() {
         ),
       ],
       syncCursor: 'cursor-1',
-      timeZone: 'Asia/Dhaka',
     );
 
     test('activates only the selected persona capabilities', () {
@@ -82,6 +93,19 @@ void main() {
         SchoolPersona.student,
       });
       expect(session.can(SchoolCapability.gradesReadPublished), isTrue);
+      expect(session.can(SchoolCapability.billingRead), isFalse);
+      expect(session.timeZone, 'Asia/Dhaka');
+    });
+
+    test('uses the selected campus authoritative timezone', () {
+      final session = bootstrap.activate(
+        campusId: 'campus-2',
+        persona: SchoolPersona.student,
+        tenantId: 'tenant-1',
+      );
+
+      expect(session.timeZone, 'Europe/London');
+      expect(session.can(SchoolCapability.timetableRead), isTrue);
       expect(session.can(SchoolCapability.billingRead), isFalse);
     });
 
@@ -145,6 +169,7 @@ void main() {
               persona: SchoolPersona.guardian,
             ),
           ],
+          timeZone: 'Asia/Dhaka',
         ),
         throwsA(
           isA<BootstrapContractException>().having(
