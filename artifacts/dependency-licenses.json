@@ -1775,11 +1775,11 @@
     },
     {
       "name": "eslint",
-      "version": "10.8.0",
+      "version": "10.8.1",
       "license": "MIT",
       "development": true,
       "optional": false,
-      "purl": "pkg:npm/eslint@10.8.0"
+      "purl": "pkg:npm/eslint@10.8.1"
     },
     {
       "name": "eslint-scope",
