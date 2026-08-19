@@ -288,19 +288,30 @@ Backend APIs, notification issuance, identity policy, server authorization and s
 - Local verification passed: mobile-core 21/21 tests, mobile API client 30/30 tests, app-bootstrap 16/16 tests, 20 targeted policy/platform bearer/bootstrap tests, platform/policy typechecks and a disposable PostgreSQL 16 migration verification including cross-persona misgrant filtering and app-runtime privilege checks.
 - No target-environment database migration, OIDC provider activation, production deployment or real account/student data use was performed.
 
+## Checkpoint 25 evidence — authoritative Family/Teacher core mobile read contracts
+
+- The platform API now implements bearer-scoped `GET /v1/mobile/family/profiles`, `GET /v1/mobile/family/students/{studentId}/dashboard`, `GET /v1/mobile/teacher/today` and `GET /v1/mobile/teacher/meetings/{meetingId}/roster` matching the existing Flutter client contracts.
+- MOB-03 adds database-owned Family/Teacher read functions that re-resolve verified issuer/subject, tenant, campus, persona and capabilities before reading authoritative people, student lifecycle, scheduling, attendance, gradebook and HR data. Request headers select scope but do not create authority.
+- Family core reads expose only authorized students, current published timetable, finalized attendance summaries and currently published grade snapshots. Billing/messages remain absent rather than synthesized until their owning read models are implemented.
+- Teacher core reads expose only current-day assigned/substitution meetings and assigned section rosters. Staff assessment/conversation routes remain fail closed rather than rendering fixture rows.
+- Platform response validation bounds identifiers, strings, arrays and serialized payload size, enforces exact timestamp/integer shapes and redacts database failures behind stable no-store API errors.
+- The reviewed post-integration migration manifest now includes MOB-02 and MOB-03, preventing the normal reviewed migration runner from silently omitting mobile authority/read functions.
+- Local verification passed the 12-route mobile suite, the combined 25-test bearer/platform suite, TypeScript typecheck and disposable PostgreSQL MOB-02/MOB-03 migration verification with authorized-student and foreign-tenant isolation checks.
+- Live staging remains blocked by external/runtime configuration: the staging Worker currently has no `DATABASE_URL` secret and no reviewed `MOBILE_OIDC_*` provider bindings. No production mutation, real account/student data or auth bypass was used.
+
 ## Server/platform-owned contract boundary
 
-The source implementation now includes `/v1/mobile/readiness` and `/v1/mobile/bootstrap`, but both remain operationally inactive until reviewed mobile OIDC bindings and the MOB-02 database migration are activated in a target environment.
+The source implementation now includes `/v1/mobile/readiness`, `/v1/mobile/bootstrap`, Family profiles/dashboard and Teacher today/roster. They remain operationally inactive until reviewed mobile OIDC bindings, a target `DATABASE_URL`, and the MOB-02/MOB-03 database migrations are activated in that environment.
 
 The following proposed endpoints remain unimplemented and inactive in MOB-01:
 
 - `/v1/mobile/device-sessions`
-- `/v1/mobile/family/**`, including the proposed document-grant exchange route
-- `/v1/mobile/teacher/**`
+- Family documents/forms/consents/conversations and the proposed document-grant exchange route
+- Teacher attendance-batch and grade-draft write endpoints plus authoritative assessment/conversation reads
 - future `/v1/mobile/sync` delta and operation endpoints
 
 MOB-01 may define and test clients, domain contracts and fail-closed UI. Owning server/platform modules must review and activate identity/provider configuration, authorization, audit, notification issuance, exchange response headers/integrity policy, native viewer/presenter integration, data minimization and persistence.
 
 ## Exact next action
 
-Activate the reviewed mobile OIDC public-client/provider configuration and MOB-02 bootstrap migration first in a non-production environment, then verify real-device Family/Staff sign-in, token refresh, logout, multi-school/campus selection and revoked/suspended access behavior through `/v1/mobile/bootstrap`. On that verified bearer context, implement and activate the Family, Teacher, device-session, notification, sync and secure-document exchange endpoints without weakening tenant/capability authority. In parallel, complete the remaining untranslated domain surfaces, authoritative Staff assessment-list and teacher-conversation read models, authoritative currency fraction metadata, school-local explicit-offset timestamp metadata, representative Android/iOS privacy/accessibility/device integration passes and native restricted-document presenters. Produce signed release artifacts, privacy declarations, provenance and rollback evidence before any live account or student data is used.
+Bind a reviewed non-production School database to the staging Worker, apply the reviewed MOB-02/MOB-03 migrations, and activate the reviewed mobile OIDC public-client/provider configuration. Then verify real-device Family/Staff sign-in, token refresh, logout, multi-school/campus selection, Family profiles/dashboard, Teacher today/roster and revoked/suspended access behavior. On that verified bearer context, implement the Teacher attendance/grade writes, Family interaction reads/writes, device-session/notification, sync and secure-document exchange endpoints without weakening tenant/capability authority. In parallel, complete the remaining untranslated domain surfaces, authoritative Staff assessment-list and teacher-conversation read models, authoritative currency fraction metadata, school-local explicit-offset timestamp metadata, representative Android/iOS privacy/accessibility/device integration passes and native restricted-document presenters. Produce signed release artifacts, privacy declarations, provenance and rollback evidence before any live account or student data is used.

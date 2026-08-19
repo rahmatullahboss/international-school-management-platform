@@ -33,6 +33,7 @@ import {
 } from './auth-logout.js';
 import { resolveDatabaseReadModel, RuntimeReadModelCache } from './database-read-model.js';
 import { DatabaseMobileAccessStore } from './database-mobile-access-store.js';
+import { DatabaseMobileReadStore } from './database-mobile-read-store.js';
 import { DatabaseMutationStore } from './database-mutation-store.js';
 import { DatabaseReadModelStore } from './database-read-model-store.js';
 import {
@@ -40,6 +41,7 @@ import {
   resolveMobileAuthReadiness,
   type MobileAuthBindings,
 } from './mobile-auth.js';
+import { isMobileUuid, resolveMobileRequestScope } from './mobile-request-scope.js';
 import { isAllowedPilotWebOrigin, resolvePilotReadSnapshot } from './pilot-read-models.js';
 import { issuePilotSession, pilotSessionHeaders, verifyPilotSession } from './pilot-sessions.js';
 import { resolveRuntimeProjectionWorkerReadiness } from './runtime-projection-worker.js';
@@ -66,6 +68,8 @@ interface Bindings extends AuthBindings, MobileAuthBindings {
 
 const app = new Hono<{ Bindings: Bindings }>();
 const runtimeReadModelCache = new RuntimeReadModelCache();
+const familyMobilePersonas = new Set(['guardian', 'student'] as const);
+const teacherMobilePersonas = new Set(['teacher'] as const);
 
 app.use('*', async (context, next) => {
   const correlationId = crypto.randomUUID();
@@ -181,6 +185,281 @@ app.get('/v1/mobile/bootstrap', async (context) => {
         error: {
           code: 'mobile_access_temporarily_unavailable',
           message: 'Mobile account access is temporarily unavailable.',
+        },
+      },
+      503,
+    );
+  }
+});
+
+function mobileReadDatabaseUrl(env: Bindings): string | undefined {
+  const databaseUrl = env.DATABASE_URL?.trim();
+  if (
+    databaseUrl === undefined ||
+    databaseUrl === '' ||
+    env.MOBILE_MEMBERSHIP_SOURCE?.trim() !== 'database'
+  ) {
+    return undefined;
+  }
+  return databaseUrl;
+}
+
+function mobileRequestScope(
+  context: { req: { header(name: string): string | undefined } },
+  allowedPersonas: ReadonlySet<'guardian' | 'student' | 'teacher'>,
+) {
+  return resolveMobileRequestScope(
+    {
+      tenantId: context.req.header('x-tenant-id'),
+      campusId: context.req.header('x-campus-id'),
+      persona: context.req.header('x-persona'),
+    },
+    allowedPersonas,
+  );
+}
+
+app.get('/v1/mobile/family/profiles', async (context) => {
+  context.header('cache-control', 'no-store');
+  const databaseUrl = mobileReadDatabaseUrl(context.env);
+  if (databaseUrl === undefined) {
+    return context.json(
+      {
+        error: {
+          code: 'mobile_access_configuration_unavailable',
+          message: 'Mobile account access is not configured.',
+        },
+      },
+      503,
+    );
+  }
+  const scope = mobileRequestScope(context, familyMobilePersonas);
+  if (!scope.ok)
+    return context.json({ error: { code: scope.code, message: scope.message } }, scope.status);
+  const authentication = await authenticateMobileBearer(
+    context.env,
+    context.req.header('authorization'),
+  );
+  if (!authentication.ok) {
+    return context.json(
+      { error: { code: authentication.code, message: authentication.message } },
+      authentication.status,
+    );
+  }
+  try {
+    const payload = await new DatabaseMobileReadStore(
+      createHttpDatabase(databaseUrl),
+    ).familyProfiles(authentication.identity, scope.scope);
+    if (payload === undefined) {
+      return context.json(
+        {
+          error: {
+            code: 'mobile_scope_denied',
+            message: 'The selected mobile school scope is not authorized.',
+          },
+        },
+        403,
+      );
+    }
+    return context.json(payload);
+  } catch {
+    return context.json(
+      {
+        error: {
+          code: 'mobile_read_temporarily_unavailable',
+          message: 'Mobile school information is temporarily unavailable.',
+        },
+      },
+      503,
+    );
+  }
+});
+
+app.get('/v1/mobile/family/students/:studentId/dashboard', async (context) => {
+  context.header('cache-control', 'no-store');
+  const databaseUrl = mobileReadDatabaseUrl(context.env);
+  if (databaseUrl === undefined) {
+    return context.json(
+      {
+        error: {
+          code: 'mobile_access_configuration_unavailable',
+          message: 'Mobile account access is not configured.',
+        },
+      },
+      503,
+    );
+  }
+  const scope = mobileRequestScope(context, familyMobilePersonas);
+  if (!scope.ok)
+    return context.json({ error: { code: scope.code, message: scope.message } }, scope.status);
+  const studentId = context.req.param('studentId');
+  if (!isMobileUuid(studentId)) {
+    return context.json(
+      {
+        error: {
+          code: 'mobile_student_invalid',
+          message: 'The requested student identifier is invalid.',
+        },
+      },
+      400,
+    );
+  }
+  const authentication = await authenticateMobileBearer(
+    context.env,
+    context.req.header('authorization'),
+  );
+  if (!authentication.ok) {
+    return context.json(
+      { error: { code: authentication.code, message: authentication.message } },
+      authentication.status,
+    );
+  }
+  try {
+    const payload = await new DatabaseMobileReadStore(
+      createHttpDatabase(databaseUrl),
+    ).familyDashboard(authentication.identity, scope.scope, studentId);
+    if (payload === undefined) {
+      return context.json(
+        {
+          error: {
+            code: 'mobile_scope_denied',
+            message: 'The selected student is not authorized for this mobile scope.',
+          },
+        },
+        403,
+      );
+    }
+    return context.json(payload);
+  } catch {
+    return context.json(
+      {
+        error: {
+          code: 'mobile_read_temporarily_unavailable',
+          message: 'Mobile school information is temporarily unavailable.',
+        },
+      },
+      503,
+    );
+  }
+});
+
+app.get('/v1/mobile/teacher/today', async (context) => {
+  context.header('cache-control', 'no-store');
+  const databaseUrl = mobileReadDatabaseUrl(context.env);
+  if (databaseUrl === undefined) {
+    return context.json(
+      {
+        error: {
+          code: 'mobile_access_configuration_unavailable',
+          message: 'Mobile account access is not configured.',
+        },
+      },
+      503,
+    );
+  }
+  const scope = mobileRequestScope(context, teacherMobilePersonas);
+  if (!scope.ok)
+    return context.json({ error: { code: scope.code, message: scope.message } }, scope.status);
+  const authentication = await authenticateMobileBearer(
+    context.env,
+    context.req.header('authorization'),
+  );
+  if (!authentication.ok) {
+    return context.json(
+      { error: { code: authentication.code, message: authentication.message } },
+      authentication.status,
+    );
+  }
+  try {
+    const payload = await new DatabaseMobileReadStore(createHttpDatabase(databaseUrl)).teacherToday(
+      authentication.identity,
+      scope.scope,
+    );
+    if (payload === undefined) {
+      return context.json(
+        {
+          error: {
+            code: 'mobile_scope_denied',
+            message: 'The selected teacher scope is not authorized.',
+          },
+        },
+        403,
+      );
+    }
+    return context.json(payload);
+  } catch {
+    return context.json(
+      {
+        error: {
+          code: 'mobile_read_temporarily_unavailable',
+          message: 'Mobile school information is temporarily unavailable.',
+        },
+      },
+      503,
+    );
+  }
+});
+
+app.get('/v1/mobile/teacher/meetings/:meetingId/roster', async (context) => {
+  context.header('cache-control', 'no-store');
+  const databaseUrl = mobileReadDatabaseUrl(context.env);
+  if (databaseUrl === undefined) {
+    return context.json(
+      {
+        error: {
+          code: 'mobile_access_configuration_unavailable',
+          message: 'Mobile account access is not configured.',
+        },
+      },
+      503,
+    );
+  }
+  const scope = mobileRequestScope(context, teacherMobilePersonas);
+  if (!scope.ok)
+    return context.json({ error: { code: scope.code, message: scope.message } }, scope.status);
+  const meetingId = context.req.param('meetingId');
+  if (!isMobileUuid(meetingId)) {
+    return context.json(
+      {
+        error: {
+          code: 'mobile_meeting_invalid',
+          message: 'The requested meeting identifier is invalid.',
+        },
+      },
+      400,
+    );
+  }
+  const authentication = await authenticateMobileBearer(
+    context.env,
+    context.req.header('authorization'),
+  );
+  if (!authentication.ok) {
+    return context.json(
+      { error: { code: authentication.code, message: authentication.message } },
+      authentication.status,
+    );
+  }
+  try {
+    const payload = await new DatabaseMobileReadStore(
+      createHttpDatabase(databaseUrl),
+    ).teacherRoster(authentication.identity, scope.scope, meetingId);
+    if (payload === undefined) {
+      return context.json(
+        {
+          error: {
+            code: 'mobile_scope_denied',
+            message: 'The requested teacher roster is not authorized.',
+          },
+        },
+        403,
+      );
+    }
+    return context.json(payload);
+  } catch {
+    return context.json(
+      {
+        error: {
+          code: 'mobile_read_temporarily_unavailable',
+          message: 'Mobile school information is temporarily unavailable.',
         },
       },
       503,

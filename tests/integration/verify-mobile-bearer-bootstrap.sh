@@ -7,6 +7,7 @@ container_name="mob02-postgres-${RANDOM}-${BASHPID}"
 manifest="infra/database/migration-manifest.json"
 auth_migration="infra/database/post-integration-migrations/202607300301_AUTH-03_durable_identity_context.sql"
 mobile_migration="infra/database/post-integration-migrations/202608190001_MOB-02_mobile_bearer_bootstrap.sql"
+core_read_migration="infra/database/post-integration-migrations/202608190002_MOB-03_mobile_core_read_models.sql"
 use_container=false
 
 cleanup() {
@@ -166,6 +167,7 @@ VALUES
 SQL
 
 apply_file "$mobile_migration" >/dev/null
+apply_file "$core_read_migration" >/dev/null
 
 run_psql <<'SQL' >/dev/null
 INSERT INTO iam.role_permission (tenant_id, role_id, permission_key)
@@ -175,6 +177,67 @@ VALUES (
   'attendance.take'
 )
 ON CONFLICT DO NOTHING;
+
+INSERT INTO people.person (tenant_id, person_id, status)
+VALUES
+  ('40000000-0000-4000-8000-000000000001', '40000000-0000-4000-8000-000000000009', 'active'),
+  ('40000000-0000-4000-8000-000000000001', '40000000-0000-4000-8000-000000000010', 'active');
+
+INSERT INTO people.person_name (
+  tenant_id, person_name_id, person_id, usage, given_name, family_name, effective_from
+) VALUES
+  (
+    '40000000-0000-4000-8000-000000000001',
+    '40000000-0000-4000-8000-000000000011',
+    '40000000-0000-4000-8000-000000000009',
+    'legal', 'Guardian', 'Tester', current_date - 10
+  ),
+  (
+    '40000000-0000-4000-8000-000000000001',
+    '40000000-0000-4000-8000-000000000012',
+    '40000000-0000-4000-8000-000000000010',
+    'legal', 'Student', 'Tester', current_date - 10
+  );
+
+INSERT INTO iam.person_link (tenant_id, account_id, person_id)
+VALUES (
+  '40000000-0000-4000-8000-000000000001',
+  '40000000-0000-4000-8000-000000000004',
+  '40000000-0000-4000-8000-000000000009'
+);
+
+INSERT INTO student_lifecycle.student_profile (
+  tenant_id, student_profile_id, person_id, status
+) VALUES (
+  '40000000-0000-4000-8000-000000000001',
+  '40000000-0000-4000-8000-000000000013',
+  '40000000-0000-4000-8000-000000000010',
+  'active'
+);
+
+INSERT INTO student_lifecycle.enrollment (
+  tenant_id, enrollment_id, student_profile_id, campus_id, program_id,
+  academic_year_id, status, effective_from, idempotency_key
+) VALUES (
+  '40000000-0000-4000-8000-000000000001',
+  '40000000-0000-4000-8000-000000000014',
+  '40000000-0000-4000-8000-000000000013',
+  '40000000-0000-4000-8000-000000000003',
+  '40000000-0000-4000-8000-000000000015',
+  '40000000-0000-4000-8000-000000000016',
+  'active', current_date - 10, 'mobile-core-read-enrollment'
+);
+
+INSERT INTO people.guardian_student_authority (
+  tenant_id, authority_id, guardian_person_id, student_person_id,
+  education_authority, portal_access, verification_status, effective_from
+) VALUES (
+  '40000000-0000-4000-8000-000000000001',
+  '40000000-0000-4000-8000-000000000017',
+  '40000000-0000-4000-8000-000000000009',
+  '40000000-0000-4000-8000-000000000010',
+  true, true, 'verified', current_date - 10
+);
 SQL
 
 run_psql -At <<'SQL'
@@ -221,6 +284,33 @@ BEGIN
     RAISE EXCEPTION 'tenant/campus bootstrap identity was not preserved';
   END IF;
 
+  IF (platform.resolve_mobile_family_profiles(
+    'https://identity.school.test',
+    'provider-mobile-user-1',
+    '40000000-0000-4000-8000-000000000001',
+    '40000000-0000-4000-8000-000000000003',
+    'guardian'
+  )->>'activeStudentId') <> '40000000-0000-4000-8000-000000000013' THEN
+    RAISE EXCEPTION 'guardian mobile profile resolver did not preserve exact authorized student scope';
+  END IF;
+
+  IF platform.resolve_mobile_family_profiles(
+    'https://identity.school.test',
+    'provider-mobile-user-1',
+    '50000000-0000-4000-8000-000000000001',
+    '40000000-0000-4000-8000-000000000003',
+    'guardian'
+  ) IS NOT NULL THEN
+    RAISE EXCEPTION 'foreign tenant mobile family scope must fail closed';
+  END IF;
+
+  IF has_function_privilege('public', 'platform.resolve_mobile_family_profiles(text,text,uuid,uuid,text)', 'EXECUTE') THEN
+    RAISE EXCEPTION 'PUBLIC must not execute mobile family profile resolver';
+  END IF;
+  IF NOT has_function_privilege('app_runtime', 'platform.resolve_mobile_family_profiles(text,text,uuid,uuid,text)', 'EXECUTE') THEN
+    RAISE EXCEPTION 'app_runtime must execute mobile family profile resolver';
+  END IF;
+
   IF has_function_privilege('public', 'iam.resolve_mobile_bootstrap_access(text,text)', 'EXECUTE') THEN
     RAISE EXCEPTION 'PUBLIC must not execute mobile bootstrap resolver';
   END IF;
@@ -244,5 +334,5 @@ END
 $runtime$;
 ROLLBACK;
 
-SELECT 'Mobile bearer bootstrap migration verification: PASS';
+SELECT 'Mobile bearer bootstrap and core read-model migration verification: PASS';
 SQL

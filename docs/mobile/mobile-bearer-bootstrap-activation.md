@@ -8,6 +8,10 @@ The server-side source contract is now implemented for:
 
 - `GET /v1/mobile/readiness`
 - `GET /v1/mobile/bootstrap`
+- `GET /v1/mobile/family/profiles`
+- `GET /v1/mobile/family/students/{studentId}/dashboard`
+- `GET /v1/mobile/teacher/today`
+- `GET /v1/mobile/teacher/meetings/{meetingId}/roster`
 
 The implementation remains fail closed until the reviewed identity-provider configuration and database migration are activated in the target environment.
 
@@ -70,6 +74,21 @@ The response contains:
 
 Timezone is campus-scoped. The client no longer assumes one account-global timezone when an account can access more than one campus.
 
+## Core mobile read models
+
+Migration `202608190002_MOB-03_mobile_core_read_models.sql` adds database-owned, tenant-safe Family and Teacher read functions. Each function re-resolves the verified issuer/subject against the exact tenant, campus and persona before reading domain tables; request headers are selectors, not authority.
+
+The first data-bearing tranche intentionally covers the journeys that can be served from existing authoritative school records without inventing new write semantics:
+
+- Family authorized student/profile selection;
+- Family current published timetable, finalized attendance summary and currently published results;
+- Teacher current-day assigned/substitution meetings;
+- Teacher exact assigned meeting roster with a server version suitable for the existing attendance-draft client contract.
+
+Family billing/messages remain `null` and Staff assessment/conversation lists remain fail closed until their owning authoritative mobile read contracts are added. The API never falls back to pilot fixture JSON when an authoritative read model is unavailable.
+
+Every scoped read requires `X-Tenant-Id`, `X-Campus-Id` and `X-Persona`, validates identifiers and database response shapes, bounds returned arrays/payload bytes, sends `Cache-Control: no-store`, and redacts database failures behind stable mobile error codes.
+
 Canonical API failures use the nested shape:
 
 ```json
@@ -101,13 +120,13 @@ The Family and Staff redirect schemes remain separate. The identity provider mus
 
 1. Review the target identity provider and create public native OIDC clients using authorization code + PKCE; do not create an app-embedded secret.
 2. Configure the API audience and issue RS256 access tokens containing the exact `school_api` scope.
-3. Review and apply `202608190001_MOB-02_mobile_bearer_bootstrap.sql` to the intended non-production database branch first.
+3. Review and apply `202608190001_MOB-02_mobile_bearer_bootstrap.sql` and `202608190002_MOB-03_mobile_core_read_models.sql` to the intended non-production database branch first.
 4. Populate/review account, active membership, OIDC binding, campus and canonical mobile role mappings.
 5. Configure the `MOBILE_OIDC_*` bindings and `MOBILE_MEMBERSHIP_SOURCE=database` on the intended API environment.
 6. Confirm `GET /v1/mobile/readiness` reports `ready` without exposing configuration values.
 7. Build Family and Staff with the reviewed `SCHOOL_*` values and distribute them through the dedicated `school-management-mobile-dev` Firebase App Distribution project.
 8. Verify real-device sign-in, multi-school/campus selection, logout, token refresh, expired-token behavior and revoked/suspended membership behavior.
-9. Only after this gate is green, activate the Family/Teacher data endpoints and notification device-session registration on the same verified bearer context.
+9. Verify the now-implemented Family/Teacher core read endpoints on that same verified bearer context, then activate attendance/grade writes, Family interactions and notification device-session registration as separate authority-preserving tranches.
 
 ## Verification
 
@@ -117,6 +136,8 @@ Source verification includes:
 - bounded/origin-pinned JWKS tests;
 - platform mobile-auth and route tests;
 - Flutter bootstrap/error/timezone tests;
-- `tests/integration/verify-mobile-bearer-bootstrap.sh`, which uses a disposable PostgreSQL 16 database (Docker fallback when local PostgreSQL client tools are absent) and verifies tenant/campus projection, persona capability isolation and function privileges.
+- `tests/integration/verify-mobile-bearer-bootstrap.sh`, which uses a disposable PostgreSQL 16 database (Docker fallback when local PostgreSQL client tools are absent) and verifies tenant/campus projection, persona capability isolation, Family authorized-student isolation and function privileges.
 
-No production provider configuration, database migration, real account data or production deployment is performed by this source tranche.
+The reviewed post-integration migration manifest now includes MOB-02 and MOB-03 so the normal reviewed migration runner cannot silently omit the mobile authority functions.
+
+As of August 19, 2026, the staging Worker still has no `DATABASE_URL` secret and no reviewed `MOBILE_OIDC_*` provider bindings, so live staging authentication/data remains deliberately disabled even though the source contracts are implemented. No production provider configuration, real account data or production deployment is performed by this source tranche.

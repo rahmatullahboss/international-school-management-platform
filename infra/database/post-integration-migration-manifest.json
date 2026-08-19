@@ -99,6 +99,18 @@
       "id": "202608100201_PROD-05_admissions_lifecycle_work_queue",
       "stream": "PROD-05",
       "path": "infra/database/post-integration-migrations/202608100201_PROD-05_admissions_lifecycle_work_queue.sql"
+    },
+    {
+      "order": 17,
+      "id": "202608190001_MOB-02_mobile_bearer_bootstrap",
+      "stream": "MOB-02",
+      "path": "infra/database/post-integration-migrations/202608190001_MOB-02_mobile_bearer_bootstrap.sql"
+    },
+    {
+      "order": 18,
+      "id": "202608190002_MOB-03_mobile_core_read_models",
+      "stream": "MOB-03",
+      "path": "infra/database/post-integration-migrations/202608190002_MOB-03_mobile_core_read_models.sql"
     }
   ]
 }

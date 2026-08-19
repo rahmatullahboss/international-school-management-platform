@@ -244,4 +244,297 @@ describe('platform mobile routes', () => {
     });
     expect(JSON.stringify(payload)).not.toContain('do-not-expose');
   });
+
+  it('returns authorized Family profiles only for an explicit family scope', async () => {
+    installJwksFetcher();
+    databaseQuery.mockResolvedValue([
+      {
+        payload: {
+          accountId: '40000000-0000-4000-8000-000000000001',
+          activeStudentId: '40000000-0000-4000-8000-000000000010',
+          students: [
+            {
+              studentId: '40000000-0000-4000-8000-000000000010',
+              campusId: '40000000-0000-4000-8000-000000000003',
+              displayName: 'Student Tester',
+              gradeLabel: 'Current grade',
+              relationshipLabel: 'Guardian',
+            },
+          ],
+        },
+      },
+    ]);
+    const response = await app.request(
+      '/v1/mobile/family/profiles',
+      {
+        headers: {
+          authorization: `Bearer ${await signedCredential()}`,
+          'x-tenant-id': '40000000-0000-4000-8000-000000000002',
+          'x-campus-id': '40000000-0000-4000-8000-000000000003',
+          'x-persona': 'guardian',
+        },
+      },
+      readyEnvironment,
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    await expect(response.json()).resolves.toMatchObject({
+      activeStudentId: '40000000-0000-4000-8000-000000000010',
+      students: [{ displayName: 'Student Tester' }],
+    });
+    expect(databaseQuery).toHaveBeenCalledWith(
+      expect.stringContaining('resolve_mobile_family_profiles'),
+      [
+        readyEnvironment.MOBILE_OIDC_ISSUER,
+        'provider-mobile-user-1',
+        '40000000-0000-4000-8000-000000000002',
+        '40000000-0000-4000-8000-000000000003',
+        'guardian',
+      ],
+    );
+  });
+
+  it('rejects missing scope and wrong persona before database access', async () => {
+    const missingScope = await app.request(
+      '/v1/mobile/family/profiles',
+      { headers: { authorization: `Bearer ${await signedCredential()}` } },
+      readyEnvironment,
+    );
+    expect(missingScope.status).toBe(400);
+    await expect(missingScope.json()).resolves.toMatchObject({
+      error: { code: 'mobile_scope_required' },
+    });
+
+    const wrongPersona = await app.request(
+      '/v1/mobile/family/profiles',
+      {
+        headers: {
+          authorization: `Bearer ${await signedCredential()}`,
+          'x-tenant-id': '40000000-0000-4000-8000-000000000002',
+          'x-campus-id': '40000000-0000-4000-8000-000000000003',
+          'x-persona': 'teacher',
+        },
+      },
+      readyEnvironment,
+    );
+    expect(wrongPersona.status).toBe(403);
+    await expect(wrongPersona.json()).resolves.toMatchObject({
+      error: { code: 'mobile_persona_denied' },
+    });
+    expect(databaseQuery).not.toHaveBeenCalled();
+  });
+
+  it('returns Teacher Today and validates database response shape', async () => {
+    installJwksFetcher();
+    databaseQuery.mockResolvedValue([
+      {
+        payload: {
+          campusId: '40000000-0000-4000-8000-000000000003',
+          generatedAt: '2026-08-19T13:00:00.000Z',
+          teacherDisplayName: 'Teacher Tester',
+          meetings: [
+            {
+              meetingId: '40000000-0000-4000-8000-000000000020',
+              sectionId: '40000000-0000-4000-8000-000000000021',
+              sectionLabel: 'Grade 5A',
+              subjectLabel: 'Mathematics',
+              roomLabel: 'Room 204',
+              startsAt: '2026-08-19T03:00:00.000Z',
+              endsAt: '2026-08-19T04:00:00.000Z',
+              rosterCount: 30,
+              attendanceStatus: 'draft',
+            },
+          ],
+        },
+      },
+    ]);
+    const response = await app.request(
+      '/v1/mobile/teacher/today',
+      {
+        headers: {
+          authorization: `Bearer ${await signedCredential()}`,
+          'x-tenant-id': '40000000-0000-4000-8000-000000000002',
+          'x-campus-id': '40000000-0000-4000-8000-000000000003',
+          'x-persona': 'teacher',
+        },
+      },
+      readyEnvironment,
+    );
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      teacherDisplayName: 'Teacher Tester',
+      meetings: [{ attendanceStatus: 'draft', rosterCount: 30 }],
+    });
+  });
+
+  it('fails closed when a mobile read model is malformed and does not leak database errors', async () => {
+    installJwksFetcher();
+    databaseQuery.mockResolvedValue([{ payload: { accountId: 'not-a-uuid' } }]);
+    const malformed = await app.request(
+      '/v1/mobile/family/profiles',
+      {
+        headers: {
+          authorization: `Bearer ${await signedCredential()}`,
+          'x-tenant-id': '40000000-0000-4000-8000-000000000002',
+          'x-campus-id': '40000000-0000-4000-8000-000000000003',
+          'x-persona': 'guardian',
+        },
+      },
+      readyEnvironment,
+    );
+    expect(malformed.status).toBe(503);
+    await expect(malformed.json()).resolves.toMatchObject({
+      error: { code: 'mobile_read_temporarily_unavailable' },
+    });
+
+    databaseQuery.mockReset();
+    databaseQuery.mockRejectedValue(new Error('secret database detail password=do-not-leak'));
+    const failed = await app.request(
+      '/v1/mobile/teacher/today',
+      {
+        headers: {
+          authorization: `Bearer ${await signedCredential()}`,
+          'x-tenant-id': '40000000-0000-4000-8000-000000000002',
+          'x-campus-id': '40000000-0000-4000-8000-000000000003',
+          'x-persona': 'teacher',
+        },
+      },
+      readyEnvironment,
+    );
+    expect(failed.status).toBe(503);
+    const payload: unknown = await failed.json();
+    expect(payload).toMatchObject({ error: { code: 'mobile_read_temporarily_unavailable' } });
+    expect(JSON.stringify(payload)).not.toContain('do-not-leak');
+  });
+
+  it('rejects malformed teacher meeting identifiers before database access', async () => {
+    const response = await app.request(
+      '/v1/mobile/teacher/meetings/not-a-uuid/roster',
+      {
+        headers: {
+          authorization: `Bearer ${await signedCredential()}`,
+          'x-tenant-id': '40000000-0000-4000-8000-000000000002',
+          'x-campus-id': '40000000-0000-4000-8000-000000000003',
+          'x-persona': 'teacher',
+        },
+      },
+      readyEnvironment,
+    );
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: { code: 'mobile_meeting_invalid' },
+    });
+    expect(databaseQuery).not.toHaveBeenCalled();
+  });
+
+  it('returns an authorized Family dashboard with exact bounded read fields', async () => {
+    installJwksFetcher();
+    databaseQuery.mockResolvedValue([
+      {
+        payload: {
+          student: {
+            studentId: '40000000-0000-4000-8000-000000000010',
+            campusId: '40000000-0000-4000-8000-000000000003',
+            displayName: 'Student Tester',
+            gradeLabel: 'Current grade',
+            relationshipLabel: 'Guardian',
+          },
+          timetable: [
+            {
+              itemId: '40000000-0000-4000-8000-000000000030',
+              subjectLabel: 'Mathematics',
+              locationLabel: 'Room 204',
+              startsAt: '2026-08-19T03:00:00.000Z',
+              endsAt: '2026-08-19T04:00:00.000Z',
+            },
+          ],
+          attendance: {
+            presentSessions: 10,
+            absentSessions: 1,
+            lateSessions: 2,
+            totalSessions: 13,
+            summaryLabel: 'Finalized attendance',
+          },
+          publishedResults: [
+            {
+              resultId: '40000000-0000-4000-8000-000000000031',
+              assessmentLabel: 'Grade 5A',
+              subjectLabel: 'Mathematics',
+              gradeLabel: 'A',
+              publishedAt: '2026-08-18T12:00:00.000Z',
+            },
+          ],
+          fees: null,
+          messages: null,
+          generatedAt: '2026-08-19T13:00:00.000Z',
+        },
+      },
+    ]);
+    const response = await app.request(
+      '/v1/mobile/family/students/40000000-0000-4000-8000-000000000010/dashboard',
+      {
+        headers: {
+          authorization: `Bearer ${await signedCredential()}`,
+          'x-tenant-id': '40000000-0000-4000-8000-000000000002',
+          'x-campus-id': '40000000-0000-4000-8000-000000000003',
+          'x-persona': 'guardian',
+        },
+      },
+      readyEnvironment,
+    );
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      student: { displayName: 'Student Tester' },
+      attendance: { totalSessions: 13 },
+      publishedResults: [{ gradeLabel: 'A' }],
+      fees: null,
+      messages: null,
+    });
+  });
+
+  it('returns an assigned Teacher roster and keeps roster version exact', async () => {
+    installJwksFetcher();
+    databaseQuery.mockResolvedValue([
+      {
+        payload: {
+          meetingId: '40000000-0000-4000-8000-000000000020',
+          sectionId: '40000000-0000-4000-8000-000000000021',
+          version: 7,
+          students: [
+            {
+              studentId: '40000000-0000-4000-8000-000000000010',
+              displayName: 'Student Tester',
+              rollLabel: 'ST-001',
+            },
+          ],
+        },
+      },
+    ]);
+    const response = await app.request(
+      '/v1/mobile/teacher/meetings/40000000-0000-4000-8000-000000000020/roster',
+      {
+        headers: {
+          authorization: `Bearer ${await signedCredential()}`,
+          'x-tenant-id': '40000000-0000-4000-8000-000000000002',
+          'x-campus-id': '40000000-0000-4000-8000-000000000003',
+          'x-persona': 'teacher',
+        },
+      },
+      readyEnvironment,
+    );
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      meetingId: '40000000-0000-4000-8000-000000000020',
+      sectionId: '40000000-0000-4000-8000-000000000021',
+      version: 7,
+      students: [
+        {
+          studentId: '40000000-0000-4000-8000-000000000010',
+          displayName: 'Student Tester',
+          rollLabel: 'ST-001',
+        },
+      ],
+    });
+  });
 });
