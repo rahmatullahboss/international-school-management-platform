@@ -169,6 +169,9 @@ describe('CARE-01 wellbeing and counselling domain', () => {
       ),
     ).toThrow();
     expect(service.readSession(access(), 'tenant-a', session.sessionId)).toEqual(session);
+    expect(() => service.readSession(access(), 'tenant-a', 'missing-session')).toThrowError(
+      expect.objectContaining<Partial<WellbeingDomainError>>({ code: 'WELLBEING_NOT_FOUND' }),
+    );
   });
 
   test('records session corrections without rewriting source notes', () => {
@@ -193,6 +196,82 @@ describe('CARE-01 wellbeing and counselling domain', () => {
       'continue',
     );
     expect(service.listSessionCorrections('tenant-a', session.sessionId)).toEqual([correction]);
+  });
+
+  test('keeps support plans draft until approved and records controlled plan reviews', () => {
+    const service = new WellbeingService(new CareSecurityService({ now: () => now }), () => now);
+    const { counsellingCase } = bootstrap(service);
+
+    const draft = service.createSupportPlan(access(), {
+      tenantId: 'tenant-a',
+      counsellingCaseId: counsellingCase.counsellingCaseId,
+      goals: ['Maintain a predictable check-in routine'],
+      interventions: ['Weekly counselor check-in'],
+      reviewAt: new Date('2026-08-15T00:00:00.000Z'),
+    });
+    expect(draft).toMatchObject({
+      counsellingCaseId: counsellingCase.counsellingCaseId,
+      status: 'draft',
+      version: 1,
+    });
+    expect(draft.approvedByPrincipalId).toBeUndefined();
+
+    const active = service.createSupportPlan(access(), {
+      tenantId: 'tenant-a',
+      counsellingCaseId: counsellingCase.counsellingCaseId,
+      goals: ['Maintain a predictable check-in routine'],
+      interventions: ['Weekly counselor check-in'],
+      reviewAt: new Date('2026-08-20T00:00:00.000Z'),
+      approvedByPrincipalId: 'wellbeing-reviewer-1',
+    });
+    expect(active).toMatchObject({
+      status: 'active',
+      approvedByPrincipalId: 'wellbeing-reviewer-1',
+    });
+
+    const review = service.reviewSupportPlan(access(), {
+      tenantId: 'tenant-a',
+      supportPlanId: active.supportPlanId,
+      outcomeCode: 'continue',
+      nextReviewAt: new Date('2026-09-01T00:00:00.000Z'),
+      restrictedNote: 'Synthetic restricted review note',
+    });
+    expect(review).toMatchObject({
+      supportPlanId: active.supportPlanId,
+      outcomeCode: 'continue',
+      reviewedByPrincipalId: 'counselor-1',
+    });
+    expect(review.nextReviewAt).toEqual(new Date('2026-09-01T00:00:00.000Z'));
+    expect(review.restrictedNote).toBe('Synthetic restricted review note');
+  });
+
+  test('fails closed when support-plan access is unassigned or the plan does not exist', () => {
+    const service = new WellbeingService(new CareSecurityService({ now: () => now }), () => now);
+    const { counsellingCase } = bootstrap(service);
+
+    expect(() =>
+      service.createSupportPlan(access({ context: context({ principalId: 'counselor-2' }) }), {
+        tenantId: 'tenant-a',
+        counsellingCaseId: counsellingCase.counsellingCaseId,
+        goals: ['Synthetic denied goal'],
+        interventions: ['Synthetic denied intervention'],
+        reviewAt: new Date('2026-08-15T00:00:00.000Z'),
+      }),
+    ).toThrowError(
+      expect.objectContaining<Partial<WellbeingDomainError>>({
+        code: 'WELLBEING_COUNSELOR_MISMATCH',
+      }),
+    );
+
+    expect(() =>
+      service.reviewSupportPlan(access(), {
+        tenantId: 'tenant-a',
+        supportPlanId: 'missing-plan',
+        outcomeCode: 'continue',
+      }),
+    ).toThrowError(
+      expect.objectContaining<Partial<WellbeingDomainError>>({ code: 'WELLBEING_NOT_FOUND' }),
+    );
   });
 
   test('requires AAL2 for high risk and safeguarding escalation while emitting no narrative', () => {
@@ -220,6 +299,27 @@ describe('CARE-01 wellbeing and counselling domain', () => {
       protectiveFactors: ['restricted-protective-factor'],
       requiredActions: ['restricted-action'],
     });
+    service.assessRisk(access(), {
+      tenantId: 'tenant-a',
+      counsellingCaseId: counsellingCase.counsellingCaseId,
+      riskLevel: 'immediate',
+      factors: ['updated-restricted-factor'],
+      protectiveFactors: ['updated-protective-factor'],
+      requiredActions: ['updated-restricted-action'],
+    });
+    expect(() =>
+      service.requestSafeguardingEscalation(access({ context: context({ assurance: 'aal1' }) }), {
+        tenantId: 'tenant-a',
+        counsellingCaseId: counsellingCase.counsellingCaseId,
+        urgency: 'immediate',
+        reasonCategory: 'student-safety',
+        safeguardingIntakeReference: 'opaque-safeguarding-intake-denied',
+      }),
+    ).toThrowError(
+      expect.objectContaining<Partial<WellbeingDomainError>>({
+        code: 'WELLBEING_RISK_REQUIRES_AAL2',
+      }),
+    );
     const escalation = service.requestSafeguardingEscalation(access(), {
       tenantId: 'tenant-a',
       counsellingCaseId: counsellingCase.counsellingCaseId,
@@ -291,6 +391,98 @@ describe('CARE-01 wellbeing and counselling domain', () => {
     expect(view.supportSummary).toBe('Approved support is active.');
     expect(JSON.stringify(view)).not.toContain('Restricted synthetic pastoral referral summary');
     expect(JSON.stringify(view)).not.toContain('riskLevel');
+  });
+
+  test('versions publication releases, revokes prior releases and fails closed for AAL1 or expired views', () => {
+    const service = new WellbeingService(new CareSecurityService({ now: () => now }), () => now);
+    const { counsellingCase } = bootstrap(service);
+    const reviewerAccess = access({
+      context: context({
+        principalId: 'privacy-reviewer-1',
+        persona: 'privacy-reviewer',
+      }),
+    });
+
+    expect(() =>
+      service.publishSupportSummary(
+        {
+          ...reviewerAccess,
+          context: { ...reviewerAccess.context, assurance: 'aal1' },
+        },
+        {
+          tenantId: 'tenant-a',
+          counsellingCaseId: counsellingCase.counsellingCaseId,
+          audience: 'guardian',
+          supportSummary: 'Synthetic denied low-assurance release.',
+        },
+      ),
+    ).toThrowError(
+      expect.objectContaining<Partial<WellbeingDomainError>>({
+        code: 'WELLBEING_PUBLICATION_REQUIRES_AAL2',
+      }),
+    );
+
+    const first = service.publishSupportSummary(reviewerAccess, {
+      tenantId: 'tenant-a',
+      counsellingCaseId: counsellingCase.counsellingCaseId,
+      audience: 'guardian',
+      supportSummary: 'Approved support summary version one.',
+    });
+    const second = service.publishSupportSummary(reviewerAccess, {
+      tenantId: 'tenant-a',
+      counsellingCaseId: counsellingCase.counsellingCaseId,
+      audience: 'guardian',
+      supportSummary: 'Approved support summary version two.',
+      nextReviewAt: new Date('2026-08-20T00:00:00.000Z'),
+      expiresAt: new Date('2026-08-30T00:00:00.000Z'),
+    });
+    expect(first.version).toBe(1);
+    expect(second.version).toBe(2);
+
+    const guardianAccess: WellbeingAccessScope = {
+      context: context({
+        principalId: 'guardian-account-1',
+        linkedPersonId: 'guardian-1',
+        persona: 'guardian',
+        assurance: 'aal1',
+        purpose: 'legal-rights-response',
+        permissions: ['care.portal.read'],
+      }),
+      guardianAuthority: {
+        tenantId: 'tenant-a',
+        guardianPersonId: 'guardian-1',
+        studentPersonId: 'student-1',
+        authorities: ['portal'],
+        verificationStatus: 'verified',
+        portalAccess: true,
+        effectiveFrom: '2026-01-01T00:00:00.000Z',
+      },
+    };
+    expect(() =>
+      service.readPublishedSummary(guardianAccess, 'tenant-a', first.publicationId),
+    ).toThrowError(
+      expect.objectContaining<Partial<WellbeingDomainError>>({ code: 'WELLBEING_NOT_FOUND' }),
+    );
+    expect(
+      service.readPublishedSummary(guardianAccess, 'tenant-a', second.publicationId),
+    ).toMatchObject({
+      supportSummary: 'Approved support summary version two.',
+      publicationVersion: 2,
+      nextReviewAt: new Date('2026-08-20T00:00:00.000Z'),
+    });
+
+    const expired = service.publishSupportSummary(reviewerAccess, {
+      tenantId: 'tenant-a',
+      counsellingCaseId: counsellingCase.counsellingCaseId,
+      audience: 'student',
+      supportSummary: 'Expired synthetic release.',
+      expiresAt: now,
+    });
+    expect(() =>
+      service.readPublishedSummary(guardianAccess, 'tenant-a', expired.publicationId),
+    ).toThrowError(
+      expect.objectContaining<Partial<WellbeingDomainError>>({ code: 'WELLBEING_NOT_FOUND' }),
+    );
   });
 
   test('suppresses small operational cohorts and excludes restricted fields', () => {

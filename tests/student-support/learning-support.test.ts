@@ -226,6 +226,94 @@ describe('CARE-01 learning-support domain', () => {
     );
   });
 
+  test('requires independent approval for plan reviews and records only controlled review outcomes', () => {
+    const service = new LearningSupportService(
+      new CareSecurityService({ now: () => now }),
+      () => now,
+    );
+    const { plan } = bootstrap(service);
+
+    expect(() =>
+      service.reviewPlan(access(), {
+        tenantId: 'tenant-a',
+        supportPlanId: plan.supportPlanId,
+        outcomeCode: 'continue',
+        goalOutcomeCodes: { 'goal-1': 'continue' },
+        independentlyApprovedByPrincipalId: 'learning-support-1',
+      }),
+    ).toThrowError(
+      expect.objectContaining<Partial<LearningSupportDomainError>>({
+        code: 'LEARNING_SUPPORT_INDEPENDENT_APPROVAL_REQUIRED',
+      }),
+    );
+
+    const review = service.reviewPlan(access(), {
+      tenantId: 'tenant-a',
+      supportPlanId: plan.supportPlanId,
+      outcomeCode: 'continue',
+      goalOutcomeCodes: { 'goal-1': 'continue' },
+      nextReviewAt: new Date('2026-10-01T00:00:00.000Z'),
+      restrictedNote: 'Synthetic restricted plan-review note',
+      independentlyApprovedByPrincipalId: 'learning-reviewer-3',
+    });
+    expect(review).toMatchObject({
+      supportPlanId: plan.supportPlanId,
+      outcomeCode: 'continue',
+      goalOutcomeCodes: { 'goal-1': 'continue' },
+      reviewedByPrincipalId: 'learning-support-1',
+      independentlyApprovedByPrincipalId: 'learning-reviewer-3',
+    });
+    expect(review.nextReviewAt).toEqual(new Date('2026-10-01T00:00:00.000Z'));
+    expect(review.restrictedNote).toBe('Synthetic restricted plan-review note');
+
+    expect(() =>
+      service.reviewPlan(access(), {
+        tenantId: 'tenant-a',
+        supportPlanId: 'missing-plan',
+        outcomeCode: 'continue',
+        goalOutcomeCodes: {},
+        independentlyApprovedByPrincipalId: 'learning-reviewer-3',
+      }),
+    ).toThrowError(
+      expect.objectContaining<Partial<LearningSupportDomainError>>({
+        code: 'LEARNING_SUPPORT_NOT_FOUND',
+      }),
+    );
+  });
+
+  test('keeps draft plans out of the minimized academic projection', () => {
+    const service = new LearningSupportService(
+      new CareSecurityService({ now: () => now }),
+      () => now,
+    );
+    const { referral, accommodation } = bootstrap(service);
+    const draft = service.createPlan(access(), {
+      tenantId: 'tenant-a',
+      referralId: referral.referralId,
+      title: 'Draft synthetic access plan',
+      goals: [],
+      accommodationIds: [accommodation.accommodationId],
+      reviewAt: new Date('2026-10-01T00:00:00.000Z'),
+    });
+    expect(draft.status).toBe('draft');
+
+    const teacherProjectionAccess = access({
+      context: context({
+        principalId: 'teacher-2',
+        persona: 'teacher',
+        assurance: 'aal1',
+        permissions: ['care.learning-support.academic-projection.read'],
+      }),
+    });
+    expect(() =>
+      service.readAcademicProjection(teacherProjectionAccess, 'tenant-a', draft.supportPlanId),
+    ).toThrowError(
+      expect.objectContaining<Partial<LearningSupportDomainError>>({
+        code: 'LEARNING_SUPPORT_NOT_FOUND',
+      }),
+    );
+  });
+
   test('returns only minimized classroom accommodations through the academic contract', () => {
     const service = new LearningSupportService(
       new CareSecurityService({ now: () => now }),
@@ -320,6 +408,106 @@ describe('CARE-01 learning-support domain', () => {
     expect(JSON.stringify(view)).not.toContain('restrictedFindings');
     expect(JSON.stringify(view)).not.toContain('restrictedRationale');
     expect(JSON.stringify(view)).not.toContain('needCategories');
+  });
+
+  test('versions minimized publication, revokes prior releases and denies low-assurance or expired views', () => {
+    const service = new LearningSupportService(
+      new CareSecurityService({ now: () => now }),
+      () => now,
+    );
+    const { plan } = bootstrap(service);
+    const reviewerAccess = access({
+      context: context({
+        principalId: 'privacy-reviewer-1',
+        persona: 'privacy-reviewer',
+      }),
+    });
+
+    expect(() =>
+      service.publishSummary(
+        { ...reviewerAccess, context: { ...reviewerAccess.context, assurance: 'aal1' } },
+        {
+          tenantId: 'tenant-a',
+          supportPlanId: plan.supportPlanId,
+          audience: 'guardian',
+          supportSummary: 'Synthetic denied low-assurance publication.',
+          goalSummaries: [],
+        },
+      ),
+    ).toThrowError(
+      expect.objectContaining<Partial<LearningSupportDomainError>>({
+        code: 'LEARNING_SUPPORT_AAL2_REQUIRED',
+      }),
+    );
+
+    const first = service.publishSummary(reviewerAccess, {
+      tenantId: 'tenant-a',
+      supportPlanId: plan.supportPlanId,
+      audience: 'guardian',
+      supportSummary: 'Approved support summary version one.',
+      goalSummaries: ['Use the approved classroom support.'],
+    });
+    const second = service.publishSummary(reviewerAccess, {
+      tenantId: 'tenant-a',
+      supportPlanId: plan.supportPlanId,
+      audience: 'guardian',
+      supportSummary: 'Approved support summary version two.',
+      goalSummaries: ['Continue the approved classroom support.'],
+      nextReviewAt: new Date('2026-10-01T00:00:00.000Z'),
+      expiresAt: new Date('2026-10-15T00:00:00.000Z'),
+    });
+    expect(first.version).toBe(1);
+    expect(second.version).toBe(2);
+
+    const guardianAccess: LearningSupportAccessScope = {
+      context: context({
+        principalId: 'guardian-account-1',
+        linkedPersonId: 'guardian-1',
+        persona: 'guardian',
+        assurance: 'aal1',
+        purpose: 'legal-rights-response',
+        permissions: ['care.portal.read'],
+      }),
+      guardianAuthority: {
+        tenantId: 'tenant-a',
+        guardianPersonId: 'guardian-1',
+        studentPersonId: 'student-1',
+        authorities: ['portal'],
+        verificationStatus: 'verified',
+        portalAccess: true,
+        effectiveFrom: '2026-01-01T00:00:00.000Z',
+      },
+    };
+    expect(() =>
+      service.readPublishedSummary(guardianAccess, 'tenant-a', first.publicationId),
+    ).toThrowError(
+      expect.objectContaining<Partial<LearningSupportDomainError>>({
+        code: 'LEARNING_SUPPORT_NOT_FOUND',
+      }),
+    );
+    expect(
+      service.readPublishedSummary(guardianAccess, 'tenant-a', second.publicationId),
+    ).toMatchObject({
+      supportSummary: 'Approved support summary version two.',
+      publicationVersion: 2,
+      nextReviewAt: new Date('2026-10-01T00:00:00.000Z'),
+    });
+
+    const expired = service.publishSummary(reviewerAccess, {
+      tenantId: 'tenant-a',
+      supportPlanId: plan.supportPlanId,
+      audience: 'student',
+      supportSummary: 'Expired synthetic learning-support publication.',
+      goalSummaries: [],
+      expiresAt: now,
+    });
+    expect(() =>
+      service.readPublishedSummary(guardianAccess, 'tenant-a', expired.publicationId),
+    ).toThrowError(
+      expect.objectContaining<Partial<LearningSupportDomainError>>({
+        code: 'LEARNING_SUPPORT_NOT_FOUND',
+      }),
+    );
   });
 
   test('emits minimum events and suppresses small operational cohorts', () => {

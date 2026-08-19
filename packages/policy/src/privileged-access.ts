@@ -36,6 +36,9 @@ export class PrivilegedAccessRegistry {
 
   approve(grantId: string, approvedBy: string, approvedAt: Date): PrivilegedAccessGrant {
     const grant = this.#require(grantId);
+    if (approvedBy === grant.principalId) {
+      throw new Error('Privileged access approval requires an independent approver');
+    }
     if (approvedAt >= grant.expiresAt) {
       throw new Error('Expired privileged access cannot be approved');
     }

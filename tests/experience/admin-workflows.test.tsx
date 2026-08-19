@@ -61,6 +61,46 @@ describe('EXP-01 admin experience', () => {
     ).toEqual(['care-1', 'attendance-1']);
   });
 
+  it('orders same-severity exceptions by due time and keeps undated work last', () => {
+    const warning = exceptions[0];
+    if (warning === undefined) throw new Error('expected warning fixture');
+
+    const sorted = selectAdminExceptions(
+      [
+        { ...warning, id: 'undated', dueAt: undefined },
+        { ...warning, id: 'later', dueAt: '2026-07-29T18:00:00+06:00' },
+        { ...warning, id: 'earlier', dueAt: '2026-07-29T15:30:00+06:00' },
+      ],
+      ['attendance.manage'],
+    );
+
+    expect(sorted.map((item) => item.id)).toEqual(['earlier', 'later', 'undated']);
+  });
+
+  it('renders only the bounded loading state while the administration ledger is preparing', () => {
+    const markup = renderToStaticMarkup(
+      <AdminOperationsHome
+        approvals={[]}
+        asOf="2026-07-29T15:05:00+06:00"
+        assurance="aal2"
+        campusName="Main Campus"
+        capabilities={[]}
+        exceptions={[]}
+        locale="en-BD"
+        metrics={[]}
+        schoolName="International Community School"
+        state="loading"
+      />,
+    );
+
+    expect(markup).toContain('Preparing the administration ledger');
+    expect(markup).toContain(
+      'Loading current scope, permissions, exceptions and evidence sources.',
+    );
+    expect(markup).not.toContain('Readiness definitions');
+    expect(markup).not.toContain('Priority exceptions');
+  });
+
   it('filters governed search results before rendering labels or counts', () => {
     const results = selectAdminSearchResults(
       [

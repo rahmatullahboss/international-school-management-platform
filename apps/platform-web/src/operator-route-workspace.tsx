@@ -10,6 +10,7 @@ interface RegisterDefinition {
   readonly columns: readonly string[];
   readonly rows: readonly Row[];
   readonly noun: string;
+  readonly searchNoun?: string;
   readonly boundary?: string;
 }
 
@@ -19,6 +20,7 @@ const definitions: Readonly<Record<string, RegisterDefinition>> = {
     description: 'Find prospective families, ownership and the next follow-up action.',
     columns: ['Family / applicant', 'Interested in', 'Owner', 'Last contact', 'Status'],
     noun: 'enquiry',
+    searchNoun: 'enquiries',
     rows: [
       [
         'Rahman family · Aya Rahman',
@@ -172,7 +174,7 @@ export function OperatorRouteWorkspace(props: {
               type="search"
               value={query}
               onChange={(event) => setQuery(event.currentTarget.value)}
-              placeholder={`Search ${definition.noun}s`}
+              placeholder={`Search ${definition.searchNoun ?? `${definition.noun}s`}`}
             />
           </label>
         </div>
