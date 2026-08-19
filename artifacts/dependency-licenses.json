@@ -1399,11 +1399,11 @@
     },
     {
       "name": "@typescript-eslint/eslint-plugin",
-      "version": "8.65.0",
+      "version": "8.67.0",
       "license": "MIT",
       "development": true,
       "optional": false,
-      "purl": "pkg:npm/%40typescript-eslint/eslint-plugin@8.65.0"
+      "purl": "pkg:npm/%40typescript-eslint/eslint-plugin@8.67.0"
     },
     {
       "name": "@typescript-eslint/eslint-plugin/node_modules/ignore",
@@ -1415,75 +1415,75 @@
     },
     {
       "name": "@typescript-eslint/parser",
-      "version": "8.65.0",
+      "version": "8.67.0",
       "license": "MIT",
       "development": true,
       "optional": false,
-      "purl": "pkg:npm/%40typescript-eslint/parser@8.65.0"
+      "purl": "pkg:npm/%40typescript-eslint/parser@8.67.0"
     },
     {
       "name": "@typescript-eslint/project-service",
-      "version": "8.65.0",
+      "version": "8.67.0",
       "license": "MIT",
       "development": true,
       "optional": false,
-      "purl": "pkg:npm/%40typescript-eslint/project-service@8.65.0"
+      "purl": "pkg:npm/%40typescript-eslint/project-service@8.67.0"
     },
     {
       "name": "@typescript-eslint/scope-manager",
-      "version": "8.65.0",
+      "version": "8.67.0",
       "license": "MIT",
       "development": true,
       "optional": false,
-      "purl": "pkg:npm/%40typescript-eslint/scope-manager@8.65.0"
+      "purl": "pkg:npm/%40typescript-eslint/scope-manager@8.67.0"
     },
     {
       "name": "@typescript-eslint/tsconfig-utils",
-      "version": "8.65.0",
+      "version": "8.67.0",
       "license": "MIT",
       "development": true,
       "optional": false,
-      "purl": "pkg:npm/%40typescript-eslint/tsconfig-utils@8.65.0"
+      "purl": "pkg:npm/%40typescript-eslint/tsconfig-utils@8.67.0"
     },
     {
       "name": "@typescript-eslint/type-utils",
-      "version": "8.65.0",
+      "version": "8.67.0",
       "license": "MIT",
       "development": true,
       "optional": false,
-      "purl": "pkg:npm/%40typescript-eslint/type-utils@8.65.0"
+      "purl": "pkg:npm/%40typescript-eslint/type-utils@8.67.0"
     },
     {
       "name": "@typescript-eslint/types",
-      "version": "8.65.0",
+      "version": "8.67.0",
       "license": "MIT",
       "development": true,
       "optional": false,
-      "purl": "pkg:npm/%40typescript-eslint/types@8.65.0"
+      "purl": "pkg:npm/%40typescript-eslint/types@8.67.0"
     },
     {
       "name": "@typescript-eslint/typescript-estree",
-      "version": "8.65.0",
+      "version": "8.67.0",
       "license": "MIT",
       "development": true,
       "optional": false,
-      "purl": "pkg:npm/%40typescript-eslint/typescript-estree@8.65.0"
+      "purl": "pkg:npm/%40typescript-eslint/typescript-estree@8.67.0"
     },
     {
       "name": "@typescript-eslint/utils",
-      "version": "8.65.0",
+      "version": "8.67.0",
       "license": "MIT",
       "development": true,
       "optional": false,
-      "purl": "pkg:npm/%40typescript-eslint/utils@8.65.0"
+      "purl": "pkg:npm/%40typescript-eslint/utils@8.67.0"
     },
     {
       "name": "@typescript-eslint/visitor-keys",
-      "version": "8.65.0",
+      "version": "8.67.0",
       "license": "MIT",
       "development": true,
       "optional": false,
-      "purl": "pkg:npm/%40typescript-eslint/visitor-keys@8.65.0"
+      "purl": "pkg:npm/%40typescript-eslint/visitor-keys@8.67.0"
     },
     {
       "name": "@vitejs/plugin-react",
@@ -2631,11 +2631,11 @@
     },
     {
       "name": "typescript-eslint",
-      "version": "8.65.0",
+      "version": "8.67.0",
       "license": "MIT",
       "development": true,
       "optional": false,
-      "purl": "pkg:npm/typescript-eslint@8.65.0"
+      "purl": "pkg:npm/typescript-eslint@8.67.0"
     },
     {
       "name": "undici",
