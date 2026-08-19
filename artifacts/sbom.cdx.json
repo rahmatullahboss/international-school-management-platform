@@ -3319,124 +3319,10 @@
     },
     {
       "type": "library",
-      "name": "@typescript-eslint/eslint-plugin",
-      "version": "8.65.0",
-      "purl": "pkg:npm/%40typescript-eslint/eslint-plugin@8.65.0",
-      "bom-ref": "pkg:npm/%40typescript-eslint/eslint-plugin@8.65.0",
-      "scope": "required",
-      "licenses": [
-        {
-          "expression": "MIT"
-        }
-      ],
-      "properties": [
-        {
-          "name": "school:development-only",
-          "value": "true"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "@typescript-eslint/eslint-plugin/node_modules/ignore",
-      "version": "7.0.6",
-      "purl": "pkg:npm/%40typescript-eslint/eslint-plugin@7.0.6",
-      "bom-ref": "pkg:npm/%40typescript-eslint/eslint-plugin@7.0.6",
-      "scope": "required",
-      "licenses": [
-        {
-          "expression": "MIT"
-        }
-      ],
-      "properties": [
-        {
-          "name": "school:development-only",
-          "value": "true"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "@typescript-eslint/parser",
-      "version": "8.65.0",
-      "purl": "pkg:npm/%40typescript-eslint/parser@8.65.0",
-      "bom-ref": "pkg:npm/%40typescript-eslint/parser@8.65.0",
-      "scope": "required",
-      "licenses": [
-        {
-          "expression": "MIT"
-        }
-      ],
-      "properties": [
-        {
-          "name": "school:development-only",
-          "value": "true"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "@typescript-eslint/project-service",
-      "version": "8.65.0",
-      "purl": "pkg:npm/%40typescript-eslint/project-service@8.65.0",
-      "bom-ref": "pkg:npm/%40typescript-eslint/project-service@8.65.0",
-      "scope": "required",
-      "licenses": [
-        {
-          "expression": "MIT"
-        }
-      ],
-      "properties": [
-        {
-          "name": "school:development-only",
-          "value": "true"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "@typescript-eslint/scope-manager",
       "version": "8.65.0",
       "purl": "pkg:npm/%40typescript-eslint/scope-manager@8.65.0",
       "bom-ref": "pkg:npm/%40typescript-eslint/scope-manager@8.65.0",
-      "scope": "required",
-      "licenses": [
-        {
-          "expression": "MIT"
-        }
-      ],
-      "properties": [
-        {
-          "name": "school:development-only",
-          "value": "true"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "@typescript-eslint/tsconfig-utils",
-      "version": "8.65.0",
-      "purl": "pkg:npm/%40typescript-eslint/tsconfig-utils@8.65.0",
-      "bom-ref": "pkg:npm/%40typescript-eslint/tsconfig-utils@8.65.0",
-      "scope": "required",
-      "licenses": [
-        {
-          "expression": "MIT"
-        }
-      ],
-      "properties": [
-        {
-          "name": "school:development-only",
-          "value": "true"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "@typescript-eslint/type-utils",
-      "version": "8.65.0",
-      "purl": "pkg:npm/%40typescript-eslint/type-utils@8.65.0",
-      "bom-ref": "pkg:npm/%40typescript-eslint/type-utils@8.65.0",
       "scope": "required",
       "licenses": [
         {
@@ -3471,44 +3357,6 @@
     },
     {
       "type": "library",
-      "name": "@typescript-eslint/typescript-estree",
-      "version": "8.65.0",
-      "purl": "pkg:npm/%40typescript-eslint/typescript-estree@8.65.0",
-      "bom-ref": "pkg:npm/%40typescript-eslint/typescript-estree@8.65.0",
-      "scope": "required",
-      "licenses": [
-        {
-          "expression": "MIT"
-        }
-      ],
-      "properties": [
-        {
-          "name": "school:development-only",
-          "value": "true"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "@typescript-eslint/utils",
-      "version": "8.65.0",
-      "purl": "pkg:npm/%40typescript-eslint/utils@8.65.0",
-      "bom-ref": "pkg:npm/%40typescript-eslint/utils@8.65.0",
-      "scope": "required",
-      "licenses": [
-        {
-          "expression": "MIT"
-        }
-      ],
-      "properties": [
-        {
-          "name": "school:development-only",
-          "value": "true"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "@typescript-eslint/visitor-keys",
       "version": "8.65.0",
       "purl": "pkg:npm/%40typescript-eslint/visitor-keys@8.65.0",
@@ -3517,6 +3365,386 @@
       "licenses": [
         {
           "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "school:development-only",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@typescript/typescript-aix-ppc64",
+      "version": "7.0.2",
+      "purl": "pkg:npm/%40typescript/typescript-aix-ppc64@7.0.2",
+      "bom-ref": "pkg:npm/%40typescript/typescript-aix-ppc64@7.0.2",
+      "scope": "optional",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "school:development-only",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@typescript/typescript-darwin-arm64",
+      "version": "7.0.2",
+      "purl": "pkg:npm/%40typescript/typescript-darwin-arm64@7.0.2",
+      "bom-ref": "pkg:npm/%40typescript/typescript-darwin-arm64@7.0.2",
+      "scope": "optional",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "school:development-only",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@typescript/typescript-darwin-x64",
+      "version": "7.0.2",
+      "purl": "pkg:npm/%40typescript/typescript-darwin-x64@7.0.2",
+      "bom-ref": "pkg:npm/%40typescript/typescript-darwin-x64@7.0.2",
+      "scope": "optional",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "school:development-only",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@typescript/typescript-freebsd-arm64",
+      "version": "7.0.2",
+      "purl": "pkg:npm/%40typescript/typescript-freebsd-arm64@7.0.2",
+      "bom-ref": "pkg:npm/%40typescript/typescript-freebsd-arm64@7.0.2",
+      "scope": "optional",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "school:development-only",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@typescript/typescript-freebsd-x64",
+      "version": "7.0.2",
+      "purl": "pkg:npm/%40typescript/typescript-freebsd-x64@7.0.2",
+      "bom-ref": "pkg:npm/%40typescript/typescript-freebsd-x64@7.0.2",
+      "scope": "optional",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "school:development-only",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@typescript/typescript-linux-arm",
+      "version": "7.0.2",
+      "purl": "pkg:npm/%40typescript/typescript-linux-arm@7.0.2",
+      "bom-ref": "pkg:npm/%40typescript/typescript-linux-arm@7.0.2",
+      "scope": "optional",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "school:development-only",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@typescript/typescript-linux-arm64",
+      "version": "7.0.2",
+      "purl": "pkg:npm/%40typescript/typescript-linux-arm64@7.0.2",
+      "bom-ref": "pkg:npm/%40typescript/typescript-linux-arm64@7.0.2",
+      "scope": "optional",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "school:development-only",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@typescript/typescript-linux-loong64",
+      "version": "7.0.2",
+      "purl": "pkg:npm/%40typescript/typescript-linux-loong64@7.0.2",
+      "bom-ref": "pkg:npm/%40typescript/typescript-linux-loong64@7.0.2",
+      "scope": "optional",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "school:development-only",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@typescript/typescript-linux-mips64el",
+      "version": "7.0.2",
+      "purl": "pkg:npm/%40typescript/typescript-linux-mips64el@7.0.2",
+      "bom-ref": "pkg:npm/%40typescript/typescript-linux-mips64el@7.0.2",
+      "scope": "optional",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "school:development-only",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@typescript/typescript-linux-ppc64",
+      "version": "7.0.2",
+      "purl": "pkg:npm/%40typescript/typescript-linux-ppc64@7.0.2",
+      "bom-ref": "pkg:npm/%40typescript/typescript-linux-ppc64@7.0.2",
+      "scope": "optional",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "school:development-only",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@typescript/typescript-linux-riscv64",
+      "version": "7.0.2",
+      "purl": "pkg:npm/%40typescript/typescript-linux-riscv64@7.0.2",
+      "bom-ref": "pkg:npm/%40typescript/typescript-linux-riscv64@7.0.2",
+      "scope": "optional",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "school:development-only",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@typescript/typescript-linux-s390x",
+      "version": "7.0.2",
+      "purl": "pkg:npm/%40typescript/typescript-linux-s390x@7.0.2",
+      "bom-ref": "pkg:npm/%40typescript/typescript-linux-s390x@7.0.2",
+      "scope": "optional",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "school:development-only",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@typescript/typescript-linux-x64",
+      "version": "7.0.2",
+      "purl": "pkg:npm/%40typescript/typescript-linux-x64@7.0.2",
+      "bom-ref": "pkg:npm/%40typescript/typescript-linux-x64@7.0.2",
+      "scope": "optional",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "school:development-only",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@typescript/typescript-netbsd-arm64",
+      "version": "7.0.2",
+      "purl": "pkg:npm/%40typescript/typescript-netbsd-arm64@7.0.2",
+      "bom-ref": "pkg:npm/%40typescript/typescript-netbsd-arm64@7.0.2",
+      "scope": "optional",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "school:development-only",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@typescript/typescript-netbsd-x64",
+      "version": "7.0.2",
+      "purl": "pkg:npm/%40typescript/typescript-netbsd-x64@7.0.2",
+      "bom-ref": "pkg:npm/%40typescript/typescript-netbsd-x64@7.0.2",
+      "scope": "optional",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "school:development-only",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@typescript/typescript-openbsd-arm64",
+      "version": "7.0.2",
+      "purl": "pkg:npm/%40typescript/typescript-openbsd-arm64@7.0.2",
+      "bom-ref": "pkg:npm/%40typescript/typescript-openbsd-arm64@7.0.2",
+      "scope": "optional",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "school:development-only",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@typescript/typescript-openbsd-x64",
+      "version": "7.0.2",
+      "purl": "pkg:npm/%40typescript/typescript-openbsd-x64@7.0.2",
+      "bom-ref": "pkg:npm/%40typescript/typescript-openbsd-x64@7.0.2",
+      "scope": "optional",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "school:development-only",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@typescript/typescript-sunos-x64",
+      "version": "7.0.2",
+      "purl": "pkg:npm/%40typescript/typescript-sunos-x64@7.0.2",
+      "bom-ref": "pkg:npm/%40typescript/typescript-sunos-x64@7.0.2",
+      "scope": "optional",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "school:development-only",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@typescript/typescript-win32-arm64",
+      "version": "7.0.2",
+      "purl": "pkg:npm/%40typescript/typescript-win32-arm64@7.0.2",
+      "bom-ref": "pkg:npm/%40typescript/typescript-win32-arm64@7.0.2",
+      "scope": "optional",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "school:development-only",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@typescript/typescript-win32-x64",
+      "version": "7.0.2",
+      "purl": "pkg:npm/%40typescript/typescript-win32-x64@7.0.2",
+      "bom-ref": "pkg:npm/%40typescript/typescript-win32-x64@7.0.2",
+      "scope": "optional",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
         }
       ],
       "properties": [
@@ -6227,9 +6455,9 @@
     {
       "type": "library",
       "name": "typescript",
-      "version": "6.0.3",
-      "purl": "pkg:npm/typescript@6.0.3",
-      "bom-ref": "pkg:npm/typescript@6.0.3",
+      "version": "7.0.2",
+      "purl": "pkg:npm/typescript@7.0.2",
+      "bom-ref": "pkg:npm/typescript@7.0.2",
       "scope": "required",
       "licenses": [
         {
@@ -6249,6 +6477,158 @@
       "version": "8.65.0",
       "purl": "pkg:npm/typescript-eslint@8.65.0",
       "bom-ref": "pkg:npm/typescript-eslint@8.65.0",
+      "scope": "required",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "school:development-only",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "typescript-eslint/node_modules/@typescript-eslint/eslint-plugin",
+      "version": "8.65.0",
+      "purl": "pkg:npm/typescript-eslint%2Fnode_modules%2F%40typescript-eslint%2Feslint-plugin@8.65.0",
+      "bom-ref": "pkg:npm/typescript-eslint%2Fnode_modules%2F%40typescript-eslint%2Feslint-plugin@8.65.0",
+      "scope": "required",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "school:development-only",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "typescript-eslint/node_modules/@typescript-eslint/eslint-plugin/node_modules/@typescript-eslint/type-utils",
+      "version": "8.65.0",
+      "purl": "pkg:npm/typescript-eslint%2Fnode_modules%2F%40typescript-eslint%2Feslint-plugin%2Fnode_modules%2F%40typescript-eslint%2Ftype-utils@8.65.0",
+      "bom-ref": "pkg:npm/typescript-eslint%2Fnode_modules%2F%40typescript-eslint%2Feslint-plugin%2Fnode_modules%2F%40typescript-eslint%2Ftype-utils@8.65.0",
+      "scope": "required",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "school:development-only",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "typescript-eslint/node_modules/@typescript-eslint/parser",
+      "version": "8.65.0",
+      "purl": "pkg:npm/typescript-eslint%2Fnode_modules%2F%40typescript-eslint%2Fparser@8.65.0",
+      "bom-ref": "pkg:npm/typescript-eslint%2Fnode_modules%2F%40typescript-eslint%2Fparser@8.65.0",
+      "scope": "required",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "school:development-only",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "typescript-eslint/node_modules/@typescript-eslint/typescript-estree",
+      "version": "8.65.0",
+      "purl": "pkg:npm/typescript-eslint%2Fnode_modules%2F%40typescript-eslint%2Ftypescript-estree@8.65.0",
+      "bom-ref": "pkg:npm/typescript-eslint%2Fnode_modules%2F%40typescript-eslint%2Ftypescript-estree@8.65.0",
+      "scope": "required",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "school:development-only",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "typescript-eslint/node_modules/@typescript-eslint/typescript-estree/node_modules/@typescript-eslint/project-service",
+      "version": "8.65.0",
+      "purl": "pkg:npm/typescript-eslint%2Fnode_modules%2F%40typescript-eslint%2Ftypescript-estree%2Fnode_modules%2F%40typescript-eslint%2Fproject-service@8.65.0",
+      "bom-ref": "pkg:npm/typescript-eslint%2Fnode_modules%2F%40typescript-eslint%2Ftypescript-estree%2Fnode_modules%2F%40typescript-eslint%2Fproject-service@8.65.0",
+      "scope": "required",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "school:development-only",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "typescript-eslint/node_modules/@typescript-eslint/typescript-estree/node_modules/@typescript-eslint/tsconfig-utils",
+      "version": "8.65.0",
+      "purl": "pkg:npm/typescript-eslint%2Fnode_modules%2F%40typescript-eslint%2Ftypescript-estree%2Fnode_modules%2F%40typescript-eslint%2Ftsconfig-utils@8.65.0",
+      "bom-ref": "pkg:npm/typescript-eslint%2Fnode_modules%2F%40typescript-eslint%2Ftypescript-estree%2Fnode_modules%2F%40typescript-eslint%2Ftsconfig-utils@8.65.0",
+      "scope": "required",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "school:development-only",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "typescript-eslint/node_modules/@typescript-eslint/utils",
+      "version": "8.65.0",
+      "purl": "pkg:npm/typescript-eslint%2Fnode_modules%2F%40typescript-eslint%2Futils@8.65.0",
+      "bom-ref": "pkg:npm/typescript-eslint%2Fnode_modules%2F%40typescript-eslint%2Futils@8.65.0",
+      "scope": "required",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "school:development-only",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "typescript-eslint/node_modules/ignore",
+      "version": "7.0.6",
+      "purl": "pkg:npm/typescript-eslint%2Fnode_modules%2Fignore@7.0.6",
+      "bom-ref": "pkg:npm/typescript-eslint%2Fnode_modules%2Fignore@7.0.6",
       "scope": "required",
       "licenses": [
         {
