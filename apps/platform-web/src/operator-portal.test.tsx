@@ -1,13 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import {
-  currentOperatorConnectivity,
-  mountOperatorPortal,
-  OperatorPortal,
-  operatorLandingCards,
-  operatorRoleForPath,
-} from './operator-portal.js';
+import { mountOperatorPortal, OperatorPortal, operatorRoleForPath } from './operator-portal.js';
 
 function withBrowserState<T>(
   state: {
@@ -68,24 +62,10 @@ describe('operator persona route contracts', () => {
     expect(operatorRoleForPath('/')).toBeUndefined();
     expect(operatorRoleForPath('/admin')).toBeUndefined();
   });
-
-  it('publishes one complete landing card for every operator role', () => {
-    const cards = operatorLandingCards();
-    expect(cards.map((card) => card.role)).toEqual(['admissions', 'finance', 'support']);
-    expect(cards.every((card) => card.href.startsWith('/'))).toBe(true);
-    expect(cards.every((card) => card.title.length > 0 && card.detail.length > 0)).toBe(true);
-  });
-
-  it('reports browser connectivity without inventing a degraded state', () => {
-    expect(withBrowserState({ online: true }, () => currentOperatorConnectivity())).toBe('online');
-    expect(withBrowserState({ online: false }, () => currentOperatorConnectivity())).toBe(
-      'offline',
-    );
-  });
 });
 
 describe('operator portal server rendering', () => {
-  it('renders each role home with scoped capabilities and controlled-action copy', () => {
+  it('renders each role home with scoped capabilities and controlled audit evidence', () => {
     const cases = [
       ['admissions', '/admissions', 'Admissions workspace'],
       ['finance', '/finance', 'Finance and cashier workspace'],
@@ -99,23 +79,36 @@ describe('operator portal server rendering', () => {
       expect(html).toContain(title);
       expect(html).toContain(`data-role="${role}"`);
       expect(html).toContain('explicit capabilities');
-      expect(html).toContain('Audited controlled action');
+      expect(html).toContain('Environment audit evidence');
       expect(html).toContain('disabled=""');
     }
   });
 
-  it('uses role-specific child-page headings for known routes', () => {
+  it('renders current scoped registers for known child routes', () => {
     const cases = [
-      ['admissions', '/admissions/applications', 'Application review queue'],
-      ['finance', '/finance/reconciliation', 'Reconciliation queue'],
-      ['support', '/support/access', 'Privileged access'],
+      [
+        'admissions',
+        '/admissions/applications',
+        'Application review queue',
+        'Application review register',
+      ],
+      [
+        'finance',
+        '/finance/reconciliation',
+        'Reconciliation queue',
+        'Reconciliation candidates',
+      ],
+      ['support', '/support/access', 'Privileged access', 'Privileged access requests'],
     ] as const;
-    for (const [role, path, title] of cases) {
+
+    for (const [role, path, pageTitle, registerTitle] of cases) {
       const html = withBrowserState({ pathname: path }, () =>
         renderToStaticMarkup(<OperatorPortal role={role} path={path} />),
       );
-      expect(html).toContain(title);
-      expect(html).toContain('Permission-scoped work');
+      expect(html).toContain(pageTitle);
+      expect(html).toContain('Current scoped register');
+      expect(html).toContain(registerTitle);
+      expect(html).toContain(`data-role="${role}"`);
     }
   });
 
@@ -123,7 +116,8 @@ describe('operator portal server rendering', () => {
     const html = withBrowserState({ pathname: '/finance/not-a-route' }, () =>
       renderToStaticMarkup(<OperatorPortal role="finance" path="/finance/not-a-route" />),
     );
-    expect(html).toContain('Page not available in this pilot');
+    expect(html).toContain('Page not available');
+    expect(html).toContain('This task is not available in your current workspace.');
     expect(html).toContain('href="/finance"');
   });
 
@@ -132,7 +126,7 @@ describe('operator portal server rendering', () => {
       { pathname: '/support', apiUrl: ' https://api.example.test/ ' },
       () => renderToStaticMarkup(<OperatorPortal role="support" path="/support" />),
     );
-    expect(html).toContain('Pilot seed data');
+    expect(html).toContain('Initial scoped data');
     expect(html).toContain('Check again');
     expect(html).not.toContain('disabled=""');
   });
@@ -145,7 +139,7 @@ describe('operator portal server rendering', () => {
       },
       () => renderToStaticMarkup(<OperatorPortal role="admissions" path="/admissions" />),
     );
-    expect(html).toContain('Pilot seed data');
+    expect(html).toContain('Initial scoped data');
     expect(html).toContain('Check again');
   });
 });
