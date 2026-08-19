@@ -91,8 +91,6 @@ function renderedHtml(): string {
 
 async function importEntry(): Promise<void> {
   await import('./entry.js');
-  await Promise.resolve();
-  await Promise.resolve();
 }
 
 beforeEach(() => {
@@ -141,7 +139,7 @@ describe('non-production entry bootstrap', () => {
 
     await importEntry();
 
-    expect(operatorMocks.mountOperatorPortal).toHaveBeenCalledWith(role);
+    await vi.waitFor(() => expect(operatorMocks.mountOperatorPortal).toHaveBeenCalledWith(role));
     expect(mainMocks.loaded).not.toHaveBeenCalled();
   });
 
@@ -151,7 +149,7 @@ describe('non-production entry bootstrap', () => {
     await importEntry();
 
     expect(browser.addEventListener).toHaveBeenCalledWith('click', expect.any(Function), true);
-    expect(mainMocks.loaded).toHaveBeenCalledOnce();
+    await vi.waitFor(() => expect(mainMocks.loaded).toHaveBeenCalledOnce());
   });
 
   it('fails clearly when the landing root is missing', async () => {
@@ -169,7 +167,7 @@ describe('production entry bootstrap', () => {
 
     await importEntry();
 
-    expect(gatewayMocks.mountProductionGate).toHaveBeenCalledWith('anonymous');
+    await vi.waitFor(() => expect(gatewayMocks.mountProductionGate).toHaveBeenCalledWith('anonymous'));
     expect(mainMocks.loaded).not.toHaveBeenCalled();
   });
 
@@ -183,7 +181,7 @@ describe('production entry bootstrap', () => {
 
     await importEntry();
 
-    expect(browser.replace).toHaveBeenCalledWith('/admin');
+    await vi.waitFor(() => expect(browser.replace).toHaveBeenCalledWith('/admin'));
     expect(gatewayMocks.pathBelongsToWorkspace).not.toHaveBeenCalled();
   });
 
@@ -198,7 +196,9 @@ describe('production entry bootstrap', () => {
 
     await importEntry();
 
-    expect(gatewayMocks.pathBelongsToWorkspace).toHaveBeenCalledWith('/teacher', '/admin');
+    await vi.waitFor(() =>
+      expect(gatewayMocks.pathBelongsToWorkspace).toHaveBeenCalledWith('/teacher', '/admin'),
+    );
     expect(gatewayMocks.mountProductionGate).toHaveBeenCalledWith('denied', adminWorkspace);
   });
 
@@ -217,9 +217,11 @@ describe('production entry bootstrap', () => {
 
     await importEntry();
 
-    expect(operatorMocks.mountProductionOperatorPortal).toHaveBeenCalledWith(
-      financeWorkspace,
-      '/finance/invoices',
+    await vi.waitFor(() =>
+      expect(operatorMocks.mountProductionOperatorPortal).toHaveBeenCalledWith(
+        financeWorkspace,
+        '/finance/invoices',
+      ),
     );
     expect(mainMocks.loaded).not.toHaveBeenCalled();
   });
@@ -234,8 +236,10 @@ describe('production entry bootstrap', () => {
 
     await importEntry();
 
-    expect(gatewayMocks.pathBelongsToWorkspace).toHaveBeenCalledWith('/admin/sis', '/admin');
+    await vi.waitFor(() =>
+      expect(gatewayMocks.pathBelongsToWorkspace).toHaveBeenCalledWith('/admin/sis', '/admin'),
+    );
     expect(browser.addEventListener).toHaveBeenCalledWith('click', expect.any(Function), true);
-    expect(mainMocks.loaded).toHaveBeenCalledOnce();
+    await vi.waitFor(() => expect(mainMocks.loaded).toHaveBeenCalledOnce());
   });
 });
