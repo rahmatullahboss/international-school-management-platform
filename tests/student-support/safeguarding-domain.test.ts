@@ -143,6 +143,158 @@ describe('CARE-01 safeguarding domain', () => {
     );
   });
 
+  test('fails closed for machine intake, expired bootstrap and unsafe membership changes', () => {
+    const service = new SafeguardingService(new CareSecurityService({ now: () => now }), () => now);
+    const teacherAccess: SafeguardingAccessScope = {
+      context: context({
+        principalId: 'teacher-1',
+        linkedPersonId: 'teacher-person-1',
+        persona: 'teacher',
+        assurance: 'aal1',
+        purpose: 'mandatory-reporting',
+        permissions: ['care.safeguarding.concern.create', 'care.safeguarding.read'],
+        machineCredential: true,
+      }),
+      relationship: relationship(),
+    };
+    expect(() =>
+      service.submitConcern(teacherAccess, {
+        tenantId: 'tenant-a',
+        studentPersonId: 'student-1',
+        campusId: 'campus-1',
+        concernCategory: 'student-safety',
+        urgency: 'priority',
+        concernNarrative: 'Synthetic denied machine concern',
+        reporterRelationship: 'integration',
+        idempotencyKey: 'machine-denied-concern',
+      }),
+    ).toThrowError(
+      expect.objectContaining<Partial<SafeguardingDomainError>>({
+        code: 'SAFEGUARDING_ACCESS_DENIED',
+      }),
+    );
+
+    const humanAccess = {
+      ...teacherAccess,
+      context: { ...teacherAccess.context, machineCredential: false },
+    };
+    const receipt = service.submitConcern(humanAccess, {
+      tenantId: 'tenant-a',
+      studentPersonId: 'student-1',
+      campusId: 'campus-1',
+      concernCategory: 'student-safety',
+      urgency: 'priority',
+      concernNarrative: 'Synthetic bootstrap concern',
+      reporterRelationship: 'teacher',
+      idempotencyKey: 'bootstrap-concern',
+    });
+    expect(() =>
+      service.openCase(access(), {
+        tenantId: 'tenant-a',
+        concernId: receipt.concernId,
+        leadPrincipalId: 'safeguarding-lead-1',
+        riskBand: 'elevated',
+        initialMembershipExpiresAt: now,
+        approvalReference: 'expired-bootstrap-approval',
+      }),
+    ).toThrowError(
+      expect.objectContaining<Partial<SafeguardingDomainError>>({
+        code: 'SAFEGUARDING_MEMBERSHIP_INVALID',
+      }),
+    );
+
+    const opened = service.openCase(access(), {
+      tenantId: 'tenant-a',
+      concernId: receipt.concernId,
+      leadPrincipalId: 'safeguarding-lead-1',
+      riskBand: 'elevated',
+      initialMembershipExpiresAt: new Date('2026-08-01T00:00:00.000Z'),
+      approvalReference: 'bootstrap-approval',
+    });
+    const replay = service.openCase(access(), {
+      tenantId: 'tenant-a',
+      concernId: receipt.concernId,
+      leadPrincipalId: 'safeguarding-lead-1',
+      riskBand: 'critical',
+      initialMembershipExpiresAt: new Date('2026-08-02T00:00:00.000Z'),
+      approvalReference: 'ignored-replay-approval',
+    });
+    expect(replay).toEqual(opened);
+
+    const leadAccess: SafeguardingAccessScope = {
+      context: context(),
+      caseMembership: opened.leadMembership,
+    };
+    expect(() =>
+      service.grantMembership(leadAccess, {
+        tenantId: 'tenant-a',
+        caseId: opened.caseFile.caseId,
+        principalId: 'safeguarding-lead-1',
+        caseRole: 'lead',
+        purpose: 'safeguarding-assessment',
+        expiresAt: new Date('2026-08-01T00:00:00.000Z'),
+        approvalReference: 'self-grant-denied',
+      }),
+    ).toThrowError(
+      expect.objectContaining<Partial<SafeguardingDomainError>>({
+        code: 'SAFEGUARDING_INDEPENDENT_APPROVAL_REQUIRED',
+      }),
+    );
+    expect(() =>
+      service.grantMembership(leadAccess, {
+        tenantId: 'tenant-a',
+        caseId: opened.caseFile.caseId,
+        principalId: 'case-member-3',
+        caseRole: 'case-member',
+        purpose: 'safeguarding-assessment',
+        expiresAt: now,
+        approvalReference: 'expired-membership',
+      }),
+    ).toThrowError(
+      expect.objectContaining<Partial<SafeguardingDomainError>>({
+        code: 'SAFEGUARDING_MEMBERSHIP_INVALID',
+      }),
+    );
+
+    const first = service.grantMembership(leadAccess, {
+      tenantId: 'tenant-a',
+      caseId: opened.caseFile.caseId,
+      principalId: 'case-member-3',
+      caseRole: 'case-member',
+      purpose: 'safeguarding-assessment',
+      expiresAt: new Date('2026-08-01T00:00:00.000Z'),
+      approvalReference: 'membership-v1',
+    });
+    const replacement = service.grantMembership(leadAccess, {
+      tenantId: 'tenant-a',
+      caseId: opened.caseFile.caseId,
+      principalId: 'case-member-3',
+      caseRole: 'case-member',
+      purpose: 'safeguarding-assessment',
+      expiresAt: new Date('2026-08-02T00:00:00.000Z'),
+      approvalReference: 'membership-v2',
+    });
+    expect(replacement.membershipId).not.toBe(first.membershipId);
+    expect(
+      service.activeMembership(
+        'tenant-a',
+        opened.caseFile.caseId,
+        'case-member-3',
+        'safeguarding-assessment',
+      ),
+    ).toEqual(replacement);
+
+    expect(() =>
+      service.revokeMembership(leadAccess, {
+        tenantId: 'tenant-a',
+        membershipId: 'missing-membership',
+        reason: 'synthetic missing membership',
+      }),
+    ).toThrowError(
+      expect.objectContaining<Partial<SafeguardingDomainError>>({ code: 'SAFEGUARDING_NOT_FOUND' }),
+    );
+  });
+
   test('keeps chronology append-only and requires independent AAL2 assessment review', () => {
     const service = new SafeguardingService(new CareSecurityService({ now: () => now }), () => now);
     const { caseFile, leadAccess } = submitAndOpen(service);
@@ -288,6 +440,156 @@ describe('CARE-01 safeguarding domain', () => {
         'synthetic-object-reference',
       ),
     ).toMatchObject({ status: 'generated' });
+  });
+
+  test('creates purpose-bound safety plans, restricted documents and active membership lookups', () => {
+    const service = new SafeguardingService(new CareSecurityService({ now: () => now }), () => now);
+    const { caseFile, leadAccess, leadMembership } = submitAndOpen(service);
+
+    const draftPlan = service.createSafetyPlan(leadAccess, {
+      tenantId: 'tenant-a',
+      caseId: caseFile.caseId,
+      actions: ['Maintain supervised transition'],
+      responsibleRoleCodes: ['safeguarding-lead'],
+      reviewAt: new Date('2026-07-30T07:00:00.000Z'),
+    });
+    expect(draftPlan).toMatchObject({
+      caseId: caseFile.caseId,
+      status: 'draft',
+      preparedByPrincipalId: 'safeguarding-lead-1',
+    });
+    expect(draftPlan.approvedByPrincipalId).toBeUndefined();
+
+    expect(() =>
+      service.createSafetyPlan(leadAccess, {
+        tenantId: 'tenant-a',
+        caseId: caseFile.caseId,
+        actions: ['Escalate supervision'],
+        responsibleRoleCodes: ['safeguarding-lead'],
+        reviewAt: new Date('2026-07-30T08:00:00.000Z'),
+        approvedByPrincipalId: 'safeguarding-lead-1',
+      }),
+    ).toThrowError(
+      expect.objectContaining<Partial<SafeguardingDomainError>>({
+        code: 'SAFEGUARDING_INDEPENDENT_APPROVAL_REQUIRED',
+      }),
+    );
+
+    expect(
+      service.createSafetyPlan(leadAccess, {
+        tenantId: 'tenant-a',
+        caseId: caseFile.caseId,
+        actions: ['Escalate supervision'],
+        responsibleRoleCodes: ['safeguarding-lead', 'principal'],
+        reviewAt: new Date('2026-07-30T08:00:00.000Z'),
+        approvedByPrincipalId: 'reviewer-2',
+      }),
+    ).toMatchObject({ status: 'active', approvedByPrincipalId: 'reviewer-2' });
+
+    const document = service.attachRestrictedDocument(leadAccess, {
+      tenantId: 'tenant-a',
+      caseId: caseFile.caseId,
+      documentId: 'document-1',
+      documentType: 'controlled-assessment',
+    });
+    expect(document).toMatchObject({
+      caseId: caseFile.caseId,
+      documentId: 'document-1',
+      classification: 'CARE-C4',
+      sourceClassification: 'CARE-C4',
+      recordedByPrincipalId: 'safeguarding-lead-1',
+    });
+
+    expect(
+      service.activeMembership(
+        'tenant-a',
+        caseFile.caseId,
+        'safeguarding-lead-1',
+        'safeguarding-assessment',
+      ),
+    ).toEqual(leadMembership);
+    expect(
+      service.activeMembership(
+        'tenant-a',
+        caseFile.caseId,
+        'safeguarding-lead-1',
+        'mandatory-reporting',
+      ),
+    ).toBeUndefined();
+  });
+
+  test('closes cases only with AAL2 independent approval and emits bounded closure evidence', () => {
+    const service = new SafeguardingService(new CareSecurityService({ now: () => now }), () => now);
+    const { caseFile, leadAccess } = submitAndOpen(service);
+
+    expect(() =>
+      service.closeCase(
+        { ...leadAccess, context: context({ assurance: 'aal1' }) },
+        {
+          tenantId: 'tenant-a',
+          caseId: caseFile.caseId,
+          outcome: 'close',
+          reasonCategory: 'safety-stabilised',
+          independentlyApprovedByPrincipalId: 'reviewer-2',
+        },
+      ),
+    ).toThrowError(
+      expect.objectContaining<Partial<SafeguardingDomainError>>({
+        code: 'SAFEGUARDING_AAL2_REQUIRED',
+      }),
+    );
+
+    expect(() =>
+      service.closeCase(leadAccess, {
+        tenantId: 'tenant-a',
+        caseId: caseFile.caseId,
+        outcome: 'close',
+        reasonCategory: 'safety-stabilised',
+        independentlyApprovedByPrincipalId: 'safeguarding-lead-1',
+      }),
+    ).toThrowError(
+      expect.objectContaining<Partial<SafeguardingDomainError>>({
+        code: 'SAFEGUARDING_INDEPENDENT_APPROVAL_REQUIRED',
+      }),
+    );
+
+    const monitoring = service.closeCase(leadAccess, {
+      tenantId: 'tenant-a',
+      caseId: caseFile.caseId,
+      outcome: 'continue-monitoring',
+      reasonCategory: 'monitoring-required',
+      independentlyApprovedByPrincipalId: 'reviewer-2',
+    });
+    expect(monitoring.caseFile).toMatchObject({ status: 'monitoring', version: 2 });
+    expect(
+      service
+        .listEvents('tenant-a')
+        .some((event) => event.eventType === 'care.safeguarding.case.closed.v1'),
+    ).toBe(false);
+
+    const closed = service.closeCase(leadAccess, {
+      tenantId: 'tenant-a',
+      caseId: caseFile.caseId,
+      outcome: 'close',
+      reasonCategory: 'safety-stabilised',
+      independentlyApprovedByPrincipalId: 'reviewer-3',
+    });
+    expect(closed.caseFile).toMatchObject({ status: 'closed', version: 3 });
+    expect(closed.caseFile.closedAt).toEqual(now);
+    expect(closed.review).toMatchObject({
+      outcome: 'close',
+      reasonCategory: 'safety-stabilised',
+      reviewedByPrincipalId: 'safeguarding-lead-1',
+      independentlyApprovedByPrincipalId: 'reviewer-3',
+    });
+    const closureEvent = service
+      .listEvents('tenant-a')
+      .find((event) => event.eventType === 'care.safeguarding.case.closed.v1');
+    expect(closureEvent).toMatchObject({
+      aggregateId: caseFile.caseId,
+      correlationId: 'safeguarding-correlation-1',
+      payload: { outcome: 'close', reasonCategory: 'safety-stabilised' },
+    });
   });
 
   test('emits no allegation, reporter, chronology, factors, actions or recipient detail', () => {
