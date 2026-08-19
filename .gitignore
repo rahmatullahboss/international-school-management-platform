@@ -17,6 +17,7 @@ codexpro/
 node_modules/
 dist/
 build/
+.tooling/
 coverage/
 .playwright/
 test-results/

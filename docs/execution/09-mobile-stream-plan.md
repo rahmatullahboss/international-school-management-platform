@@ -41,7 +41,7 @@ Backend APIs, notification issuance, identity policy, server authorization and s
    - Adaptive Family and Staff application shells.
 2. **Authentication and bootstrap — client/native passed; server activation remains**
    - OIDC authorization-code flow with PKCE, secure token storage, refresh/end-session, account-scoped bootstrap and capability sessions.
-   - Android/iOS projects, separate identifiers/redirect schemes, Android API 23 secure-storage baseline, disabled backup, release-signing guard and iOS Keychain Sharing.
+   - Android/iOS projects, separate identifiers/redirect schemes, the Flutter 3.44.7-supported Android API 24 baseline, disabled backup, release-signing guard and iOS Keychain Sharing.
 3. **Family journeys — read and interaction production journeys passed; server activation remains**
    - Multi-child/student context, timetable, attendance, published results, exact money, fees/receipts and messages.
    - Capability-scoped documents, forms, guardian consent and paginated conversations.
@@ -76,7 +76,7 @@ Backend APIs, notification issuance, identity policy, server authorization and s
 
 - `school_authentication` implements AppAuth authorization-code exchange, refresh/end-session and redacted secure-token storage.
 - `school_app_bootstrap` coordinates restore, sign-in, authorized access selection, capability sessions and safe sign-out.
-- Native identifiers, redirect schemes, Android API 23/backup/signing guards and iOS URL/Keychain configuration are committed and statically verified.
+- Native identifiers, redirect schemes, the Flutter 3.44.7 Android API 24 baseline, backup/signing guards and iOS URL/Keychain configuration are committed and statically verified.
 - Device-session contracts are account-scoped, idempotent and exclude hardware/advertising identifiers and unrestricted personal identifiers.
 - Mobile CI `30481736792`, `30482768167`, `30486745809`, `30488155470` and `30488862416` passed the authentication, bootstrap, native and device-session gates.
 - Root CI `30481735986` and `30482768058` passed the corresponding repository gates.

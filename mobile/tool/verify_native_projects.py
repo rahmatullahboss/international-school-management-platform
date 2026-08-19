@@ -57,7 +57,7 @@ def main() -> None:
             gradle,
             f'namespace = "{config["bundle"]}"',
             f'applicationId = "{config["bundle"]}"',
-            "minSdk = 23",
+            "minSdk = flutter.minSdkVersion",
             f'"appAuthRedirectScheme" to "{config["scheme"]}"',
             "Release signing is injected only by the controlled store pipeline.",
         )
