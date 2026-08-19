@@ -39,13 +39,7 @@ interface BrowserHarness {
 
 interface ProductionWorkspaceFixture {
   readonly role:
-    | 'admin'
-    | 'teacher'
-    | 'guardian'
-    | 'student'
-    | 'admissions'
-    | 'finance'
-    | 'support';
+    'admin' | 'teacher' | 'guardian' | 'student' | 'admissions' | 'finance' | 'support';
   readonly path: string;
   readonly assurance: 'aal1' | 'aal2';
   readonly expiresAt: string;
@@ -87,9 +81,7 @@ function installBrowser(pathname: string, root: unknown = {}): BrowserHarness {
 }
 
 function renderedHtml(): string {
-  const element = rootMocks.render.mock.calls.at(-1)?.[0] as
-    | ReactElement
-    | undefined;
+  const element = rootMocks.render.mock.calls.at(-1)?.[0] as ReactElement | undefined;
   if (element === undefined) throw new Error('expected entry render');
   return renderToStaticMarkup(element);
 }
@@ -138,30 +130,21 @@ describe('non-production entry bootstrap', () => {
     ['/admissions/applications/', 'admissions'],
     ['/finance/receipts/', 'finance'],
     ['/support', 'support'],
-  ] as const)(
-    'mounts the %s specialist route through the operator portal',
-    async (path, role) => {
-      installBrowser(path);
+  ] as const)('mounts the %s specialist route through the operator portal', async (path, role) => {
+    installBrowser(path);
 
-      await importEntry();
+    await importEntry();
 
-      await vi.waitFor(() =>
-        expect(operatorMocks.mountOperatorPortal).toHaveBeenCalledWith(role),
-      );
-      expect(operatorMocks.mountProductionOperatorPortal).not.toHaveBeenCalled();
-    },
-  );
+    await vi.waitFor(() => expect(operatorMocks.mountOperatorPortal).toHaveBeenCalledWith(role));
+    expect(operatorMocks.mountProductionOperatorPortal).not.toHaveBeenCalled();
+  });
 
   it('loads the core application and installs home navigation for a principal route', async () => {
     const browser = installBrowser('/teacher/classes/');
 
     await importEntry();
 
-    expect(browser.addEventListener).toHaveBeenCalledWith(
-      'click',
-      expect.any(Function),
-      true,
-    );
+    expect(browser.addEventListener).toHaveBeenCalledWith('click', expect.any(Function), true);
     expect(operatorMocks.mountOperatorPortal).not.toHaveBeenCalled();
   });
 
@@ -212,15 +195,9 @@ describe('production entry bootstrap', () => {
     await importEntry();
 
     await vi.waitFor(() =>
-      expect(gatewayMocks.pathBelongsToWorkspace).toHaveBeenCalledWith(
-        '/teacher',
-        '/admin',
-      ),
+      expect(gatewayMocks.pathBelongsToWorkspace).toHaveBeenCalledWith('/teacher', '/admin'),
     );
-    expect(gatewayMocks.mountProductionGate).toHaveBeenCalledWith(
-      'denied',
-      adminWorkspace,
-    );
+    expect(gatewayMocks.mountProductionGate).toHaveBeenCalledWith('denied', adminWorkspace);
   });
 
   it('mounts an authorized specialist workspace without loading the principal application', async () => {
@@ -258,16 +235,9 @@ describe('production entry bootstrap', () => {
     await importEntry();
 
     await vi.waitFor(() =>
-      expect(gatewayMocks.pathBelongsToWorkspace).toHaveBeenCalledWith(
-        '/admin/sis',
-        '/admin',
-      ),
+      expect(gatewayMocks.pathBelongsToWorkspace).toHaveBeenCalledWith('/admin/sis', '/admin'),
     );
-    expect(browser.addEventListener).toHaveBeenCalledWith(
-      'click',
-      expect.any(Function),
-      true,
-    );
+    expect(browser.addEventListener).toHaveBeenCalledWith('click', expect.any(Function), true);
     expect(gatewayMocks.mountProductionGate).not.toHaveBeenCalled();
     expect(operatorMocks.mountProductionOperatorPortal).not.toHaveBeenCalled();
   });
