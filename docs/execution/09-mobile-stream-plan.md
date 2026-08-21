@@ -299,13 +299,23 @@ Backend APIs, notification issuance, identity policy, server authorization and s
 - Local verification passed the 12-route mobile suite, the combined 25-test bearer/platform suite, TypeScript typecheck and disposable PostgreSQL MOB-02/MOB-03 migration verification with authorized-student and foreign-tenant isolation checks.
 - Live staging remains blocked by external/runtime configuration: the staging Worker currently has no `DATABASE_URL` secret and no reviewed `MOBILE_OIDC_*` provider bindings. No production mutation, real account/student data or auth bypass was used.
 
+## Checkpoint 26 evidence — account-scoped mobile device-session registration
+
+- The platform API now implements bearer-authenticated `POST /v1/mobile/device-sessions` and `POST /v1/mobile/device-sessions/{deviceSessionId}/revoke` matching the existing Flutter `DeviceSessionApi` contract.
+- MOB-04 persists only app-generated installation identity, application/platform/version, notification environment and the provider delivery credential required for notification delivery. Hardware/advertising identifiers and unrestricted personal identifiers remain outside the contract.
+- Registration/revocation are account-scoped and idempotent. Registration serializes both the account and the installation/token ownership resources so concurrent cross-account claims cannot leave duplicate active ownership. Reusing an idempotency key with different input fails closed; token rotation advances the session revision; a token/installation transferred to another account revokes the prior active owner defensively.
+- Raw provider credentials are withheld from API responses and idempotency receipts, protected behind revoked PUBLIC/app-runtime table access, and response validation accepts only the exact bounded receipt fields so any unexpected database field fails closed.
+- Android sessions accept Firebase/FCM credentials only and iOS sessions APNs credentials only. Non-production environments reject production notification credentials and production rejects development credentials.
+- Request bodies are byte bounded and exact-field validated; mutation routes emit `Cache-Control: no-store` and stable redacted 4xx/5xx errors.
+- Disposable PostgreSQL verification now covers MOB-02/MOB-03/MOB-04 including registration replay, token rotation revision, revoke state and function privileges; focused mobile route tests cover registration, provider/platform denial, idempotency conflict redaction, revocation and credential-response rejection.
+- Notification issuance/provider credentials remain inactive. Staging still lacks the reviewed School `DATABASE_URL` and `MOBILE_OIDC_*` bindings required to exercise real account device registration.
+
 ## Server/platform-owned contract boundary
 
-The source implementation now includes `/v1/mobile/readiness`, `/v1/mobile/bootstrap`, Family profiles/dashboard and Teacher today/roster. They remain operationally inactive until reviewed mobile OIDC bindings, a target `DATABASE_URL`, and the MOB-02/MOB-03 database migrations are activated in that environment.
+The source implementation now includes `/v1/mobile/readiness`, `/v1/mobile/bootstrap`, Family profiles/dashboard, Teacher today/roster and account-scoped device-session registration/revocation. They remain operationally inactive until reviewed mobile OIDC bindings, a target `DATABASE_URL`, and the MOB-02/MOB-03/MOB-04 database migrations are activated in that environment.
 
 The following proposed endpoints remain unimplemented and inactive in MOB-01:
 
-- `/v1/mobile/device-sessions`
 - Family documents/forms/consents/conversations and the proposed document-grant exchange route
 - Teacher attendance-batch and grade-draft write endpoints plus authoritative assessment/conversation reads
 - future `/v1/mobile/sync` delta and operation endpoints
@@ -314,4 +324,4 @@ MOB-01 may define and test clients, domain contracts and fail-closed UI. Owning 
 
 ## Exact next action
 
-Bind a reviewed non-production School database to the staging Worker, apply the reviewed MOB-02/MOB-03 migrations, and activate the reviewed mobile OIDC public-client/provider configuration. Then verify real-device Family/Staff sign-in, token refresh, logout, multi-school/campus selection, Family profiles/dashboard, Teacher today/roster and revoked/suspended access behavior. On that verified bearer context, implement the Teacher attendance/grade writes, Family interaction reads/writes, device-session/notification, sync and secure-document exchange endpoints without weakening tenant/capability authority. In parallel, complete the remaining untranslated domain surfaces, authoritative Staff assessment-list and teacher-conversation read models, authoritative currency fraction metadata, school-local explicit-offset timestamp metadata, representative Android/iOS privacy/accessibility/device integration passes and native restricted-document presenters. Produce signed release artifacts, privacy declarations, provenance and rollback evidence before any live account or student data is used.
+Bind a reviewed non-production School database to the staging Worker, apply the reviewed MOB-02/MOB-03/MOB-04 migrations, and activate the reviewed mobile OIDC public-client/provider configuration. Then verify real-device Family/Staff sign-in, token refresh, logout, multi-school/campus selection, Family profiles/dashboard, Teacher today/roster and revoked/suspended access behavior. On that verified bearer context, implement the Teacher attendance/grade writes, Family interaction reads/writes, notification issuance, sync and secure-document exchange endpoints without weakening tenant/capability authority. In parallel, complete the remaining untranslated domain surfaces, authoritative Staff assessment-list and teacher-conversation read models, authoritative currency fraction metadata, school-local explicit-offset timestamp metadata, representative Android/iOS privacy/accessibility/device integration passes and native restricted-document presenters. Produce signed release artifacts, privacy declarations, provenance and rollback evidence before any live account or student data is used.

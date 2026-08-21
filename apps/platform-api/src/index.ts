@@ -32,7 +32,9 @@ import {
   type LogoutScope,
 } from './auth-logout.js';
 import { resolveDatabaseReadModel, RuntimeReadModelCache } from './database-read-model.js';
+import { readBoundedUtf8RequestBody } from './bounded-request-body.js';
 import { DatabaseMobileAccessStore } from './database-mobile-access-store.js';
+import { DatabaseMobileDeviceSessionStore } from './database-mobile-device-session-store.js';
 import { DatabaseMobileReadStore } from './database-mobile-read-store.js';
 import { DatabaseMutationStore } from './database-mutation-store.js';
 import { DatabaseReadModelStore } from './database-read-model-store.js';
@@ -41,6 +43,12 @@ import {
   resolveMobileAuthReadiness,
   type MobileAuthBindings,
 } from './mobile-auth.js';
+import {
+  isEmptyMobileMutationBody,
+  isMobileDeviceSessionIdempotencyKey,
+  mobileDeviceSessionDatabaseErrorCode,
+  parseMobileDeviceSessionRegistration,
+} from './mobile-device-session.js';
 import { isMobileUuid, resolveMobileRequestScope } from './mobile-request-scope.js';
 import { isAllowedPilotWebOrigin, resolvePilotReadSnapshot } from './pilot-read-models.js';
 import { issuePilotSession, pilotSessionHeaders, verifyPilotSession } from './pilot-sessions.js';
@@ -185,6 +193,207 @@ app.get('/v1/mobile/bootstrap', async (context) => {
         error: {
           code: 'mobile_access_temporarily_unavailable',
           message: 'Mobile account access is temporarily unavailable.',
+        },
+      },
+      503,
+    );
+  }
+});
+
+app.post('/v1/mobile/device-sessions', async (context) => {
+  context.header('cache-control', 'no-store');
+  const databaseUrl = mobileReadDatabaseUrl(context.env);
+  if (databaseUrl === undefined) {
+    return context.json(
+      {
+        error: {
+          code: 'mobile_access_configuration_unavailable',
+          message: 'Mobile account access is not configured.',
+        },
+      },
+      503,
+    );
+  }
+
+  const authentication = await authenticateMobileBearer(
+    context.env,
+    context.req.header('authorization'),
+  );
+  if (!authentication.ok) {
+    return context.json(
+      { error: { code: authentication.code, message: authentication.message } },
+      authentication.status,
+    );
+  }
+
+  const idempotencyKey = context.req.header('idempotency-key')?.trim();
+  if (!isMobileDeviceSessionIdempotencyKey(idempotencyKey)) {
+    return context.json(
+      {
+        error: {
+          code: 'mobile_device_session_invalid',
+          message: 'The device registration request is invalid.',
+        },
+      },
+      400,
+    );
+  }
+
+  const body = parseMobileDeviceSessionRegistration(
+    await readBoundedUtf8RequestBody(context.req.raw.body, 16 * 1024),
+  );
+  if (body === undefined) {
+    return context.json(
+      {
+        error: {
+          code: 'mobile_device_session_invalid',
+          message: 'The device registration request is invalid.',
+        },
+      },
+      400,
+    );
+  }
+  const expectedNotificationEnvironment =
+    context.env.APP_ENV === 'production' ? 'production' : 'development';
+  if (body.notificationEnvironment !== expectedNotificationEnvironment) {
+    return context.json(
+      {
+        error: {
+          code: 'mobile_device_session_environment_denied',
+          message: 'The push credential environment does not match this service environment.',
+        },
+      },
+      403,
+    );
+  }
+
+  try {
+    const payload = await new DatabaseMobileDeviceSessionStore(
+      createHttpDatabase(databaseUrl),
+    ).register(authentication.identity, idempotencyKey, body);
+    if (payload === undefined) {
+      return context.json(
+        {
+          error: {
+            code: 'mobile_device_session_denied',
+            message: 'This account cannot register a mobile device session.',
+          },
+        },
+        403,
+      );
+    }
+    return context.json(payload);
+  } catch (error) {
+    if (mobileDeviceSessionDatabaseErrorCode(error) === 'idempotency_conflict') {
+      return context.json(
+        {
+          error: {
+            code: 'mobile_device_session_idempotency_conflict',
+            message: 'The idempotency key was already used for a different device request.',
+          },
+        },
+        409,
+      );
+    }
+    return context.json(
+      {
+        error: {
+          code: 'mobile_device_session_temporarily_unavailable',
+          message: 'Mobile device registration is temporarily unavailable.',
+        },
+      },
+      503,
+    );
+  }
+});
+
+app.post('/v1/mobile/device-sessions/:deviceSessionId/revoke', async (context) => {
+  context.header('cache-control', 'no-store');
+  const databaseUrl = mobileReadDatabaseUrl(context.env);
+  if (databaseUrl === undefined) {
+    return context.json(
+      {
+        error: {
+          code: 'mobile_access_configuration_unavailable',
+          message: 'Mobile account access is not configured.',
+        },
+      },
+      503,
+    );
+  }
+
+  const authentication = await authenticateMobileBearer(
+    context.env,
+    context.req.header('authorization'),
+  );
+  if (!authentication.ok) {
+    return context.json(
+      { error: { code: authentication.code, message: authentication.message } },
+      authentication.status,
+    );
+  }
+
+  const idempotencyKey = context.req.header('idempotency-key')?.trim();
+  const deviceSessionId = context.req.param('deviceSessionId');
+  if (!isMobileDeviceSessionIdempotencyKey(idempotencyKey) || !isMobileUuid(deviceSessionId)) {
+    return context.json(
+      {
+        error: {
+          code: 'mobile_device_session_invalid',
+          message: 'The device revocation request is invalid.',
+        },
+      },
+      400,
+    );
+  }
+
+  if (
+    !isEmptyMobileMutationBody(await readBoundedUtf8RequestBody(context.req.raw.body, 2 * 1024))
+  ) {
+    return context.json(
+      {
+        error: {
+          code: 'mobile_device_session_invalid',
+          message: 'The device revocation request is invalid.',
+        },
+      },
+      400,
+    );
+  }
+
+  try {
+    const payload = await new DatabaseMobileDeviceSessionStore(
+      createHttpDatabase(databaseUrl),
+    ).revoke(authentication.identity, idempotencyKey, deviceSessionId);
+    if (payload === undefined) {
+      return context.json(
+        {
+          error: {
+            code: 'mobile_device_session_denied',
+            message: 'This account cannot revoke the requested device session.',
+          },
+        },
+        403,
+      );
+    }
+    return context.json(payload);
+  } catch (error) {
+    if (mobileDeviceSessionDatabaseErrorCode(error) === 'idempotency_conflict') {
+      return context.json(
+        {
+          error: {
+            code: 'mobile_device_session_idempotency_conflict',
+            message: 'The idempotency key was already used for a different device request.',
+          },
+        },
+        409,
+      );
+    }
+    return context.json(
+      {
+        error: {
+          code: 'mobile_device_session_temporarily_unavailable',
+          message: 'Mobile device revocation is temporarily unavailable.',
         },
       },
       503,

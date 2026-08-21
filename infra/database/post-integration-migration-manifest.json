@@ -111,6 +111,12 @@
       "id": "202608190002_MOB-03_mobile_core_read_models",
       "stream": "MOB-03",
       "path": "infra/database/post-integration-migrations/202608190002_MOB-03_mobile_core_read_models.sql"
+    },
+    {
+      "order": 19,
+      "id": "202608190003_MOB-04_mobile_device_sessions",
+      "stream": "MOB-04",
+      "path": "infra/database/post-integration-migrations/202608190003_MOB-04_mobile_device_sessions.sql"
     }
   ]
 }

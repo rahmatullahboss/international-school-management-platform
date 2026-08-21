@@ -537,4 +537,202 @@ describe('platform mobile routes', () => {
       ],
     });
   });
+
+  it('registers an account-scoped Android FCM device session without echoing the token', async () => {
+    installJwksFetcher();
+    databaseQuery.mockResolvedValue([
+      {
+        payload: {
+          deviceSessionId: '40000000-0000-4000-8000-000000000040',
+          installationId: 'installation_000001',
+          registeredAt: '2026-08-19T14:00:00.000Z',
+          revision: 1,
+        },
+      },
+    ]);
+    const response = await app.request(
+      '/v1/mobile/device-sessions',
+      {
+        method: 'POST',
+        headers: {
+          authorization: `Bearer ${await signedCredential()}`,
+          'content-type': 'application/json',
+          'idempotency-key': 'device-register-0001',
+        },
+        body: JSON.stringify({
+          installationId: 'installation_000001',
+          application: 'family',
+          platform: 'android',
+          appVersion: '0.1.0+2',
+          pushProvider: 'firebase',
+          notificationEnvironment: 'development',
+          pushToken: 'firebase-token-secret-value',
+        }),
+      },
+      readyEnvironment,
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    const payload: unknown = await response.json();
+    expect(payload).toEqual({
+      deviceSessionId: '40000000-0000-4000-8000-000000000040',
+      installationId: 'installation_000001',
+      registeredAt: '2026-08-19T14:00:00.000Z',
+      revision: 1,
+    });
+    expect(JSON.stringify(payload)).not.toContain('firebase-token-secret-value');
+    expect(databaseQuery).toHaveBeenCalledWith(
+      expect.stringContaining('register_mobile_device_session'),
+      expect.arrayContaining([
+        readyEnvironment.MOBILE_OIDC_ISSUER,
+        'provider-mobile-user-1',
+        'device-register-0001',
+        'installation_000001',
+        'family',
+        'android',
+        'firebase',
+        'development',
+        'firebase-token-secret-value',
+      ]),
+    );
+  });
+
+  it('rejects invalid provider/platform pairing before database access', async () => {
+    installJwksFetcher();
+    const response = await app.request(
+      '/v1/mobile/device-sessions',
+      {
+        method: 'POST',
+        headers: {
+          authorization: `Bearer ${await signedCredential()}`,
+          'content-type': 'application/json',
+          'idempotency-key': 'device-register-0002',
+        },
+        body: JSON.stringify({
+          installationId: 'installation_000001',
+          application: 'family',
+          platform: 'android',
+          appVersion: '0.1.0+2',
+          pushProvider: 'apns',
+          notificationEnvironment: 'development',
+          pushToken: 'provider-token',
+        }),
+      },
+      readyEnvironment,
+    );
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: { code: 'mobile_device_session_invalid' },
+    });
+    expect(databaseQuery).not.toHaveBeenCalled();
+  });
+
+  it('maps device registration idempotency conflicts to a stable 409 without leaking database detail', async () => {
+    installJwksFetcher();
+    databaseQuery.mockRejectedValue(
+      new Error('MOBILE_DEVICE_SESSION_IDEMPOTENCY_CONFLICT token=do-not-leak'),
+    );
+    const response = await app.request(
+      '/v1/mobile/device-sessions',
+      {
+        method: 'POST',
+        headers: {
+          authorization: `Bearer ${await signedCredential()}`,
+          'content-type': 'application/json',
+          'idempotency-key': 'device-register-0003',
+        },
+        body: JSON.stringify({
+          installationId: 'installation_000001',
+          application: 'family',
+          platform: 'android',
+          appVersion: '0.1.0+2',
+          pushProvider: 'firebase',
+          notificationEnvironment: 'development',
+          pushToken: 'firebase-token-value',
+        }),
+      },
+      readyEnvironment,
+    );
+    expect(response.status).toBe(409);
+    const payload: unknown = await response.json();
+    expect(payload).toMatchObject({
+      error: { code: 'mobile_device_session_idempotency_conflict' },
+    });
+    expect(JSON.stringify(payload)).not.toContain('do-not-leak');
+  });
+
+  it('revokes only an authenticated account-owned device session', async () => {
+    installJwksFetcher();
+    databaseQuery.mockResolvedValue([
+      {
+        payload: {
+          deviceSessionId: '40000000-0000-4000-8000-000000000040',
+          revokedAt: '2026-08-19T14:10:00.000Z',
+          revision: 2,
+        },
+      },
+    ]);
+    const response = await app.request(
+      '/v1/mobile/device-sessions/40000000-0000-4000-8000-000000000040/revoke',
+      {
+        method: 'POST',
+        headers: {
+          authorization: `Bearer ${await signedCredential()}`,
+          'content-type': 'application/json',
+          'idempotency-key': 'device-revoke-00001',
+        },
+        body: '{}',
+      },
+      readyEnvironment,
+    );
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      deviceSessionId: '40000000-0000-4000-8000-000000000040',
+      revokedAt: '2026-08-19T14:10:00.000Z',
+      revision: 2,
+    });
+  });
+
+  it('fails closed if a device registration database response contains provider credentials', async () => {
+    installJwksFetcher();
+    databaseQuery.mockResolvedValue([
+      {
+        payload: {
+          deviceSessionId: '40000000-0000-4000-8000-000000000040',
+          installationId: 'installation_000001',
+          registeredAt: '2026-08-19T14:00:00.000Z',
+          revision: 1,
+          pushToken: 'must-never-leave-database-boundary',
+        },
+      },
+    ]);
+    const response = await app.request(
+      '/v1/mobile/device-sessions',
+      {
+        method: 'POST',
+        headers: {
+          authorization: `Bearer ${await signedCredential()}`,
+          'content-type': 'application/json',
+          'idempotency-key': 'device-register-0004',
+        },
+        body: JSON.stringify({
+          installationId: 'installation_000001',
+          application: 'family',
+          platform: 'android',
+          appVersion: '0.1.0+2',
+          pushProvider: 'firebase',
+          notificationEnvironment: 'development',
+          pushToken: 'firebase-token-value',
+        }),
+      },
+      readyEnvironment,
+    );
+    expect(response.status).toBe(503);
+    const payload: unknown = await response.json();
+    expect(payload).toMatchObject({
+      error: { code: 'mobile_device_session_temporarily_unavailable' },
+    });
+    expect(JSON.stringify(payload)).not.toContain('must-never-leave-database-boundary');
+  });
 });

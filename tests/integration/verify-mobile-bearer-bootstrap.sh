@@ -8,6 +8,7 @@ manifest="infra/database/migration-manifest.json"
 auth_migration="infra/database/post-integration-migrations/202607300301_AUTH-03_durable_identity_context.sql"
 mobile_migration="infra/database/post-integration-migrations/202608190001_MOB-02_mobile_bearer_bootstrap.sql"
 core_read_migration="infra/database/post-integration-migrations/202608190002_MOB-03_mobile_core_read_models.sql"
+device_session_migration="infra/database/post-integration-migrations/202608190003_MOB-04_mobile_device_sessions.sql"
 use_container=false
 
 cleanup() {
@@ -168,6 +169,7 @@ SQL
 
 apply_file "$mobile_migration" >/dev/null
 apply_file "$core_read_migration" >/dev/null
+apply_file "$device_session_migration" >/dev/null
 
 run_psql <<'SQL' >/dev/null
 INSERT INTO iam.role_permission (tenant_id, role_id, permission_key)
@@ -246,6 +248,11 @@ DECLARE
   access_count integer;
   capability_count integer;
   leaked_admin_count integer;
+  device_register jsonb;
+  device_retry jsonb;
+  device_rotated jsonb;
+  device_revoke jsonb;
+  device_transferred jsonb;
 BEGIN
   SELECT count(*), max(cardinality(capabilities))
   INTO access_count, capability_count
@@ -311,6 +318,138 @@ BEGIN
     RAISE EXCEPTION 'app_runtime must execute mobile family profile resolver';
   END IF;
 
+  device_register := platform.register_mobile_device_session(
+    'https://identity.school.test',
+    'provider-mobile-user-1',
+    'device-register-0001',
+    'installation_000001',
+    'family',
+    'android',
+    '0.1.0+2',
+    'firebase',
+    'development',
+    'firebase-token-one'
+  );
+  IF device_register IS NULL OR device_register->>'installationId' <> 'installation_000001' THEN
+    RAISE EXCEPTION 'device registration did not return the exact installation';
+  END IF;
+  IF device_register ? 'pushToken' OR device_register::text LIKE '%firebase-token-one%' THEN
+    RAISE EXCEPTION 'device registration response exposed the push token';
+  END IF;
+
+  device_retry := platform.register_mobile_device_session(
+    'https://identity.school.test',
+    'provider-mobile-user-1',
+    'device-register-0001',
+    'installation_000001',
+    'family',
+    'android',
+    '0.1.0+2',
+    'firebase',
+    'development',
+    'firebase-token-one'
+  );
+  IF device_retry <> device_register THEN
+    RAISE EXCEPTION 'same device registration idempotency key did not replay the same response';
+  END IF;
+
+  device_rotated := platform.register_mobile_device_session(
+    'https://identity.school.test',
+    'provider-mobile-user-1',
+    'device-register-0002',
+    'installation_000001',
+    'family',
+    'android',
+    '0.1.0+3',
+    'firebase',
+    'development',
+    'firebase-token-two'
+  );
+  IF (device_rotated->>'revision')::bigint <> 2 THEN
+    RAISE EXCEPTION 'device token rotation did not advance revision';
+  END IF;
+  IF (SELECT count(*) FROM platform.mobile_device_session WHERE revoked_at IS NULL) <> 1 THEN
+    RAISE EXCEPTION 'device registration did not preserve one active session';
+  END IF;
+
+  device_revoke := platform.revoke_mobile_device_session(
+    'https://identity.school.test',
+    'provider-mobile-user-1',
+    'device-revoke-00001',
+    (device_rotated->>'deviceSessionId')::uuid
+  );
+  IF device_revoke IS NULL OR device_revoke->>'revokedAt' IS NULL THEN
+    RAISE EXCEPTION 'device revoke did not return a bounded receipt';
+  END IF;
+  IF EXISTS (SELECT 1 FROM platform.mobile_device_session WHERE revoked_at IS NULL) THEN
+    RAISE EXCEPTION 'device revoke left an active session';
+  END IF;
+
+  INSERT INTO iam.account (
+    account_id, provider, provider_subject, email, assurance_level
+  ) VALUES (
+    '40000000-0000-4000-8000-000000000020',
+    'https://identity.school.test',
+    'provider-mobile-user-2',
+    'second-guardian@example.test',
+    'aal1'
+  );
+  INSERT INTO iam.membership (
+    tenant_id, membership_id, account_id, campus_id, status
+  ) VALUES (
+    '40000000-0000-4000-8000-000000000001',
+    '40000000-0000-4000-8000-000000000021',
+    '40000000-0000-4000-8000-000000000020',
+    '40000000-0000-4000-8000-000000000003',
+    'active'
+  );
+  INSERT INTO iam.oidc_membership_binding (
+    binding_id, provider_issuer, provider_subject, account_id, tenant_id, membership_id, campus_id, status
+  ) VALUES (
+    '40000000-0000-4000-8000-000000000022',
+    'https://identity.school.test',
+    'provider-mobile-user-2',
+    '40000000-0000-4000-8000-000000000020',
+    '40000000-0000-4000-8000-000000000001',
+    '40000000-0000-4000-8000-000000000021',
+    '40000000-0000-4000-8000-000000000003',
+    'active'
+  );
+
+  device_transferred := platform.register_mobile_device_session(
+    'https://identity.school.test',
+    'provider-mobile-user-2',
+    'device-register-0003',
+    'installation_000001',
+    'family',
+    'android',
+    '0.1.0+4',
+    'firebase',
+    'development',
+    'firebase-token-two'
+  );
+  IF device_transferred IS NULL THEN
+    RAISE EXCEPTION 'device ownership transfer did not register the new account';
+  END IF;
+  IF (SELECT count(*) FROM platform.mobile_device_session WHERE revoked_at IS NULL) <> 1 THEN
+    RAISE EXCEPTION 'device ownership transfer left multiple active sessions';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1
+    FROM platform.mobile_device_session
+    WHERE account_id = '40000000-0000-4000-8000-000000000020'::uuid
+      AND revoked_at IS NULL
+  ) THEN
+    RAISE EXCEPTION 'device ownership transfer did not move active ownership to the new account';
+  END IF;
+
+  IF has_function_privilege('public', 'platform.register_mobile_device_session(text,text,text,text,text,text,text,text,text,text)', 'EXECUTE') THEN
+    RAISE EXCEPTION 'PUBLIC must not execute mobile device registration';
+  END IF;
+  IF NOT has_function_privilege('app_runtime', 'platform.register_mobile_device_session(text,text,text,text,text,text,text,text,text,text)', 'EXECUTE') THEN
+    RAISE EXCEPTION 'app_runtime must execute mobile device registration';
+  END IF;
+
   IF has_function_privilege('public', 'iam.resolve_mobile_bootstrap_access(text,text)', 'EXECUTE') THEN
     RAISE EXCEPTION 'PUBLIC must not execute mobile bootstrap resolver';
   END IF;
@@ -334,5 +473,5 @@ END
 $runtime$;
 ROLLBACK;
 
-SELECT 'Mobile bearer bootstrap and core read-model migration verification: PASS';
+SELECT 'Mobile bearer bootstrap, core read-model, and device-session migration verification: PASS';
 SQL

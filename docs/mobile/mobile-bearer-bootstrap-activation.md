@@ -12,6 +12,8 @@ The server-side source contract is now implemented for:
 - `GET /v1/mobile/family/students/{studentId}/dashboard`
 - `GET /v1/mobile/teacher/today`
 - `GET /v1/mobile/teacher/meetings/{meetingId}/roster`
+- `POST /v1/mobile/device-sessions`
+- `POST /v1/mobile/device-sessions/{deviceSessionId}/revoke`
 
 The implementation remains fail closed until the reviewed identity-provider configuration and database migration are activated in the target environment.
 
@@ -89,6 +91,16 @@ Family billing/messages remain `null` and Staff assessment/conversation lists re
 
 Every scoped read requires `X-Tenant-Id`, `X-Campus-Id` and `X-Persona`, validates identifiers and database response shapes, bounds returned arrays/payload bytes, sends `Cache-Control: no-store`, and redacts database failures behind stable mobile error codes.
 
+## Mobile device sessions and push credentials
+
+Migration `202608190003_MOB-04_mobile_device_sessions.sql` adds account-scoped notification device sessions for the already-implemented Flutter native-notification lifecycle. Registration is authenticated by the same verified mobile bearer identity but is deliberately account-scoped rather than tenant-scoped, because one installation may switch between authorized school/campus contexts after bootstrap.
+
+The server stores only app-generated installation IDs plus the provider credential required for delivery; it does not accept hardware IDs, advertising IDs, phone numbers, email addresses or device names. Provider credentials are never returned by the API, copied into idempotency responses, written to application logs or exposed through public/app-runtime table grants.
+
+Registration and revocation are idempotent. A repeated idempotency key with different input fails closed. Re-registering the same installation updates the existing session/revision, and registering an installation or provider token under a different account defensively revokes the previous active owner before the new session becomes active. Android registrations accept Firebase/FCM credentials only; iOS accepts APNs credentials only. Non-production API environments accept only `development` notification credentials, while production accepts only `production` credentials.
+
+Both mutation routes bound request bodies, validate exact known fields/identifiers, use `Cache-Control: no-store`, and return stable redacted errors. The notification-sending worker/provider activation remains a separate server/platform responsibility; MOB-04 only establishes the safe registration lifecycle and delivery-address authority.
+
 Canonical API failures use the nested shape:
 
 ```json
@@ -120,13 +132,13 @@ The Family and Staff redirect schemes remain separate. The identity provider mus
 
 1. Review the target identity provider and create public native OIDC clients using authorization code + PKCE; do not create an app-embedded secret.
 2. Configure the API audience and issue RS256 access tokens containing the exact `school_api` scope.
-3. Review and apply `202608190001_MOB-02_mobile_bearer_bootstrap.sql` and `202608190002_MOB-03_mobile_core_read_models.sql` to the intended non-production database branch first.
+3. Review and apply `202608190001_MOB-02_mobile_bearer_bootstrap.sql`, `202608190002_MOB-03_mobile_core_read_models.sql` and `202608190003_MOB-04_mobile_device_sessions.sql` to the intended non-production database branch first.
 4. Populate/review account, active membership, OIDC binding, campus and canonical mobile role mappings.
 5. Configure the `MOBILE_OIDC_*` bindings and `MOBILE_MEMBERSHIP_SOURCE=database` on the intended API environment.
 6. Confirm `GET /v1/mobile/readiness` reports `ready` without exposing configuration values.
 7. Build Family and Staff with the reviewed `SCHOOL_*` values and distribute them through the dedicated `school-management-mobile-dev` Firebase App Distribution project.
 8. Verify real-device sign-in, multi-school/campus selection, logout, token refresh, expired-token behavior and revoked/suspended membership behavior.
-9. Verify the now-implemented Family/Teacher core read endpoints on that same verified bearer context, then activate attendance/grade writes, Family interactions and notification device-session registration as separate authority-preserving tranches.
+9. Verify the now-implemented Family/Teacher core read and device-session registration/revocation endpoints on that same verified bearer context, then activate attendance/grade writes, Family interactions and notification issuance as separate authority-preserving tranches.
 
 ## Verification
 
@@ -138,6 +150,6 @@ Source verification includes:
 - Flutter bootstrap/error/timezone tests;
 - `tests/integration/verify-mobile-bearer-bootstrap.sh`, which uses a disposable PostgreSQL 16 database (Docker fallback when local PostgreSQL client tools are absent) and verifies tenant/campus projection, persona capability isolation, Family authorized-student isolation and function privileges.
 
-The reviewed post-integration migration manifest now includes MOB-02 and MOB-03 so the normal reviewed migration runner cannot silently omit the mobile authority functions.
+The reviewed post-integration migration manifest now includes MOB-02, MOB-03 and MOB-04 so the normal reviewed migration runner cannot silently omit the mobile authority, read-model or device-session functions.
 
 As of August 19, 2026, the staging Worker still has no `DATABASE_URL` secret and no reviewed `MOBILE_OIDC_*` provider bindings, so live staging authentication/data remains deliberately disabled even though the source contracts are implemented. No production provider configuration, real account data or production deployment is performed by this source tranche.
