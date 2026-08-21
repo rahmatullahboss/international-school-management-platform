@@ -102,6 +102,65 @@ void main() {
   });
 
   test(
+    'conversation open records the newest message read explicitly',
+    () async {
+      final repository = _FamilyInteractionRepository()
+        ..conversationMessages = <FamilyConversationMessage>[
+          FamilyConversationMessage(
+            authorLabel: 'Teacher',
+            body: 'Newest message',
+            messageId: 'message-newest',
+            sentAt: DateTime.utc(2026, 7, 30, 5),
+          ),
+        ];
+      final controller = FamilyInteractionController(
+        repository: repository,
+        session: familySession(
+          capabilities: const <String>{SchoolCapability.messagesRead},
+        ),
+      );
+
+      await controller.loadConversations('student-1');
+      await controller.openConversation('conversation-1');
+
+      expect(repository.readCalls, 1);
+      expect(repository.lastReadMessageId, 'message-newest');
+      expect(controller.messagesPhase, FamilyInteractionPhase.ready);
+      expect(controller.activeConversation?.unreadCount, 0);
+    },
+  );
+
+  test(
+    'read receipt failure keeps loaded messages and unread evidence',
+    () async {
+      final repository = _FamilyInteractionRepository()
+        ..failReadReceipt = true
+        ..conversationMessages = <FamilyConversationMessage>[
+          FamilyConversationMessage(
+            authorLabel: 'Teacher',
+            body: 'Newest message',
+            messageId: 'message-newest',
+            sentAt: DateTime.utc(2026, 7, 30, 5),
+          ),
+        ];
+      final controller = FamilyInteractionController(
+        repository: repository,
+        session: familySession(
+          capabilities: const <String>{SchoolCapability.messagesRead},
+        ),
+      );
+
+      await controller.loadConversations('student-1');
+      await controller.openConversation('conversation-1');
+
+      expect(controller.messages.single.messageId, 'message-newest');
+      expect(controller.messagesPhase, FamilyInteractionPhase.ready);
+      expect(controller.activeConversation?.unreadCount, 1);
+      expect(controller.messagesReasonCode, 'FAMILY_READ_RECEIPT_FAILED');
+    },
+  );
+
+  test(
     'conversation send requires capability and appends server message',
     () async {
       final repository = _FamilyInteractionRepository();
@@ -158,6 +217,11 @@ final class _FamilyInteractionRepository
   FamilyFormSubmissionCommand? lastSubmission;
   int consentCalls = 0;
   int messageCalls = 0;
+  int readCalls = 0;
+  String? lastReadMessageId;
+  List<FamilyConversationMessage> conversationMessages =
+      const <FamilyConversationMessage>[];
+  bool failReadReceipt = false;
 
   @override
   Future<int> decideConsent({
@@ -223,7 +287,7 @@ final class _FamilyInteractionRepository
     int limit = 50,
   }) async => FamilyConversationMessagePage(
     conversationId: conversationId,
-    messages: const <FamilyConversationMessage>[],
+    messages: conversationMessages,
   );
 
   @override
@@ -246,6 +310,22 @@ final class _FamilyInteractionRepository
     requiresStepUp: false,
     singleUse: true,
   );
+
+  @override
+  Future<int> markConversationRead({
+    required String conversationId,
+    required String correlationId,
+    required String idempotencyKey,
+    required String messageId,
+    required SchoolSession session,
+  }) async {
+    readCalls++;
+    lastReadMessageId = messageId;
+    if (failReadReceipt) {
+      throw const FamilyInteractionException('FAMILY_READ_RECEIPT_FAILED');
+    }
+    return readCalls;
+  }
 
   @override
   Future<FamilyConversationMessage> sendMessage({

@@ -269,6 +269,35 @@ final class FamilyInteractionApi {
     }
   }
 
+  Future<int> markConversationRead({
+    required String conversationId,
+    required String correlationId,
+    required String idempotencyKey,
+    required String messageId,
+    required SchoolSession session,
+  }) async {
+    _requireCapability(session, SchoolCapability.messagesRead);
+    final normalizedConversationId = _requiredStringValue(
+      conversationId,
+      'conversationId',
+    );
+    final normalizedMessageId = _requiredStringValue(messageId, 'messageId');
+    final normalizedIdempotencyKey = _requiredStringValue(
+      idempotencyKey,
+      'idempotencyKey',
+    );
+    final response = await _client.postJson(
+      '/v1/mobile/family/conversations/${Uri.encodeComponent(normalizedConversationId)}/read-receipts',
+      body: <String, Object?>{'messageId': normalizedMessageId},
+      context: ApiRequestContext(
+        correlationId: correlationId,
+        session: session,
+      ),
+      idempotencyKey: normalizedIdempotencyKey,
+    );
+    return _acceptedRevision(response, 'conversation-read');
+  }
+
   Future<FamilyConversationMessage> sendMessage({
     required String correlationId,
     required FamilySendMessageCommand command,

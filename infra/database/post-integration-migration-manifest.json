@@ -135,6 +135,12 @@
       "id": "202608210003_MOB-06B_mobile_family_forms_consents",
       "stream": "MOB-06B",
       "path": "infra/database/post-integration-migrations/202608210003_MOB-06B_mobile_family_forms_consents.sql"
+    },
+    {
+      "order": 23,
+      "id": "202608210004_MOB-06C_mobile_family_conversations",
+      "stream": "MOB-06C",
+      "path": "infra/database/post-integration-migrations/202608210004_MOB-06C_mobile_family_conversations.sql"
     }
   ]
 }

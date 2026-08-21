@@ -62,6 +62,14 @@ abstract interface class FamilyInteractionRepository {
     int limit = 50,
   });
 
+  Future<int> markConversationRead({
+    required String conversationId,
+    required String correlationId,
+    required String idempotencyKey,
+    required String messageId,
+    required SchoolSession session,
+  });
+
   Future<FamilyConversationMessage> sendMessage({
     required String correlationId,
     required FamilySendMessageCommand command,
@@ -174,6 +182,21 @@ final class FamilyInteractionApiRepository
     correlationId: correlationId,
     documentId: documentId,
     idempotencyKey: idempotencyKey,
+    session: session,
+  );
+
+  @override
+  Future<int> markConversationRead({
+    required String conversationId,
+    required String correlationId,
+    required String idempotencyKey,
+    required String messageId,
+    required SchoolSession session,
+  }) => _api.markConversationRead(
+    conversationId: conversationId,
+    correlationId: correlationId,
+    idempotencyKey: idempotencyKey,
+    messageId: messageId,
     session: session,
   );
 
@@ -654,6 +677,39 @@ final class FamilyInteractionController extends ChangeNotifier {
           : page.messages;
       messagesNextCursor = page.nextCursor;
       messagesPhase = FamilyInteractionPhase.ready;
+      if (!append && page.messages.isNotEmpty) {
+        try {
+          await _repository.markConversationRead(
+            conversationId: conversationId,
+            correlationId: _nextIdentity('family-conversation-read'),
+            idempotencyKey: _nextIdentity('family-conversation-read-operation'),
+            messageId: page.messages.first.messageId,
+            session: _session,
+          );
+          if (revision != _scopeRevision ||
+              activeConversation?.conversationId != conversationId) {
+            return;
+          }
+          final readSummary = FamilyConversationSummary(
+            conversationId: conversation.conversationId,
+            latestMessageAt: conversation.latestMessageAt,
+            subject: conversation.subject,
+            unreadCount: 0,
+          );
+          activeConversation = readSummary;
+          conversations = List<FamilyConversationSummary>.unmodifiable(
+            conversations.map(
+              (item) =>
+                  item.conversationId == conversationId ? readSummary : item,
+            ),
+          );
+        } on Object catch (error) {
+          if (revision == _scopeRevision &&
+              activeConversation?.conversationId == conversationId) {
+            messagesReasonCode = _familyInteractionReason(error);
+          }
+        }
+      }
     } on Object catch (error) {
       if (revision != _scopeRevision ||
           activeConversation?.conversationId != conversationId) {
