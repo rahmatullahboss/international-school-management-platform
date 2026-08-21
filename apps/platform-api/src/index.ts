@@ -51,6 +51,7 @@ import {
   parseMobileDeviceSessionRegistration,
 } from './mobile-device-session.js';
 import mobileFamilyDocumentRoutes from './mobile-family-document-routes.js';
+import mobileFamilyFormsConsentsRoutes from './mobile-family-forms-consents-routes.js';
 import {
   isMobileTeacherWriteIdempotencyKey,
   parseTeacherAttendanceWrite,
@@ -93,6 +94,7 @@ app.use('*', async (context, next) => {
 });
 
 app.route('/', mobileFamilyDocumentRoutes);
+app.route('/', mobileFamilyFormsConsentsRoutes);
 
 app.use('/pilot/*', async (context, next) => {
   const runtime = parseRuntimeEnvironment(context.env);

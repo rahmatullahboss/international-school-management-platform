@@ -19,6 +19,11 @@ The server-side source contract is now implemented for:
 - `GET /v1/mobile/family/students/{studentId}/documents`
 - `POST /v1/mobile/family/documents/{documentId}/download-grants`
 - `POST /v1/mobile/family/document-download-grants/{grantId}/exchange`
+- `GET /v1/mobile/family/students/{studentId}/forms`
+- `GET /v1/mobile/family/forms/{formId}`
+- `POST /v1/mobile/family/forms/{formId}/submit`
+- `GET /v1/mobile/family/students/{studentId}/consents`
+- `POST /v1/mobile/family/consents/{consentId}/decisions`
 
 The implementation remains fail closed until the reviewed identity-provider configuration and database migration are activated in the target environment.
 
@@ -122,6 +127,14 @@ Only canonical document objects with `scan_status='clean'` and mobile-safe profi
 
 Secure byte exchange additionally requires a reviewed `MOBILE_DOCUMENT_BUCKET` runtime binding. The API authenticates first and verifies the storage binding before claiming the grant, preventing missing storage from consuming a single-use grant. After claim, the object must exist at the canonical `document_object.object_key`, have the exact published byte size and carry matching immutable `school-sha256` metadata. Publication withdrawal, guardian/student authority revocation, missing objects or integrity drift fail closed. No bucket name or production binding is committed by MOB-06A; target-environment object storage activation remains an explicit platform operation.
 
+## Family forms and consent decisions
+
+Migration `202608210003_MOB-06B_mobile_family_forms_consents.sql` adds authoritative Family form requests/submissions and consent requests/decisions for the existing Flutter contracts. These routes are guardian-only because the canonical MOB-02 mobile capability projection grants `forms.consent` only to the guardian persona. Every operation re-resolves verified issuer/subject, tenant, campus, `forms.consent`, exactly one active linked guardian person, current student enrollment and verified current guardian `portal_access` authority.
+
+Form definitions use a bounded explicit schema with `text`, `boolean`, `singleChoice` and `date` fields. The database rejects malformed schemas at publication time and validates submitted answers against required fields, exact field types and choice/date policy. Submission requires the current schema version plus optimistic form `baseVersion`; stale, schema-mismatched, invalid or closed requests do not create submission rows or advance revisions. Account-scoped idempotency digests include tenant/campus/persona/resource/student and exact payload, and replay still re-resolves current authority and exact resource binding. Completed form identity/schema is immutable.
+
+Consent requests remain separate from canonical consent evidence because `people.consent_record` represents granted/withdrawn/expired evidence rather than pending/declined requests. A guardian `grant` transactionally appends a canonical `people.consent_record` for the student person, deciding guardian and request purpose, then links that record to the request. A `decline` advances the request without creating a granted-consent record. Past-due pending requests are exposed as `expired` and cannot be decided. Decided consent requests are immutable; while pending, purpose changes require a new policy version and student reassignment requires a revision advance. MOB-06B tables are not directly accessible to `PUBLIC` or `app_runtime`; `app_runtime` can execute only the reviewed form/consent API functions, not internal schema/authority helpers.
+
 Canonical API failures use the nested shape:
 
 ```json
@@ -153,14 +166,14 @@ The Family and Staff redirect schemes remain separate. The identity provider mus
 
 1. Review the target identity provider and create public native OIDC clients using authorization code + PKCE; do not create an app-embedded secret.
 2. Configure the API audience and issue RS256 access tokens containing the exact `school_api` scope.
-3. Review and apply `202608190001_MOB-02_mobile_bearer_bootstrap.sql`, `202608190002_MOB-03_mobile_core_read_models.sql`, `202608190003_MOB-04_mobile_device_sessions.sql`, `202608210001_MOB-05_mobile_teacher_writes.sql` and `202608210002_MOB-06A_mobile_family_documents.sql` to the intended non-production database branch first.
-4. Populate/review account, active membership, OIDC binding, campus, canonical mobile role mappings and the explicit Family document publication metadata backed by canonical student profile-document links.
+3. Review and apply `202608190001_MOB-02_mobile_bearer_bootstrap.sql`, `202608190002_MOB-03_mobile_core_read_models.sql`, `202608190003_MOB-04_mobile_device_sessions.sql`, `202608210001_MOB-05_mobile_teacher_writes.sql`, `202608210002_MOB-06A_mobile_family_documents.sql` and `202608210003_MOB-06B_mobile_family_forms_consents.sql` to the intended non-production database branch first.
+4. Populate/review account, active membership, OIDC binding, campus, canonical mobile role mappings, explicit Family document publication metadata backed by canonical student profile-document links, and reviewed Family form/consent requests bound to the intended students.
 5. Configure the `MOBILE_OIDC_*` bindings and `MOBILE_MEMBERSHIP_SOURCE=database` on the intended API environment.
 6. Provision/review the intended secure object-storage bucket, upload only clean canonical document objects with matching byte length and immutable `school-sha256` metadata, then bind it as `MOBILE_DOCUMENT_BUCKET`. Do not reuse an unrelated project bucket.
 7. Confirm `GET /v1/mobile/readiness` reports `ready` without exposing configuration values.
 8. Build Family and Staff with the reviewed `SCHOOL_*` values and distribute them through the dedicated `school-management-mobile-dev` Firebase App Distribution project.
 9. Verify real-device sign-in, multi-school/campus selection, logout, token refresh, expired-token behavior and revoked/suspended membership behavior.
-10. Verify the implemented Family/Teacher core reads, Family document list/grant/exchange, Teacher attendance/grade-draft writes and device-session registration/revocation endpoints on that same verified bearer context. Confirm restricted documents trigger AAL2 and one-use presentation, then activate the remaining Family forms/consents/conversations and notification issuance as separate authority-preserving tranches.
+10. Verify the implemented Family/Teacher core reads, Family document list/grant/exchange, Family form list/load/submission and consent list/decision flows, Teacher attendance/grade-draft writes and device-session registration/revocation endpoints on that same verified bearer context. Confirm restricted documents trigger AAL2 and one-use presentation, guardian form submissions preserve schema/revision authority, granted consents append exact canonical evidence and declines do not manufacture granted records. Then activate Family conversations/messages and notification issuance as separate authority-preserving tranches.
 
 ## Verification
 
@@ -170,8 +183,8 @@ Source verification includes:
 - bounded/origin-pinned JWKS tests;
 - platform mobile-auth and route tests;
 - Flutter bootstrap/error/timezone tests;
-- `tests/integration/verify-mobile-bearer-bootstrap.sh`, which uses a disposable PostgreSQL 16 database (Docker fallback when local PostgreSQL client tools are absent) and verifies tenant/campus projection, persona capability isolation, Family authorized-student isolation, MOB-04 device-session authority, MOB-05 Teacher attendance/grade-draft authority, and MOB-06A Family document pagination, clean-scan/visibility filtering, grant idempotency, AAL2 no-consumption, single-use claim, withdrawal/revocation re-checks and function/table privileges.
+- `tests/integration/verify-mobile-bearer-bootstrap.sh`, which uses a disposable PostgreSQL 16 database (Docker fallback when local PostgreSQL client tools are absent) and verifies tenant/campus projection, persona capability isolation, Family authorized-student isolation, MOB-04 device-session authority, MOB-05 Teacher attendance/grade-draft authority, MOB-06A Family document pagination/clean-scan/visibility/grant authority, and MOB-06B Family form schema/answer validation, optimistic revision and idempotency behavior, canonical granted-consent evidence, decline/expiry behavior, completed-identity immutability, pending-consent authoring guards, authority revocation and function/table privileges.
 
-The reviewed post-integration migration manifest now includes MOB-02, MOB-03, MOB-04, MOB-05 and MOB-06A so the normal reviewed migration runner cannot silently omit the mobile authority, read-model, device-session, Teacher-write or Family-document functions.
+The reviewed post-integration migration manifest now includes MOB-02, MOB-03, MOB-04, MOB-05, MOB-06A and MOB-06B so the normal reviewed migration runner cannot silently omit the mobile authority, read-model, device-session, Teacher-write, Family-document or Family form/consent functions.
 
 As of August 21, 2026, the staging Worker still has no reviewed `DATABASE_URL` secret, no reviewed `MOBILE_OIDC_*` provider bindings and no reviewed `MOBILE_DOCUMENT_BUCKET` binding, so live staging authentication/data/document exchange remains deliberately disabled even though the source contracts are implemented. No production provider/storage configuration, real account data or production deployment is performed by this source tranche.

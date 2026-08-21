@@ -13,6 +13,8 @@ teacher_write_migration="infra/database/post-integration-migrations/202608210001
 teacher_write_verification="tests/integration/verify-mobile-teacher-writes.sql"
 family_document_migration="infra/database/post-integration-migrations/202608210002_MOB-06A_mobile_family_documents.sql"
 family_document_verification="tests/integration/verify-mobile-family-documents.sql"
+family_forms_consents_migration="infra/database/post-integration-migrations/202608210003_MOB-06B_mobile_family_forms_consents.sql"
+family_forms_consents_verification="tests/integration/verify-mobile-family-forms-consents.sql"
 use_container=false
 
 cleanup() {
@@ -176,6 +178,7 @@ apply_file "$core_read_migration" >/dev/null
 apply_file "$device_session_migration" >/dev/null
 apply_file "$teacher_write_migration" >/dev/null
 apply_file "$family_document_migration" >/dev/null
+apply_file "$family_forms_consents_migration" >/dev/null
 
 run_psql <<'SQL' >/dev/null
 INSERT INTO iam.role_permission (tenant_id, role_id, permission_key)
@@ -486,3 +489,5 @@ apply_file "$teacher_write_verification" >/dev/null
 printf '%s\n' 'Mobile teacher write authority verification: PASS'
 apply_file "$family_document_verification" >/dev/null
 printf '%s\n' 'Mobile Family document authority verification: PASS'
+apply_file "$family_forms_consents_verification" >/dev/null
+printf '%s\n' 'Mobile Family forms/consents authority verification: PASS'
