@@ -111,6 +111,42 @@
       "id": "202608190002_MOB-03_mobile_core_read_models",
       "stream": "MOB-03",
       "path": "infra/database/post-integration-migrations/202608190002_MOB-03_mobile_core_read_models.sql"
+    },
+    {
+      "order": 19,
+      "id": "202608190003_MOB-04_mobile_device_sessions",
+      "stream": "MOB-04",
+      "path": "infra/database/post-integration-migrations/202608190003_MOB-04_mobile_device_sessions.sql"
+    },
+    {
+      "order": 20,
+      "id": "202608210001_MOB-05_mobile_teacher_writes",
+      "stream": "MOB-05",
+      "path": "infra/database/post-integration-migrations/202608210001_MOB-05_mobile_teacher_writes.sql"
+    },
+    {
+      "order": 21,
+      "id": "202608210002_MOB-06A_mobile_family_documents",
+      "stream": "MOB-06A",
+      "path": "infra/database/post-integration-migrations/202608210002_MOB-06A_mobile_family_documents.sql"
+    },
+    {
+      "order": 22,
+      "id": "202608210003_MOB-06B_mobile_family_forms_consents",
+      "stream": "MOB-06B",
+      "path": "infra/database/post-integration-migrations/202608210003_MOB-06B_mobile_family_forms_consents.sql"
+    },
+    {
+      "order": 23,
+      "id": "202608210004_MOB-06C_mobile_family_conversations",
+      "stream": "MOB-06C",
+      "path": "infra/database/post-integration-migrations/202608210004_MOB-06C_mobile_family_conversations.sql"
+    },
+    {
+      "order": 24,
+      "id": "202608210005_MOB-07_mobile_notification_issuance",
+      "stream": "MOB-07",
+      "path": "infra/database/post-integration-migrations/202608210005_MOB-07_mobile_notification_issuance.sql"
     }
   ]
 }

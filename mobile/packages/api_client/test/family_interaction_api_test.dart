@@ -222,6 +222,39 @@ void main() {
     client.close();
   });
 
+  test(
+    'records conversation reads only through explicit idempotent commands',
+    () async {
+      late http.Request captured;
+      final client = clientFor((request) {
+        captured = request;
+        return <String, Object?>{'acceptedRevision': 3};
+      });
+
+      final revision = await FamilyInteractionApi(client).markConversationRead(
+        conversationId: 'conversation-1',
+        correlationId: 'messages-read-1',
+        idempotencyKey: 'conversation-1-read-message-1',
+        messageId: 'message-1',
+        session: familySession(
+          capabilities: const {SchoolCapability.messagesRead},
+        ),
+      );
+
+      expect(
+        captured.url.path,
+        '/v1/mobile/family/conversations/conversation-1/read-receipts',
+      );
+      expect(
+        captured.headers['idempotency-key'],
+        'conversation-1-read-message-1',
+      );
+      expect(captured.body, contains('"messageId":"message-1"'));
+      expect(revision, 3);
+      client.close();
+    },
+  );
+
   test('sends messages only with send capability and idempotency', () async {
     late http.Request captured;
     final client = clientFor((request) {

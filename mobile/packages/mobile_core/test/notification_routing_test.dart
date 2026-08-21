@@ -241,7 +241,7 @@ Map<String, Object?> familyData({
   'campusId': 'campus-1',
   'persona': SchoolPersona.guardian.name,
   'kind': kind.name,
-  if (resourceId != null) 'resourceId': resourceId,
+  'resourceId': ?resourceId,
   'issuedAt': '2026-07-30T06:00:00Z',
   'expiresAt': '2026-07-30T06:30:00Z',
 };

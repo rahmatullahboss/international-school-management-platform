@@ -146,6 +146,15 @@ final class _Repository implements FamilyInteractionRepository {
   }) => throw UnimplementedError();
 
   @override
+  Future<int> markConversationRead({
+    required String conversationId,
+    required String correlationId,
+    required String idempotencyKey,
+    required String messageId,
+    required SchoolSession session,
+  }) => throw UnimplementedError();
+
+  @override
   Future<FamilyConversationMessage> sendMessage({
     required String correlationId,
     required FamilySendMessageCommand command,

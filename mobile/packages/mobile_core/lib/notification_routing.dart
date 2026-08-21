@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:collection';
 
-import 'mobile_core.dart';
+import 'package:school_mobile_core/mobile_core.dart';
 
 enum MobileNotificationApplication { family, staff }
 
