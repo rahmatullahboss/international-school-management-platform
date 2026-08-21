@@ -19,6 +19,8 @@ family_conversation_migration="infra/database/post-integration-migrations/202608
 family_conversation_verification="tests/integration/verify-mobile-family-conversations.sql"
 mobile_notification_migration="infra/database/post-integration-migrations/202608210005_MOB-07_mobile_notification_issuance.sql"
 mobile_notification_verification="tests/integration/verify-mobile-notification-issuance.sql"
+mobile_sync_migration="infra/database/post-integration-migrations/202608220001_MOB-08_mobile_sync_delta.sql"
+mobile_sync_verification="tests/integration/verify-mobile-sync-delta.sql"
 use_container=false
 
 cleanup() {
@@ -185,6 +187,7 @@ apply_file "$family_document_migration" >/dev/null
 apply_file "$family_forms_consents_migration" >/dev/null
 apply_file "$family_conversation_migration" >/dev/null
 apply_file "$mobile_notification_migration" >/dev/null
+apply_file "$mobile_sync_migration" >/dev/null
 
 run_psql <<'SQL' >/dev/null
 INSERT INTO iam.role_permission (tenant_id, role_id, permission_key)
@@ -501,3 +504,5 @@ apply_file "$family_conversation_verification" >/dev/null
 printf '%s\n' 'Mobile Family conversation authority verification: PASS'
 apply_file "$mobile_notification_verification" >/dev/null
 printf '%s\n' 'Mobile notification issuance authority verification: PASS'
+apply_file "$mobile_sync_verification" >/dev/null
+printf '%s\n' 'Mobile sync delta authority verification: PASS'

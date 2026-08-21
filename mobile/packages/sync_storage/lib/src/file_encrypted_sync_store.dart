@@ -293,10 +293,24 @@ final class FileEncryptedSyncStore
         record: record,
       );
       final cursor = _cursorFromJson(value);
+      if (cursor == null) {
+        return null;
+      }
       cursor.validateSession(session);
       return cursor;
     }),
   );
+
+  @override
+  Future<void> clearCursor(SchoolSession session) => _serial.run(() async {
+    _validateSession(session);
+    final files = await _files();
+    final snapshot = await _load(files);
+    if (snapshot.cursor != null) {
+      snapshot.cursor = null;
+      await _write(files, snapshot);
+    }
+  });
 
   @override
   Future<void> purgeTerminalBefore(DateTime cutoff) => _serial.run(
@@ -702,16 +716,28 @@ Map<String, Object?> _cursorToJson(SyncCursor cursor) => <String, Object?>{
   'tenantId': cursor.tenantId,
   'campusId': cursor.campusId,
   'cursor': cursor.cursor,
+  'persona': cursor.persona.name,
   'receivedAt': cursor.receivedAt.toIso8601String(),
 };
 
-SyncCursor _cursorFromJson(Map<String, Object?> json) => SyncCursor(
-  accountId: _string(json, 'accountId'),
-  campusId: _string(json, 'campusId'),
-  cursor: _string(json, 'cursor'),
-  receivedAt: _dateTime(json, 'receivedAt'),
-  tenantId: _string(json, 'tenantId'),
-);
+SyncCursor? _cursorFromJson(Map<String, Object?> json) {
+  final personaName = _optionalString(json, 'persona');
+  if (personaName == null) {
+    return null;
+  }
+  try {
+    return SyncCursor(
+      accountId: _string(json, 'accountId'),
+      campusId: _string(json, 'campusId'),
+      cursor: _string(json, 'cursor'),
+      persona: SchoolPersona.values.byName(personaName),
+      receivedAt: _dateTime(json, 'receivedAt'),
+      tenantId: _string(json, 'tenantId'),
+    );
+  } on ArgumentError catch (error) {
+    throw SyncStorageException('SYNC_CURSOR_DOCUMENT_INVALID', error);
+  }
+}
 
 Map<String, Object?> _map(Map<String, Object?> json, String key) {
   final value = json[key];

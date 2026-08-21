@@ -352,6 +352,11 @@ final class _MemorySyncStore
   }
 
   @override
+  Future<void> clearCursor(SchoolSession session) async {
+    cursor = null;
+  }
+
+  @override
   Future<void> saveCursor(SyncCursor cursor) async {
     this.cursor = cursor;
   }

@@ -147,6 +147,12 @@
       "id": "202608210005_MOB-07_mobile_notification_issuance",
       "stream": "MOB-07",
       "path": "infra/database/post-integration-migrations/202608210005_MOB-07_mobile_notification_issuance.sql"
+    },
+    {
+      "order": 25,
+      "id": "202608220001_MOB-08_mobile_sync_delta",
+      "stream": "MOB-08",
+      "path": "infra/database/post-integration-migrations/202608220001_MOB-08_mobile_sync_delta.sql"
     }
   ]
 }

@@ -240,6 +240,9 @@ final class _MemorySyncStore
   Future<SyncCursor?> readCursor(SchoolSession session) async => null;
 
   @override
+  Future<void> clearCursor(SchoolSession session) async {}
+
+  @override
   Future<void> saveCursor(SyncCursor cursor) async {}
 
   @override

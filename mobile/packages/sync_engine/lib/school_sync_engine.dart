@@ -298,12 +298,14 @@ final class SyncCursor {
     required String accountId,
     required String campusId,
     required String cursor,
+    required SchoolPersona persona,
     required DateTime receivedAt,
     required String tenantId,
   }) => SyncCursor._(
     accountId: _required(accountId, 'accountId'),
     campusId: _required(campusId, 'campusId'),
     cursor: _required(cursor, 'cursor'),
+    persona: persona,
     receivedAt: receivedAt,
     tenantId: _required(tenantId, 'tenantId'),
   );
@@ -312,6 +314,7 @@ final class SyncCursor {
     required this.accountId,
     required this.campusId,
     required this.cursor,
+    required this.persona,
     required this.receivedAt,
     required this.tenantId,
   });
@@ -320,14 +323,94 @@ final class SyncCursor {
   final String tenantId;
   final String campusId;
   final String cursor;
+  final SchoolPersona persona;
   final DateTime receivedAt;
 
   void validateSession(SchoolSession session) {
     if (accountId != session.accountId ||
         tenantId != session.tenantId ||
-        campusId != session.campusId) {
+        campusId != session.campusId ||
+        persona != session.activePersona) {
       throw const SyncContractException('SYNC_CURSOR_SCOPE_MISMATCH');
     }
+  }
+}
+
+final class SyncDelta {
+  factory SyncDelta({
+    required bool changed,
+    required String cursor,
+    required DateTime serverTime,
+  }) {
+    final normalizedCursor = _required(cursor, 'cursor');
+    if (serverTime.isUtc == false) {
+      throw const SyncContractException('SYNC_DELTA_SERVER_TIME_NOT_UTC');
+    }
+    return SyncDelta._(
+      changed: changed,
+      cursor: normalizedCursor,
+      serverTime: serverTime,
+    );
+  }
+
+  const SyncDelta._({
+    required this.changed,
+    required this.cursor,
+    required this.serverTime,
+  });
+
+  final bool changed;
+  final String cursor;
+  final DateTime serverTime;
+}
+
+final class SyncDeltaCursorInvalidException implements Exception {
+  const SyncDeltaCursorInvalidException();
+}
+
+abstract interface class SyncDeltaTransport {
+  Future<SyncDelta> pull({
+    required SchoolSession session,
+    required String? cursor,
+  });
+}
+
+final class SyncDeltaCoordinator {
+  SyncDeltaCoordinator({
+    required EncryptedSyncStore store,
+    required SyncDeltaTransport transport,
+  }) : _store = store,
+       _transport = transport;
+
+  final EncryptedSyncStore _store;
+  final SyncDeltaTransport _transport;
+
+  Future<SyncDelta> pull(SchoolSession session) async {
+    final current = await _store.readCursor(session);
+    current?.validateSession(session);
+
+    SyncDelta delta;
+    try {
+      delta = await _transport.pull(session: session, cursor: current?.cursor);
+    } on SyncDeltaCursorInvalidException {
+      if (current == null) {
+        rethrow;
+      }
+      await _store.clearCursor(session);
+      delta = await _transport.pull(session: session, cursor: null);
+    }
+
+    await _store.saveCursor(
+      SyncCursor(
+        accountId: session.accountId,
+        campusId: session.campusId,
+        cursor: delta.cursor,
+        persona: session.activePersona,
+        receivedAt: delta.serverTime,
+        tenantId: session.tenantId,
+      ),
+    );
+    return delta;
   }
 }
 
@@ -372,6 +455,8 @@ abstract interface class EncryptedSyncStore {
   Future<void> saveCursor(SyncCursor cursor);
 
   Future<SyncCursor?> readCursor(SchoolSession session);
+
+  Future<void> clearCursor(SchoolSession session);
 
   Future<void> purgeTerminalBefore(DateTime cutoff);
 }

@@ -53,6 +53,7 @@ import {
 import mobileFamilyConversationRoutes from './mobile-family-conversation-routes.js';
 import mobileFamilyDocumentRoutes from './mobile-family-document-routes.js';
 import mobileFamilyFormsConsentsRoutes from './mobile-family-forms-consents-routes.js';
+import mobileSyncRoutes from './mobile-sync-routes.js';
 import {
   isMobileTeacherWriteIdempotencyKey,
   parseTeacherAttendanceWrite,
@@ -97,6 +98,7 @@ app.use('*', async (context, next) => {
 app.route('/', mobileFamilyDocumentRoutes);
 app.route('/', mobileFamilyFormsConsentsRoutes);
 app.route('/', mobileFamilyConversationRoutes);
+app.route('/', mobileSyncRoutes);
 
 app.use('/pilot/*', async (context, next) => {
   const runtime = parseRuntimeEnvironment(context.env);

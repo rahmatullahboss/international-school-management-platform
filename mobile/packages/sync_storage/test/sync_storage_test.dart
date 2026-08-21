@@ -94,6 +94,7 @@ void main() {
       accountId: session.accountId,
       campusId: session.campusId,
       cursor: 'delta-cursor-100',
+      persona: session.activePersona,
       receivedAt: DateTime.parse('2026-07-30T04:00:00+06:00'),
       tenantId: session.tenantId,
     );
@@ -108,6 +109,31 @@ void main() {
       isNot(contains('delta-cursor-100')),
     );
   });
+
+  test(
+    'clears a persisted cursor without deleting queued operations',
+    () async {
+      final session = teacherSession();
+      final store = await factory.open(session);
+      await store.upsert(syncOperation());
+      await store.saveCursor(
+        SyncCursor(
+          accountId: session.accountId,
+          campusId: session.campusId,
+          cursor: '40000000-0000-4000-8000-000000000009',
+          persona: session.activePersona,
+          receivedAt: DateTime.parse('2026-08-22T00:00:00Z'),
+          tenantId: session.tenantId,
+        ),
+      );
+
+      await store.clearCursor(session);
+      final reopened = await factory.open(session);
+
+      expect(await reopened.readCursor(session), isNull);
+      expect(await reopened.find('operation-1'), isNotNull);
+    },
+  );
 
   test(
     'key rotation re-encrypts records and preserves readable data',

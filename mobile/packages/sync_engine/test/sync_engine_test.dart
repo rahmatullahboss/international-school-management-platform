@@ -126,6 +126,7 @@ void main() {
       accountId: 'account-1',
       campusId: 'campus-1',
       cursor: 'cursor-100',
+      persona: SchoolPersona.teacher,
       receivedAt: DateTime.parse('2026-07-30T03:30:00+06:00'),
       tenantId: 'tenant-1',
     );
@@ -142,6 +143,94 @@ void main() {
       ),
     );
   });
+
+  test('cursor cannot cross persona boundaries', () {
+    final cursor = SyncCursor(
+      accountId: 'account-1',
+      campusId: 'campus-1',
+      cursor: 'cursor-101',
+      persona: SchoolPersona.guardian,
+      receivedAt: DateTime.parse('2026-08-22T00:00:00Z'),
+      tenantId: 'tenant-1',
+    );
+    expect(
+      () => cursor.validateSession(teacherSession()),
+      throwsA(
+        isA<SyncContractException>().having(
+          (error) => error.code,
+          'code',
+          'SYNC_CURSOR_SCOPE_MISMATCH',
+        ),
+      ),
+    );
+  });
+
+  test(
+    'delta coordinator persists the server cursor for the exact persona',
+    () async {
+      final store = MemoryEncryptedSyncStore(const <SyncOperationEnvelope>[]);
+      final previous = SyncCursor(
+        accountId: 'account-1',
+        campusId: 'campus-1',
+        cursor: '40000000-0000-4000-8000-000000000001',
+        persona: SchoolPersona.teacher,
+        receivedAt: DateTime.parse('2026-08-21T23:00:00Z'),
+        tenantId: 'tenant-1',
+      );
+      await store.saveCursor(previous);
+      final transport = FakeSyncDeltaTransport(
+        SyncDelta(
+          changed: true,
+          cursor: '40000000-0000-4000-8000-000000000002',
+          serverTime: DateTime.parse('2026-08-22T00:00:00Z'),
+        ),
+      );
+      final coordinator = SyncDeltaCoordinator(
+        store: store,
+        transport: transport,
+      );
+
+      final result = await coordinator.pull(teacherSession());
+
+      expect(result.changed, isTrue);
+      expect(transport.cursor, previous.cursor);
+      final saved = await store.readCursor(teacherSession());
+      expect(saved?.cursor, result.cursor);
+      expect(saved?.persona, SchoolPersona.teacher);
+      expect(saved?.receivedAt, result.serverTime);
+    },
+  );
+
+  test(
+    'delta coordinator clears an invalid cursor and retries once from baseline',
+    () async {
+      final store = MemoryEncryptedSyncStore(const <SyncOperationEnvelope>[]);
+      await store.saveCursor(
+        SyncCursor(
+          accountId: 'account-1',
+          campusId: 'campus-1',
+          cursor: '40000000-0000-4000-8000-000000000009',
+          persona: SchoolPersona.teacher,
+          receivedAt: DateTime.parse('2026-08-21T22:00:00Z'),
+          tenantId: 'tenant-1',
+        ),
+      );
+      final transport = RecoveringSyncDeltaTransport();
+      final coordinator = SyncDeltaCoordinator(
+        store: store,
+        transport: transport,
+      );
+
+      final result = await coordinator.pull(teacherSession());
+
+      expect(transport.cursors, <String?>[
+        '40000000-0000-4000-8000-000000000009',
+        null,
+      ]);
+      expect(result.changed, isFalse);
+      expect((await store.readCursor(teacherSession()))?.cursor, result.cursor);
+    },
+  );
 
   test('coordinator persists in-flight and accepted terminal states', () async {
     final store = MemoryEncryptedSyncStore(<SyncOperationEnvelope>[
@@ -306,6 +395,11 @@ final class MemoryEncryptedSyncStore implements EncryptedSyncStore {
   Future<SyncCursor?> readCursor(SchoolSession session) async => _cursor;
 
   @override
+  Future<void> clearCursor(SchoolSession session) async {
+    _cursor = null;
+  }
+
+  @override
   Future<void> saveCursor(SyncCursor cursor) async {
     _cursor = cursor;
   }
@@ -314,6 +408,42 @@ final class MemoryEncryptedSyncStore implements EncryptedSyncStore {
   Future<void> upsert(SyncOperationEnvelope operation) async {
     _operations[operation.operationId] = operation;
     history.add(operation);
+  }
+}
+
+final class FakeSyncDeltaTransport implements SyncDeltaTransport {
+  FakeSyncDeltaTransport(this.result);
+
+  final SyncDelta result;
+  String? cursor;
+
+  @override
+  Future<SyncDelta> pull({
+    required SchoolSession session,
+    required String? cursor,
+  }) async {
+    this.cursor = cursor;
+    return result;
+  }
+}
+
+final class RecoveringSyncDeltaTransport implements SyncDeltaTransport {
+  final List<String?> cursors = <String?>[];
+
+  @override
+  Future<SyncDelta> pull({
+    required SchoolSession session,
+    required String? cursor,
+  }) async {
+    cursors.add(cursor);
+    if (cursor != null) {
+      throw const SyncDeltaCursorInvalidException();
+    }
+    return SyncDelta(
+      changed: false,
+      cursor: '40000000-0000-4000-8000-000000000010',
+      serverTime: DateTime.parse('2026-08-22T00:05:00Z'),
+    );
   }
 }
 
