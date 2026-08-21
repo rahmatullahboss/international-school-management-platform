@@ -14,6 +14,8 @@ The server-side source contract is now implemented for:
 - `GET /v1/mobile/teacher/meetings/{meetingId}/roster`
 - `POST /v1/mobile/device-sessions`
 - `POST /v1/mobile/device-sessions/{deviceSessionId}/revoke`
+- `POST /v1/mobile/teacher/attendance-batches`
+- `POST /v1/mobile/teacher/assessments/{assessmentId}/grade-drafts`
 
 The implementation remains fail closed until the reviewed identity-provider configuration and database migration are activated in the target environment.
 
@@ -101,6 +103,14 @@ Registration and revocation are idempotent. A repeated idempotency key with diff
 
 Both mutation routes bound request bodies, validate exact known fields/identifiers, use `Cache-Control: no-store`, and return stable redacted errors. The notification-sending worker/provider activation remains a separate server/platform responsibility; MOB-04 only establishes the safe registration lifecycle and delivery-address authority.
 
+## Teacher attendance and grade-draft writes
+
+Migration `202608210001_MOB-05_mobile_teacher_writes.sql` adds function-only Teacher mutation authority for the existing Flutter attendance-batch and grade-draft contracts. Every write re-resolves the verified issuer/subject against the exact tenant, campus and `teacher` persona and then requires the canonical `attendance.take` or `grades.write` capability.
+
+Attendance writes require the active teacher/substitute to own the scheduled meeting, validate every student against the current section roster, resolve each mobile mark through exactly one published attendance code, and keep the attendance session open. Grade drafts require an active teacher/co-teacher assignment for the assessment section, validate current roster membership, preserve integer score-unit conversion, reject canonical reporting-period `gradebook_lock` state before mutation and keep the assessment publication state unchanged. The mobile request contract cannot request attendance finalization, assessment publication or grade publication.
+
+Both write functions use idempotency receipts plus optimistic revisions and resource-level serialization. An exact replay returns the stored receipt; changed reuse conflicts. Initial stale revisions are rejected before creating attendance sessions, grade revision rows or assessment-result rows. MOB-05's command/revision tables are not directly granted to `PUBLIC` or `app_runtime`; only the reviewed mutation functions are executable by `app_runtime`, while the internal authority resolver is not.
+
 Canonical API failures use the nested shape:
 
 ```json
@@ -132,13 +142,13 @@ The Family and Staff redirect schemes remain separate. The identity provider mus
 
 1. Review the target identity provider and create public native OIDC clients using authorization code + PKCE; do not create an app-embedded secret.
 2. Configure the API audience and issue RS256 access tokens containing the exact `school_api` scope.
-3. Review and apply `202608190001_MOB-02_mobile_bearer_bootstrap.sql`, `202608190002_MOB-03_mobile_core_read_models.sql` and `202608190003_MOB-04_mobile_device_sessions.sql` to the intended non-production database branch first.
+3. Review and apply `202608190001_MOB-02_mobile_bearer_bootstrap.sql`, `202608190002_MOB-03_mobile_core_read_models.sql`, `202608190003_MOB-04_mobile_device_sessions.sql` and `202608210001_MOB-05_mobile_teacher_writes.sql` to the intended non-production database branch first.
 4. Populate/review account, active membership, OIDC binding, campus and canonical mobile role mappings.
 5. Configure the `MOBILE_OIDC_*` bindings and `MOBILE_MEMBERSHIP_SOURCE=database` on the intended API environment.
 6. Confirm `GET /v1/mobile/readiness` reports `ready` without exposing configuration values.
 7. Build Family and Staff with the reviewed `SCHOOL_*` values and distribute them through the dedicated `school-management-mobile-dev` Firebase App Distribution project.
 8. Verify real-device sign-in, multi-school/campus selection, logout, token refresh, expired-token behavior and revoked/suspended membership behavior.
-9. Verify the now-implemented Family/Teacher core read and device-session registration/revocation endpoints on that same verified bearer context, then activate attendance/grade writes, Family interactions and notification issuance as separate authority-preserving tranches.
+9. Verify the now-implemented Family/Teacher core reads, Teacher attendance/grade-draft writes and device-session registration/revocation endpoints on that same verified bearer context, then activate Family interactions and notification issuance as separate authority-preserving tranches.
 
 ## Verification
 
@@ -148,8 +158,8 @@ Source verification includes:
 - bounded/origin-pinned JWKS tests;
 - platform mobile-auth and route tests;
 - Flutter bootstrap/error/timezone tests;
-- `tests/integration/verify-mobile-bearer-bootstrap.sh`, which uses a disposable PostgreSQL 16 database (Docker fallback when local PostgreSQL client tools are absent) and verifies tenant/campus projection, persona capability isolation, Family authorized-student isolation and function privileges.
+- `tests/integration/verify-mobile-bearer-bootstrap.sh`, which uses a disposable PostgreSQL 16 database (Docker fallback when local PostgreSQL client tools are absent) and verifies tenant/campus projection, persona capability isolation, Family authorized-student isolation, MOB-04 device-session authority and MOB-05 Teacher attendance/grade-draft authority including stale-revision no-mutation and function privileges.
 
-The reviewed post-integration migration manifest now includes MOB-02, MOB-03 and MOB-04 so the normal reviewed migration runner cannot silently omit the mobile authority, read-model or device-session functions.
+The reviewed post-integration migration manifest now includes MOB-02, MOB-03, MOB-04 and MOB-05 so the normal reviewed migration runner cannot silently omit the mobile authority, read-model, device-session or Teacher-write functions.
 
-As of August 19, 2026, the staging Worker still has no `DATABASE_URL` secret and no reviewed `MOBILE_OIDC_*` provider bindings, so live staging authentication/data remains deliberately disabled even though the source contracts are implemented. No production provider configuration, real account data or production deployment is performed by this source tranche.
+As of August 21, 2026, the staging Worker still has no reviewed `DATABASE_URL` secret and no reviewed `MOBILE_OIDC_*` provider bindings, so live staging authentication/data remains deliberately disabled even though the source contracts are implemented. No production provider configuration, real account data or production deployment is performed by this source tranche.

@@ -36,6 +36,7 @@ import { readBoundedUtf8RequestBody } from './bounded-request-body.js';
 import { DatabaseMobileAccessStore } from './database-mobile-access-store.js';
 import { DatabaseMobileDeviceSessionStore } from './database-mobile-device-session-store.js';
 import { DatabaseMobileReadStore } from './database-mobile-read-store.js';
+import { DatabaseMobileTeacherWriteStore } from './database-mobile-teacher-write-store.js';
 import { DatabaseMutationStore } from './database-mutation-store.js';
 import { DatabaseReadModelStore } from './database-read-model-store.js';
 import {
@@ -49,6 +50,11 @@ import {
   mobileDeviceSessionDatabaseErrorCode,
   parseMobileDeviceSessionRegistration,
 } from './mobile-device-session.js';
+import {
+  isMobileTeacherWriteIdempotencyKey,
+  parseTeacherAttendanceWrite,
+  parseTeacherGradeDraftWrite,
+} from './mobile-teacher-write.js';
 import { isMobileUuid, resolveMobileRequestScope } from './mobile-request-scope.js';
 import { isAllowedPilotWebOrigin, resolvePilotReadSnapshot } from './pilot-read-models.js';
 import { issuePilotSession, pilotSessionHeaders, verifyPilotSession } from './pilot-sessions.js';
@@ -669,6 +675,159 @@ app.get('/v1/mobile/teacher/meetings/:meetingId/roster', async (context) => {
         error: {
           code: 'mobile_read_temporarily_unavailable',
           message: 'Mobile school information is temporarily unavailable.',
+        },
+      },
+      503,
+    );
+  }
+});
+
+app.post('/v1/mobile/teacher/attendance-batches', async (context) => {
+  context.header('cache-control', 'no-store');
+  const databaseUrl = mobileReadDatabaseUrl(context.env);
+  if (databaseUrl === undefined) {
+    return context.json(
+      {
+        error: {
+          code: 'mobile_access_configuration_unavailable',
+          message: 'Mobile account access is not configured.',
+        },
+      },
+      503,
+    );
+  }
+  const scope = mobileRequestScope(context, teacherMobilePersonas);
+  if (!scope.ok)
+    return context.json({ error: { code: scope.code, message: scope.message } }, scope.status);
+
+  const idempotencyKey = context.req.header('idempotency-key')?.trim();
+  const body = parseTeacherAttendanceWrite(
+    await readBoundedUtf8RequestBody(context.req.raw.body, 64 * 1024),
+  );
+  if (!isMobileTeacherWriteIdempotencyKey(idempotencyKey) || body === undefined) {
+    return context.json(
+      {
+        error: {
+          code: 'mobile_teacher_write_invalid',
+          message: 'The teacher attendance request is invalid.',
+        },
+      },
+      400,
+    );
+  }
+
+  const authentication = await authenticateMobileBearer(
+    context.env,
+    context.req.header('authorization'),
+  );
+  if (!authentication.ok) {
+    return context.json(
+      { error: { code: authentication.code, message: authentication.message } },
+      authentication.status,
+    );
+  }
+
+  try {
+    const payload = await new DatabaseMobileTeacherWriteStore(
+      createHttpDatabase(databaseUrl),
+    ).submitAttendance(authentication.identity, scope.scope, idempotencyKey, body);
+    if (payload === undefined) {
+      return context.json(
+        {
+          error: {
+            code: 'mobile_teacher_write_denied',
+            message: 'This teacher is not authorized to write attendance for the selected scope.',
+          },
+        },
+        403,
+      );
+    }
+    return context.json(payload);
+  } catch {
+    return context.json(
+      {
+        error: {
+          code: 'mobile_teacher_write_temporarily_unavailable',
+          message: 'Teacher attendance is temporarily unavailable.',
+        },
+      },
+      503,
+    );
+  }
+});
+
+app.post('/v1/mobile/teacher/assessments/:assessmentId/grade-drafts', async (context) => {
+  context.header('cache-control', 'no-store');
+  const databaseUrl = mobileReadDatabaseUrl(context.env);
+  if (databaseUrl === undefined) {
+    return context.json(
+      {
+        error: {
+          code: 'mobile_access_configuration_unavailable',
+          message: 'Mobile account access is not configured.',
+        },
+      },
+      503,
+    );
+  }
+  const scope = mobileRequestScope(context, teacherMobilePersonas);
+  if (!scope.ok)
+    return context.json({ error: { code: scope.code, message: scope.message } }, scope.status);
+
+  const assessmentId = context.req.param('assessmentId');
+  const idempotencyKey = context.req.header('idempotency-key')?.trim();
+  const body = parseTeacherGradeDraftWrite(
+    await readBoundedUtf8RequestBody(context.req.raw.body, 96 * 1024),
+  );
+  if (
+    !isMobileUuid(assessmentId) ||
+    !isMobileTeacherWriteIdempotencyKey(idempotencyKey) ||
+    body === undefined
+  ) {
+    return context.json(
+      {
+        error: {
+          code: 'mobile_teacher_write_invalid',
+          message: 'The teacher grade draft request is invalid.',
+        },
+      },
+      400,
+    );
+  }
+
+  const authentication = await authenticateMobileBearer(
+    context.env,
+    context.req.header('authorization'),
+  );
+  if (!authentication.ok) {
+    return context.json(
+      { error: { code: authentication.code, message: authentication.message } },
+      authentication.status,
+    );
+  }
+
+  try {
+    const payload = await new DatabaseMobileTeacherWriteStore(
+      createHttpDatabase(databaseUrl),
+    ).saveGradeDraft(authentication.identity, scope.scope, idempotencyKey, assessmentId, body);
+    if (payload === undefined) {
+      return context.json(
+        {
+          error: {
+            code: 'mobile_teacher_write_denied',
+            message: 'This teacher is not authorized to write grades for the selected scope.',
+          },
+        },
+        403,
+      );
+    }
+    return context.json(payload);
+  } catch {
+    return context.json(
+      {
+        error: {
+          code: 'mobile_teacher_write_temporarily_unavailable',
+          message: 'Teacher grade drafts are temporarily unavailable.',
         },
       },
       503,

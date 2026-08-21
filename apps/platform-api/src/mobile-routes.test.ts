@@ -538,6 +538,105 @@ describe('platform mobile routes', () => {
     });
   });
 
+  it('accepts scoped Teacher attendance and grade-draft writes without client finalization authority', async () => {
+    installJwksFetcher();
+    databaseQuery.mockResolvedValue([
+      {
+        payload: {
+          operationId: 'attendance-operation-route-0001',
+          acceptedRevision: 8,
+          status: 'accepted',
+        },
+      },
+    ]);
+    const attendance = await app.request(
+      '/v1/mobile/teacher/attendance-batches',
+      {
+        method: 'POST',
+        headers: {
+          authorization: `Bearer ${await signedCredential()}`,
+          'content-type': 'application/json',
+          'idempotency-key': 'attendance-idempotency-route-0001',
+          'x-tenant-id': '40000000-0000-4000-8000-000000000002',
+          'x-campus-id': '40000000-0000-4000-8000-000000000003',
+          'x-persona': 'teacher',
+        },
+        body: JSON.stringify({
+          operationId: 'attendance-operation-route-0001',
+          meetingId: '40000000-0000-4000-8000-000000000020',
+          baseVersion: 7,
+          clientCreatedAt: '2026-08-21T09:00:00.000Z',
+          lines: [
+            {
+              studentId: '40000000-0000-4000-8000-000000000010',
+              mark: 'present',
+            },
+          ],
+        }),
+      },
+      readyEnvironment,
+    );
+    expect(attendance.status).toBe(200);
+    await expect(attendance.json()).resolves.toEqual({
+      operationId: 'attendance-operation-route-0001',
+      acceptedRevision: 8,
+      status: 'accepted',
+    });
+    expect(databaseQuery).toHaveBeenCalledWith(
+      expect.stringContaining('submit_mobile_teacher_attendance'),
+      expect.any(Array),
+    );
+
+    databaseQuery.mockReset();
+    databaseQuery.mockResolvedValue([
+      {
+        payload: {
+          operationId: 'grade-operation-route-0001',
+          acceptedRevision: 5,
+          status: 'duplicate',
+        },
+      },
+    ]);
+    const gradeDraft = await app.request(
+      '/v1/mobile/teacher/assessments/40000000-0000-4000-8000-000000000040/grade-drafts',
+      {
+        method: 'POST',
+        headers: {
+          authorization: `Bearer ${await signedCredential()}`,
+          'content-type': 'application/json',
+          'idempotency-key': 'grade-idempotency-route-0001',
+          'x-tenant-id': '40000000-0000-4000-8000-000000000002',
+          'x-campus-id': '40000000-0000-4000-8000-000000000003',
+          'x-persona': 'teacher',
+        },
+        body: JSON.stringify({
+          operationId: 'grade-operation-route-0001',
+          baseVersion: 4,
+          scoreScale: 100,
+          maximumScoreUnits: 10000,
+          entries: [
+            {
+              studentId: '40000000-0000-4000-8000-000000000010',
+              status: 'scored',
+              scoreUnits: 8750,
+            },
+          ],
+        }),
+      },
+      readyEnvironment,
+    );
+    expect(gradeDraft.status).toBe(200);
+    await expect(gradeDraft.json()).resolves.toEqual({
+      operationId: 'grade-operation-route-0001',
+      acceptedRevision: 5,
+      status: 'duplicate',
+    });
+    expect(databaseQuery).toHaveBeenCalledWith(
+      expect.stringContaining('save_mobile_teacher_grade_draft'),
+      expect.any(Array),
+    );
+  });
+
   it('registers an account-scoped Android FCM device session without echoing the token', async () => {
     installJwksFetcher();
     databaseQuery.mockResolvedValue([

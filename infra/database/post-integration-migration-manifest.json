@@ -117,6 +117,12 @@
       "id": "202608190003_MOB-04_mobile_device_sessions",
       "stream": "MOB-04",
       "path": "infra/database/post-integration-migrations/202608190003_MOB-04_mobile_device_sessions.sql"
+    },
+    {
+      "order": 20,
+      "id": "202608210001_MOB-05_mobile_teacher_writes",
+      "stream": "MOB-05",
+      "path": "infra/database/post-integration-migrations/202608210001_MOB-05_mobile_teacher_writes.sql"
     }
   ]
 }

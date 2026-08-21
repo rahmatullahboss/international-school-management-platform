@@ -9,6 +9,8 @@ auth_migration="infra/database/post-integration-migrations/202607300301_AUTH-03_
 mobile_migration="infra/database/post-integration-migrations/202608190001_MOB-02_mobile_bearer_bootstrap.sql"
 core_read_migration="infra/database/post-integration-migrations/202608190002_MOB-03_mobile_core_read_models.sql"
 device_session_migration="infra/database/post-integration-migrations/202608190003_MOB-04_mobile_device_sessions.sql"
+teacher_write_migration="infra/database/post-integration-migrations/202608210001_MOB-05_mobile_teacher_writes.sql"
+teacher_write_verification="tests/integration/verify-mobile-teacher-writes.sql"
 use_container=false
 
 cleanup() {
@@ -170,6 +172,7 @@ SQL
 apply_file "$mobile_migration" >/dev/null
 apply_file "$core_read_migration" >/dev/null
 apply_file "$device_session_migration" >/dev/null
+apply_file "$teacher_write_migration" >/dev/null
 
 run_psql <<'SQL' >/dev/null
 INSERT INTO iam.role_permission (tenant_id, role_id, permission_key)
@@ -475,3 +478,6 @@ ROLLBACK;
 
 SELECT 'Mobile bearer bootstrap, core read-model, and device-session migration verification: PASS';
 SQL
+
+apply_file "$teacher_write_verification" >/dev/null
+printf '%s\n' 'Mobile teacher write authority verification: PASS'
