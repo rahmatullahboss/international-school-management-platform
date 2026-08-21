@@ -17,6 +17,8 @@ family_forms_consents_migration="infra/database/post-integration-migrations/2026
 family_forms_consents_verification="tests/integration/verify-mobile-family-forms-consents.sql"
 family_conversation_migration="infra/database/post-integration-migrations/202608210004_MOB-06C_mobile_family_conversations.sql"
 family_conversation_verification="tests/integration/verify-mobile-family-conversations.sql"
+mobile_notification_migration="infra/database/post-integration-migrations/202608210005_MOB-07_mobile_notification_issuance.sql"
+mobile_notification_verification="tests/integration/verify-mobile-notification-issuance.sql"
 use_container=false
 
 cleanup() {
@@ -182,6 +184,7 @@ apply_file "$teacher_write_migration" >/dev/null
 apply_file "$family_document_migration" >/dev/null
 apply_file "$family_forms_consents_migration" >/dev/null
 apply_file "$family_conversation_migration" >/dev/null
+apply_file "$mobile_notification_migration" >/dev/null
 
 run_psql <<'SQL' >/dev/null
 INSERT INTO iam.role_permission (tenant_id, role_id, permission_key)
@@ -496,3 +499,5 @@ apply_file "$family_forms_consents_verification" >/dev/null
 printf '%s\n' 'Mobile Family forms/consents authority verification: PASS'
 apply_file "$family_conversation_verification" >/dev/null
 printf '%s\n' 'Mobile Family conversation authority verification: PASS'
+apply_file "$mobile_notification_verification" >/dev/null
+printf '%s\n' 'Mobile notification issuance authority verification: PASS'

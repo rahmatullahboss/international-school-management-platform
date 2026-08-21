@@ -141,6 +141,12 @@
       "id": "202608210004_MOB-06C_mobile_family_conversations",
       "stream": "MOB-06C",
       "path": "infra/database/post-integration-migrations/202608210004_MOB-06C_mobile_family_conversations.sql"
+    },
+    {
+      "order": 24,
+      "id": "202608210005_MOB-07_mobile_notification_issuance",
+      "stream": "MOB-07",
+      "path": "infra/database/post-integration-migrations/202608210005_MOB-07_mobile_notification_issuance.sql"
     }
   ]
 }
