@@ -123,6 +123,12 @@
       "id": "202608210001_MOB-05_mobile_teacher_writes",
       "stream": "MOB-05",
       "path": "infra/database/post-integration-migrations/202608210001_MOB-05_mobile_teacher_writes.sql"
+    },
+    {
+      "order": 21,
+      "id": "202608210002_MOB-06A_mobile_family_documents",
+      "stream": "MOB-06A",
+      "path": "infra/database/post-integration-migrations/202608210002_MOB-06A_mobile_family_documents.sql"
     }
   ]
 }

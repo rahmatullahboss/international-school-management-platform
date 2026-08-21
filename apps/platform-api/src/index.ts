@@ -50,6 +50,7 @@ import {
   mobileDeviceSessionDatabaseErrorCode,
   parseMobileDeviceSessionRegistration,
 } from './mobile-device-session.js';
+import mobileFamilyDocumentRoutes from './mobile-family-document-routes.js';
 import {
   isMobileTeacherWriteIdempotencyKey,
   parseTeacherAttendanceWrite,
@@ -90,6 +91,8 @@ app.use('*', async (context, next) => {
   context.header('x-correlation-id', correlationId);
   await next();
 });
+
+app.route('/', mobileFamilyDocumentRoutes);
 
 app.use('/pilot/*', async (context, next) => {
   const runtime = parseRuntimeEnvironment(context.env);

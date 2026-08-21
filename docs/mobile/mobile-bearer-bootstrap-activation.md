@@ -16,6 +16,9 @@ The server-side source contract is now implemented for:
 - `POST /v1/mobile/device-sessions/{deviceSessionId}/revoke`
 - `POST /v1/mobile/teacher/attendance-batches`
 - `POST /v1/mobile/teacher/assessments/{assessmentId}/grade-drafts`
+- `GET /v1/mobile/family/students/{studentId}/documents`
+- `POST /v1/mobile/family/documents/{documentId}/download-grants`
+- `POST /v1/mobile/family/document-download-grants/{grantId}/exchange`
 
 The implementation remains fail closed until the reviewed identity-provider configuration and database migration are activated in the target environment.
 
@@ -111,6 +114,14 @@ Attendance writes require the active teacher/substitute to own the scheduled mee
 
 Both write functions use idempotency receipts plus optimistic revisions and resource-level serialization. An exact replay returns the stored receipt; changed reuse conflicts. Initial stale revisions are rejected before creating attendance sessions, grade revision rows or assessment-result rows. MOB-05's command/revision tables are not directly granted to `PUBLIC` or `app_runtime`; only the reviewed mutation functions are executable by `app_runtime`, while the internal authority resolver is not.
 
+## Family documents and secure download grants
+
+Migration `202608210002_MOB-06A_mobile_family_documents.sql` adds Family document metadata reads plus account-scoped, short-lived, single-use secure download grants. Mobile publication rows contain only presentation and integrity policy metadata; they do not create student/document authority. Every list, grant and exchange re-resolves the verified mobile identity, exact tenant/campus/Family persona, `documents.read`, active student/enrollment authority and the canonical student profile-document linkage.
+
+Only canonical document objects with `scan_status='clean'` and mobile-safe profile-document visibility are eligible. Canonical `restricted` profile-document visibility is never widened by a mobile publication row. API metadata and grant responses never return object keys, storage URLs, bearer credentials or provider access tokens. Restricted mobile classification requires `Cache-Control: no-store` and AAL2 before database claim/consumption.
+
+Secure byte exchange additionally requires a reviewed `MOBILE_DOCUMENT_BUCKET` runtime binding. The API authenticates first and verifies the storage binding before claiming the grant, preventing missing storage from consuming a single-use grant. After claim, the object must exist at the canonical `document_object.object_key`, have the exact published byte size and carry matching immutable `school-sha256` metadata. Publication withdrawal, guardian/student authority revocation, missing objects or integrity drift fail closed. No bucket name or production binding is committed by MOB-06A; target-environment object storage activation remains an explicit platform operation.
+
 Canonical API failures use the nested shape:
 
 ```json
@@ -142,13 +153,14 @@ The Family and Staff redirect schemes remain separate. The identity provider mus
 
 1. Review the target identity provider and create public native OIDC clients using authorization code + PKCE; do not create an app-embedded secret.
 2. Configure the API audience and issue RS256 access tokens containing the exact `school_api` scope.
-3. Review and apply `202608190001_MOB-02_mobile_bearer_bootstrap.sql`, `202608190002_MOB-03_mobile_core_read_models.sql`, `202608190003_MOB-04_mobile_device_sessions.sql` and `202608210001_MOB-05_mobile_teacher_writes.sql` to the intended non-production database branch first.
-4. Populate/review account, active membership, OIDC binding, campus and canonical mobile role mappings.
+3. Review and apply `202608190001_MOB-02_mobile_bearer_bootstrap.sql`, `202608190002_MOB-03_mobile_core_read_models.sql`, `202608190003_MOB-04_mobile_device_sessions.sql`, `202608210001_MOB-05_mobile_teacher_writes.sql` and `202608210002_MOB-06A_mobile_family_documents.sql` to the intended non-production database branch first.
+4. Populate/review account, active membership, OIDC binding, campus, canonical mobile role mappings and the explicit Family document publication metadata backed by canonical student profile-document links.
 5. Configure the `MOBILE_OIDC_*` bindings and `MOBILE_MEMBERSHIP_SOURCE=database` on the intended API environment.
-6. Confirm `GET /v1/mobile/readiness` reports `ready` without exposing configuration values.
-7. Build Family and Staff with the reviewed `SCHOOL_*` values and distribute them through the dedicated `school-management-mobile-dev` Firebase App Distribution project.
-8. Verify real-device sign-in, multi-school/campus selection, logout, token refresh, expired-token behavior and revoked/suspended membership behavior.
-9. Verify the now-implemented Family/Teacher core reads, Teacher attendance/grade-draft writes and device-session registration/revocation endpoints on that same verified bearer context, then activate Family interactions and notification issuance as separate authority-preserving tranches.
+6. Provision/review the intended secure object-storage bucket, upload only clean canonical document objects with matching byte length and immutable `school-sha256` metadata, then bind it as `MOBILE_DOCUMENT_BUCKET`. Do not reuse an unrelated project bucket.
+7. Confirm `GET /v1/mobile/readiness` reports `ready` without exposing configuration values.
+8. Build Family and Staff with the reviewed `SCHOOL_*` values and distribute them through the dedicated `school-management-mobile-dev` Firebase App Distribution project.
+9. Verify real-device sign-in, multi-school/campus selection, logout, token refresh, expired-token behavior and revoked/suspended membership behavior.
+10. Verify the implemented Family/Teacher core reads, Family document list/grant/exchange, Teacher attendance/grade-draft writes and device-session registration/revocation endpoints on that same verified bearer context. Confirm restricted documents trigger AAL2 and one-use presentation, then activate the remaining Family forms/consents/conversations and notification issuance as separate authority-preserving tranches.
 
 ## Verification
 
@@ -158,8 +170,8 @@ Source verification includes:
 - bounded/origin-pinned JWKS tests;
 - platform mobile-auth and route tests;
 - Flutter bootstrap/error/timezone tests;
-- `tests/integration/verify-mobile-bearer-bootstrap.sh`, which uses a disposable PostgreSQL 16 database (Docker fallback when local PostgreSQL client tools are absent) and verifies tenant/campus projection, persona capability isolation, Family authorized-student isolation, MOB-04 device-session authority and MOB-05 Teacher attendance/grade-draft authority including stale-revision no-mutation and function privileges.
+- `tests/integration/verify-mobile-bearer-bootstrap.sh`, which uses a disposable PostgreSQL 16 database (Docker fallback when local PostgreSQL client tools are absent) and verifies tenant/campus projection, persona capability isolation, Family authorized-student isolation, MOB-04 device-session authority, MOB-05 Teacher attendance/grade-draft authority, and MOB-06A Family document pagination, clean-scan/visibility filtering, grant idempotency, AAL2 no-consumption, single-use claim, withdrawal/revocation re-checks and function/table privileges.
 
-The reviewed post-integration migration manifest now includes MOB-02, MOB-03, MOB-04 and MOB-05 so the normal reviewed migration runner cannot silently omit the mobile authority, read-model, device-session or Teacher-write functions.
+The reviewed post-integration migration manifest now includes MOB-02, MOB-03, MOB-04, MOB-05 and MOB-06A so the normal reviewed migration runner cannot silently omit the mobile authority, read-model, device-session, Teacher-write or Family-document functions.
 
-As of August 21, 2026, the staging Worker still has no reviewed `DATABASE_URL` secret and no reviewed `MOBILE_OIDC_*` provider bindings, so live staging authentication/data remains deliberately disabled even though the source contracts are implemented. No production provider configuration, real account data or production deployment is performed by this source tranche.
+As of August 21, 2026, the staging Worker still has no reviewed `DATABASE_URL` secret, no reviewed `MOBILE_OIDC_*` provider bindings and no reviewed `MOBILE_DOCUMENT_BUCKET` binding, so live staging authentication/data/document exchange remains deliberately disabled even though the source contracts are implemented. No production provider/storage configuration, real account data or production deployment is performed by this source tranche.
