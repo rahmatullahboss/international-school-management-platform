@@ -3,6 +3,7 @@ import { extname, join, relative } from 'node:path';
 
 const ROOT = 'apps/platform-api/src';
 const REVIEWED_OPERATIONAL_LOG_SINK = 'apps/platform-api/src/runtime-operational-log.ts';
+const REVIEWED_EXCEPTION_CLASSIFIERS = ['mobileDeviceSessionDatabaseErrorCode'];
 const MAX_REPORTED_VIOLATIONS = 40;
 
 function runtimeSourceFiles(directory) {
@@ -96,14 +97,23 @@ export function auditRuntimeSource(file, source) {
     const exceptionName = match[1];
     if (exceptionName === undefined) continue;
     const start = match.index ?? 0;
-    const inspectionWindow = source.slice(start, Math.min(source.length, start + 1200));
+    const bodyStart = start + match[0].length;
+    const inspectionWindow = source.slice(bodyStart, Math.min(source.length, bodyStart + 1200));
     const escapedName = escapeRegExp(exceptionName);
+    let unsafeWindow = inspectionWindow;
+    for (const classifier of REVIEWED_EXCEPTION_CLASSIFIERS) {
+      const reviewedCall = new RegExp(
+        `\\b${escapeRegExp(classifier)}\\s*\\(\\s*${escapedName}\\s*\\)`,
+        'gu',
+      );
+      unsafeWindow = unsafeWindow.replace(reviewedCall, '');
+    }
     const detailPattern = new RegExp(
       `\\b${escapedName}\\s*(?:\\.\\s*(?:message|stack|cause)\\b|\\)|,)`,
       'u',
     );
     const stringPattern = new RegExp(`\\bString\\s*\\(\\s*${escapedName}\\s*\\)`, 'u');
-    if (detailPattern.test(inspectionWindow) || stringPattern.test(inspectionWindow)) {
+    if (detailPattern.test(unsafeWindow) || stringPattern.test(unsafeWindow)) {
       violations.push({
         file,
         line: lineNumber(source, start),
@@ -122,6 +132,26 @@ function runSelfTests() {
   );
   if (clean.length !== 0) {
     throw new Error('runtime secret-boundary clean self-test failed');
+  }
+
+  const classified = auditRuntimeSource(
+    'clean.ts',
+    "try { await work(); } catch (failure) { return mobileDeviceSessionDatabaseErrorCode(failure) === 'idempotency_conflict' ? conflict() : unavailable(); }",
+  );
+  if (classified.length !== 0) {
+    throw new Error('runtime secret-boundary reviewed classifier self-test failed');
+  }
+
+  const classifierStillRejectsDetail = auditRuntimeSource(
+    'unsafe.ts',
+    'try { await work(); } catch (failure) { mobileDeviceSessionDatabaseErrorCode(failure); return new Response(failure.message); }',
+  );
+  if (
+    !classifierStillRejectsDetail.some(
+      (violation) => violation.reason === 'caught-exception-detail-output',
+    )
+  ) {
+    throw new Error('runtime secret-boundary classifier detail self-test failed');
   }
 
   const cleanSink = auditRuntimeSource(
