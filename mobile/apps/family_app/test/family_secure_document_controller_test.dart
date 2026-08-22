@@ -13,7 +13,7 @@ void main() {
         classification: FamilyDocumentClassification.restricted,
         documentId: 'document-1',
         fileName: 'report.pdf',
-        issuedAt: DateTime.utc(2026, 7, 1),
+        issuedAt: schoolTime('2026-07-01T06:00:00.000+06:00'),
         sizeBytes: 128,
         title: 'Student report',
       );
@@ -39,6 +39,9 @@ void main() {
     },
   );
 }
+
+SchoolAuthoritativeTimestamp schoolTime(String value) =>
+    SchoolAuthoritativeTimestamp.parse(timestamp: value, timeZoneId: 'Asia/Dhaka');
 
 SchoolSession session() => SchoolSession(
   accountId: 'account-1',
@@ -93,7 +96,7 @@ final class _Repository implements FamilyInteractionRepository {
     required SchoolSession session,
   }) async => FamilyDocumentDownloadGrant(
     documentId: documentId,
-    expiresAt: DateTime.utc(2026, 7, 30, 9, 10),
+    expiresAt: schoolTime('2026-07-30T15:10:00.000+06:00'),
     grantId: 'grant-1',
     requiresStepUp: true,
     singleUse: true,

@@ -149,7 +149,7 @@ void main() {
         document: document(sizeBytes: utf8.encode('secure-document').length),
         grant: FamilyDocumentDownloadGrant(
           documentId: 'document-1',
-          expiresAt: DateTime.utc(2026, 7, 30, 9, 10),
+          expiresAt: schoolTime('2026-07-30T15:10:00.000+06:00'),
           grantId: 'grant-unsafe',
           requiresStepUp: true,
           singleUse: false,
@@ -183,7 +183,7 @@ FamilyDocumentSummary document({required int sizeBytes}) =>
       classification: FamilyDocumentClassification.restricted,
       documentId: 'document-1',
       fileName: 'report.pdf',
-      issuedAt: DateTime.utc(2026, 7, 1),
+      issuedAt: schoolTime('2026-07-01T06:00:00.000+06:00'),
       sizeBytes: sizeBytes,
       title: 'Student report',
     );
@@ -191,11 +191,14 @@ FamilyDocumentSummary document({required int sizeBytes}) =>
 FamilyDocumentDownloadGrant grant({required bool requiresStepUp}) =>
     FamilyDocumentDownloadGrant(
       documentId: 'document-1',
-      expiresAt: DateTime.utc(2026, 7, 30, 9, 10),
+      expiresAt: schoolTime('2026-07-30T15:10:00.000+06:00'),
       grantId: 'grant-1',
       requiresStepUp: requiresStepUp,
       singleUse: true,
     );
+
+SchoolAuthoritativeTimestamp schoolTime(String value) =>
+    SchoolAuthoritativeTimestamp.parse(timestamp: value, timeZoneId: 'Asia/Dhaka');
 
 SchoolSession session() => SchoolSession(
   accountId: 'account-1',

@@ -58,7 +58,7 @@ The shared runtime and production applications now provide:
 
 The mobile-core lifecycle policy separately verifies fail-closed decisions for backgrounding, process detachment, stale/fresh authorization, memory pressure, restricted-content obscuring, presentation cancellation and transient-byte purge. Android/iOS hosts still need approved wiring and device integration evidence.
 
-This is not complete domain translation or device certification. Reviewed global Material/Cupertino translations, broader translated and pluralized domain copy, production timestamp adoption, TalkBack/VoiceOver passes, secure-storage lifecycle tests, Android/iOS integration tests and signed store-release evidence remain required. Family fee amounts now require server/read-model supplied fraction-digit metadata; the client does not infer monetary precision from a currency code.
+This is not complete domain translation or device certification. Reviewed global Material/Cupertino translations, broader translated and pluralized domain copy, Checkpoint 36 timestamp-contract adoption across remaining Staff/other date-time surfaces, TalkBack/VoiceOver passes, secure-storage lifecycle tests, Android/iOS integration tests and signed store-release evidence remain required. Family interaction timestamps now require server-owned school timezone metadata plus an explicit per-instant numeric offset; device timezone inference is not accepted. Family fee amounts require server/read-model supplied fraction-digit metadata; the client does not infer monetary precision from a currency code.
 
 ## Toolchain
 

@@ -415,7 +415,7 @@ final class SecureDocumentExchangeCoordinator
       );
     }
     final now = _clock().toUtc();
-    if (!grant.expiresAt.isAfter(now.add(const Duration(seconds: 5)))) {
+    if (!grant.expiresAt.instantUtc.isAfter(now.add(const Duration(seconds: 5)))) {
       throw const SecureDocumentException('SECURE_DOCUMENT_GRANT_EXPIRED');
     }
     if (document.classification == FamilyDocumentClassification.restricted &&

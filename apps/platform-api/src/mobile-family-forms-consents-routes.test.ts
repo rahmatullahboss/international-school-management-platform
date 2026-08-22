@@ -66,6 +66,7 @@ describe('mobile Family forms and consents routes', () => {
   it('lists and loads authorized form contracts', async () => {
     databaseQuery.mockResolvedValueOnce([
       {
+        timeZoneId: 'Asia/Dhaka',
         payload: {
           forms: [{ formId, title: 'Emergency update', status: 'open', dueAt: null }],
         },
@@ -80,10 +81,12 @@ describe('mobile Family forms and consents routes', () => {
     expect(list.headers.get('cache-control')).toBe('no-store');
     await expect(list.json()).resolves.toEqual({
       forms: [{ formId, title: 'Emergency update', status: 'open', dueAt: null }],
+      timeZoneId: 'Asia/Dhaka',
     });
 
     databaseQuery.mockResolvedValueOnce([
       {
+        timeZoneId: 'Asia/Dhaka',
         payload: {
           formId,
           title: 'Emergency update',
@@ -158,6 +161,7 @@ describe('mobile Family forms and consents routes', () => {
   it('lists consents and records an authorized guardian decision', async () => {
     databaseQuery.mockResolvedValueOnce([
       {
+        timeZoneId: 'Asia/Dhaka',
         payload: {
           consents: [
             {

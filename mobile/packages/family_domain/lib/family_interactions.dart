@@ -10,14 +10,13 @@ final class FamilyDocumentSummary {
   FamilyDocumentSummary({
     required this.cachePolicy,
     required this.classification,
-    required DateTime issuedAt,
+    required this.issuedAt,
     required String documentId,
     required String fileName,
     required int sizeBytes,
     required String title,
   }) : documentId = _requiredInteraction(documentId, 'documentId'),
        fileName = _requiredInteraction(fileName, 'fileName'),
-       issuedAt = issuedAt.toUtc(),
        sizeBytes = _nonNegativeInteraction(sizeBytes, 'sizeBytes'),
        title = _requiredInteraction(title, 'title') {
     if (classification == FamilyDocumentClassification.restricted &&
@@ -32,7 +31,7 @@ final class FamilyDocumentSummary {
   final String title;
   final String fileName;
   final int sizeBytes;
-  final DateTime issuedAt;
+  final SchoolAuthoritativeTimestamp issuedAt;
   final FamilyDocumentClassification classification;
   final FamilyDocumentCachePolicy cachePolicy;
 }
@@ -59,17 +58,16 @@ final class FamilyDocumentPage {
 final class FamilyDocumentDownloadGrant {
   FamilyDocumentDownloadGrant({
     required String documentId,
-    required DateTime expiresAt,
+    required this.expiresAt,
     required String grantId,
     required this.requiresStepUp,
     required this.singleUse,
   }) : documentId = _requiredInteraction(documentId, 'documentId'),
-       expiresAt = expiresAt.toUtc(),
        grantId = _requiredInteraction(grantId, 'grantId');
 
   final String grantId;
   final String documentId;
-  final DateTime expiresAt;
+  final SchoolAuthoritativeTimestamp expiresAt;
   final bool requiresStepUp;
   final bool singleUse;
 
@@ -87,15 +85,14 @@ final class FamilyFormSummary {
     required String formId,
     required this.status,
     required String title,
-    DateTime? dueAt,
-  }) : dueAt = dueAt?.toUtc(),
-       formId = _requiredInteraction(formId, 'formId'),
+    this.dueAt,
+  }) : formId = _requiredInteraction(formId, 'formId'),
        title = _requiredInteraction(title, 'title');
 
   final String formId;
   final String title;
   final FamilyFormStatus status;
-  final DateTime? dueAt;
+  final SchoolAuthoritativeTimestamp? dueAt;
 }
 
 final class FamilyFormFieldDefinition {
@@ -136,9 +133,8 @@ final class FamilyFormDefinition {
     required int schemaVersion,
     required this.status,
     required String title,
-    DateTime? dueAt,
+    this.dueAt,
   }) : baseVersion = _nonNegativeInteraction(baseVersion, 'baseVersion'),
-       dueAt = dueAt?.toUtc(),
        fields = List<FamilyFormFieldDefinition>.unmodifiable(fields),
        formId = _requiredInteraction(formId, 'formId'),
        schemaVersion = _positiveInteraction(schemaVersion, 'schemaVersion'),
@@ -153,7 +149,7 @@ final class FamilyFormDefinition {
   final String title;
   final FamilyFormStatus status;
   final int baseVersion;
-  final DateTime? dueAt;
+  final SchoolAuthoritativeTimestamp? dueAt;
   final int schemaVersion;
   final List<FamilyFormFieldDefinition> fields;
 }
@@ -194,9 +190,8 @@ final class FamilyConsentRequest {
     required this.status,
     required String studentId,
     required String title,
-    DateTime? dueAt,
+    this.dueAt,
   }) : consentId = _requiredInteraction(consentId, 'consentId'),
-       dueAt = dueAt?.toUtc(),
        policyVersion = _requiredInteraction(policyVersion, 'policyVersion'),
        studentId = _requiredInteraction(studentId, 'studentId'),
        title = _requiredInteraction(title, 'title');
@@ -206,7 +201,7 @@ final class FamilyConsentRequest {
   final String title;
   final String policyVersion;
   final FamilyConsentStatus status;
-  final DateTime? dueAt;
+  final SchoolAuthoritativeTimestamp? dueAt;
 }
 
 final class FamilyConsentDecisionCommand {
@@ -240,18 +235,17 @@ final class FamilyConsentDecisionCommand {
 final class FamilyConversationSummary {
   FamilyConversationSummary({
     required String conversationId,
-    required DateTime latestMessageAt,
+    required this.latestMessageAt,
     required String subject,
     required int unreadCount,
   }) : conversationId = _requiredInteraction(conversationId, 'conversationId'),
-       latestMessageAt = latestMessageAt.toUtc(),
        subject = _requiredInteraction(subject, 'subject'),
        unreadCount = _nonNegativeInteraction(unreadCount, 'unreadCount');
 
   final String conversationId;
   final String subject;
   final int unreadCount;
-  final DateTime latestMessageAt;
+  final SchoolAuthoritativeTimestamp latestMessageAt;
 }
 
 final class FamilyConversationPage {
@@ -277,16 +271,15 @@ final class FamilyConversationMessage {
     required String authorLabel,
     required String body,
     required String messageId,
-    required DateTime sentAt,
+    required this.sentAt,
   }) : authorLabel = _requiredInteraction(authorLabel, 'authorLabel'),
        body = _boundedMessage(body),
-       messageId = _requiredInteraction(messageId, 'messageId'),
-       sentAt = sentAt.toUtc();
+       messageId = _requiredInteraction(messageId, 'messageId');
 
   final String messageId;
   final String authorLabel;
   final String body;
-  final DateTime sentAt;
+  final SchoolAuthoritativeTimestamp sentAt;
 }
 
 final class FamilyConversationMessagePage {

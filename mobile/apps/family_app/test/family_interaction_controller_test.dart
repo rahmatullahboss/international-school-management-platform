@@ -110,7 +110,7 @@ void main() {
             authorLabel: 'Teacher',
             body: 'Newest message',
             messageId: 'message-newest',
-            sentAt: DateTime.utc(2026, 7, 30, 5),
+            sentAt: schoolTime('2026-07-30T11:00:00.000+06:00'),
           ),
         ];
       final controller = FamilyInteractionController(
@@ -140,7 +140,7 @@ void main() {
             authorLabel: 'Teacher',
             body: 'Newest message',
             messageId: 'message-newest',
-            sentAt: DateTime.utc(2026, 7, 30, 5),
+            sentAt: schoolTime('2026-07-30T11:00:00.000+06:00'),
           ),
         ];
       final controller = FamilyInteractionController(
@@ -189,10 +189,13 @@ FamilyDocumentSummary document(String documentId) => FamilyDocumentSummary(
   classification: FamilyDocumentClassification.personal,
   documentId: documentId,
   fileName: '$documentId.pdf',
-  issuedAt: DateTime.utc(2026, 7, 30),
+  issuedAt: schoolTime('2026-07-30T06:00:00.000+06:00'),
   sizeBytes: 100,
   title: documentId,
 );
+
+SchoolAuthoritativeTimestamp schoolTime(String value) =>
+    SchoolAuthoritativeTimestamp.parse(timestamp: value, timeZoneId: 'Asia/Dhaka');
 
 SchoolSession familySession({
   required Set<String> capabilities,
@@ -251,7 +254,7 @@ final class _FamilyInteractionRepository
     conversations: <FamilyConversationSummary>[
       FamilyConversationSummary(
         conversationId: 'conversation-1',
-        latestMessageAt: DateTime.utc(2026, 7, 30),
+        latestMessageAt: schoolTime('2026-07-30T06:00:00.000+06:00'),
         subject: 'Class update',
         unreadCount: 1,
       ),
@@ -305,7 +308,7 @@ final class _FamilyInteractionRepository
     required SchoolSession session,
   }) async => FamilyDocumentDownloadGrant(
     documentId: documentId,
-    expiresAt: DateTime.utc(2026, 7, 30, 6),
+    expiresAt: schoolTime('2026-07-30T12:00:00.000+06:00'),
     grantId: 'grant-1',
     requiresStepUp: false,
     singleUse: true,
@@ -338,7 +341,7 @@ final class _FamilyInteractionRepository
       authorLabel: 'Guardian',
       body: command.body,
       messageId: 'message-$messageCalls',
-      sentAt: DateTime.utc(2026, 7, 30, 5),
+      sentAt: schoolTime('2026-07-30T11:00:00.000+06:00'),
     );
   }
 

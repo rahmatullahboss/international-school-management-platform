@@ -14,7 +14,7 @@ const messageId = '40000000-0000-4000-8000-000000000030';
 const cursor = '20260821123456789.40000000-0000-4000-8000-000000000040';
 
 function database(payload: unknown) {
-  const query = vi.fn().mockResolvedValue([{ payload }]);
+  const query = vi.fn().mockResolvedValue([{ payload, timeZoneId: 'Asia/Dhaka' }]);
   return { query, store: new DatabaseMobileFamilyConversationStore({ query } as never) };
 }
 
@@ -39,10 +39,11 @@ describe('DatabaseMobileFamilyConversationStore', () => {
           conversationId,
           subject: 'Class updates',
           unreadCount: 2,
-          latestMessageAt: '2026-08-21T12:34:56.789Z',
+          latestMessageAt: '2026-08-21T18:34:56.789+06:00',
         },
       ],
       nextCursor: cursor,
+      timeZoneId: 'Asia/Dhaka',
     });
     expect(query).toHaveBeenCalledWith(
       expect.stringContaining('platform.resolve_mobile_family_conversations'),
@@ -100,7 +101,8 @@ describe('DatabaseMobileFamilyConversationStore', () => {
       messageId,
       authorLabel: 'Guardian Tester',
       body: 'Thank you.',
-      sentAt: '2026-08-21T12:35:56.789Z',
+      sentAt: '2026-08-21T18:35:56.789+06:00',
+      timeZoneId: 'Asia/Dhaka',
     });
     expect(query).toHaveBeenCalledWith(
       expect.stringContaining('platform.send_mobile_family_conversation_message'),

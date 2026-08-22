@@ -3,11 +3,14 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:school_family_app/family_utc_presentation.dart';
+import 'package:school_mobile_core/mobile_core.dart';
 
 void main() {
-  testWidgets('presents server instants explicitly as UTC', (tester) async {
-    final source = DateTime.parse('2026-08-08T01:30:00+06:00');
-    final utc = source.toUtc();
+  testWidgets('presents authoritative school wall time with explicit offset', (tester) async {
+    final timestamp = SchoolAuthoritativeTimestamp.parse(
+      timestamp: '2026-08-08T01:30:00.000+06:00',
+      timeZoneId: 'Asia/Dhaka',
+    );
     late String dateLabel;
     late String dateTimeLabel;
     late String expectedDate;
@@ -19,22 +22,26 @@ void main() {
         home: Builder(
           builder: (context) {
             final localizations = MaterialLocalizations.of(context);
-            expectedDate = localizations.formatMediumDate(utc);
+            final wallClock = timestamp.schoolWallClock;
+            expectedDate = localizations.formatMediumDate(wallClock);
             expectedTime = localizations.formatTimeOfDay(
-              TimeOfDay(hour: utc.hour, minute: utc.minute),
+              TimeOfDay(hour: wallClock.hour, minute: wallClock.minute),
             );
-            dateLabel = FamilyUtcPresentation.date(context, source);
-            dateTimeLabel = FamilyUtcPresentation.dateTime(context, source);
+            dateLabel = FamilySchoolTimePresentation.date(context, timestamp);
+            dateTimeLabel = FamilySchoolTimePresentation.dateTime(context, timestamp);
             return const SizedBox();
           },
         ),
       ),
     );
 
-    expect(utc, DateTime.utc(2026, 8, 7, 19, 30));
-    expect(dateLabel, '$expectedDate · UTC');
-    expect(dateTimeLabel, '$expectedDate · $expectedTime · UTC');
-    expect(dateLabel, isNot(contains('Aug 8')));
+    expect(timestamp.instantUtc, DateTime.utc(2026, 8, 7, 19, 30));
+    expect(dateLabel, '$expectedDate · UTC+06:00 · Asia/Dhaka');
+    expect(
+      dateTimeLabel,
+      '$expectedDate · $expectedTime · UTC+06:00 · Asia/Dhaka',
+    );
+    expect(dateLabel, contains('Aug 8'));
   });
 
   test(
@@ -43,13 +50,14 @@ void main() {
       final screenSource = File(
         'lib/family_interaction_screens.dart',
       ).readAsStringSync();
-      final utcSource = File(
+      final timeSource = File(
         'lib/family_utc_presentation.dart',
       ).readAsStringSync();
 
       expect(screenSource, isNot(contains('.toLocal()')));
-      expect(utcSource, isNot(contains('.toLocal()')));
-      expect(utcSource, contains('.toUtc()'));
+      expect(timeSource, isNot(contains('.toLocal()')));
+      expect(timeSource, contains('schoolWallClock'));
+      expect(timeSource, contains('UTC\$sign'));
     },
   );
 }

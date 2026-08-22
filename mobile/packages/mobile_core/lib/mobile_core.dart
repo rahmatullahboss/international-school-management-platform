@@ -1,6 +1,7 @@
 /// Shared, platform-neutral contracts used by both Flutter applications.
 library;
 
+export 'authoritative_time.dart';
 export 'privacy_lifecycle.dart';
 
 enum SchoolPersona {

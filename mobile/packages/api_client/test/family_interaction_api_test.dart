@@ -14,13 +14,14 @@ void main() {
     final client = clientFor((request) {
       captured = request;
       return <String, Object?>{
+        'timeZoneId': 'Asia/Dhaka',
         'documents': <Object?>[
           <String, Object?>{
             'documentId': 'document-1',
             'title': 'Published report',
             'fileName': 'report.pdf',
             'sizeBytes': 1024,
-            'issuedAt': '2026-07-30T01:00:00+06:00',
+            'issuedAt': '2026-07-30T01:00:00.000+06:00',
             'classification': 'personal',
             'cachePolicy': 'encryptedTemporary',
           },
@@ -45,7 +46,34 @@ void main() {
     expect(captured.headers['x-tenant-id'], 'tenant-1');
     expect(captured.headers['x-campus-id'], 'campus-1');
     expect(page.documents.single.documentId, 'document-1');
+    expect(page.documents.single.issuedAt.offset, const Duration(hours: 6));
     expect(page.nextCursor, 'cursor-2');
+    client.close();
+  });
+
+  test('rejects timestamp metadata for a different school timezone', () async {
+    final client = clientFor(
+      (request) => <String, Object?>{
+        'timeZoneId': 'America/New_York',
+        'documents': <Object?>[],
+        'nextCursor': null,
+      },
+    );
+
+    await expectLater(
+      FamilyInteractionApi(client).listDocuments(
+        correlationId: 'documents-time-zone-mismatch',
+        session: familySession(capabilities: const {SchoolCapability.documentsRead}),
+        studentId: 'student-1',
+      ),
+      throwsA(
+        isA<SchoolApiException>().having(
+          (error) => error.code,
+          'code',
+          'INVALID_FAMILY_INTERACTION_RESPONSE',
+        ),
+      ),
+    );
     client.close();
   });
 
@@ -86,6 +114,7 @@ void main() {
     () async {
       final client = clientFor(
         (request) => <String, Object?>{
+          'timeZoneId': 'Asia/Dhaka',
           'formId': 'form-1',
           'title': 'Transport form',
           'status': 'open',
@@ -197,6 +226,7 @@ void main() {
   test('lists conversation messages and validates response scope', () async {
     final client = clientFor(
       (request) => <String, Object?>{
+        'timeZoneId': 'Asia/Dhaka',
         'conversationId': 'conversation-other',
         'messages': <Object?>[],
         'nextCursor': null,
@@ -260,10 +290,11 @@ void main() {
     final client = clientFor((request) {
       captured = request;
       return <String, Object?>{
+        'timeZoneId': 'Asia/Dhaka',
         'messageId': 'message-1',
         'authorLabel': 'Guardian',
         'body': 'Thank you',
-        'sentAt': '2026-07-30T01:00:00+06:00',
+        'sentAt': '2026-07-30T01:00:00.000+06:00',
       };
     });
     final command = FamilySendMessageCommand(

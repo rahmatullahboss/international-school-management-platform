@@ -22,6 +22,7 @@ describe('database mobile Family forms and consents store', () => {
       .fn()
       .mockResolvedValueOnce([
         {
+          timeZoneId: 'Asia/Dhaka',
           payload: {
             forms: [
               {
@@ -36,6 +37,7 @@ describe('database mobile Family forms and consents store', () => {
       ])
       .mockResolvedValueOnce([
         {
+          timeZoneId: 'Asia/Dhaka',
           payload: {
             formId,
             title: 'Emergency contact update',
@@ -70,17 +72,19 @@ describe('database mobile Family forms and consents store', () => {
           formId,
           title: 'Emergency contact update',
           status: 'open',
-          dueAt: '2026-09-01T12:00:00.000Z',
+          dueAt: '2026-09-01T18:00:00.000+06:00',
         },
       ],
+      timeZoneId: 'Asia/Dhaka',
     });
     await expect(store.loadForm(identity, scope, formId)).resolves.toEqual({
       formId,
       title: 'Emergency contact update',
       status: 'open',
-      dueAt: '2026-09-01T12:00:00.000Z',
+      dueAt: '2026-09-01T18:00:00.000+06:00',
       baseVersion: 4,
       schemaVersion: 2,
+      timeZoneId: 'Asia/Dhaka',
       fields: [
         {
           fieldId: 'contact_name',
@@ -105,6 +109,7 @@ describe('database mobile Family forms and consents store', () => {
       .fn()
       .mockResolvedValueOnce([
         {
+          timeZoneId: 'Asia/Dhaka',
           payload: {
             formId,
             title: 'Bad form',
@@ -126,6 +131,7 @@ describe('database mobile Family forms and consents store', () => {
       ])
       .mockResolvedValueOnce([
         {
+          timeZoneId: 'Asia/Dhaka',
           payload: {
             formId,
             title: 'Leaky form',
@@ -174,6 +180,7 @@ describe('database mobile Family forms and consents store', () => {
       .fn()
       .mockResolvedValueOnce([
         {
+          timeZoneId: 'Asia/Dhaka',
           payload: {
             consents: [
               {

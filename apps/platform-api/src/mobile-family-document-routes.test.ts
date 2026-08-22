@@ -63,6 +63,7 @@ describe('mobile Family document routes', () => {
   it('lists authorized document metadata and issues a single-use grant', async () => {
     databaseQuery.mockResolvedValueOnce([
       {
+        timeZoneId: 'Asia/Dhaka',
         payload: {
           documents: [
             {
@@ -98,6 +99,7 @@ describe('mobile Family document routes', () => {
 
     databaseQuery.mockResolvedValueOnce([
       {
+        timeZoneId: 'Asia/Dhaka',
         payload: {
           documentId: '40000000-0000-4000-8000-000000000050',
           expiresAt: '2026-08-21T09:05:00.000Z',
@@ -123,10 +125,11 @@ describe('mobile Family document routes', () => {
     expect(grant.status).toBe(200);
     await expect(grant.json()).resolves.toEqual({
       documentId: '40000000-0000-4000-8000-000000000050',
-      expiresAt: '2026-08-21T09:05:00.000Z',
+      expiresAt: '2026-08-21T15:05:00.000+06:00',
       grantId: '40000000-0000-4000-8000-000000000051',
       requiresStepUp: true,
       singleUse: true,
+      timeZoneId: 'Asia/Dhaka',
     });
   });
 
@@ -221,6 +224,7 @@ describe('mobile Family document routes', () => {
     });
     databaseQuery.mockResolvedValue([
       {
+        timeZoneId: 'Asia/Dhaka',
         payload: {
           status: 'claimed',
           documentId: '40000000-0000-4000-8000-000000000050',

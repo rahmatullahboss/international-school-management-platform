@@ -6,9 +6,11 @@ import type {
   FamilyConsentDecisionInput,
   FamilyFormSubmissionInput,
 } from './mobile-family-forms-consents.js';
+import { requireSchoolTimeZone, schoolLocalTimestamp } from './mobile-school-time.js';
 
 interface PayloadRow extends Record<string, unknown> {
   readonly payload: unknown;
+  readonly timeZoneId?: unknown;
 }
 
 export interface MobileFamilyFormSummary {
@@ -18,9 +20,15 @@ export interface MobileFamilyFormSummary {
   readonly dueAt: string | null;
 }
 
+export interface MobileFamilyFormList {
+  readonly forms: readonly MobileFamilyFormSummary[];
+  readonly timeZoneId: string;
+}
+
 export interface MobileFamilyFormDefinition extends MobileFamilyFormSummary {
   readonly baseVersion: number;
   readonly schemaVersion: number;
+  readonly timeZoneId: string;
   readonly fields: readonly {
     readonly fieldId: string;
     readonly label: string;
@@ -37,6 +45,11 @@ export interface MobileFamilyConsentRequest {
   readonly policyVersion: string;
   readonly status: 'pending' | 'granted' | 'declined' | 'expired';
   readonly dueAt: string | null;
+}
+
+export interface MobileFamilyConsentList {
+  readonly consents: readonly MobileFamilyConsentRequest[];
+  readonly timeZoneId: string;
 }
 
 export type MobileFamilyInteractionMutationResult =
@@ -94,14 +107,18 @@ function requireText(value: unknown, operation: string, maximum = MAX_TEXT): str
   return normalized;
 }
 
-function requireTimestampOrNull(value: unknown, operation: string): string | null {
+function requireTimestampOrNull(
+  value: unknown,
+  operation: string,
+  timeZoneId: string,
+): string | null {
   if (value === null) return null;
   const timestamp = requireText(value, operation, 64);
   const parsed = new Date(timestamp);
   if (!Number.isFinite(parsed.getTime()) || parsed.toISOString() !== timestamp) {
     throw invalidResponse(operation);
   }
-  return timestamp;
+  return schoolLocalTimestamp(timestamp, timeZoneId, operation);
 }
 
 function requireInteger(value: unknown, operation: string, minimum: number): number {
@@ -118,14 +135,18 @@ function requireFormStatus(value: unknown, operation: string): MobileFamilyFormS
   return value;
 }
 
-function validateFormSummary(value: unknown, operation: string): MobileFamilyFormSummary {
+function validateFormSummary(
+  value: unknown,
+  operation: string,
+  timeZoneId: string,
+): MobileFamilyFormSummary {
   const form = requireRecord(value, operation);
   requireExactKeys(form, operation, new Set(['formId', 'title', 'status', 'dueAt']));
   return {
     formId: requireUuid(form.formId, operation),
     title: requireText(form.title, operation),
     status: requireFormStatus(form.status, operation),
-    dueAt: requireTimestampOrNull(form.dueAt, operation),
+    dueAt: requireTimestampOrNull(form.dueAt, operation, timeZoneId),
   };
 }
 
@@ -161,8 +182,12 @@ function validateFormField(
   };
 }
 
-function validateFormDefinition(value: unknown): MobileFamilyFormDefinition {
+function validateFormDefinition(
+  value: unknown,
+  timeZoneValue: unknown,
+): MobileFamilyFormDefinition {
   const operation = 'Mobile family form';
+  const timeZoneId = requireSchoolTimeZone(timeZoneValue, operation);
   const form = requireRecord(value, operation);
   requireExactKeys(
     form,
@@ -180,25 +205,31 @@ function validateFormDefinition(value: unknown): MobileFamilyFormDefinition {
     formId: requireUuid(form.formId, operation),
     title: requireText(form.title, operation),
     status: requireFormStatus(form.status, operation),
-    dueAt: requireTimestampOrNull(form.dueAt, operation),
+    dueAt: requireTimestampOrNull(form.dueAt, operation, timeZoneId),
     baseVersion: requireInteger(form.baseVersion, operation, 0),
     schemaVersion: requireInteger(form.schemaVersion, operation, 1),
+    timeZoneId,
     fields,
   };
 }
 
-function validateFormList(value: unknown): { readonly forms: readonly MobileFamilyFormSummary[] } {
+function validateFormList(value: unknown, timeZoneValue: unknown): MobileFamilyFormList {
   const operation = 'Mobile family forms';
+  const timeZoneId = requireSchoolTimeZone(timeZoneValue, operation);
   const payload = requireRecord(value, operation);
   requireExactKeys(payload, operation, new Set(['forms']));
   if (!Array.isArray(payload.forms) || payload.forms.length > 100) throw invalidResponse(operation);
-  const forms = payload.forms.map((form) => validateFormSummary(form, operation));
+  const forms = payload.forms.map((form) => validateFormSummary(form, operation, timeZoneId));
   if (new Set(forms.map((form) => form.formId)).size !== forms.length)
     throw invalidResponse(operation);
-  return { forms };
+  return { forms, timeZoneId };
 }
 
-function validateConsent(value: unknown, operation: string): MobileFamilyConsentRequest {
+function validateConsent(
+  value: unknown,
+  operation: string,
+  timeZoneId: string,
+): MobileFamilyConsentRequest {
   const consent = requireRecord(value, operation);
   requireExactKeys(
     consent,
@@ -220,24 +251,25 @@ function validateConsent(value: unknown, operation: string): MobileFamilyConsent
     title: requireText(consent.title, operation),
     policyVersion: requireText(consent.policyVersion, operation, 128),
     status,
-    dueAt: requireTimestampOrNull(consent.dueAt, operation),
+    dueAt: requireTimestampOrNull(consent.dueAt, operation, timeZoneId),
   };
 }
 
-function validateConsentList(value: unknown): {
-  readonly consents: readonly MobileFamilyConsentRequest[];
-} {
+function validateConsentList(value: unknown, timeZoneValue: unknown): MobileFamilyConsentList {
   const operation = 'Mobile family consents';
+  const timeZoneId = requireSchoolTimeZone(timeZoneValue, operation);
   const payload = requireRecord(value, operation);
   requireExactKeys(payload, operation, new Set(['consents']));
   if (!Array.isArray(payload.consents) || payload.consents.length > 100) {
     throw invalidResponse(operation);
   }
-  const consents = payload.consents.map((consent) => validateConsent(consent, operation));
+  const consents = payload.consents.map((consent) =>
+    validateConsent(consent, operation, timeZoneId),
+  );
   if (new Set(consents.map((consent) => consent.consentId)).size !== consents.length) {
     throw invalidResponse(operation);
   }
-  return { consents };
+  return { consents, timeZoneId };
 }
 
 function validateMutation(
@@ -302,12 +334,15 @@ export class DatabaseMobileFamilyFormsConsentsStore {
     identity: Pick<OidcIdentity, 'issuer' | 'subject'>,
     scope: MobileReadScope,
     studentId: string,
-  ): Promise<{ readonly forms: readonly MobileFamilyFormSummary[] } | undefined> {
+  ): Promise<MobileFamilyFormList | undefined> {
     const [issuer, subject] = requireIdentity(identity);
     requireGuardianScope(scope);
     if (!UUID_PATTERN.test(studentId)) throw new Error('Mobile Family student id is invalid.');
     const rows = await this.#database.query<PayloadRow>(
-      `SELECT platform.resolve_mobile_family_forms($1::text,$2::text,$3::uuid,$4::uuid,$5::text,$6::uuid) AS payload`,
+      `SELECT platform.resolve_mobile_family_forms($1::text,$2::text,$3::uuid,$4::uuid,$5::text,$6::uuid) AS payload,
+       (SELECT scope.time_zone FROM platform.resolve_mobile_request_scope(
+         $1::text,$2::text,$3::uuid,$4::uuid,$5::text
+       ) AS scope) AS "timeZoneId"`,
       [issuer, subject, scope.tenantId, scope.campusId, scope.persona, studentId],
     );
     return this.#onePayload(rows, validateFormList, 'Mobile family forms');
@@ -322,7 +357,10 @@ export class DatabaseMobileFamilyFormsConsentsStore {
     requireGuardianScope(scope);
     if (!UUID_PATTERN.test(formId)) throw new Error('Mobile Family form id is invalid.');
     const rows = await this.#database.query<PayloadRow>(
-      `SELECT platform.resolve_mobile_family_form($1::text,$2::text,$3::uuid,$4::uuid,$5::text,$6::uuid) AS payload`,
+      `SELECT platform.resolve_mobile_family_form($1::text,$2::text,$3::uuid,$4::uuid,$5::text,$6::uuid) AS payload,
+       (SELECT scope.time_zone FROM platform.resolve_mobile_request_scope(
+         $1::text,$2::text,$3::uuid,$4::uuid,$5::text
+       ) AS scope) AS "timeZoneId"`,
       [issuer, subject, scope.tenantId, scope.campusId, scope.persona, formId],
     );
     const result = this.#onePayload(rows, validateFormDefinition, 'Mobile family form');
@@ -371,12 +409,15 @@ export class DatabaseMobileFamilyFormsConsentsStore {
     identity: Pick<OidcIdentity, 'issuer' | 'subject'>,
     scope: MobileReadScope,
     studentId: string,
-  ): Promise<{ readonly consents: readonly MobileFamilyConsentRequest[] } | undefined> {
+  ): Promise<MobileFamilyConsentList | undefined> {
     const [issuer, subject] = requireIdentity(identity);
     requireGuardianScope(scope);
     if (!UUID_PATTERN.test(studentId)) throw new Error('Mobile Family student id is invalid.');
     const rows = await this.#database.query<PayloadRow>(
-      `SELECT platform.resolve_mobile_family_consents($1::text,$2::text,$3::uuid,$4::uuid,$5::text,$6::uuid) AS payload`,
+      `SELECT platform.resolve_mobile_family_consents($1::text,$2::text,$3::uuid,$4::uuid,$5::text,$6::uuid) AS payload,
+       (SELECT scope.time_zone FROM platform.resolve_mobile_request_scope(
+         $1::text,$2::text,$3::uuid,$4::uuid,$5::text
+       ) AS scope) AS "timeZoneId"`,
       [issuer, subject, scope.tenantId, scope.campusId, scope.persona, studentId],
     );
     return this.#onePayload(rows, validateConsentList, 'Mobile family consents');
@@ -419,13 +460,13 @@ export class DatabaseMobileFamilyFormsConsentsStore {
 
   #onePayload<T>(
     rows: readonly PayloadRow[],
-    validator: (value: unknown) => T,
+    validator: (value: unknown, timeZoneValue: unknown) => T,
     operation: string,
   ): T | undefined {
     if (rows.length !== 1) throw invalidResponse(operation);
     const row = rows[0];
     if (row === undefined) throw invalidResponse(operation);
     if (row.payload === null || row.payload === undefined) return undefined;
-    return validator(row.payload);
+    return validator(row.payload, row.timeZoneId);
   }
 }

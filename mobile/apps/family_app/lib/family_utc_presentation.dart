@@ -1,23 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:school_mobile_core/mobile_core.dart';
 
-/// Presentation fallback for server timestamps that currently carry an
-/// authoritative UTC instant but no authoritative school offset/timezone.
-///
-/// Until the owning read model supplies school timezone metadata, the Family
-/// app presents the instant explicitly as UTC. It must never infer presentation
-/// time from the device timezone.
-abstract final class FamilyUtcPresentation {
-  static String date(BuildContext context, DateTime value) {
-    final utc = value.toUtc();
+/// Presents a server-owned school-local timestamp without consulting device time.
+abstract final class FamilySchoolTimePresentation {
+  static String date(BuildContext context, SchoolAuthoritativeTimestamp value) {
     final localizations = MaterialLocalizations.of(context);
-    return '${localizations.formatMediumDate(utc)} · UTC';
+    return '${localizations.formatMediumDate(value.schoolWallClock)} · '
+        '${_offsetLabel(value.offset)} · ${value.timeZoneId}';
   }
 
-  static String dateTime(BuildContext context, DateTime value) {
-    final utc = value.toUtc();
+  static String dateTime(BuildContext context, SchoolAuthoritativeTimestamp value) {
     final localizations = MaterialLocalizations.of(context);
-    final time = TimeOfDay(hour: utc.hour, minute: utc.minute);
-    return '${localizations.formatMediumDate(utc)} · '
-        '${localizations.formatTimeOfDay(time)} · UTC';
+    final wallClock = value.schoolWallClock;
+    final time = TimeOfDay(hour: wallClock.hour, minute: wallClock.minute);
+    return '${localizations.formatMediumDate(wallClock)} · '
+        '${localizations.formatTimeOfDay(time)} · '
+        '${_offsetLabel(value.offset)} · ${value.timeZoneId}';
+  }
+
+  static String _offsetLabel(Duration offset) {
+    final minutes = offset.inMinutes;
+    final sign = minutes < 0 ? '−' : '+';
+    final absolute = minutes.abs();
+    final hours = (absolute ~/ 60).toString().padLeft(2, '0');
+    final remainder = (absolute % 60).toString().padLeft(2, '0');
+    return 'UTC$sign$hours:$remainder';
   }
 }

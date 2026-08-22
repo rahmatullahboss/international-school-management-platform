@@ -6,9 +6,11 @@ import type {
   FamilyMessageSendInput,
   FamilyReadReceiptInput,
 } from './mobile-family-conversations.js';
+import { requireSchoolTimeZone, schoolLocalTimestamp } from './mobile-school-time.js';
 
 interface PayloadRow extends Record<string, unknown> {
   readonly payload: unknown;
+  readonly timeZoneId?: unknown;
 }
 
 export interface MobileFamilyConversationSummary {
@@ -28,12 +30,18 @@ export interface MobileFamilyConversationMessage {
 export interface MobileFamilyConversationPage {
   readonly conversations: readonly MobileFamilyConversationSummary[];
   readonly nextCursor: string | null;
+  readonly timeZoneId: string;
 }
 
 export interface MobileFamilyConversationMessagePage {
   readonly conversationId: string;
   readonly messages: readonly MobileFamilyConversationMessage[];
   readonly nextCursor: string | null;
+  readonly timeZoneId: string;
+}
+
+export interface MobileFamilyConversationSentMessage extends MobileFamilyConversationMessage {
+  readonly timeZoneId: string;
 }
 
 export type MobileFamilyConversationMutationResult =
@@ -102,7 +110,11 @@ function requireCursorOrNull(value: unknown, operation: string): string | null {
   return value;
 }
 
-function validateConversation(value: unknown, operation: string): MobileFamilyConversationSummary {
+function validateConversation(
+  value: unknown,
+  operation: string,
+  timeZoneId: string,
+): MobileFamilyConversationSummary {
   const row = exactRecord(
     value,
     new Set(['conversationId', 'subject', 'unreadCount', 'latestMessageAt']),
@@ -112,11 +124,19 @@ function validateConversation(value: unknown, operation: string): MobileFamilyCo
     conversationId: requireUuid(row.conversationId, operation),
     subject: requireText(row.subject, operation, 512),
     unreadCount: requireInteger(row.unreadCount, operation, 0),
-    latestMessageAt: requireTimestamp(row.latestMessageAt, operation),
+    latestMessageAt: schoolLocalTimestamp(
+      requireTimestamp(row.latestMessageAt, operation),
+      timeZoneId,
+      operation,
+    ),
   };
 }
 
-function validateMessage(value: unknown, operation: string): MobileFamilyConversationMessage {
+function validateMessage(
+  value: unknown,
+  operation: string,
+  timeZoneId: string,
+): MobileFamilyConversationMessage {
   const row = exactRecord(
     value,
     new Set(['messageId', 'authorLabel', 'body', 'sentAt']),
@@ -126,28 +146,40 @@ function validateMessage(value: unknown, operation: string): MobileFamilyConvers
     messageId: requireUuid(row.messageId, operation),
     authorLabel: requireText(row.authorLabel, operation, 512),
     body: requireText(row.body, operation, 4000),
-    sentAt: requireTimestamp(row.sentAt, operation),
+    sentAt: schoolLocalTimestamp(requireTimestamp(row.sentAt, operation), timeZoneId, operation),
   };
 }
 
-function validateConversationPage(value: unknown): MobileFamilyConversationPage {
+function validateConversationPage(
+  value: unknown,
+  timeZoneValue: unknown,
+): MobileFamilyConversationPage {
   const operation = 'Mobile family conversations';
+  const timeZoneId = requireSchoolTimeZone(timeZoneValue, operation);
   const payload = exactRecord(value, new Set(['conversations', 'nextCursor']), operation);
   if (!Array.isArray(payload.conversations) || payload.conversations.length > 100) {
     throw invalidResponse(operation);
   }
-  const conversations = payload.conversations.map((row) => validateConversation(row, operation));
+  const conversations = payload.conversations.map((row) =>
+    validateConversation(row, operation, timeZoneId),
+  );
   if (new Set(conversations.map((row) => row.conversationId)).size !== conversations.length) {
     throw invalidResponse(operation);
   }
-  return { conversations, nextCursor: requireCursorOrNull(payload.nextCursor, operation) };
+  return {
+    conversations,
+    nextCursor: requireCursorOrNull(payload.nextCursor, operation),
+    timeZoneId,
+  };
 }
 
 function validateMessagePage(
   value: unknown,
   expectedConversationId: string,
+  timeZoneValue: unknown,
 ): MobileFamilyConversationMessagePage {
   const operation = 'Mobile family conversation messages';
+  const timeZoneId = requireSchoolTimeZone(timeZoneValue, operation);
   const payload = exactRecord(
     value,
     new Set(['conversationId', 'messages', 'nextCursor']),
@@ -161,7 +193,7 @@ function validateMessagePage(
   ) {
     throw invalidResponse(operation);
   }
-  const messages = payload.messages.map((row) => validateMessage(row, operation));
+  const messages = payload.messages.map((row) => validateMessage(row, operation, timeZoneId));
   if (new Set(messages.map((row) => row.messageId)).size !== messages.length) {
     throw invalidResponse(operation);
   }
@@ -169,6 +201,7 @@ function validateMessagePage(
     conversationId,
     messages,
     nextCursor: requireCursorOrNull(payload.nextCursor, operation),
+    timeZoneId,
   };
 }
 
@@ -248,7 +281,10 @@ export class DatabaseMobileFamilyConversationStore {
     requireLimit(limit);
     if (!UUID_PATTERN.test(studentId)) throw new Error('Mobile Family student id is invalid.');
     const rows = await this.#database.query<PayloadRow>(
-      `SELECT platform.resolve_mobile_family_conversations($1::text,$2::text,$3::uuid,$4::uuid,$5::text,$6::uuid,$7::text,$8::integer) AS payload`,
+      `SELECT platform.resolve_mobile_family_conversations($1::text,$2::text,$3::uuid,$4::uuid,$5::text,$6::uuid,$7::text,$8::integer) AS payload,
+       (SELECT scope.time_zone FROM platform.resolve_mobile_request_scope(
+         $1::text,$2::text,$3::uuid,$4::uuid,$5::text
+       ) AS scope) AS "timeZoneId"`,
       [
         issuer,
         subject,
@@ -276,7 +312,10 @@ export class DatabaseMobileFamilyConversationStore {
     if (!UUID_PATTERN.test(conversationId))
       throw new Error('Mobile Family conversation id is invalid.');
     const rows = await this.#database.query<PayloadRow>(
-      `SELECT platform.resolve_mobile_family_conversation_messages($1::text,$2::text,$3::uuid,$4::uuid,$5::text,$6::uuid,$7::text,$8::integer) AS payload`,
+      `SELECT platform.resolve_mobile_family_conversation_messages($1::text,$2::text,$3::uuid,$4::uuid,$5::text,$6::uuid,$7::text,$8::integer) AS payload,
+       (SELECT scope.time_zone FROM platform.resolve_mobile_request_scope(
+         $1::text,$2::text,$3::uuid,$4::uuid,$5::text
+       ) AS scope) AS "timeZoneId"`,
       [
         issuer,
         subject,
@@ -290,7 +329,7 @@ export class DatabaseMobileFamilyConversationStore {
     );
     return this.#onePayload(
       rows,
-      (value) => validateMessagePage(value, conversationId),
+      (value, timeZoneValue) => validateMessagePage(value, conversationId, timeZoneValue),
       'Mobile family conversation messages',
     );
   }
@@ -302,7 +341,7 @@ export class DatabaseMobileFamilyConversationStore {
     idempotencyKey: string,
     input: FamilyMessageSendInput,
   ): Promise<
-    | MobileFamilyConversationMessage
+    | MobileFamilyConversationSentMessage
     | { readonly status: 'idempotency-conflict' | 'locked' }
     | undefined
   > {
@@ -318,7 +357,10 @@ export class DatabaseMobileFamilyConversationStore {
       throw new Error('Mobile Family conversation message is invalid.');
     }
     const rows = await this.#database.query<PayloadRow>(
-      `SELECT platform.send_mobile_family_conversation_message($1::text,$2::text,$3::uuid,$4::uuid,$5::text,$6::uuid,$7::text,$8::text) AS payload`,
+      `SELECT platform.send_mobile_family_conversation_message($1::text,$2::text,$3::uuid,$4::uuid,$5::text,$6::uuid,$7::text,$8::text) AS payload,
+       (SELECT scope.time_zone FROM platform.resolve_mobile_request_scope(
+         $1::text,$2::text,$3::uuid,$4::uuid,$5::text
+       ) AS scope) AS "timeZoneId"`,
       [
         issuer,
         subject,
@@ -332,7 +374,7 @@ export class DatabaseMobileFamilyConversationStore {
     );
     return this.#onePayload(
       rows,
-      (value) => {
+      (value, timeZoneValue) => {
         if (isRecord(value) && 'status' in value) {
           const mutation = validateMutation(value);
           if (
@@ -343,7 +385,9 @@ export class DatabaseMobileFamilyConversationStore {
           }
           throw invalidResponse('Mobile family conversation message');
         }
-        return validateMessage(value, 'Mobile family conversation message');
+        const operation = 'Mobile family conversation message';
+        const timeZoneId = requireSchoolTimeZone(timeZoneValue, operation);
+        return { ...validateMessage(value, operation, timeZoneId), timeZoneId };
       },
       'Mobile family conversation message',
     );
@@ -380,13 +424,13 @@ export class DatabaseMobileFamilyConversationStore {
 
   #onePayload<T>(
     rows: readonly PayloadRow[],
-    validator: (value: unknown) => T,
+    validator: (value: unknown, timeZoneValue: unknown) => T,
     operation: string,
   ): T | undefined {
     if (rows.length !== 1) throw invalidResponse(operation);
     const row = rows[0];
     if (row === undefined) throw invalidResponse(operation);
     if (row.payload === null || row.payload === undefined) return undefined;
-    return validator(row.payload);
+    return validator(row.payload, row.timeZoneId);
   }
 }

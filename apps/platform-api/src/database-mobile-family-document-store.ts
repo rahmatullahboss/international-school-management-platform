@@ -2,9 +2,11 @@ import type { HttpDatabase } from '@school/database';
 import type { OidcIdentity } from '@school/policy';
 
 import type { MobileReadScope } from './database-mobile-read-store.js';
+import { requireSchoolTimeZone, schoolLocalTimestamp } from './mobile-school-time.js';
 
 interface PayloadRow extends Record<string, unknown> {
   readonly payload: unknown;
+  readonly timeZoneId?: unknown;
 }
 
 export interface MobileFamilyDocumentSummary {
@@ -20,6 +22,7 @@ export interface MobileFamilyDocumentSummary {
 export interface MobileFamilyDocumentPage {
   readonly documents: readonly MobileFamilyDocumentSummary[];
   readonly nextCursor: string | null;
+  readonly timeZoneId: string;
 }
 
 export interface MobileFamilyDocumentGrant {
@@ -28,6 +31,7 @@ export interface MobileFamilyDocumentGrant {
   readonly grantId: string;
   readonly requiresStepUp: boolean;
   readonly singleUse: true;
+  readonly timeZoneId: string;
 }
 
 export type MobileFamilyDocumentGrantResult =
@@ -127,7 +131,11 @@ function requireDocumentBytes(value: unknown, operation: string): number {
   return value;
 }
 
-function validateDocument(value: unknown, operation: string): MobileFamilyDocumentSummary {
+function validateDocument(
+  value: unknown,
+  operation: string,
+  timeZoneId: string,
+): MobileFamilyDocumentSummary {
   const document = requireRecord(value, operation);
   requireExactKeys(
     document,
@@ -162,20 +170,27 @@ function validateDocument(value: unknown, operation: string): MobileFamilyDocume
     title: requireText(document.title, operation),
     fileName: requireText(document.fileName, operation),
     sizeBytes: requireDocumentBytes(document.sizeBytes, operation),
-    issuedAt: requireTimestamp(document.issuedAt, operation),
+    issuedAt: schoolLocalTimestamp(
+      requireTimestamp(document.issuedAt, operation),
+      timeZoneId,
+      operation,
+    ),
     classification,
     cachePolicy,
   };
 }
 
-function validatePage(value: unknown): MobileFamilyDocumentPage {
+function validatePage(value: unknown, timeZoneValue: unknown): MobileFamilyDocumentPage {
   const operation = 'Mobile family documents';
+  const timeZoneId = requireSchoolTimeZone(timeZoneValue, operation);
   const payload = requireRecord(value, operation);
   requireExactKeys(payload, operation, new Set(['documents', 'nextCursor']));
   if (!Array.isArray(payload.documents) || payload.documents.length > MAX_PAGE_DOCUMENTS) {
     throw invalidResponse(operation);
   }
-  const documents = payload.documents.map((document) => validateDocument(document, operation));
+  const documents = payload.documents.map((document) =>
+    validateDocument(document, operation, timeZoneId),
+  );
   if (new Set(documents.map((document) => document.documentId)).size !== documents.length) {
     throw invalidResponse(operation);
   }
@@ -183,16 +198,17 @@ function validatePage(value: unknown): MobileFamilyDocumentPage {
   if (nextCursor !== null && (typeof nextCursor !== 'string' || !UUID_PATTERN.test(nextCursor))) {
     throw invalidResponse(operation);
   }
-  return { documents, nextCursor };
+  return { documents, nextCursor, timeZoneId };
 }
 
-function validateGrant(value: unknown): MobileFamilyDocumentGrantResult {
+function validateGrant(value: unknown, timeZoneValue: unknown): MobileFamilyDocumentGrantResult {
   const operation = 'Mobile family document grant';
   const payload = requireRecord(value, operation);
   if (payload.status === 'idempotency-conflict') {
     requireExactKeys(payload, operation, new Set(['status']));
     return { status: 'idempotency-conflict' };
   }
+  const timeZoneId = requireSchoolTimeZone(timeZoneValue, operation);
   requireExactKeys(
     payload,
     operation,
@@ -203,10 +219,15 @@ function validateGrant(value: unknown): MobileFamilyDocumentGrantResult {
   }
   return {
     documentId: requireUuid(payload.documentId, operation),
-    expiresAt: requireTimestamp(payload.expiresAt, operation),
+    expiresAt: schoolLocalTimestamp(
+      requireTimestamp(payload.expiresAt, operation),
+      timeZoneId,
+      operation,
+    ),
     grantId: requireUuid(payload.grantId, operation),
     requiresStepUp: payload.requiresStepUp,
     singleUse: true,
+    timeZoneId,
   };
 }
 
@@ -283,7 +304,10 @@ export class DatabaseMobileFamilyDocumentStore {
     const rows = await this.#database.query<PayloadRow>(
       `SELECT platform.resolve_mobile_family_documents(
          $1::text, $2::text, $3::uuid, $4::uuid, $5::text, $6::uuid, $7::uuid, $8::integer
-       ) AS payload`,
+       ) AS payload,
+       (SELECT scope.time_zone FROM platform.resolve_mobile_request_scope(
+         $1::text, $2::text, $3::uuid, $4::uuid, $5::text
+       ) AS scope) AS "timeZoneId"`,
       [
         issuer,
         subject,
@@ -312,7 +336,10 @@ export class DatabaseMobileFamilyDocumentStore {
     const rows = await this.#database.query<PayloadRow>(
       `SELECT platform.issue_mobile_family_document_download_grant(
          $1::text, $2::text, $3::uuid, $4::uuid, $5::text, $6::uuid, $7::text
-       ) AS payload`,
+       ) AS payload,
+       (SELECT scope.time_zone FROM platform.resolve_mobile_request_scope(
+         $1::text, $2::text, $3::uuid, $4::uuid, $5::text
+       ) AS scope) AS "timeZoneId"`,
       [issuer, subject, scope.tenantId, scope.campusId, scope.persona, documentId, idempotencyKey],
     );
     return this.#onePayload(rows, validateGrant, 'Mobile family document grant');
@@ -352,13 +379,13 @@ export class DatabaseMobileFamilyDocumentStore {
 
   #onePayload<T>(
     rows: readonly PayloadRow[],
-    validator: (value: unknown) => T,
+    validator: (value: unknown, timeZoneValue: unknown) => T,
     operation: string,
   ): T | undefined {
     if (rows.length !== 1) throw invalidResponse(operation);
     const row = rows[0];
     if (row === undefined) throw invalidResponse(operation);
     if (row.payload === null || row.payload === undefined) return undefined;
-    return validator(row.payload);
+    return validator(row.payload, row.timeZoneId);
   }
 }

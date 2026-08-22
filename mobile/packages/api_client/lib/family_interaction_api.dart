@@ -24,8 +24,12 @@ final class FamilyInteractionApi {
       queryParameters: _pageQuery(cursor, limit),
     );
     try {
+      final timeZoneId = _responseTimeZone(response, session);
       return FamilyDocumentPage(
-        documents: _objectList(response, 'documents').map(_document),
+        documents: _objectList(
+          response,
+          'documents',
+        ).map((document) => _document(document, timeZoneId)),
         nextCursor: _optionalString(response, 'nextCursor'),
       );
     } on Object catch (error) {
@@ -61,9 +65,10 @@ final class FamilyInteractionApi {
       if (response.keys.any(forbiddenKeys.contains)) {
         throw const FormatException('FAMILY_DOCUMENT_RAW_CREDENTIAL_FORBIDDEN');
       }
+      final timeZoneId = _responseTimeZone(response, session);
       final grant = FamilyDocumentDownloadGrant(
         documentId: _requiredString(response, 'documentId'),
-        expiresAt: _dateTime(response, 'expiresAt'),
+        expiresAt: _timestamp(response, 'expiresAt', timeZoneId),
         grantId: _requiredString(response, 'grantId'),
         requiresStepUp: _requiredBool(response, 'requiresStepUp'),
         singleUse: _requiredBool(response, 'singleUse'),
@@ -91,10 +96,11 @@ final class FamilyInteractionApi {
       ),
     );
     try {
+      final timeZoneId = _responseTimeZone(response, session);
       final forms = _objectList(
         response,
         'forms',
-      ).map(_formSummary).toList(growable: false);
+      ).map((form) => _formSummary(form, timeZoneId)).toList(growable: false);
       _requireUnique(forms.map((form) => form.formId), 'FAMILY_FORM_DUPLICATE');
       return List<FamilyFormSummary>.unmodifiable(forms);
     } on Object catch (error) {
@@ -117,9 +123,10 @@ final class FamilyInteractionApi {
       ),
     );
     try {
+      final timeZoneId = _responseTimeZone(response, session);
       final definition = FamilyFormDefinition(
         baseVersion: _requiredInt(response, 'baseVersion'),
-        dueAt: _optionalDateTime(response, 'dueAt'),
+        dueAt: _optionalTimestamp(response, 'dueAt', timeZoneId),
         fields: _objectList(response, 'fields').map(_formField),
         formId: _requiredString(response, 'formId'),
         schemaVersion: _requiredInt(response, 'schemaVersion'),
@@ -172,10 +179,11 @@ final class FamilyInteractionApi {
       ),
     );
     try {
+      final timeZoneId = _responseTimeZone(response, session);
       final consents = _objectList(
         response,
         'consents',
-      ).map(_consent).toList(growable: false);
+      ).map((consent) => _consent(consent, timeZoneId)).toList(growable: false);
       _requireUnique(
         consents.map((consent) => consent.consentId),
         'FAMILY_CONSENT_DUPLICATE',
@@ -225,11 +233,12 @@ final class FamilyInteractionApi {
       queryParameters: _pageQuery(cursor, limit),
     );
     try {
+      final timeZoneId = _responseTimeZone(response, session);
       return FamilyConversationPage(
         conversations: _objectList(
           response,
           'conversations',
-        ).map(_conversation),
+        ).map((conversation) => _conversation(conversation, timeZoneId)),
         nextCursor: _optionalString(response, 'nextCursor'),
       );
     } on Object catch (error) {
@@ -255,9 +264,13 @@ final class FamilyInteractionApi {
       queryParameters: _pageQuery(cursor, limit),
     );
     try {
+      final timeZoneId = _responseTimeZone(response, session);
       final page = FamilyConversationMessagePage(
         conversationId: _requiredString(response, 'conversationId'),
-        messages: _objectList(response, 'messages').map(_message),
+        messages: _objectList(
+          response,
+          'messages',
+        ).map((message) => _message(message, timeZoneId)),
         nextCursor: _optionalString(response, 'nextCursor'),
       );
       if (page.conversationId != normalizedId) {
@@ -314,7 +327,8 @@ final class FamilyInteractionApi {
       idempotencyKey: command.idempotencyKey,
     );
     try {
-      return _message(response);
+      final timeZoneId = _responseTimeZone(response, session);
+      return _message(response, timeZoneId);
     } on Object catch (error) {
       throw _invalidResponse('sent-message', error);
     }
@@ -345,7 +359,7 @@ final class FamilyInteractionApi {
     }
   }
 
-  FamilyDocumentSummary _document(Map<String, Object?> json) =>
+  FamilyDocumentSummary _document(Map<String, Object?> json, String timeZoneId) =>
       FamilyDocumentSummary(
         cachePolicy: _documentCachePolicy(_requiredString(json, 'cachePolicy')),
         classification: _documentClassification(
@@ -353,14 +367,14 @@ final class FamilyInteractionApi {
         ),
         documentId: _requiredString(json, 'documentId'),
         fileName: _requiredString(json, 'fileName'),
-        issuedAt: _dateTime(json, 'issuedAt'),
+        issuedAt: _timestamp(json, 'issuedAt', timeZoneId),
         sizeBytes: _requiredInt(json, 'sizeBytes'),
         title: _requiredString(json, 'title'),
       );
 
-  FamilyFormSummary _formSummary(Map<String, Object?> json) =>
+  FamilyFormSummary _formSummary(Map<String, Object?> json, String timeZoneId) =>
       FamilyFormSummary(
-        dueAt: _optionalDateTime(json, 'dueAt'),
+        dueAt: _optionalTimestamp(json, 'dueAt', timeZoneId),
         formId: _requiredString(json, 'formId'),
         status: _formStatus(_requiredString(json, 'status')),
         title: _requiredString(json, 'title'),
@@ -375,30 +389,30 @@ final class FamilyInteractionApi {
         type: _formFieldType(_requiredString(json, 'type')),
       );
 
-  FamilyConsentRequest _consent(Map<String, Object?> json) =>
+  FamilyConsentRequest _consent(Map<String, Object?> json, String timeZoneId) =>
       FamilyConsentRequest(
         consentId: _requiredString(json, 'consentId'),
-        dueAt: _optionalDateTime(json, 'dueAt'),
+        dueAt: _optionalTimestamp(json, 'dueAt', timeZoneId),
         policyVersion: _requiredString(json, 'policyVersion'),
         status: _consentStatus(_requiredString(json, 'status')),
         studentId: _requiredString(json, 'studentId'),
         title: _requiredString(json, 'title'),
       );
 
-  FamilyConversationSummary _conversation(Map<String, Object?> json) =>
+  FamilyConversationSummary _conversation(Map<String, Object?> json, String timeZoneId) =>
       FamilyConversationSummary(
         conversationId: _requiredString(json, 'conversationId'),
-        latestMessageAt: _dateTime(json, 'latestMessageAt'),
+        latestMessageAt: _timestamp(json, 'latestMessageAt', timeZoneId),
         subject: _requiredString(json, 'subject'),
         unreadCount: _requiredInt(json, 'unreadCount'),
       );
 
-  FamilyConversationMessage _message(Map<String, Object?> json) =>
+  FamilyConversationMessage _message(Map<String, Object?> json, String timeZoneId) =>
       FamilyConversationMessage(
         authorLabel: _requiredString(json, 'authorLabel'),
         body: _requiredString(json, 'body'),
         messageId: _requiredString(json, 'messageId'),
-        sentAt: _dateTime(json, 'sentAt'),
+        sentAt: _timestamp(json, 'sentAt', timeZoneId),
       );
 
   FamilyDocumentClassification _documentClassification(String value) =>
@@ -533,12 +547,32 @@ bool _requiredBool(Map<String, Object?> json, String key) {
   return value;
 }
 
-DateTime _dateTime(Map<String, Object?> json, String key) =>
-    DateTime.parse(_requiredString(json, key)).toUtc();
+String _responseTimeZone(Map<String, Object?> json, SchoolSession session) {
+  final timeZoneId = _requiredString(json, 'timeZoneId');
+  if (timeZoneId != session.timeZone) {
+    throw const FormatException('FAMILY_TIME_ZONE_SCOPE_MISMATCH');
+  }
+  return timeZoneId;
+}
 
-DateTime? _optionalDateTime(Map<String, Object?> json, String key) {
+SchoolAuthoritativeTimestamp _timestamp(
+  Map<String, Object?> json,
+  String key,
+  String timeZoneId,
+) => SchoolAuthoritativeTimestamp.parse(
+  timestamp: _requiredString(json, key),
+  timeZoneId: timeZoneId,
+);
+
+SchoolAuthoritativeTimestamp? _optionalTimestamp(
+  Map<String, Object?> json,
+  String key,
+  String timeZoneId,
+) {
   final value = _optionalString(json, key);
-  return value == null ? null : DateTime.parse(value).toUtc();
+  return value == null
+      ? null
+      : SchoolAuthoritativeTimestamp.parse(timestamp: value, timeZoneId: timeZoneId);
 }
 
 void _requireUnique(Iterable<String> values, String code) {

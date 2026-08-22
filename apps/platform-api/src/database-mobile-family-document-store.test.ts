@@ -17,6 +17,7 @@ describe('database mobile family document store', () => {
   it('validates an exact authorized document page', async () => {
     const query = vi.fn().mockResolvedValue([
       {
+        timeZoneId: 'Asia/Dhaka',
         payload: {
           documents: [
             {
@@ -44,12 +45,13 @@ describe('database mobile family document store', () => {
           title: 'Student report',
           fileName: 'student-report.pdf',
           sizeBytes: 1024,
-          issuedAt: '2026-08-21T09:00:00.000Z',
+          issuedAt: '2026-08-21T15:00:00.000+06:00',
           classification: 'restricted',
           cachePolicy: 'noStore',
         },
       ],
       nextCursor: null,
+      timeZoneId: 'Asia/Dhaka',
     });
     expect(query).toHaveBeenCalledWith(
       expect.stringContaining('resolve_mobile_family_documents'),
@@ -64,11 +66,28 @@ describe('database mobile family document store', () => {
     );
   });
 
+  it('fails closed when authoritative campus timezone metadata is absent', async () => {
+    const query = vi.fn().mockResolvedValue([
+      {
+        payload: {
+          documents: [],
+          nextCursor: null,
+        },
+      },
+    ]);
+    const store = new DatabaseMobileFamilyDocumentStore({ query });
+
+    await expect(
+      store.listDocuments(identity, scope, '40000000-0000-4000-8000-000000000011', undefined, 25),
+    ).rejects.toThrow('invalid school timestamp metadata');
+  });
+
   it('issues an exact single-use grant and rejects unexpected credential fields', async () => {
     const query = vi
       .fn()
       .mockResolvedValueOnce([
         {
+          timeZoneId: 'Asia/Dhaka',
           payload: {
             documentId: '40000000-0000-4000-8000-000000000010',
             expiresAt: '2026-08-21T09:05:00.000Z',
@@ -80,6 +99,7 @@ describe('database mobile family document store', () => {
       ])
       .mockResolvedValueOnce([
         {
+          timeZoneId: 'Asia/Dhaka',
           payload: {
             documentId: '40000000-0000-4000-8000-000000000010',
             expiresAt: '2026-08-21T09:05:00.000Z',
@@ -118,6 +138,7 @@ describe('database mobile family document store', () => {
   it('claims a grant only through the verified identity and assurance contract', async () => {
     const query = vi.fn().mockResolvedValue([
       {
+        timeZoneId: 'Asia/Dhaka',
         payload: {
           status: 'claimed',
           documentId: '40000000-0000-4000-8000-000000000010',

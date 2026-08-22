@@ -10,7 +10,7 @@ void main() {
         classification: FamilyDocumentClassification.restricted,
         documentId: 'document-1',
         fileName: 'report.pdf',
-        issuedAt: DateTime.utc(2026, 7, 30),
+        issuedAt: schoolTime('2026-07-30T06:00:00.000+06:00'),
         sizeBytes: 1024,
         title: 'Confidential report',
       ),
@@ -29,7 +29,7 @@ void main() {
     () {
       final grant = FamilyDocumentDownloadGrant(
         documentId: 'document-1',
-        expiresAt: DateTime.utc(2026, 7, 30, 2),
+        expiresAt: schoolTime('2026-07-30T08:00:00.000+06:00'),
         grantId: 'opaque-download-reference',
         requiresStepUp: true,
         singleUse: true,
@@ -158,13 +158,13 @@ void main() {
           conversations: [
             FamilyConversationSummary(
               conversationId: 'conversation-1',
-              latestMessageAt: DateTime.utc(2026, 7, 30),
+              latestMessageAt: schoolTime('2026-07-30T06:00:00.000+06:00'),
               subject: 'Class update',
               unreadCount: 1,
             ),
             FamilyConversationSummary(
               conversationId: 'conversation-1',
-              latestMessageAt: DateTime.utc(2026, 7, 30),
+              latestMessageAt: schoolTime('2026-07-30T06:00:00.000+06:00'),
               subject: 'Duplicate',
               unreadCount: 0,
             ),
@@ -195,6 +195,9 @@ void main() {
     },
   );
 }
+
+SchoolAuthoritativeTimestamp schoolTime(String value) =>
+    SchoolAuthoritativeTimestamp.parse(timestamp: value, timeZoneId: 'Asia/Dhaka');
 
 SchoolSession session({
   required SchoolPersona persona,

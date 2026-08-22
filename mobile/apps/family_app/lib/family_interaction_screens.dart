@@ -1136,11 +1136,11 @@ void _afterFrame(FutureOr<void> Function() callback) {
   WidgetsBinding.instance.addPostFrameCallback((_) => callback());
 }
 
-String _familyDateLabel(BuildContext context, DateTime value) =>
-    FamilyUtcPresentation.date(context, value);
+String _familyDateLabel(BuildContext context, SchoolAuthoritativeTimestamp value) =>
+    FamilySchoolTimePresentation.date(context, value);
 
-String _familyDateTimeLabel(BuildContext context, DateTime value) =>
-    FamilyUtcPresentation.dateTime(context, value);
+String _familyDateTimeLabel(BuildContext context, SchoolAuthoritativeTimestamp value) =>
+    FamilySchoolTimePresentation.dateTime(context, value);
 
 String _fileSizeLabel(int bytes) {
   if (bytes < 1024) return '$bytes B';

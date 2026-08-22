@@ -66,6 +66,7 @@ describe('mobile Family conversation routes', () => {
   it('lists scoped conversations and paginated messages without hidden read mutation', async () => {
     databaseQuery.mockResolvedValueOnce([
       {
+        timeZoneId: 'Asia/Dhaka',
         payload: {
           conversations: [
             {
@@ -92,6 +93,7 @@ describe('mobile Family conversation routes', () => {
 
     databaseQuery.mockResolvedValueOnce([
       {
+        timeZoneId: 'Asia/Dhaka',
         payload: {
           conversationId,
           messages: [
@@ -122,6 +124,7 @@ describe('mobile Family conversation routes', () => {
   it('sends a message and records read state only through explicit idempotent POST commands', async () => {
     databaseQuery.mockResolvedValueOnce([
       {
+        timeZoneId: 'Asia/Dhaka',
         payload: {
           messageId,
           authorLabel: 'Guardian Tester',
@@ -165,7 +168,9 @@ describe('mobile Family conversation routes', () => {
   });
 
   it('supports the student Family persona when canonical student authority resolves', async () => {
-    databaseQuery.mockResolvedValueOnce([{ payload: { conversations: [], nextCursor: null } }]);
+    databaseQuery.mockResolvedValueOnce([
+      { payload: { conversations: [], nextCursor: null }, timeZoneId: 'Asia/Dhaka' },
+    ]);
     const response = await app.request(
       `/v1/mobile/family/students/${studentId}/conversations`,
       { headers: { ...headers, 'x-persona': 'student' } },
