@@ -161,6 +161,7 @@ final class FamilyReadApi implements FamilyReadRepository {
 
   FamilyMoneyAmount _money(Map<String, Object?> json) => FamilyMoneyAmount(
     currencyCode: _requiredString(json, 'currencyCode'),
+    fractionDigits: _requiredInt(json, 'fractionDigits'),
     minorUnits: _requiredInt(json, 'minorUnits'),
   );
 

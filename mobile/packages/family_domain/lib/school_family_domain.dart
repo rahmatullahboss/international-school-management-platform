@@ -135,15 +135,23 @@ final class FamilyPublishedResult {
 }
 
 final class FamilyMoneyAmount {
-  FamilyMoneyAmount({required String currencyCode, required int minorUnits})
-    : currencyCode = _currency(currencyCode),
-      minorUnits = minorUnits {
+  FamilyMoneyAmount({
+    required String currencyCode,
+    required int fractionDigits,
+    required int minorUnits,
+  }) : currencyCode = _currency(currencyCode),
+       fractionDigits = fractionDigits,
+       minorUnits = minorUnits {
     if (minorUnits < 0) {
       throw const FamilyDomainException('FAMILY_MONEY_NEGATIVE');
+    }
+    if (fractionDigits < 0 || fractionDigits > 6) {
+      throw const FamilyDomainException('FAMILY_MONEY_FRACTION_DIGITS_INVALID');
     }
   }
 
   final String currencyCode;
+  final int fractionDigits;
   final int minorUnits;
 }
 
@@ -163,6 +171,12 @@ final class FamilyFeeReadModel {
     if (lastReceipt != null &&
         lastReceipt!.currencyCode != outstanding.currencyCode) {
       throw const FamilyDomainException('FAMILY_RECEIPT_CURRENCY_MISMATCH');
+    }
+    if (lastReceipt != null &&
+        lastReceipt!.fractionDigits != outstanding.fractionDigits) {
+      throw const FamilyDomainException(
+        'FAMILY_RECEIPT_FRACTION_DIGITS_MISMATCH',
+      );
     }
   }
 

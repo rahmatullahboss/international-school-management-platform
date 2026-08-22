@@ -1013,7 +1013,7 @@ class _FamilyFeesReadScreen extends StatelessWidget {
   String _moneyLabel(BuildContext context, FamilyMoneyAmount amount) =>
       SchoolExactMoneyFormatter.format(
         currencyCode: amount.currencyCode,
-        fractionDigits: 2,
+        fractionDigits: amount.fractionDigits,
         locale: Localizations.localeOf(context),
         minorUnits: amount.minorUnits,
       );

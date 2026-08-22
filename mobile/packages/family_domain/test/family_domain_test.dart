@@ -106,32 +106,89 @@ void main() {
     },
   );
 
-  test('money remains exact integer minor units with currency consistency', () {
-    final fees = FamilyFeeReadModel(
-      invoiceReference: 'INV-2026-0719',
-      outstanding: FamilyMoneyAmount(currencyCode: 'bdt', minorUnits: 450000),
-      lastReceipt: FamilyMoneyAmount(currencyCode: 'BDT', minorUnits: 450000),
-      lastReceiptReference: 'RCPT-1042',
-    );
-
-    expect(fees.outstanding.currencyCode, 'BDT');
-    expect(fees.outstanding.minorUnits, 450000);
-    expect(
-      () => FamilyFeeReadModel(
+  test(
+    'money remains exact integer minor units with authoritative metadata',
+    () {
+      final fees = FamilyFeeReadModel(
         invoiceReference: 'INV-2026-0719',
-        outstanding: FamilyMoneyAmount(currencyCode: 'BDT', minorUnits: 450000),
-        lastReceipt: FamilyMoneyAmount(currencyCode: 'USD', minorUnits: 1000),
-        lastReceiptReference: 'RCPT-1042',
-      ),
-      throwsA(
-        isA<FamilyDomainException>().having(
-          (error) => error.code,
-          'code',
-          'FAMILY_RECEIPT_CURRENCY_MISMATCH',
+        outstanding: FamilyMoneyAmount(
+          currencyCode: 'bdt',
+          fractionDigits: 2,
+          minorUnits: 450000,
         ),
-      ),
-    );
-  });
+        lastReceipt: FamilyMoneyAmount(
+          currencyCode: 'BDT',
+          fractionDigits: 2,
+          minorUnits: 450000,
+        ),
+        lastReceiptReference: 'RCPT-1042',
+      );
+
+      expect(fees.outstanding.currencyCode, 'BDT');
+      expect(fees.outstanding.fractionDigits, 2);
+      expect(fees.outstanding.minorUnits, 450000);
+      expect(
+        () => FamilyFeeReadModel(
+          invoiceReference: 'INV-2026-0719',
+          outstanding: FamilyMoneyAmount(
+            currencyCode: 'BDT',
+            fractionDigits: 2,
+            minorUnits: 450000,
+          ),
+          lastReceipt: FamilyMoneyAmount(
+            currencyCode: 'USD',
+            fractionDigits: 2,
+            minorUnits: 1000,
+          ),
+          lastReceiptReference: 'RCPT-1042',
+        ),
+        throwsA(
+          isA<FamilyDomainException>().having(
+            (error) => error.code,
+            'code',
+            'FAMILY_RECEIPT_CURRENCY_MISMATCH',
+          ),
+        ),
+      );
+      expect(
+        () => FamilyFeeReadModel(
+          invoiceReference: 'INV-2026-0719',
+          outstanding: FamilyMoneyAmount(
+            currencyCode: 'KWD',
+            fractionDigits: 3,
+            minorUnits: 450000,
+          ),
+          lastReceipt: FamilyMoneyAmount(
+            currencyCode: 'KWD',
+            fractionDigits: 2,
+            minorUnits: 1000,
+          ),
+          lastReceiptReference: 'RCPT-1042',
+        ),
+        throwsA(
+          isA<FamilyDomainException>().having(
+            (error) => error.code,
+            'code',
+            'FAMILY_RECEIPT_FRACTION_DIGITS_MISMATCH',
+          ),
+        ),
+      );
+      expect(
+        () => FamilyMoneyAmount(
+          currencyCode: 'JPY',
+          fractionDigits: 7,
+          minorUnits: 1000,
+        ),
+        throwsA(
+          isA<FamilyDomainException>().having(
+            (error) => error.code,
+            'code',
+            'FAMILY_MONEY_FRACTION_DIGITS_INVALID',
+          ),
+        ),
+      );
+    },
+  );
 
   test('dashboard snapshots keep server read models immutable', () {
     final timetable = <FamilyTimetableItem>[

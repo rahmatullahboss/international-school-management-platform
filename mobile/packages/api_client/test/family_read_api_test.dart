@@ -77,8 +77,41 @@ void main() {
       expect(dashboard.attendance?.summaryLabel, 'Published attendance · 96%');
       expect(dashboard.fees?.outstanding.minorUnits, 450000);
       expect(dashboard.fees?.outstanding.currencyCode, 'BDT');
+      expect(dashboard.fees?.outstanding.fractionDigits, 2);
       expect(dashboard.publishedResults.single.gradeLabel, 'A');
       expect(dashboard.messages?.unreadCount, 2);
+
+      client.close();
+    },
+  );
+
+  test(
+    'rejects fee payloads without authoritative fraction metadata',
+    () async {
+      final payload = dashboardFixture();
+      final fees = payload['fees']! as Map<String, Object?>;
+      final outstanding = fees['outstanding']! as Map<String, Object?>;
+      outstanding.remove('fractionDigits');
+      final client = SchoolApiClient(
+        accessTokenProvider: () async => 'access-token',
+        baseUri: Uri.parse('https://api.school.example/'),
+        client: MockClient(
+          (request) async => http.Response(jsonEncode(payload), 200),
+        ),
+      );
+
+      expect(
+        () => FamilyReadApi(
+          client,
+        ).loadDashboard(session: guardianSession(), studentId: 'student-1'),
+        throwsA(
+          isA<SchoolApiException>().having(
+            (error) => error.code,
+            'code',
+            'INVALID_FAMILY_RESPONSE',
+          ),
+        ),
+      );
 
       client.close();
     },
@@ -251,11 +284,13 @@ Map<String, Object?> dashboardFixture() => <String, Object?>{
     'invoiceReference': 'INV-2026-0719',
     'outstanding': <String, Object?>{
       'currencyCode': 'BDT',
+      'fractionDigits': 2,
       'minorUnits': 450000,
     },
     'lastReceiptReference': 'RCPT-1042',
     'lastReceipt': <String, Object?>{
       'currencyCode': 'BDT',
+      'fractionDigits': 2,
       'minorUnits': 450000,
     },
   },
