@@ -196,6 +196,61 @@ final class TeacherMobileApi
   }
 
   @override
+  Future<TeacherConversationMessage> sendConversationMessage({
+    required TeacherConversationSendCommand command,
+    required SchoolSession session,
+    String correlationId = 'teacher-conversation-send',
+  }) async {
+    command.validateSession(session);
+    final response = await _client.postJson(
+      '$conversationsPath/${Uri.encodeComponent(command.conversationId)}/messages',
+      body: <String, Object?>{'body': command.body},
+      context: ApiRequestContext(
+        correlationId: correlationId,
+        session: session,
+      ),
+      idempotencyKey: command.idempotencyKey,
+    );
+    try {
+      return _sentConversationMessage(response);
+    } on TeacherDomainException catch (error) {
+      throw _invalidResponse('conversation-send:${error.code}');
+    } on FormatException catch (error) {
+      throw _invalidResponse('conversation-send:${error.message}');
+    }
+  }
+
+  @override
+  Future<int> markConversationRead({
+    required TeacherConversationReadCommand command,
+    required SchoolSession session,
+    String correlationId = 'teacher-conversation-read',
+  }) async {
+    command.validateSession(session);
+    final response = await _client.postJson(
+      '$conversationsPath/${Uri.encodeComponent(command.conversationId)}/read-receipts',
+      body: <String, Object?>{'messageId': command.messageId},
+      context: ApiRequestContext(
+        correlationId: correlationId,
+        session: session,
+      ),
+      idempotencyKey: command.idempotencyKey,
+    );
+    try {
+      _requireExactKeys(response, const {
+        'acceptedRevision',
+      }, 'conversation-read');
+      final revision = _requiredInt(response, 'acceptedRevision');
+      if (revision < 0) {
+        throw const FormatException('TEACHER_READ_REVISION_INVALID');
+      }
+      return revision;
+    } on FormatException catch (error) {
+      throw _invalidResponse('conversation-read:${error.message}');
+    }
+  }
+
+  @override
   Future<TeacherWriteReceipt> submitAttendance({
     required TeacherAttendanceBatchCommand command,
     required SchoolSession session,
@@ -336,6 +391,24 @@ final class TeacherMobileApi
     return TeacherConversationMessage(
       authorLabel: _requiredString(json, 'authorLabel'),
       authoredByViewer: _requiredBool(json, 'authoredByViewer'),
+      body: _requiredString(json, 'body'),
+      messageId: _requiredString(json, 'messageId'),
+      sentAt: _dateTime(json, 'sentAt'),
+    );
+  }
+
+  TeacherConversationMessage _sentConversationMessage(
+    Map<String, Object?> json,
+  ) {
+    _requireExactKeys(json, const {
+      'messageId',
+      'authorLabel',
+      'body',
+      'sentAt',
+    }, 'conversation-sent-message');
+    return TeacherConversationMessage(
+      authorLabel: _requiredString(json, 'authorLabel'),
+      authoredByViewer: true,
       body: _requiredString(json, 'body'),
       messageId: _requiredString(json, 'messageId'),
       sentAt: _dateTime(json, 'sentAt'),

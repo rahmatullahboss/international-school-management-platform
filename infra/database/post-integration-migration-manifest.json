@@ -159,6 +159,12 @@
       "id": "202608220002_MOB-09_mobile_staff_reads",
       "stream": "MOB-09",
       "path": "infra/database/post-integration-migrations/202608220002_MOB-09_mobile_staff_reads.sql"
+    },
+    {
+      "order": 27,
+      "id": "202608220003_MOB-10_mobile_staff_conversation_writes",
+      "stream": "MOB-10",
+      "path": "infra/database/post-integration-migrations/202608220003_MOB-10_mobile_staff_conversation_writes.sql"
     }
   ]
 }

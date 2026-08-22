@@ -15,6 +15,10 @@ final class StaffExtendedReadStrings {
     required this.messagesEmpty,
     required this.open,
     required this.readOnlyConversation,
+    required this.replyAvailable,
+    required this.message,
+    required this.messageActionFailed,
+    required this.sendMessage,
     required this.refresh,
     required this.unavailable,
   });
@@ -36,7 +40,11 @@ final class StaffExtendedReadStrings {
       locked: 'লক করা',
       messagesEmpty: 'যোগদানের পর কোনো বার্তা নেই।',
       open: 'খোলা',
-      readOnlyConversation: 'এই মোবাইল ভিউটি এখন শুধু পড়ার জন্য।',
+      readOnlyConversation: 'এই কথোপকথনে উত্তর দেওয়ার অনুমতি নেই।',
+      replyAvailable: 'উত্তর দেওয়া যাবে',
+      message: 'বার্তা',
+      messageActionFailed: 'বার্তার কাজ সম্পন্ন হয়নি',
+      sendMessage: 'বার্তা পাঠান',
       refresh: 'হালনাগাদ করুন',
       unavailable: 'কর্তৃত্বপূর্ণ ডেটা এখন পাওয়া যাচ্ছে না।',
     ),
@@ -53,7 +61,11 @@ final class StaffExtendedReadStrings {
       locked: 'مقفل',
       messagesEmpty: 'لا توجد رسائل بعد انضمامك.',
       open: 'مفتوح',
-      readOnlyConversation: 'عرض المحادثة على الهاتف للقراءة فقط حاليًا.',
+      readOnlyConversation: 'لا تملك صلاحية الرد على هذه المحادثة.',
+      replyAvailable: 'الرد متاح',
+      message: 'رسالة',
+      messageActionFailed: 'تعذر إكمال إجراء الرسالة',
+      sendMessage: 'إرسال الرسالة',
       refresh: 'تحديث',
       unavailable: 'البيانات الموثوقة غير متاحة الآن.',
     ),
@@ -73,7 +85,12 @@ final class StaffExtendedReadStrings {
       locked: 'Locked',
       messagesEmpty: 'No messages have been sent since you joined.',
       open: 'Open',
-      readOnlyConversation: 'Mobile conversation access is read-only for now.',
+      readOnlyConversation:
+          'You do not have permission to reply to this conversation.',
+      replyAvailable: 'Replies enabled',
+      message: 'Message',
+      messageActionFailed: 'Message action failed',
+      sendMessage: 'Send message',
       refresh: 'Refresh',
       unavailable: 'Authoritative data is unavailable right now.',
     ),
@@ -91,6 +108,10 @@ final class StaffExtendedReadStrings {
   final String messagesEmpty;
   final String open;
   final String readOnlyConversation;
+  final String replyAvailable;
+  final String message;
+  final String messageActionFailed;
+  final String sendMessage;
   final String refresh;
   final String unavailable;
 

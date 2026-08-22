@@ -610,6 +610,66 @@ final class TeacherConversationMessagesReadModel {
   final bool hasMore;
 }
 
+final class TeacherConversationSendCommand {
+  factory TeacherConversationSendCommand({
+    required String body,
+    required String conversationId,
+    required String idempotencyKey,
+  }) {
+    final normalizedBody = body.trim();
+    if (normalizedBody.isEmpty || normalizedBody.length > 4000) {
+      throw const TeacherDomainException(
+        'TEACHER_CONVERSATION_MESSAGE_INVALID',
+      );
+    }
+    return TeacherConversationSendCommand._(
+      body: normalizedBody,
+      conversationId: _required(conversationId, 'conversationId'),
+      idempotencyKey: _required(idempotencyKey, 'idempotencyKey'),
+    );
+  }
+
+  const TeacherConversationSendCommand._({
+    required this.body,
+    required this.conversationId,
+    required this.idempotencyKey,
+  });
+
+  final String body;
+  final String conversationId;
+  final String idempotencyKey;
+
+  void validateSession(SchoolSession session) {
+    _requireTeacherCapability(session, SchoolCapability.messagesSend);
+  }
+}
+
+final class TeacherConversationReadCommand {
+  factory TeacherConversationReadCommand({
+    required String conversationId,
+    required String idempotencyKey,
+    required String messageId,
+  }) => TeacherConversationReadCommand._(
+    conversationId: _required(conversationId, 'conversationId'),
+    idempotencyKey: _required(idempotencyKey, 'idempotencyKey'),
+    messageId: _required(messageId, 'messageId'),
+  );
+
+  const TeacherConversationReadCommand._({
+    required this.conversationId,
+    required this.idempotencyKey,
+    required this.messageId,
+  });
+
+  final String conversationId;
+  final String idempotencyKey;
+  final String messageId;
+
+  void validateSession(SchoolSession session) {
+    _requireTeacherCapability(session, SchoolCapability.messagesRead);
+  }
+}
+
 abstract interface class TeacherExtendedReadRepository {
   Future<TeacherAssessmentListReadModel> loadAssessments(
     SchoolSession session, {
@@ -625,6 +685,18 @@ abstract interface class TeacherExtendedReadRepository {
     required String conversationId,
     required SchoolSession session,
     String correlationId = 'teacher-conversation-messages',
+  });
+
+  Future<TeacherConversationMessage> sendConversationMessage({
+    required TeacherConversationSendCommand command,
+    required SchoolSession session,
+    String correlationId = 'teacher-conversation-send',
+  });
+
+  Future<int> markConversationRead({
+    required TeacherConversationReadCommand command,
+    required SchoolSession session,
+    String correlationId = 'teacher-conversation-read',
   });
 }
 

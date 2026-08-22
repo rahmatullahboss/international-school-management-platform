@@ -23,6 +23,8 @@ mobile_sync_migration="infra/database/post-integration-migrations/202608220001_M
 mobile_sync_verification="tests/integration/verify-mobile-sync-delta.sql"
 mobile_staff_read_migration="infra/database/post-integration-migrations/202608220002_MOB-09_mobile_staff_reads.sql"
 mobile_staff_read_verification="tests/integration/verify-mobile-staff-reads.sql"
+mobile_staff_conversation_write_migration="infra/database/post-integration-migrations/202608220003_MOB-10_mobile_staff_conversation_writes.sql"
+mobile_staff_conversation_write_verification="tests/integration/verify-mobile-staff-conversation-writes.sql"
 use_container=false
 
 cleanup() {
@@ -200,6 +202,7 @@ apply_file "$family_conversation_migration" >/dev/null
 apply_file "$mobile_notification_migration" >/dev/null
 apply_file "$mobile_sync_migration" >/dev/null
 apply_file "$mobile_staff_read_migration" >/dev/null
+apply_file "$mobile_staff_conversation_write_migration" >/dev/null
 
 run_psql <<'SQL' >/dev/null
 INSERT INTO iam.role_permission (tenant_id, role_id, permission_key)
@@ -520,3 +523,5 @@ apply_file "$mobile_sync_verification" >/dev/null
 printf '%s\n' 'Mobile sync delta authority verification: PASS'
 apply_file "$mobile_staff_read_verification" >/dev/null
 printf '%s\n' 'Mobile Staff read authority verification: PASS'
+apply_file "$mobile_staff_conversation_write_verification" >/dev/null
+printf '%s\n' 'Mobile Staff conversation write authority verification: PASS'

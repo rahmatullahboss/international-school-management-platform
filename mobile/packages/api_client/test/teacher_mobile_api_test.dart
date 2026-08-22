@@ -233,6 +233,97 @@ void main() {
     },
   );
 
+  test('sends teacher conversation messages with explicit idempotency', () async {
+    late http.Request capturedRequest;
+    final client = apiClient((request) async {
+      capturedRequest = request;
+      return http.Response(
+        jsonEncode(<String, Object?>{
+          'messageId': '40000000-0000-4000-8000-000000000812',
+          'authorLabel': 'Teacher One',
+          'body': 'Please review the update.',
+          'sentAt': '2026-08-22T04:00:00.000Z',
+        }),
+        200,
+      );
+    });
+
+    final message = await TeacherMobileApi(client).sendConversationMessage(
+      command: TeacherConversationSendCommand(
+        body: 'Please review the update.',
+        conversationId: '40000000-0000-4000-8000-000000000810',
+        idempotencyKey: 'teacher-message-idempotency-0001',
+      ),
+      session: teacherSession(),
+    );
+
+    expect(
+      capturedRequest.url.path,
+      '/v1/mobile/teacher/conversations/40000000-0000-4000-8000-000000000810/messages',
+    );
+    expect(
+      capturedRequest.headers['idempotency-key'],
+      'teacher-message-idempotency-0001',
+    );
+    expect(message.messageId, '40000000-0000-4000-8000-000000000812');
+    client.close();
+  });
+
+  test('records explicit teacher conversation read receipts', () async {
+    late http.Request capturedRequest;
+    final client = apiClient((request) async {
+      capturedRequest = request;
+      return http.Response(
+        jsonEncode(<String, Object?>{'acceptedRevision': 5}),
+        200,
+      );
+    });
+
+    final revision = await TeacherMobileApi(client).markConversationRead(
+      command: TeacherConversationReadCommand(
+        conversationId: '40000000-0000-4000-8000-000000000810',
+        idempotencyKey: 'teacher-read-idempotency-0001',
+        messageId: '40000000-0000-4000-8000-000000000811',
+      ),
+      session: teacherSession(),
+    );
+
+    expect(
+      capturedRequest.url.path,
+      '/v1/mobile/teacher/conversations/40000000-0000-4000-8000-000000000810/read-receipts',
+    );
+    expect(revision, 5);
+    client.close();
+  });
+
+  test('rejects hidden fields in teacher message mutation responses', () async {
+    final client = apiClient(
+      (request) async => http.Response(
+        jsonEncode(<String, Object?>{
+          'messageId': '40000000-0000-4000-8000-000000000812',
+          'authorLabel': 'Teacher One',
+          'body': 'Please review the update.',
+          'sentAt': '2026-08-22T04:00:00.000Z',
+          'internalPersonId': 'secret',
+        }),
+        200,
+      ),
+    );
+
+    expect(
+      () => TeacherMobileApi(client).sendConversationMessage(
+        command: TeacherConversationSendCommand(
+          body: 'Please review the update.',
+          conversationId: '40000000-0000-4000-8000-000000000810',
+          idempotencyKey: 'teacher-message-idempotency-0001',
+        ),
+        session: teacherSession(),
+      ),
+      throwsA(isA<SchoolApiException>()),
+    );
+    client.close();
+  });
+
   test('rejects unexpected assessment response fields', () async {
     final client = apiClient(
       (request) async => http.Response(
@@ -416,6 +507,7 @@ SchoolSession teacherSession() => SchoolSession(
     SchoolCapability.attendanceTake,
     SchoolCapability.gradesWrite,
     SchoolCapability.messagesRead,
+    SchoolCapability.messagesSend,
     SchoolCapability.timetableRead,
   },
   locale: 'en-BD',

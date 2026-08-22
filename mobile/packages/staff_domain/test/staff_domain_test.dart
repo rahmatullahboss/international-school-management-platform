@@ -252,6 +252,54 @@ void main() {
       throwsA(isA<TeacherDomainException>()),
     );
   });
+
+  test(
+    'conversation commands enforce message bounds and separate capabilities',
+    () {
+      final session = SchoolSession(
+        accountId: 'account-1',
+        activePersona: SchoolPersona.teacher,
+        availablePersonas: const {SchoolPersona.teacher},
+        campusId: 'campus-1',
+        capabilities: const {
+          SchoolCapability.messagesRead,
+          SchoolCapability.messagesSend,
+        },
+        locale: 'en-BD',
+        tenantId: 'tenant-1',
+        timeZone: 'Asia/Dhaka',
+      );
+      final send = TeacherConversationSendCommand(
+        body: 'Please review this update.',
+        conversationId: 'conversation-1',
+        idempotencyKey: 'teacher-message-idempotency-0001',
+      );
+      final read = TeacherConversationReadCommand(
+        conversationId: 'conversation-1',
+        idempotencyKey: 'teacher-read-idempotency-0001',
+        messageId: 'message-1',
+      );
+
+      expect(() => send.validateSession(session), returnsNormally);
+      expect(() => read.validateSession(session), returnsNormally);
+      final normalized = TeacherConversationSendCommand(
+        body: ' padded ',
+        conversationId: 'conversation-1',
+        idempotencyKey: 'teacher-message-idempotency-0002',
+      );
+      expect(normalized.body, 'padded');
+      expect(
+        () => send.validateSession(teacherSession()),
+        throwsA(
+          isA<TeacherDomainException>().having(
+            (error) => error.code,
+            'code',
+            'TEACHER_CAPABILITY_REQUIRED:${SchoolCapability.messagesSend}',
+          ),
+        ),
+      );
+    },
+  );
 }
 
 TeacherMeetingSummary teacherMeeting() => TeacherMeetingSummary(
