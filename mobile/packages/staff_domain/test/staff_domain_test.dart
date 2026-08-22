@@ -2,6 +2,12 @@ import 'package:school_mobile_core/mobile_core.dart';
 import 'package:school_staff_domain/school_staff_domain.dart';
 import 'package:test/test.dart';
 
+SchoolAuthoritativeTimestamp _schoolTime(String timestamp) =>
+    SchoolAuthoritativeTimestamp.parse(
+      timestamp: timestamp,
+      timeZoneId: 'Asia/Dhaka',
+    );
+
 void main() {
   test('teacher today model rejects duplicate meeting identities', () {
     final meeting = teacherMeeting();
@@ -9,7 +15,7 @@ void main() {
     expect(
       () => TeacherTodayReadModel(
         campusId: 'campus-1',
-        generatedAt: DateTime.parse('2026-07-30T08:00:00+06:00'),
+        generatedAt: _schoolTime('2026-07-30T08:00:00.000+06:00'),
         meetings: [meeting, meeting],
         teacherDisplayName: 'Teacher One',
       ),
@@ -166,7 +172,7 @@ void main() {
         assessmentId: 'assessment-1',
         assessmentTitle: 'Fractions quiz',
         categoryLabel: 'Quiz',
-        dueAt: DateTime.parse('2026-08-22T09:00:00Z'),
+        dueAt: _schoolTime('2026-08-22T15:00:00.000+06:00'),
         enteredCount: 12,
         lockState: TeacherGradebookLockState.open,
         maximumScoreUnits: 2000,
@@ -183,7 +189,7 @@ void main() {
       expect(
         () => TeacherAssessmentListReadModel(
           assessments: [assessment, assessment],
-          generatedAt: DateTime.parse('2026-08-22T09:00:00Z'),
+          generatedAt: _schoolTime('2026-08-22T15:00:00.000+06:00'),
           hasMore: false,
         ),
         throwsA(
@@ -199,7 +205,7 @@ void main() {
           assessmentId: 'assessment-2',
           assessmentTitle: 'Invalid counts',
           categoryLabel: 'Quiz',
-          dueAt: DateTime.parse('2026-08-22T09:00:00Z'),
+          dueAt: _schoolTime('2026-08-22T15:00:00.000+06:00'),
           enteredCount: 25,
           lockState: TeacherGradebookLockState.open,
           maximumScoreUnits: 2000,
@@ -220,7 +226,7 @@ void main() {
     final summary = TeacherConversationSummary(
       canReply: true,
       conversationId: 'conversation-1',
-      latestMessageAt: DateTime.parse('2026-08-22T09:00:00Z'),
+      latestMessageAt: _schoolTime('2026-08-22T15:00:00.000+06:00'),
       studentDisplayName: 'Student One',
       studentId: 'student-1',
       subject: 'Homework support',
@@ -228,7 +234,7 @@ void main() {
     expect(
       () => TeacherConversationListReadModel(
         conversations: [summary, summary],
-        generatedAt: DateTime.parse('2026-08-22T09:00:00Z'),
+        generatedAt: _schoolTime('2026-08-22T15:00:00.000+06:00'),
         hasMore: false,
       ),
       throwsA(isA<TeacherDomainException>()),
@@ -239,7 +245,7 @@ void main() {
       authoredByViewer: true,
       body: 'Please review question 4.',
       messageId: 'message-1',
-      sentAt: DateTime.parse('2026-08-22T09:00:00Z'),
+      sentAt: _schoolTime('2026-08-22T15:00:00.000+06:00'),
     );
     expect(
       () => TeacherConversationMessagesReadModel(
@@ -304,13 +310,13 @@ void main() {
 
 TeacherMeetingSummary teacherMeeting() => TeacherMeetingSummary(
   attendanceStatus: TeacherAttendanceStatus.notStarted,
-  endsAt: DateTime.parse('2026-07-30T10:00:00+06:00'),
+  endsAt: _schoolTime('2026-07-30T10:00:00.000+06:00'),
   meetingId: 'meeting-1',
   roomLabel: 'Room 204',
   rosterCount: 24,
   sectionId: 'section-1',
   sectionLabel: 'Grade 5A',
-  startsAt: DateTime.parse('2026-07-30T09:00:00+06:00'),
+  startsAt: _schoolTime('2026-07-30T09:00:00.000+06:00'),
   subjectLabel: 'Mathematics',
 );
 

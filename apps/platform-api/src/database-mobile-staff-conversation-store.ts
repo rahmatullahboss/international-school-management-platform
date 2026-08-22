@@ -6,9 +6,11 @@ import type {
   TeacherConversationMessageSendInput,
   TeacherConversationReadReceiptInput,
 } from './mobile-staff-conversations.js';
+import { requireSchoolTimeZone, schoolLocalTimestamp } from './mobile-school-time.js';
 
 interface PayloadRow extends Record<string, unknown> {
   readonly payload: unknown;
+  readonly timeZoneId?: unknown;
 }
 
 export interface MobileTeacherConversationMessage {
@@ -16,6 +18,7 @@ export interface MobileTeacherConversationMessage {
   readonly authorLabel: string;
   readonly body: string;
   readonly sentAt: string;
+  readonly timeZoneId: string;
 }
 
 export type MobileTeacherConversationMutationResult =
@@ -77,8 +80,9 @@ function requireInteger(value: unknown, operation: string, minimum: number): num
   return value;
 }
 
-function validateMessage(value: unknown): MobileTeacherConversationMessage {
+function validateMessage(value: unknown, timeZoneValue: unknown): MobileTeacherConversationMessage {
   const operation = 'Mobile teacher conversation message';
+  const timeZoneId = requireSchoolTimeZone(timeZoneValue, operation);
   const payload = exactRecord(
     value,
     new Set(['messageId', 'authorLabel', 'body', 'sentAt']),
@@ -88,7 +92,12 @@ function validateMessage(value: unknown): MobileTeacherConversationMessage {
     messageId: requireUuid(payload.messageId, operation),
     authorLabel: requireText(payload.authorLabel, operation, 512),
     body: requireText(payload.body, operation, 4000),
-    sentAt: requireTimestamp(payload.sentAt, operation),
+    sentAt: schoolLocalTimestamp(
+      requireTimestamp(payload.sentAt, operation),
+      timeZoneId,
+      operation,
+    ),
+    timeZoneId,
   };
 }
 
@@ -166,12 +175,15 @@ export class DatabaseMobileStaffConversationStore {
       throw new Error('Mobile teacher conversation message is invalid.');
     }
     const rows = await this.#database.query<PayloadRow>(
-      `SELECT platform.send_mobile_teacher_conversation_message($1::text,$2::text,$3::uuid,$4::uuid,$5::uuid,$6::text,$7::text) AS payload`,
+      `SELECT platform.send_mobile_teacher_conversation_message($1::text,$2::text,$3::uuid,$4::uuid,$5::uuid,$6::text,$7::text) AS payload,
+       (SELECT request_scope.time_zone FROM platform.resolve_mobile_request_scope(
+         $1::text, $2::text, $3::uuid, $4::uuid, 'teacher'::text
+       ) AS request_scope) AS "timeZoneId"`,
       [issuer, subject, scope.tenantId, scope.campusId, conversationId, input.body, idempotencyKey],
     );
     return this.#onePayload(
       rows,
-      (value) => {
+      (value, timeZoneValue) => {
         if (isRecord(value) && 'status' in value) {
           const mutation = validateMutation(value);
           if (
@@ -182,7 +194,7 @@ export class DatabaseMobileStaffConversationStore {
           }
           throw invalidResponse('Mobile teacher conversation message');
         }
-        return validateMessage(value);
+        return validateMessage(value, timeZoneValue);
       },
       'Mobile teacher conversation message',
     );
@@ -219,13 +231,13 @@ export class DatabaseMobileStaffConversationStore {
 
   #onePayload<T>(
     rows: readonly PayloadRow[],
-    validator: (value: unknown) => T,
+    validator: (value: unknown, timeZoneValue: unknown) => T,
     operation: string,
   ): T | undefined {
     if (rows.length !== 1) throw invalidResponse(operation);
     const row = rows[0];
     if (row === undefined) throw invalidResponse(operation);
     if (row.payload === null || row.payload === undefined) return undefined;
-    return validator(row.payload);
+    return validator(row.payload, row.timeZoneId);
   }
 }

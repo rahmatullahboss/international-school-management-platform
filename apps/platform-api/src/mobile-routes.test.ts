@@ -329,6 +329,7 @@ describe('platform mobile routes', () => {
     installJwksFetcher();
     databaseQuery.mockResolvedValue([
       {
+        timeZoneId: 'Asia/Dhaka',
         payload: {
           campusId: '40000000-0000-4000-8000-000000000003',
           generatedAt: '2026-08-19T13:00:00.000Z',
@@ -432,6 +433,7 @@ describe('platform mobile routes', () => {
     installJwksFetcher();
     databaseQuery.mockResolvedValue([
       {
+        timeZoneId: 'Asia/Dhaka',
         payload: {
           student: {
             studentId: '40000000-0000-4000-8000-000000000010',

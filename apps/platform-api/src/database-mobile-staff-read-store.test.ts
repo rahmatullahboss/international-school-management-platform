@@ -13,6 +13,7 @@ describe('DatabaseMobileStaffReadStore', () => {
   it('queries the bounded assessment read function and strips no reviewed fields', async () => {
     const query = vi.fn().mockResolvedValue([
       {
+        timeZoneId: 'Asia/Dhaka',
         payload: {
           generatedAt: '2026-08-22T03:00:00.000Z',
           hasMore: false,
@@ -48,9 +49,27 @@ describe('DatabaseMobileStaffReadStore', () => {
     expect(payload?.assessments).toHaveLength(1);
   });
 
+  it('fails closed when the canonical school timezone metadata is absent', async () => {
+    const query = vi.fn().mockResolvedValue([
+      {
+        payload: {
+          generatedAt: '2026-08-22T03:00:00.000Z',
+          hasMore: false,
+          assessments: [],
+        },
+      },
+    ]);
+    const store = new DatabaseMobileStaffReadStore({ query } as never);
+
+    await expect(store.assessments(identity, scope)).rejects.toThrow(
+      'invalid school timestamp metadata',
+    );
+  });
+
   it('rejects internal fields in conversation responses', async () => {
     const query = vi.fn().mockResolvedValue([
       {
+        timeZoneId: 'Asia/Dhaka',
         payload: {
           generatedAt: '2026-08-22T03:00:00.000Z',
           hasMore: false,

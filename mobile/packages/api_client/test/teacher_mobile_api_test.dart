@@ -54,6 +54,26 @@ void main() {
     client.close();
   });
 
+  test('rejects teacher timestamps from a different school timezone', () async {
+    final fixture = todayFixture()..['timeZoneId'] = 'America/New_York';
+    final client = apiClient(
+      (request) async => http.Response(jsonEncode(fixture), 200),
+    );
+
+    expect(
+      () => TeacherMobileApi(client).loadToday(teacherSession()),
+      throwsA(
+        isA<SchoolApiException>().having(
+          (error) => error.code,
+          'code',
+          'INVALID_TEACHER_RESPONSE',
+        ),
+      ),
+    );
+
+    client.close();
+  });
+
   test('loads a versioned roster for the requested meeting', () async {
     late http.Request capturedRequest;
     final client = apiClient((request) async {
@@ -134,8 +154,9 @@ void main() {
         capturedRequest = request;
         return http.Response(
           jsonEncode(<String, Object?>{
-            'generatedAt': '2026-08-22T03:00:00.000Z',
+            'generatedAt': '2026-08-22T09:00:00.000+06:00',
             'hasMore': false,
+            'timeZoneId': 'Asia/Dhaka',
             'assessments': <Object?>[
               <String, Object?>{
                 'assessmentId': '40000000-0000-4000-8000-000000000701',
@@ -144,7 +165,7 @@ void main() {
                 'subjectLabel': 'Mathematics',
                 'assessmentTitle': 'Fractions quiz',
                 'categoryLabel': 'Quiz',
-                'dueAt': '2026-08-23T03:00:00.000Z',
+                'dueAt': '2026-08-23T09:00:00.000+06:00',
                 'state': 'published',
                 'lockState': 'open',
                 'version': 3,
@@ -180,15 +201,16 @@ void main() {
         if (request.url.path == TeacherMobileApi.conversationsPath) {
           return http.Response(
             jsonEncode(<String, Object?>{
-              'generatedAt': '2026-08-22T03:00:00.000Z',
+              'generatedAt': '2026-08-22T09:00:00.000+06:00',
               'hasMore': false,
+              'timeZoneId': 'Asia/Dhaka',
               'conversations': <Object?>[
                 <String, Object?>{
                   'conversationId': '40000000-0000-4000-8000-000000000810',
                   'studentId': '40000000-0000-4000-8000-000000000013',
                   'studentDisplayName': 'Student One',
                   'subject': 'Homework support',
-                  'latestMessageAt': '2026-08-22T02:55:00.000Z',
+                  'latestMessageAt': '2026-08-22T08:55:00.000+06:00',
                   'canReply': true,
                 },
               ],
@@ -202,12 +224,13 @@ void main() {
             'studentDisplayName': 'Student One',
             'subject': 'Homework support',
             'hasMore': false,
+            'timeZoneId': 'Asia/Dhaka',
             'messages': <Object?>[
               <String, Object?>{
                 'messageId': '40000000-0000-4000-8000-000000000811',
                 'authorLabel': 'Teacher One',
                 'body': 'Please review question 4.',
-                'sentAt': '2026-08-22T02:55:00.000Z',
+                'sentAt': '2026-08-22T08:55:00.000+06:00',
                 'authoredByViewer': true,
               },
             ],
@@ -242,7 +265,8 @@ void main() {
           'messageId': '40000000-0000-4000-8000-000000000812',
           'authorLabel': 'Teacher One',
           'body': 'Please review the update.',
-          'sentAt': '2026-08-22T04:00:00.000Z',
+          'sentAt': '2026-08-22T10:00:00.000+06:00',
+          'timeZoneId': 'Asia/Dhaka',
         }),
         200,
       );
@@ -303,7 +327,8 @@ void main() {
           'messageId': '40000000-0000-4000-8000-000000000812',
           'authorLabel': 'Teacher One',
           'body': 'Please review the update.',
-          'sentAt': '2026-08-22T04:00:00.000Z',
+          'sentAt': '2026-08-22T10:00:00.000+06:00',
+          'timeZoneId': 'Asia/Dhaka',
           'internalPersonId': 'secret',
         }),
         200,
@@ -328,8 +353,9 @@ void main() {
     final client = apiClient(
       (request) async => http.Response(
         jsonEncode(<String, Object?>{
-          'generatedAt': '2026-08-22T03:00:00.000Z',
+          'generatedAt': '2026-08-22T09:00:00.000+06:00',
           'hasMore': false,
+          'timeZoneId': 'Asia/Dhaka',
           'assessments': <Object?>[],
           'internalRevision': 99,
         }),
@@ -518,7 +544,8 @@ SchoolSession teacherSession() => SchoolSession(
 Map<String, Object?> todayFixture() => <String, Object?>{
   'campusId': 'campus-1',
   'teacherDisplayName': 'Teacher One',
-  'generatedAt': '2026-07-30T08:00:00+06:00',
+  'generatedAt': '2026-07-30T08:00:00.000+06:00',
+  'timeZoneId': 'Asia/Dhaka',
   'meetings': <Object?>[
     <String, Object?>{
       'meetingId': 'meeting-1',
@@ -526,8 +553,8 @@ Map<String, Object?> todayFixture() => <String, Object?>{
       'sectionLabel': 'Grade 5A',
       'subjectLabel': 'Mathematics',
       'roomLabel': 'Room 204',
-      'startsAt': '2026-07-30T09:00:00+06:00',
-      'endsAt': '2026-07-30T10:00:00+06:00',
+      'startsAt': '2026-07-30T09:00:00.000+06:00',
+      'endsAt': '2026-07-30T10:00:00.000+06:00',
       'rosterCount': 24,
       'attendanceStatus': 'notStarted',
       'substitutionForTeacherLabel': null,

@@ -16,6 +16,7 @@ describe('DatabaseMobileStaffConversationStore', () => {
   it('validates the exact send response and query arguments', async () => {
     const query = vi.fn().mockResolvedValue([
       {
+        timeZoneId: 'Asia/Dhaka',
         payload: {
           messageId,
           authorLabel: 'Teacher One',
@@ -34,7 +35,8 @@ describe('DatabaseMobileStaffConversationStore', () => {
       messageId,
       authorLabel: 'Teacher One',
       body: 'Please review this.',
-      sentAt: '2026-08-22T04:00:00.000Z',
+      sentAt: '2026-08-22T10:00:00.000+06:00',
+      timeZoneId: 'Asia/Dhaka',
     });
     expect(query).toHaveBeenCalledWith(
       expect.stringContaining('send_mobile_teacher_conversation_message'),
@@ -48,6 +50,26 @@ describe('DatabaseMobileStaffConversationStore', () => {
         idempotencyKey,
       ],
     );
+  });
+
+  it('fails closed when send timestamp timezone metadata is absent', async () => {
+    const query = vi.fn().mockResolvedValue([
+      {
+        payload: {
+          messageId,
+          authorLabel: 'Teacher One',
+          body: 'Please review this.',
+          sentAt: '2026-08-22T04:00:00.000Z',
+        },
+      },
+    ]);
+    const store = new DatabaseMobileStaffConversationStore({ query } as never);
+
+    await expect(
+      store.sendMessage(identity, scope, conversationId, idempotencyKey, {
+        body: 'Please review this.',
+      }),
+    ).rejects.toThrow('invalid school timestamp metadata');
   });
 
   it('accepts only bounded mutation statuses and read receipts', async () => {
@@ -69,6 +91,7 @@ describe('DatabaseMobileStaffConversationStore', () => {
     const malformed = new DatabaseMobileStaffConversationStore({
       query: vi.fn().mockResolvedValue([
         {
+          timeZoneId: 'Asia/Dhaka',
           payload: {
             messageId,
             authorLabel: 'Teacher One',

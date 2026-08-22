@@ -27,10 +27,14 @@ final class TeacherMobileApi
       ),
     );
     try {
+      final timeZoneId = _responseTimeZone(response, session);
       final today = TeacherTodayReadModel(
         campusId: _requiredString(response, 'campusId'),
-        generatedAt: _dateTime(response, 'generatedAt'),
-        meetings: _objectList(response, 'meetings').map(_meeting),
+        generatedAt: _timestamp(response, 'generatedAt', timeZoneId),
+        meetings: _objectList(
+          response,
+          'meetings',
+        ).map((item) => _meeting(item, timeZoneId)),
         teacherDisplayName: _requiredString(response, 'teacherDisplayName'),
       );
       if (today.campusId != session.campusId) {
@@ -95,14 +99,16 @@ final class TeacherMobileApi
         'assessments',
         'generatedAt',
         'hasMore',
+        'timeZoneId',
       }, 'assessments');
+      final timeZoneId = _responseTimeZone(response, session);
       final assessments = _objectList(response, 'assessments');
       if (assessments.length > 64) {
         throw const FormatException('TEACHER_ASSESSMENT_LIMIT');
       }
       return TeacherAssessmentListReadModel(
-        assessments: assessments.map(_assessment),
-        generatedAt: _dateTime(response, 'generatedAt'),
+        assessments: assessments.map((item) => _assessment(item, timeZoneId)),
+        generatedAt: _timestamp(response, 'generatedAt', timeZoneId),
         hasMore: _requiredBool(response, 'hasMore'),
       );
     } on TeacherDomainException catch (error) {
@@ -130,14 +136,18 @@ final class TeacherMobileApi
         'conversations',
         'generatedAt',
         'hasMore',
+        'timeZoneId',
       }, 'conversations');
+      final timeZoneId = _responseTimeZone(response, session);
       final conversations = _objectList(response, 'conversations');
       if (conversations.length > 50) {
         throw const FormatException('TEACHER_CONVERSATION_LIMIT');
       }
       return TeacherConversationListReadModel(
-        conversations: conversations.map(_conversation),
-        generatedAt: _dateTime(response, 'generatedAt'),
+        conversations: conversations.map(
+          (item) => _conversation(item, timeZoneId),
+        ),
+        generatedAt: _timestamp(response, 'generatedAt', timeZoneId),
         hasMore: _requiredBool(response, 'hasMore'),
       );
     } on TeacherDomainException catch (error) {
@@ -172,7 +182,9 @@ final class TeacherMobileApi
         'subject',
         'messages',
         'hasMore',
+        'timeZoneId',
       }, 'conversation-messages');
+      final timeZoneId = _responseTimeZone(response, session);
       if (_requiredString(response, 'conversationId') !=
           normalizedConversationId) {
         throw const FormatException('TEACHER_CONVERSATION_SCOPE_MISMATCH');
@@ -184,7 +196,9 @@ final class TeacherMobileApi
       return TeacherConversationMessagesReadModel(
         conversationId: normalizedConversationId,
         hasMore: _requiredBool(response, 'hasMore'),
-        messages: messages.map(_conversationMessage),
+        messages: messages.map(
+          (item) => _conversationMessage(item, timeZoneId),
+        ),
         studentDisplayName: _requiredString(response, 'studentDisplayName'),
         subject: _requiredString(response, 'subject'),
       );
@@ -212,7 +226,7 @@ final class TeacherMobileApi
       idempotencyKey: command.idempotencyKey,
     );
     try {
-      return _sentConversationMessage(response);
+      return _sentConversationMessage(response, session);
     } on TeacherDomainException catch (error) {
       throw _invalidResponse('conversation-send:${error.code}');
     } on FormatException catch (error) {
@@ -315,7 +329,10 @@ final class TeacherMobileApi
     return _receipt(response, command.operationId, 'grade-draft');
   }
 
-  TeacherAssessmentSummary _assessment(Map<String, Object?> json) {
+  TeacherAssessmentSummary _assessment(
+    Map<String, Object?> json,
+    String timeZoneId,
+  ) {
     _requireExactKeys(json, const {
       'assessmentId',
       'sectionId',
@@ -336,7 +353,7 @@ final class TeacherMobileApi
       assessmentId: _requiredString(json, 'assessmentId'),
       assessmentTitle: _requiredString(json, 'assessmentTitle'),
       categoryLabel: _requiredString(json, 'categoryLabel'),
-      dueAt: _dateTime(json, 'dueAt'),
+      dueAt: _timestamp(json, 'dueAt', timeZoneId),
       enteredCount: _requiredInt(json, 'enteredCount'),
       lockState: switch (_requiredString(json, 'lockState')) {
         'open' => TeacherGradebookLockState.open,
@@ -361,7 +378,10 @@ final class TeacherMobileApi
     );
   }
 
-  TeacherConversationSummary _conversation(Map<String, Object?> json) {
+  TeacherConversationSummary _conversation(
+    Map<String, Object?> json,
+    String timeZoneId,
+  ) {
     _requireExactKeys(json, const {
       'conversationId',
       'studentId',
@@ -373,14 +393,17 @@ final class TeacherMobileApi
     return TeacherConversationSummary(
       canReply: _requiredBool(json, 'canReply'),
       conversationId: _requiredString(json, 'conversationId'),
-      latestMessageAt: _dateTime(json, 'latestMessageAt'),
+      latestMessageAt: _timestamp(json, 'latestMessageAt', timeZoneId),
       studentDisplayName: _requiredString(json, 'studentDisplayName'),
       studentId: _requiredString(json, 'studentId'),
       subject: _requiredString(json, 'subject'),
     );
   }
 
-  TeacherConversationMessage _conversationMessage(Map<String, Object?> json) {
+  TeacherConversationMessage _conversationMessage(
+    Map<String, Object?> json,
+    String timeZoneId,
+  ) {
     _requireExactKeys(json, const {
       'messageId',
       'authorLabel',
@@ -393,46 +416,51 @@ final class TeacherMobileApi
       authoredByViewer: _requiredBool(json, 'authoredByViewer'),
       body: _requiredString(json, 'body'),
       messageId: _requiredString(json, 'messageId'),
-      sentAt: _dateTime(json, 'sentAt'),
+      sentAt: _timestamp(json, 'sentAt', timeZoneId),
     );
   }
 
   TeacherConversationMessage _sentConversationMessage(
     Map<String, Object?> json,
+    SchoolSession session,
   ) {
     _requireExactKeys(json, const {
       'messageId',
       'authorLabel',
       'body',
       'sentAt',
+      'timeZoneId',
     }, 'conversation-sent-message');
+    final timeZoneId = _responseTimeZone(json, session);
     return TeacherConversationMessage(
       authorLabel: _requiredString(json, 'authorLabel'),
       authoredByViewer: true,
       body: _requiredString(json, 'body'),
       messageId: _requiredString(json, 'messageId'),
-      sentAt: _dateTime(json, 'sentAt'),
+      sentAt: _timestamp(json, 'sentAt', timeZoneId),
     );
   }
 
-  TeacherMeetingSummary _meeting(Map<String, Object?> json) =>
-      TeacherMeetingSummary(
-        attendanceStatus: _attendanceStatus(
-          _requiredString(json, 'attendanceStatus'),
-        ),
-        endsAt: _dateTime(json, 'endsAt'),
-        meetingId: _requiredString(json, 'meetingId'),
-        roomLabel: _requiredString(json, 'roomLabel'),
-        rosterCount: _requiredInt(json, 'rosterCount'),
-        sectionId: _requiredString(json, 'sectionId'),
-        sectionLabel: _requiredString(json, 'sectionLabel'),
-        startsAt: _dateTime(json, 'startsAt'),
-        subjectLabel: _requiredString(json, 'subjectLabel'),
-        substitutionForTeacherLabel: _optionalString(
-          json,
-          'substitutionForTeacherLabel',
-        ),
-      );
+  TeacherMeetingSummary _meeting(
+    Map<String, Object?> json,
+    String timeZoneId,
+  ) => TeacherMeetingSummary(
+    attendanceStatus: _attendanceStatus(
+      _requiredString(json, 'attendanceStatus'),
+    ),
+    endsAt: _timestamp(json, 'endsAt', timeZoneId),
+    meetingId: _requiredString(json, 'meetingId'),
+    roomLabel: _requiredString(json, 'roomLabel'),
+    rosterCount: _requiredInt(json, 'rosterCount'),
+    sectionId: _requiredString(json, 'sectionId'),
+    sectionLabel: _requiredString(json, 'sectionLabel'),
+    startsAt: _timestamp(json, 'startsAt', timeZoneId),
+    subjectLabel: _requiredString(json, 'subjectLabel'),
+    substitutionForTeacherLabel: _optionalString(
+      json,
+      'substitutionForTeacherLabel',
+    ),
+  );
 
   TeacherRosterStudent _rosterStudent(Map<String, Object?> json) =>
       TeacherRosterStudent(
@@ -566,11 +594,19 @@ void _requireExactKeys(
   }
 }
 
-DateTime _dateTime(Map<String, Object?> json, String key) {
-  final value = _requiredString(json, key);
-  final parsed = DateTime.tryParse(value);
-  if (parsed == null) {
-    throw FormatException('TEACHER_DATETIME_INVALID:$key');
+String _responseTimeZone(Map<String, Object?> json, SchoolSession session) {
+  final timeZoneId = _requiredString(json, 'timeZoneId');
+  if (timeZoneId != session.timeZone) {
+    throw const FormatException('TEACHER_TIME_ZONE_SCOPE_MISMATCH');
   }
-  return parsed;
+  return timeZoneId;
 }
+
+SchoolAuthoritativeTimestamp _timestamp(
+  Map<String, Object?> json,
+  String key,
+  String timeZoneId,
+) => SchoolAuthoritativeTimestamp.parse(
+  timestamp: _requiredString(json, key),
+  timeZoneId: timeZoneId,
+);

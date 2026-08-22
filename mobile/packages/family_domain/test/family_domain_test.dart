@@ -2,6 +2,12 @@ import 'package:school_family_domain/school_family_domain.dart';
 import 'package:school_mobile_core/mobile_core.dart';
 import 'package:test/test.dart';
 
+SchoolAuthoritativeTimestamp _schoolTime(String timestamp) =>
+    SchoolAuthoritativeTimestamp.parse(
+      timestamp: timestamp,
+      timeZoneId: 'Asia/Dhaka',
+    );
+
 void main() {
   final first = FamilyStudentProfile(
     campusId: 'campus-1',
@@ -193,10 +199,10 @@ void main() {
   test('dashboard snapshots keep server read models immutable', () {
     final timetable = <FamilyTimetableItem>[
       FamilyTimetableItem(
-        endsAt: DateTime.utc(2026, 7, 30, 3),
+        endsAt: _schoolTime('2026-07-30T09:00:00.000+06:00'),
         itemId: 'class-1',
         locationLabel: 'Room 203',
-        startsAt: DateTime.utc(2026, 7, 30, 2),
+        startsAt: _schoolTime('2026-07-30T08:00:00.000+06:00'),
         subjectLabel: 'Mathematics',
       ),
     ];
@@ -204,7 +210,7 @@ void main() {
       FamilyPublishedResult(
         assessmentLabel: 'Term 1',
         gradeLabel: 'A',
-        publishedAt: DateTime.utc(2026, 7, 29),
+        publishedAt: _schoolTime('2026-07-29T06:00:00.000+06:00'),
         resultId: 'result-1',
         subjectLabel: 'Science',
       ),
@@ -212,7 +218,7 @@ void main() {
     final snapshot = FamilyDashboardReadModel(
       attendance: null,
       fees: null,
-      generatedAt: DateTime.utc(2026, 7, 30),
+      generatedAt: _schoolTime('2026-07-30T06:00:00.000+06:00'),
       messages: FamilyMessageReadModel(unreadCount: 2),
       publishedResults: results,
       student: first,

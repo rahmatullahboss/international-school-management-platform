@@ -5,6 +5,12 @@ import 'package:school_family_app/main.dart';
 import 'package:school_family_domain/school_family_domain.dart';
 import 'package:school_mobile_core/mobile_core.dart';
 
+SchoolAuthoritativeTimestamp _schoolTime(String timestamp) =>
+    SchoolAuthoritativeTimestamp.parse(
+      timestamp: timestamp,
+      timeZoneId: 'Asia/Dhaka',
+    );
+
 void main() {
   test('loads profiles and the active student dashboard', () async {
     final repository = FakeFamilyRepository();
@@ -132,7 +138,7 @@ FamilyDashboardReadModel dashboard(String studentId) =>
         totalSessions: 50,
       ),
       fees: null,
-      generatedAt: DateTime.utc(2026, 7, 30),
+      generatedAt: _schoolTime('2026-07-30T06:00:00.000+06:00'),
       messages: FamilyMessageReadModel(unreadCount: 0),
       publishedResults: const [],
       student: student(studentId),

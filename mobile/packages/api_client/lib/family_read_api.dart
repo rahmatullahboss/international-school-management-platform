@@ -61,17 +61,20 @@ final class FamilyReadApi implements FamilyReadRepository {
       ),
     );
     try {
+      final timeZoneId = _responseTimeZone(response, session);
       final student = _student(_requiredObject(response, 'student'));
       if (student.studentId != normalizedStudentId ||
           student.campusId != session.campusId) {
         throw const FamilyDomainException('FAMILY_DASHBOARD_SCOPE_MISMATCH');
       }
-      final timetable = _objectList(response, 'timetable').map(_timetable);
-      final attendance = _optionalObject(response, 'attendance');
-      final publishedResults = _objectList(
+      final timetable = _objectList(
         response,
-        'publishedResults',
-      ).map(_publishedResult).toList(growable: false);
+        'timetable',
+      ).map((item) => _timetable(item, timeZoneId));
+      final attendance = _optionalObject(response, 'attendance');
+      final publishedResults = _objectList(response, 'publishedResults')
+          .map((item) => _publishedResult(item, timeZoneId))
+          .toList(growable: false);
       final fees = _optionalObject(response, 'fees');
       final messages = _optionalObject(response, 'messages');
 
@@ -100,8 +103,8 @@ final class FamilyReadApi implements FamilyReadRepository {
       return FamilyDashboardReadModel(
         attendance: attendance == null ? null : _attendance(attendance),
         fees: fees == null ? null : _fees(fees),
-        generatedAt: _dateTime(response, 'generatedAt'),
-        messages: messages == null ? null : _messages(messages),
+        generatedAt: _timestamp(response, 'generatedAt', timeZoneId),
+        messages: messages == null ? null : _messages(messages, timeZoneId),
         publishedResults: publishedResults,
         student: student,
         timetable: timetable,
@@ -122,14 +125,16 @@ final class FamilyReadApi implements FamilyReadRepository {
         studentId: _requiredString(json, 'studentId'),
       );
 
-  FamilyTimetableItem _timetable(Map<String, Object?> json) =>
-      FamilyTimetableItem(
-        endsAt: _dateTime(json, 'endsAt'),
-        itemId: _requiredString(json, 'itemId'),
-        locationLabel: _requiredString(json, 'locationLabel'),
-        startsAt: _dateTime(json, 'startsAt'),
-        subjectLabel: _requiredString(json, 'subjectLabel'),
-      );
+  FamilyTimetableItem _timetable(
+    Map<String, Object?> json,
+    String timeZoneId,
+  ) => FamilyTimetableItem(
+    endsAt: _timestamp(json, 'endsAt', timeZoneId),
+    itemId: _requiredString(json, 'itemId'),
+    locationLabel: _requiredString(json, 'locationLabel'),
+    startsAt: _timestamp(json, 'startsAt', timeZoneId),
+    subjectLabel: _requiredString(json, 'subjectLabel'),
+  );
 
   FamilyAttendanceReadModel _attendance(Map<String, Object?> json) =>
       FamilyAttendanceReadModel(
@@ -140,14 +145,16 @@ final class FamilyReadApi implements FamilyReadRepository {
         totalSessions: _requiredInt(json, 'totalSessions'),
       );
 
-  FamilyPublishedResult _publishedResult(Map<String, Object?> json) =>
-      FamilyPublishedResult(
-        assessmentLabel: _requiredString(json, 'assessmentLabel'),
-        gradeLabel: _requiredString(json, 'gradeLabel'),
-        publishedAt: _dateTime(json, 'publishedAt'),
-        resultId: _requiredString(json, 'resultId'),
-        subjectLabel: _requiredString(json, 'subjectLabel'),
-      );
+  FamilyPublishedResult _publishedResult(
+    Map<String, Object?> json,
+    String timeZoneId,
+  ) => FamilyPublishedResult(
+    assessmentLabel: _requiredString(json, 'assessmentLabel'),
+    gradeLabel: _requiredString(json, 'gradeLabel'),
+    publishedAt: _timestamp(json, 'publishedAt', timeZoneId),
+    resultId: _requiredString(json, 'resultId'),
+    subjectLabel: _requiredString(json, 'subjectLabel'),
+  );
 
   FamilyFeeReadModel _fees(Map<String, Object?> json) {
     final lastReceipt = _optionalObject(json, 'lastReceipt');
@@ -165,11 +172,13 @@ final class FamilyReadApi implements FamilyReadRepository {
     minorUnits: _requiredInt(json, 'minorUnits'),
   );
 
-  FamilyMessageReadModel _messages(Map<String, Object?> json) =>
-      FamilyMessageReadModel(
-        latestMessageAt: _optionalDateTime(json, 'latestMessageAt'),
-        unreadCount: _requiredInt(json, 'unreadCount'),
-      );
+  FamilyMessageReadModel _messages(
+    Map<String, Object?> json,
+    String timeZoneId,
+  ) => FamilyMessageReadModel(
+    latestMessageAt: _optionalTimestamp(json, 'latestMessageAt', timeZoneId),
+    unreadCount: _requiredInt(json, 'unreadCount'),
+  );
 
   void _requireFamilyPersona(SchoolSession session) {
     if (session.activePersona != SchoolPersona.guardian &&
@@ -245,10 +254,33 @@ int _requiredInt(Map<String, Object?> json, String key) {
   return value;
 }
 
-DateTime _dateTime(Map<String, Object?> json, String key) =>
-    DateTime.parse(_requiredString(json, key)).toUtc();
+String _responseTimeZone(Map<String, Object?> json, SchoolSession session) {
+  final timeZoneId = _requiredString(json, 'timeZoneId');
+  if (timeZoneId != session.timeZone) {
+    throw const FormatException('FAMILY_TIME_ZONE_SCOPE_MISMATCH');
+  }
+  return timeZoneId;
+}
 
-DateTime? _optionalDateTime(Map<String, Object?> json, String key) {
+SchoolAuthoritativeTimestamp _timestamp(
+  Map<String, Object?> json,
+  String key,
+  String timeZoneId,
+) => SchoolAuthoritativeTimestamp.parse(
+  timestamp: _requiredString(json, key),
+  timeZoneId: timeZoneId,
+);
+
+SchoolAuthoritativeTimestamp? _optionalTimestamp(
+  Map<String, Object?> json,
+  String key,
+  String timeZoneId,
+) {
   final value = _optionalString(json, key);
-  return value == null ? null : DateTime.parse(value).toUtc();
+  return value == null
+      ? null
+      : SchoolAuthoritativeTimestamp.parse(
+          timestamp: value,
+          timeZoneId: timeZoneId,
+        );
 }

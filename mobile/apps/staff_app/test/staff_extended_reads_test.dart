@@ -7,6 +7,12 @@ import 'package:school_mobile_core/mobile_core.dart';
 import 'package:school_staff_app/main.dart';
 import 'package:school_staff_domain/school_staff_domain.dart';
 
+SchoolAuthoritativeTimestamp _schoolTime(String timestamp) =>
+    SchoolAuthoritativeTimestamp.parse(
+      timestamp: timestamp,
+      timeZoneId: 'Asia/Dhaka',
+    );
+
 void main() {
   testWidgets(
     'renders authoritative assessment state without substitute grades',
@@ -186,7 +192,7 @@ final class _ExtendedRepository implements TeacherExtendedReadRepository {
         assessmentId: 'assessment-1',
         assessmentTitle: 'Fractions quiz',
         categoryLabel: 'Quiz',
-        dueAt: DateTime.parse('2026-08-23T03:00:00Z'),
+        dueAt: _schoolTime('2026-08-23T09:00:00.000+06:00'),
         enteredCount: 12,
         lockState: TeacherGradebookLockState.locked,
         maximumScoreUnits: 1000000,
@@ -199,7 +205,7 @@ final class _ExtendedRepository implements TeacherExtendedReadRepository {
         version: 2,
       ),
     ],
-    generatedAt: DateTime.parse('2026-08-22T03:00:00Z'),
+    generatedAt: _schoolTime('2026-08-22T09:00:00.000+06:00'),
     hasMore: false,
   );
 
@@ -212,13 +218,13 @@ final class _ExtendedRepository implements TeacherExtendedReadRepository {
       TeacherConversationSummary(
         canReply: true,
         conversationId: 'conversation-1',
-        latestMessageAt: DateTime.parse('2026-08-22T03:00:00Z'),
+        latestMessageAt: _schoolTime('2026-08-22T09:00:00.000+06:00'),
         studentDisplayName: 'Student One',
         studentId: 'student-1',
         subject: 'Homework support',
       ),
     ],
-    generatedAt: DateTime.parse('2026-08-22T03:00:00Z'),
+    generatedAt: _schoolTime('2026-08-22T09:00:00.000+06:00'),
     hasMore: false,
   );
 
@@ -260,7 +266,7 @@ final class _ExtendedRepository implements TeacherExtendedReadRepository {
       authoredByViewer: true,
       body: command.body,
       messageId: 'message-sent',
-      sentAt: DateTime.parse('2026-08-22T03:05:00Z'),
+      sentAt: _schoolTime('2026-08-22T09:05:00.000+06:00'),
     );
   }
 }
@@ -277,7 +283,7 @@ TeacherConversationMessagesReadModel _conversationMessages({
       authoredByViewer: true,
       body: body,
       messageId: 'message-1',
-      sentAt: DateTime.parse('2026-08-22T03:00:00Z'),
+      sentAt: _schoolTime('2026-08-22T09:00:00.000+06:00'),
     ),
   ],
   studentDisplayName: 'Student One',

@@ -24,17 +24,17 @@ enum TeacherGradebookLockState { open, locked }
 final class TeacherMeetingSummary {
   factory TeacherMeetingSummary({
     required TeacherAttendanceStatus attendanceStatus,
-    required DateTime endsAt,
+    required SchoolAuthoritativeTimestamp endsAt,
     required String meetingId,
     required String roomLabel,
     required int rosterCount,
     required String sectionId,
     required String sectionLabel,
-    required DateTime startsAt,
+    required SchoolAuthoritativeTimestamp startsAt,
     required String subjectLabel,
     String? substitutionForTeacherLabel,
   }) {
-    if (!endsAt.isAfter(startsAt)) {
+    if (!endsAt.instantUtc.isAfter(startsAt.instantUtc)) {
       throw const TeacherDomainException('TEACHER_MEETING_TIME_INVALID');
     }
     if (rosterCount < 0) {
@@ -72,8 +72,8 @@ final class TeacherMeetingSummary {
   final String sectionLabel;
   final String subjectLabel;
   final String roomLabel;
-  final DateTime startsAt;
-  final DateTime endsAt;
+  final SchoolAuthoritativeTimestamp startsAt;
+  final SchoolAuthoritativeTimestamp endsAt;
   final int rosterCount;
   final TeacherAttendanceStatus attendanceStatus;
   final String? substitutionForTeacherLabel;
@@ -84,7 +84,7 @@ final class TeacherMeetingSummary {
 final class TeacherTodayReadModel {
   factory TeacherTodayReadModel({
     required String campusId,
-    required DateTime generatedAt,
+    required SchoolAuthoritativeTimestamp generatedAt,
     required Iterable<TeacherMeetingSummary> meetings,
     required String teacherDisplayName,
   }) {
@@ -112,7 +112,7 @@ final class TeacherTodayReadModel {
 
   final String campusId;
   final String teacherDisplayName;
-  final DateTime generatedAt;
+  final SchoolAuthoritativeTimestamp generatedAt;
   final List<TeacherMeetingSummary> meetings;
 }
 
@@ -376,7 +376,7 @@ final class TeacherAssessmentSummary {
     required String assessmentId,
     required String assessmentTitle,
     required String categoryLabel,
-    required DateTime dueAt,
+    required SchoolAuthoritativeTimestamp dueAt,
     required int enteredCount,
     required TeacherGradebookLockState lockState,
     required int maximumScoreUnits,
@@ -435,7 +435,7 @@ final class TeacherAssessmentSummary {
   final String subjectLabel;
   final String assessmentTitle;
   final String categoryLabel;
-  final DateTime dueAt;
+  final SchoolAuthoritativeTimestamp dueAt;
   final TeacherAssessmentState state;
   final TeacherGradebookLockState lockState;
   final int version;
@@ -452,7 +452,7 @@ final class TeacherAssessmentSummary {
 final class TeacherAssessmentListReadModel {
   factory TeacherAssessmentListReadModel({
     required Iterable<TeacherAssessmentSummary> assessments,
-    required DateTime generatedAt,
+    required SchoolAuthoritativeTimestamp generatedAt,
     required bool hasMore,
   }) {
     final normalized = List<TeacherAssessmentSummary>.unmodifiable(assessments);
@@ -474,7 +474,7 @@ final class TeacherAssessmentListReadModel {
   });
 
   final List<TeacherAssessmentSummary> assessments;
-  final DateTime generatedAt;
+  final SchoolAuthoritativeTimestamp generatedAt;
   final bool hasMore;
 }
 
@@ -482,7 +482,7 @@ final class TeacherConversationSummary {
   factory TeacherConversationSummary({
     required bool canReply,
     required String conversationId,
-    required DateTime latestMessageAt,
+    required SchoolAuthoritativeTimestamp latestMessageAt,
     required String studentDisplayName,
     required String studentId,
     required String subject,
@@ -508,14 +508,14 @@ final class TeacherConversationSummary {
   final String studentId;
   final String studentDisplayName;
   final String subject;
-  final DateTime latestMessageAt;
+  final SchoolAuthoritativeTimestamp latestMessageAt;
   final bool canReply;
 }
 
 final class TeacherConversationListReadModel {
   factory TeacherConversationListReadModel({
     required Iterable<TeacherConversationSummary> conversations,
-    required DateTime generatedAt,
+    required SchoolAuthoritativeTimestamp generatedAt,
     required bool hasMore,
   }) {
     final normalized = List<TeacherConversationSummary>.unmodifiable(
@@ -539,7 +539,7 @@ final class TeacherConversationListReadModel {
   });
 
   final List<TeacherConversationSummary> conversations;
-  final DateTime generatedAt;
+  final SchoolAuthoritativeTimestamp generatedAt;
   final bool hasMore;
 }
 
@@ -549,7 +549,7 @@ final class TeacherConversationMessage {
     required bool authoredByViewer,
     required String body,
     required String messageId,
-    required DateTime sentAt,
+    required SchoolAuthoritativeTimestamp sentAt,
   }) => TeacherConversationMessage._(
     authorLabel: _required(authorLabel, 'authorLabel'),
     authoredByViewer: authoredByViewer,
@@ -569,7 +569,7 @@ final class TeacherConversationMessage {
   final String messageId;
   final String authorLabel;
   final String body;
-  final DateTime sentAt;
+  final SchoolAuthoritativeTimestamp sentAt;
   final bool authoredByViewer;
 }
 

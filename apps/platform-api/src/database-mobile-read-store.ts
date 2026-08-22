@@ -1,6 +1,8 @@
 import type { HttpDatabase } from '@school/database';
 import type { OidcIdentity } from '@school/policy';
 
+import { requireSchoolTimeZone, schoolLocalTimestamp } from './mobile-school-time.js';
+
 export type MobileReadPersona = 'guardian' | 'student' | 'teacher';
 
 export interface MobileReadScope {
@@ -11,6 +13,7 @@ export interface MobileReadScope {
 
 interface PayloadRow extends Record<string, unknown> {
   readonly payload: unknown;
+  readonly timeZoneId?: unknown;
 }
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
@@ -107,8 +110,9 @@ function validateFamilyProfiles(value: unknown): Record<string, unknown> {
   return validated;
 }
 
-function validateFamilyDashboard(value: unknown): Record<string, unknown> {
+function validateFamilyDashboard(value: unknown, timeZoneValue: unknown): Record<string, unknown> {
   const operation = 'Mobile family dashboard';
+  const timeZoneId = requireSchoolTimeZone(timeZoneValue, operation);
   const payload = requireRecord(value, operation);
   const timetable = requireArray(payload.timetable, operation).map((entry) => {
     const item = requireRecord(entry, operation);
@@ -116,8 +120,12 @@ function validateFamilyDashboard(value: unknown): Record<string, unknown> {
       itemId: requireUuid(item.itemId, operation),
       subjectLabel: requireText(item.subjectLabel, operation),
       locationLabel: requireText(item.locationLabel, operation),
-      startsAt: requireTimestamp(item.startsAt, operation),
-      endsAt: requireTimestamp(item.endsAt, operation),
+      startsAt: schoolLocalTimestamp(
+        requireTimestamp(item.startsAt, operation),
+        timeZoneId,
+        operation,
+      ),
+      endsAt: schoolLocalTimestamp(requireTimestamp(item.endsAt, operation), timeZoneId, operation),
     };
   });
   const publishedResults = requireArray(payload.publishedResults, operation).map((entry) => {
@@ -127,7 +135,11 @@ function validateFamilyDashboard(value: unknown): Record<string, unknown> {
       assessmentLabel: requireText(result.assessmentLabel, operation),
       subjectLabel: requireText(result.subjectLabel, operation),
       gradeLabel: requireText(result.gradeLabel, operation),
-      publishedAt: requireTimestamp(result.publishedAt, operation),
+      publishedAt: schoolLocalTimestamp(
+        requireTimestamp(result.publishedAt, operation),
+        timeZoneId,
+        operation,
+      ),
     };
   });
 
@@ -153,14 +165,20 @@ function validateFamilyDashboard(value: unknown): Record<string, unknown> {
     publishedResults,
     fees: null,
     messages: null,
-    generatedAt: requireTimestamp(payload.generatedAt, operation),
+    generatedAt: schoolLocalTimestamp(
+      requireTimestamp(payload.generatedAt, operation),
+      timeZoneId,
+      operation,
+    ),
+    timeZoneId,
   };
   validatePayloadSize(validated, operation);
   return validated;
 }
 
-function validateTeacherToday(value: unknown): Record<string, unknown> {
+function validateTeacherToday(value: unknown, timeZoneValue: unknown): Record<string, unknown> {
   const operation = 'Mobile teacher today';
+  const timeZoneId = requireSchoolTimeZone(timeZoneValue, operation);
   const payload = requireRecord(value, operation);
   const meetings = requireArray(payload.meetings, operation).map((entry) => {
     const meeting = requireRecord(entry, operation);
@@ -183,8 +201,16 @@ function validateTeacherToday(value: unknown): Record<string, unknown> {
       sectionLabel: requireText(meeting.sectionLabel, operation),
       subjectLabel: requireText(meeting.subjectLabel, operation),
       roomLabel: requireText(meeting.roomLabel, operation),
-      startsAt: requireTimestamp(meeting.startsAt, operation),
-      endsAt: requireTimestamp(meeting.endsAt, operation),
+      startsAt: schoolLocalTimestamp(
+        requireTimestamp(meeting.startsAt, operation),
+        timeZoneId,
+        operation,
+      ),
+      endsAt: schoolLocalTimestamp(
+        requireTimestamp(meeting.endsAt, operation),
+        timeZoneId,
+        operation,
+      ),
       rosterCount: requireInteger(meeting.rosterCount, operation),
       attendanceStatus,
       ...(substitution === null || substitution === undefined
@@ -194,9 +220,14 @@ function validateTeacherToday(value: unknown): Record<string, unknown> {
   });
   const validated = {
     campusId: requireUuid(payload.campusId, operation),
-    generatedAt: requireTimestamp(payload.generatedAt, operation),
+    generatedAt: schoolLocalTimestamp(
+      requireTimestamp(payload.generatedAt, operation),
+      timeZoneId,
+      operation,
+    ),
     teacherDisplayName: requireText(payload.teacherDisplayName, operation),
     meetings,
+    timeZoneId,
   };
   validatePayloadSize(validated, operation);
   return validated;
@@ -274,7 +305,10 @@ export class DatabaseMobileReadStore {
     const rows = await this.#database.query<PayloadRow>(
       `SELECT platform.resolve_mobile_family_dashboard(
          $1::text, $2::text, $3::uuid, $4::uuid, $5::text, $6::uuid
-       ) AS payload`,
+       ) AS payload,
+       (SELECT request_scope.time_zone FROM platform.resolve_mobile_request_scope(
+         $1::text, $2::text, $3::uuid, $4::uuid, $5::text
+       ) AS request_scope) AS "timeZoneId"`,
       [issuer, subject, scope.tenantId, scope.campusId, scope.persona, studentId],
     );
     return this.#onePayload(rows, validateFamilyDashboard, 'Mobile family dashboard');
@@ -289,7 +323,10 @@ export class DatabaseMobileReadStore {
     const rows = await this.#database.query<PayloadRow>(
       `SELECT platform.resolve_mobile_teacher_today(
          $1::text, $2::text, $3::uuid, $4::uuid
-       ) AS payload`,
+       ) AS payload,
+       (SELECT request_scope.time_zone FROM platform.resolve_mobile_request_scope(
+         $1::text, $2::text, $3::uuid, $4::uuid, 'teacher'::text
+       ) AS request_scope) AS "timeZoneId"`,
       [issuer, subject, scope.tenantId, scope.campusId],
     );
     return this.#onePayload(rows, validateTeacherToday, 'Mobile teacher today');
@@ -314,13 +351,13 @@ export class DatabaseMobileReadStore {
 
   #onePayload(
     rows: readonly PayloadRow[],
-    validator: (value: unknown) => Record<string, unknown>,
+    validator: (value: unknown, timeZoneValue: unknown) => Record<string, unknown>,
     operation: string,
   ): Record<string, unknown> | undefined {
     if (rows.length !== 1) throw invalidResponse(operation);
     const row = rows[0];
     if (row === undefined) throw invalidResponse(operation);
     if (row.payload === null || row.payload === undefined) return undefined;
-    return validator(row.payload);
+    return validator(row.payload, row.timeZoneId);
   }
 }

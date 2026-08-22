@@ -5,6 +5,12 @@ import 'package:school_mobile_core/mobile_core.dart';
 import 'package:school_staff_app/main.dart';
 import 'package:school_staff_domain/school_staff_domain.dart';
 
+SchoolAuthoritativeTimestamp _schoolTime(String timestamp) =>
+    SchoolAuthoritativeTimestamp.parse(
+      timestamp: timestamp,
+      timeZoneId: 'Asia/Dhaka',
+    );
+
 void main() {
   test('loads the authorized teacher day', () async {
     final repository = FakeTeacherRepository(today: teacherToday());
@@ -213,7 +219,7 @@ final class SequencedTeacherRepository implements TeacherJourneyRepository {
 TeacherTodayReadModel teacherToday({bool includeSecondMeeting = false}) =>
     TeacherTodayReadModel(
       campusId: 'campus-1',
-      generatedAt: DateTime.parse('2026-07-30T08:00:00+06:00'),
+      generatedAt: _schoolTime('2026-07-30T08:00:00.000+06:00'),
       meetings: <TeacherMeetingSummary>[
         teacherMeeting(),
         if (includeSecondMeeting)
@@ -227,13 +233,13 @@ TeacherMeetingSummary teacherMeeting({
   String sectionId = 'section-1',
 }) => TeacherMeetingSummary(
   attendanceStatus: TeacherAttendanceStatus.notStarted,
-  endsAt: DateTime.parse('2026-07-30T10:00:00+06:00'),
+  endsAt: _schoolTime('2026-07-30T10:00:00.000+06:00'),
   meetingId: meetingId,
   roomLabel: 'Room 204',
   rosterCount: 24,
   sectionId: sectionId,
   sectionLabel: sectionId == 'section-1' ? 'Grade 5A' : 'Grade 6B',
-  startsAt: DateTime.parse('2026-07-30T09:00:00+06:00'),
+  startsAt: _schoolTime('2026-07-30T09:00:00.000+06:00'),
   subjectLabel: 'Mathematics',
 );
 

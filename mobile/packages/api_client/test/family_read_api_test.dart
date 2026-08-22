@@ -86,6 +86,35 @@ void main() {
   );
 
   test(
+    'rejects dashboard timezone metadata outside the active scope',
+    () async {
+      final payload = dashboardFixture()..['timeZoneId'] = 'America/New_York';
+      final client = SchoolApiClient(
+        accessTokenProvider: () async => 'access-token',
+        baseUri: Uri.parse('https://api.school.example/'),
+        client: MockClient(
+          (request) async => http.Response(jsonEncode(payload), 200),
+        ),
+      );
+
+      expect(
+        () => FamilyReadApi(
+          client,
+        ).loadDashboard(session: guardianSession(), studentId: 'student-1'),
+        throwsA(
+          isA<SchoolApiException>().having(
+            (error) => error.code,
+            'code',
+            'INVALID_FAMILY_RESPONSE',
+          ),
+        ),
+      );
+
+      client.close();
+    },
+  );
+
+  test(
     'rejects fee payloads without authoritative fraction metadata',
     () async {
       final payload = dashboardFixture();
@@ -247,7 +276,8 @@ SchoolSession guardianSession() => SchoolSession(
 );
 
 Map<String, Object?> dashboardFixture() => <String, Object?>{
-  'generatedAt': '2026-07-30T01:30:00+06:00',
+  'generatedAt': '2026-07-30T01:30:00.000+06:00',
+  'timeZoneId': 'Asia/Dhaka',
   'student': <String, Object?>{
     'studentId': 'student-1',
     'campusId': 'campus-1',
@@ -260,8 +290,8 @@ Map<String, Object?> dashboardFixture() => <String, Object?>{
       'itemId': 'class-1',
       'subjectLabel': 'Mathematics',
       'locationLabel': 'Room 203',
-      'startsAt': '2026-07-30T08:00:00+06:00',
-      'endsAt': '2026-07-30T09:00:00+06:00',
+      'startsAt': '2026-07-30T08:00:00.000+06:00',
+      'endsAt': '2026-07-30T09:00:00.000+06:00',
     },
   ],
   'attendance': <String, Object?>{
@@ -277,7 +307,7 @@ Map<String, Object?> dashboardFixture() => <String, Object?>{
       'assessmentLabel': 'Term 1',
       'subjectLabel': 'Science',
       'gradeLabel': 'A',
-      'publishedAt': '2026-07-29T12:00:00+06:00',
+      'publishedAt': '2026-07-29T12:00:00.000+06:00',
     },
   ],
   'fees': <String, Object?>{
@@ -296,6 +326,6 @@ Map<String, Object?> dashboardFixture() => <String, Object?>{
   },
   'messages': <String, Object?>{
     'unreadCount': 2,
-    'latestMessageAt': '2026-07-29T18:00:00+06:00',
+    'latestMessageAt': '2026-07-29T18:00:00.000+06:00',
   },
 };

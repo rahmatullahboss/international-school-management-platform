@@ -64,17 +64,15 @@ final class FamilyProfileDirectory {
 
 final class FamilyTimetableItem {
   FamilyTimetableItem({
-    required DateTime endsAt,
+    required this.endsAt,
     required String itemId,
     required String locationLabel,
-    required DateTime startsAt,
+    required this.startsAt,
     required String subjectLabel,
-  }) : endsAt = endsAt.toUtc(),
-       itemId = _required(itemId, 'itemId'),
+  }) : itemId = _required(itemId, 'itemId'),
        locationLabel = _required(locationLabel, 'locationLabel'),
-       startsAt = startsAt.toUtc(),
        subjectLabel = _required(subjectLabel, 'subjectLabel') {
-    if (!this.endsAt.isAfter(this.startsAt)) {
+    if (!endsAt.instantUtc.isAfter(startsAt.instantUtc)) {
       throw const FamilyDomainException('FAMILY_TIMETABLE_RANGE_INVALID');
     }
   }
@@ -82,8 +80,8 @@ final class FamilyTimetableItem {
   final String itemId;
   final String subjectLabel;
   final String locationLabel;
-  final DateTime startsAt;
-  final DateTime endsAt;
+  final SchoolAuthoritativeTimestamp startsAt;
+  final SchoolAuthoritativeTimestamp endsAt;
 }
 
 final class FamilyAttendanceReadModel {
@@ -118,12 +116,11 @@ final class FamilyPublishedResult {
   FamilyPublishedResult({
     required String assessmentLabel,
     required String gradeLabel,
-    required DateTime publishedAt,
+    required this.publishedAt,
     required String resultId,
     required String subjectLabel,
   }) : assessmentLabel = _required(assessmentLabel, 'assessmentLabel'),
        gradeLabel = _required(gradeLabel, 'gradeLabel'),
-       publishedAt = publishedAt.toUtc(),
        resultId = _required(resultId, 'resultId'),
        subjectLabel = _required(subjectLabel, 'subjectLabel');
 
@@ -131,7 +128,7 @@ final class FamilyPublishedResult {
   final String assessmentLabel;
   final String subjectLabel;
   final String gradeLabel;
-  final DateTime publishedAt;
+  final SchoolAuthoritativeTimestamp publishedAt;
 }
 
 final class FamilyMoneyAmount {
@@ -187,31 +184,29 @@ final class FamilyFeeReadModel {
 }
 
 final class FamilyMessageReadModel {
-  FamilyMessageReadModel({DateTime? latestMessageAt, required int unreadCount})
-    : latestMessageAt = latestMessageAt?.toUtc(),
-      unreadCount = _nonNegative(unreadCount, 'unreadCount');
+  FamilyMessageReadModel({this.latestMessageAt, required int unreadCount})
+    : unreadCount = _nonNegative(unreadCount, 'unreadCount');
 
   final int unreadCount;
-  final DateTime? latestMessageAt;
+  final SchoolAuthoritativeTimestamp? latestMessageAt;
 }
 
 final class FamilyDashboardReadModel {
   FamilyDashboardReadModel({
     required this.attendance,
     required this.fees,
-    required DateTime generatedAt,
+    required this.generatedAt,
     required this.messages,
     required this.student,
     required Iterable<FamilyPublishedResult> publishedResults,
     required Iterable<FamilyTimetableItem> timetable,
-  }) : generatedAt = generatedAt.toUtc(),
-       publishedResults = List<FamilyPublishedResult>.unmodifiable(
+  }) : publishedResults = List<FamilyPublishedResult>.unmodifiable(
          publishedResults,
        ),
        timetable = List<FamilyTimetableItem>.unmodifiable(timetable);
 
   final FamilyStudentProfile student;
-  final DateTime generatedAt;
+  final SchoolAuthoritativeTimestamp generatedAt;
   final List<FamilyTimetableItem> timetable;
   final FamilyAttendanceReadModel? attendance;
   final List<FamilyPublishedResult> publishedResults;
