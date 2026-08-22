@@ -21,6 +21,8 @@ mobile_notification_migration="infra/database/post-integration-migrations/202608
 mobile_notification_verification="tests/integration/verify-mobile-notification-issuance.sql"
 mobile_sync_migration="infra/database/post-integration-migrations/202608220001_MOB-08_mobile_sync_delta.sql"
 mobile_sync_verification="tests/integration/verify-mobile-sync-delta.sql"
+mobile_staff_read_migration="infra/database/post-integration-migrations/202608220002_MOB-09_mobile_staff_reads.sql"
+mobile_staff_read_verification="tests/integration/verify-mobile-staff-reads.sql"
 use_container=false
 
 cleanup() {
@@ -41,13 +43,22 @@ else
   }
   use_container=true
   docker run -d --rm --name "$container_name" -e POSTGRES_HOST_AUTH_METHOD=trust postgres:16-alpine >/dev/null
+  readiness_checks=0
   for _ in $(seq 1 30); do
     if docker exec "$container_name" pg_isready -U postgres >/dev/null 2>&1; then
-      break
+      readiness_checks=$((readiness_checks + 1))
+      if [[ "$readiness_checks" -ge 2 ]]; then
+        break
+      fi
+    else
+      readiness_checks=0
     fi
     sleep 1
   done
-  docker exec "$container_name" pg_isready -U postgres >/dev/null
+  if [[ "$readiness_checks" -lt 2 ]]; then
+    echo "PostgreSQL verifier container did not become stably ready" >&2
+    exit 1
+  fi
 fi
 
 run_psql() {
@@ -188,6 +199,7 @@ apply_file "$family_forms_consents_migration" >/dev/null
 apply_file "$family_conversation_migration" >/dev/null
 apply_file "$mobile_notification_migration" >/dev/null
 apply_file "$mobile_sync_migration" >/dev/null
+apply_file "$mobile_staff_read_migration" >/dev/null
 
 run_psql <<'SQL' >/dev/null
 INSERT INTO iam.role_permission (tenant_id, role_id, permission_key)
@@ -506,3 +518,5 @@ apply_file "$mobile_notification_verification" >/dev/null
 printf '%s\n' 'Mobile notification issuance authority verification: PASS'
 apply_file "$mobile_sync_verification" >/dev/null
 printf '%s\n' 'Mobile sync delta authority verification: PASS'
+apply_file "$mobile_staff_read_verification" >/dev/null
+printf '%s\n' 'Mobile Staff read authority verification: PASS'

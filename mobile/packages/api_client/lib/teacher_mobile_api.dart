@@ -2,11 +2,14 @@ import 'package:school_api_client/school_api_client.dart';
 import 'package:school_mobile_core/mobile_core.dart';
 import 'package:school_staff_domain/school_staff_domain.dart';
 
-final class TeacherMobileApi implements TeacherJourneyRepository {
+final class TeacherMobileApi
+    implements TeacherJourneyRepository, TeacherExtendedReadRepository {
   const TeacherMobileApi(this._client);
 
   static const todayPath = '/v1/mobile/teacher/today';
   static const attendanceBatchPath = '/v1/mobile/teacher/attendance-batches';
+  static const assessmentsPath = '/v1/mobile/teacher/assessments';
+  static const conversationsPath = '/v1/mobile/teacher/conversations';
 
   final SchoolApiClient _client;
 
@@ -67,6 +70,124 @@ final class TeacherMobileApi implements TeacherJourneyRepository {
         throw const TeacherDomainException('TEACHER_ROSTER_SCOPE_MISMATCH');
       }
       return roster;
+    } on TeacherDomainException catch (error) {
+      throw _invalidResponse(error.code);
+    } on FormatException catch (error) {
+      throw _invalidResponse(error.message);
+    }
+  }
+
+  @override
+  Future<TeacherAssessmentListReadModel> loadAssessments(
+    SchoolSession session, {
+    String correlationId = 'teacher-assessments',
+  }) async {
+    _requireTeacherCapability(session, SchoolCapability.gradesWrite);
+    final response = await _client.getJson(
+      assessmentsPath,
+      context: ApiRequestContext(
+        correlationId: correlationId,
+        session: session,
+      ),
+    );
+    try {
+      _requireExactKeys(response, const {
+        'assessments',
+        'generatedAt',
+        'hasMore',
+      }, 'assessments');
+      final assessments = _objectList(response, 'assessments');
+      if (assessments.length > 64) {
+        throw const FormatException('TEACHER_ASSESSMENT_LIMIT');
+      }
+      return TeacherAssessmentListReadModel(
+        assessments: assessments.map(_assessment),
+        generatedAt: _dateTime(response, 'generatedAt'),
+        hasMore: _requiredBool(response, 'hasMore'),
+      );
+    } on TeacherDomainException catch (error) {
+      throw _invalidResponse(error.code);
+    } on FormatException catch (error) {
+      throw _invalidResponse(error.message);
+    }
+  }
+
+  @override
+  Future<TeacherConversationListReadModel> loadConversations(
+    SchoolSession session, {
+    String correlationId = 'teacher-conversations',
+  }) async {
+    _requireTeacherCapability(session, SchoolCapability.messagesRead);
+    final response = await _client.getJson(
+      conversationsPath,
+      context: ApiRequestContext(
+        correlationId: correlationId,
+        session: session,
+      ),
+    );
+    try {
+      _requireExactKeys(response, const {
+        'conversations',
+        'generatedAt',
+        'hasMore',
+      }, 'conversations');
+      final conversations = _objectList(response, 'conversations');
+      if (conversations.length > 50) {
+        throw const FormatException('TEACHER_CONVERSATION_LIMIT');
+      }
+      return TeacherConversationListReadModel(
+        conversations: conversations.map(_conversation),
+        generatedAt: _dateTime(response, 'generatedAt'),
+        hasMore: _requiredBool(response, 'hasMore'),
+      );
+    } on TeacherDomainException catch (error) {
+      throw _invalidResponse(error.code);
+    } on FormatException catch (error) {
+      throw _invalidResponse(error.message);
+    }
+  }
+
+  @override
+  Future<TeacherConversationMessagesReadModel> loadConversationMessages({
+    required String conversationId,
+    required SchoolSession session,
+    String correlationId = 'teacher-conversation-messages',
+  }) async {
+    _requireTeacherCapability(session, SchoolCapability.messagesRead);
+    final normalizedConversationId = _requiredValue(
+      conversationId,
+      'conversationId',
+    );
+    final response = await _client.getJson(
+      '$conversationsPath/${Uri.encodeComponent(normalizedConversationId)}/messages',
+      context: ApiRequestContext(
+        correlationId: correlationId,
+        session: session,
+      ),
+    );
+    try {
+      _requireExactKeys(response, const {
+        'conversationId',
+        'studentDisplayName',
+        'subject',
+        'messages',
+        'hasMore',
+      }, 'conversation-messages');
+      if (_requiredString(response, 'conversationId') !=
+          normalizedConversationId) {
+        throw const FormatException('TEACHER_CONVERSATION_SCOPE_MISMATCH');
+      }
+      final messages = _objectList(response, 'messages');
+      if (messages.length > 100) {
+        throw const FormatException('TEACHER_MESSAGE_LIMIT');
+      }
+      return TeacherConversationMessagesReadModel(
+        conversationId: normalizedConversationId,
+        hasMore: _requiredBool(response, 'hasMore'),
+        messages: messages.map(_conversationMessage),
+        studentDisplayName: _requiredString(response, 'studentDisplayName'),
+        subject: _requiredString(response, 'subject'),
+      );
     } on TeacherDomainException catch (error) {
       throw _invalidResponse(error.code);
     } on FormatException catch (error) {
@@ -137,6 +258,88 @@ final class TeacherMobileApi implements TeacherJourneyRepository {
       idempotencyKey: command.idempotencyKey,
     );
     return _receipt(response, command.operationId, 'grade-draft');
+  }
+
+  TeacherAssessmentSummary _assessment(Map<String, Object?> json) {
+    _requireExactKeys(json, const {
+      'assessmentId',
+      'sectionId',
+      'sectionLabel',
+      'subjectLabel',
+      'assessmentTitle',
+      'categoryLabel',
+      'dueAt',
+      'state',
+      'lockState',
+      'version',
+      'scoreScale',
+      'maximumScoreUnits',
+      'rosterCount',
+      'enteredCount',
+    }, 'assessment');
+    return TeacherAssessmentSummary(
+      assessmentId: _requiredString(json, 'assessmentId'),
+      assessmentTitle: _requiredString(json, 'assessmentTitle'),
+      categoryLabel: _requiredString(json, 'categoryLabel'),
+      dueAt: _dateTime(json, 'dueAt'),
+      enteredCount: _requiredInt(json, 'enteredCount'),
+      lockState: switch (_requiredString(json, 'lockState')) {
+        'open' => TeacherGradebookLockState.open,
+        'locked' => TeacherGradebookLockState.locked,
+        _ => throw const FormatException(
+          'TEACHER_GRADEBOOK_LOCK_STATE_UNKNOWN',
+        ),
+      },
+      maximumScoreUnits: _requiredInt(json, 'maximumScoreUnits'),
+      rosterCount: _requiredInt(json, 'rosterCount'),
+      scoreScale: _requiredInt(json, 'scoreScale'),
+      sectionId: _requiredString(json, 'sectionId'),
+      sectionLabel: _requiredString(json, 'sectionLabel'),
+      state: switch (_requiredString(json, 'state')) {
+        'draft' => TeacherAssessmentState.draft,
+        'published' => TeacherAssessmentState.published,
+        'closed' => TeacherAssessmentState.closed,
+        _ => throw const FormatException('TEACHER_ASSESSMENT_STATE_UNKNOWN'),
+      },
+      subjectLabel: _requiredString(json, 'subjectLabel'),
+      version: _requiredInt(json, 'version'),
+    );
+  }
+
+  TeacherConversationSummary _conversation(Map<String, Object?> json) {
+    _requireExactKeys(json, const {
+      'conversationId',
+      'studentId',
+      'studentDisplayName',
+      'subject',
+      'latestMessageAt',
+      'canReply',
+    }, 'conversation');
+    return TeacherConversationSummary(
+      canReply: _requiredBool(json, 'canReply'),
+      conversationId: _requiredString(json, 'conversationId'),
+      latestMessageAt: _dateTime(json, 'latestMessageAt'),
+      studentDisplayName: _requiredString(json, 'studentDisplayName'),
+      studentId: _requiredString(json, 'studentId'),
+      subject: _requiredString(json, 'subject'),
+    );
+  }
+
+  TeacherConversationMessage _conversationMessage(Map<String, Object?> json) {
+    _requireExactKeys(json, const {
+      'messageId',
+      'authorLabel',
+      'body',
+      'sentAt',
+      'authoredByViewer',
+    }, 'conversation-message');
+    return TeacherConversationMessage(
+      authorLabel: _requiredString(json, 'authorLabel'),
+      authoredByViewer: _requiredBool(json, 'authoredByViewer'),
+      body: _requiredString(json, 'body'),
+      messageId: _requiredString(json, 'messageId'),
+      sentAt: _dateTime(json, 'sentAt'),
+    );
   }
 
   TeacherMeetingSummary _meeting(Map<String, Object?> json) =>
@@ -265,10 +468,29 @@ String? _optionalString(Map<String, Object?> json, String key) {
 
 int _requiredInt(Map<String, Object?> json, String key) {
   final value = json[key];
-  if (value is! int) {
+  if (value is! int || value < 0) {
     throw FormatException('TEACHER_INT_REQUIRED:$key');
   }
   return value;
+}
+
+bool _requiredBool(Map<String, Object?> json, String key) {
+  final value = json[key];
+  if (value is! bool) {
+    throw FormatException('TEACHER_BOOL_REQUIRED:$key');
+  }
+  return value;
+}
+
+void _requireExactKeys(
+  Map<String, Object?> json,
+  Set<String> keys,
+  String operation,
+) {
+  if (json.length != keys.length ||
+      json.keys.any((key) => !keys.contains(key))) {
+    throw FormatException('TEACHER_FIELDS_INVALID:$operation');
+  }
 }
 
 DateTime _dateTime(Map<String, Object?> json, String key) {

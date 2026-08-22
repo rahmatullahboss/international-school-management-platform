@@ -127,6 +127,133 @@ void main() {
   );
 
   test(
+    'loads authoritative assessment summaries with exact score scale',
+    () async {
+      late http.Request capturedRequest;
+      final client = apiClient((request) async {
+        capturedRequest = request;
+        return http.Response(
+          jsonEncode(<String, Object?>{
+            'generatedAt': '2026-08-22T03:00:00.000Z',
+            'hasMore': false,
+            'assessments': <Object?>[
+              <String, Object?>{
+                'assessmentId': '40000000-0000-4000-8000-000000000701',
+                'sectionId': '40000000-0000-4000-8000-000000000064',
+                'sectionLabel': 'Grade 5A',
+                'subjectLabel': 'Mathematics',
+                'assessmentTitle': 'Fractions quiz',
+                'categoryLabel': 'Quiz',
+                'dueAt': '2026-08-23T03:00:00.000Z',
+                'state': 'published',
+                'lockState': 'open',
+                'version': 3,
+                'scoreScale': 100,
+                'maximumScoreUnits': 2000,
+                'rosterCount': 24,
+                'enteredCount': 12,
+              },
+            ],
+          }),
+          200,
+        );
+      });
+
+      final result = await TeacherMobileApi(
+        client,
+      ).loadAssessments(teacherSession());
+
+      expect(capturedRequest.url.path, TeacherMobileApi.assessmentsPath);
+      expect(result.assessments.single.scoreScale, 100);
+      expect(result.assessments.single.maximumScoreUnits, 2000);
+      expect(result.assessments.single.enteredCount, 12);
+      client.close();
+    },
+  );
+
+  test(
+    'loads teacher conversation summaries and messages without hidden fields',
+    () async {
+      var requestCount = 0;
+      final client = apiClient((request) async {
+        requestCount += 1;
+        if (request.url.path == TeacherMobileApi.conversationsPath) {
+          return http.Response(
+            jsonEncode(<String, Object?>{
+              'generatedAt': '2026-08-22T03:00:00.000Z',
+              'hasMore': false,
+              'conversations': <Object?>[
+                <String, Object?>{
+                  'conversationId': '40000000-0000-4000-8000-000000000810',
+                  'studentId': '40000000-0000-4000-8000-000000000013',
+                  'studentDisplayName': 'Student One',
+                  'subject': 'Homework support',
+                  'latestMessageAt': '2026-08-22T02:55:00.000Z',
+                  'canReply': true,
+                },
+              ],
+            }),
+            200,
+          );
+        }
+        return http.Response(
+          jsonEncode(<String, Object?>{
+            'conversationId': '40000000-0000-4000-8000-000000000810',
+            'studentDisplayName': 'Student One',
+            'subject': 'Homework support',
+            'hasMore': false,
+            'messages': <Object?>[
+              <String, Object?>{
+                'messageId': '40000000-0000-4000-8000-000000000811',
+                'authorLabel': 'Teacher One',
+                'body': 'Please review question 4.',
+                'sentAt': '2026-08-22T02:55:00.000Z',
+                'authoredByViewer': true,
+              },
+            ],
+          }),
+          200,
+        );
+      });
+
+      final api = TeacherMobileApi(client);
+      final conversations = await api.loadConversations(teacherSession());
+      final messages = await api.loadConversationMessages(
+        conversationId: conversations.conversations.single.conversationId,
+        session: teacherSession(),
+      );
+
+      expect(requestCount, 2);
+      expect(
+        conversations.conversations.single.studentDisplayName,
+        'Student One',
+      );
+      expect(messages.messages.single.authoredByViewer, isTrue);
+      client.close();
+    },
+  );
+
+  test('rejects unexpected assessment response fields', () async {
+    final client = apiClient(
+      (request) async => http.Response(
+        jsonEncode(<String, Object?>{
+          'generatedAt': '2026-08-22T03:00:00.000Z',
+          'hasMore': false,
+          'assessments': <Object?>[],
+          'internalRevision': 99,
+        }),
+        200,
+      ),
+    );
+
+    expect(
+      () => TeacherMobileApi(client).loadAssessments(teacherSession()),
+      throwsA(isA<SchoolApiException>()),
+    );
+    client.close();
+  });
+
+  test(
     'submits idempotent attendance batches without client finalization',
     () async {
       late http.Request capturedRequest;
@@ -288,6 +415,7 @@ SchoolSession teacherSession() => SchoolSession(
   capabilities: const {
     SchoolCapability.attendanceTake,
     SchoolCapability.gradesWrite,
+    SchoolCapability.messagesRead,
     SchoolCapability.timetableRead,
   },
   locale: 'en-BD',

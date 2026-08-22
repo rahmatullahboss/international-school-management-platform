@@ -158,6 +158,100 @@ void main() {
     expect(receipt.status, TeacherWriteStatus.requiresReconciliation);
     expect(receipt.reasonCode, 'BASE_VERSION_STALE');
   });
+
+  test(
+    'assessment list rejects duplicate assessment identities and invalid counts',
+    () {
+      final assessment = TeacherAssessmentSummary(
+        assessmentId: 'assessment-1',
+        assessmentTitle: 'Fractions quiz',
+        categoryLabel: 'Quiz',
+        dueAt: DateTime.parse('2026-08-22T09:00:00Z'),
+        enteredCount: 12,
+        lockState: TeacherGradebookLockState.open,
+        maximumScoreUnits: 2000,
+        rosterCount: 24,
+        scoreScale: 100,
+        sectionId: 'section-1',
+        sectionLabel: 'Grade 5A',
+        state: TeacherAssessmentState.published,
+        subjectLabel: 'Mathematics',
+        version: 3,
+      );
+
+      expect(assessment.isReadOnly, isFalse);
+      expect(
+        () => TeacherAssessmentListReadModel(
+          assessments: [assessment, assessment],
+          generatedAt: DateTime.parse('2026-08-22T09:00:00Z'),
+          hasMore: false,
+        ),
+        throwsA(
+          isA<TeacherDomainException>().having(
+            (error) => error.code,
+            'code',
+            'TEACHER_ASSESSMENT_DUPLICATE',
+          ),
+        ),
+      );
+      expect(
+        () => TeacherAssessmentSummary(
+          assessmentId: 'assessment-2',
+          assessmentTitle: 'Invalid counts',
+          categoryLabel: 'Quiz',
+          dueAt: DateTime.parse('2026-08-22T09:00:00Z'),
+          enteredCount: 25,
+          lockState: TeacherGradebookLockState.open,
+          maximumScoreUnits: 2000,
+          rosterCount: 24,
+          scoreScale: 100,
+          sectionId: 'section-1',
+          sectionLabel: 'Grade 5A',
+          state: TeacherAssessmentState.draft,
+          subjectLabel: 'Mathematics',
+          version: 1,
+        ),
+        throwsA(isA<TeacherDomainException>()),
+      );
+    },
+  );
+
+  test('conversation models keep thread and message identities unique', () {
+    final summary = TeacherConversationSummary(
+      canReply: true,
+      conversationId: 'conversation-1',
+      latestMessageAt: DateTime.parse('2026-08-22T09:00:00Z'),
+      studentDisplayName: 'Student One',
+      studentId: 'student-1',
+      subject: 'Homework support',
+    );
+    expect(
+      () => TeacherConversationListReadModel(
+        conversations: [summary, summary],
+        generatedAt: DateTime.parse('2026-08-22T09:00:00Z'),
+        hasMore: false,
+      ),
+      throwsA(isA<TeacherDomainException>()),
+    );
+
+    final message = TeacherConversationMessage(
+      authorLabel: 'Teacher One',
+      authoredByViewer: true,
+      body: 'Please review question 4.',
+      messageId: 'message-1',
+      sentAt: DateTime.parse('2026-08-22T09:00:00Z'),
+    );
+    expect(
+      () => TeacherConversationMessagesReadModel(
+        conversationId: 'conversation-1',
+        hasMore: false,
+        messages: [message, message],
+        studentDisplayName: 'Student One',
+        subject: 'Homework support',
+      ),
+      throwsA(isA<TeacherDomainException>()),
+    );
+  });
 }
 
 TeacherMeetingSummary teacherMeeting() => TeacherMeetingSummary(

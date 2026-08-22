@@ -17,6 +17,10 @@ enum TeacherWriteStatus {
 
 enum TeacherGradeEntryStatus { scored, missing, exempt }
 
+enum TeacherAssessmentState { draft, published, closed }
+
+enum TeacherGradebookLockState { open, locked }
+
 final class TeacherMeetingSummary {
   factory TeacherMeetingSummary({
     required TeacherAttendanceStatus attendanceStatus,
@@ -365,6 +369,263 @@ final class TeacherWriteReceipt {
   final int acceptedRevision;
   final TeacherWriteStatus status;
   final String? reasonCode;
+}
+
+final class TeacherAssessmentSummary {
+  factory TeacherAssessmentSummary({
+    required String assessmentId,
+    required String assessmentTitle,
+    required String categoryLabel,
+    required DateTime dueAt,
+    required int enteredCount,
+    required TeacherGradebookLockState lockState,
+    required int maximumScoreUnits,
+    required int rosterCount,
+    required int scoreScale,
+    required String sectionId,
+    required String sectionLabel,
+    required TeacherAssessmentState state,
+    required String subjectLabel,
+    required int version,
+  }) {
+    if (enteredCount < 0 || rosterCount < 0 || enteredCount > rosterCount) {
+      throw const TeacherDomainException('TEACHER_ASSESSMENT_COUNTS_INVALID');
+    }
+    if (scoreScale < 1 || maximumScoreUnits < 1 || version < 1) {
+      throw const TeacherDomainException('TEACHER_ASSESSMENT_SCALE_INVALID');
+    }
+    return TeacherAssessmentSummary._(
+      assessmentId: _required(assessmentId, 'assessmentId'),
+      assessmentTitle: _required(assessmentTitle, 'assessmentTitle'),
+      categoryLabel: _required(categoryLabel, 'categoryLabel'),
+      dueAt: dueAt,
+      enteredCount: enteredCount,
+      lockState: lockState,
+      maximumScoreUnits: maximumScoreUnits,
+      rosterCount: rosterCount,
+      scoreScale: scoreScale,
+      sectionId: _required(sectionId, 'sectionId'),
+      sectionLabel: _required(sectionLabel, 'sectionLabel'),
+      state: state,
+      subjectLabel: _required(subjectLabel, 'subjectLabel'),
+      version: version,
+    );
+  }
+
+  const TeacherAssessmentSummary._({
+    required this.assessmentId,
+    required this.assessmentTitle,
+    required this.categoryLabel,
+    required this.dueAt,
+    required this.enteredCount,
+    required this.lockState,
+    required this.maximumScoreUnits,
+    required this.rosterCount,
+    required this.scoreScale,
+    required this.sectionId,
+    required this.sectionLabel,
+    required this.state,
+    required this.subjectLabel,
+    required this.version,
+  });
+
+  final String assessmentId;
+  final String sectionId;
+  final String sectionLabel;
+  final String subjectLabel;
+  final String assessmentTitle;
+  final String categoryLabel;
+  final DateTime dueAt;
+  final TeacherAssessmentState state;
+  final TeacherGradebookLockState lockState;
+  final int version;
+  final int scoreScale;
+  final int maximumScoreUnits;
+  final int rosterCount;
+  final int enteredCount;
+
+  bool get isReadOnly =>
+      state == TeacherAssessmentState.closed ||
+      lockState == TeacherGradebookLockState.locked;
+}
+
+final class TeacherAssessmentListReadModel {
+  factory TeacherAssessmentListReadModel({
+    required Iterable<TeacherAssessmentSummary> assessments,
+    required DateTime generatedAt,
+    required bool hasMore,
+  }) {
+    final normalized = List<TeacherAssessmentSummary>.unmodifiable(assessments);
+    _requireUnique(
+      normalized.map((assessment) => assessment.assessmentId),
+      'TEACHER_ASSESSMENT_DUPLICATE',
+    );
+    return TeacherAssessmentListReadModel._(
+      assessments: normalized,
+      generatedAt: generatedAt,
+      hasMore: hasMore,
+    );
+  }
+
+  const TeacherAssessmentListReadModel._({
+    required this.assessments,
+    required this.generatedAt,
+    required this.hasMore,
+  });
+
+  final List<TeacherAssessmentSummary> assessments;
+  final DateTime generatedAt;
+  final bool hasMore;
+}
+
+final class TeacherConversationSummary {
+  factory TeacherConversationSummary({
+    required bool canReply,
+    required String conversationId,
+    required DateTime latestMessageAt,
+    required String studentDisplayName,
+    required String studentId,
+    required String subject,
+  }) => TeacherConversationSummary._(
+    canReply: canReply,
+    conversationId: _required(conversationId, 'conversationId'),
+    latestMessageAt: latestMessageAt,
+    studentDisplayName: _required(studentDisplayName, 'studentDisplayName'),
+    studentId: _required(studentId, 'studentId'),
+    subject: _required(subject, 'subject'),
+  );
+
+  const TeacherConversationSummary._({
+    required this.canReply,
+    required this.conversationId,
+    required this.latestMessageAt,
+    required this.studentDisplayName,
+    required this.studentId,
+    required this.subject,
+  });
+
+  final String conversationId;
+  final String studentId;
+  final String studentDisplayName;
+  final String subject;
+  final DateTime latestMessageAt;
+  final bool canReply;
+}
+
+final class TeacherConversationListReadModel {
+  factory TeacherConversationListReadModel({
+    required Iterable<TeacherConversationSummary> conversations,
+    required DateTime generatedAt,
+    required bool hasMore,
+  }) {
+    final normalized = List<TeacherConversationSummary>.unmodifiable(
+      conversations,
+    );
+    _requireUnique(
+      normalized.map((conversation) => conversation.conversationId),
+      'TEACHER_CONVERSATION_DUPLICATE',
+    );
+    return TeacherConversationListReadModel._(
+      conversations: normalized,
+      generatedAt: generatedAt,
+      hasMore: hasMore,
+    );
+  }
+
+  const TeacherConversationListReadModel._({
+    required this.conversations,
+    required this.generatedAt,
+    required this.hasMore,
+  });
+
+  final List<TeacherConversationSummary> conversations;
+  final DateTime generatedAt;
+  final bool hasMore;
+}
+
+final class TeacherConversationMessage {
+  factory TeacherConversationMessage({
+    required String authorLabel,
+    required bool authoredByViewer,
+    required String body,
+    required String messageId,
+    required DateTime sentAt,
+  }) => TeacherConversationMessage._(
+    authorLabel: _required(authorLabel, 'authorLabel'),
+    authoredByViewer: authoredByViewer,
+    body: _required(body, 'body'),
+    messageId: _required(messageId, 'messageId'),
+    sentAt: sentAt,
+  );
+
+  const TeacherConversationMessage._({
+    required this.authorLabel,
+    required this.authoredByViewer,
+    required this.body,
+    required this.messageId,
+    required this.sentAt,
+  });
+
+  final String messageId;
+  final String authorLabel;
+  final String body;
+  final DateTime sentAt;
+  final bool authoredByViewer;
+}
+
+final class TeacherConversationMessagesReadModel {
+  factory TeacherConversationMessagesReadModel({
+    required String conversationId,
+    required Iterable<TeacherConversationMessage> messages,
+    required String studentDisplayName,
+    required String subject,
+    required bool hasMore,
+  }) {
+    final normalized = List<TeacherConversationMessage>.unmodifiable(messages);
+    _requireUnique(
+      normalized.map((message) => message.messageId),
+      'TEACHER_CONVERSATION_MESSAGE_DUPLICATE',
+    );
+    return TeacherConversationMessagesReadModel._(
+      conversationId: _required(conversationId, 'conversationId'),
+      hasMore: hasMore,
+      messages: normalized,
+      studentDisplayName: _required(studentDisplayName, 'studentDisplayName'),
+      subject: _required(subject, 'subject'),
+    );
+  }
+
+  const TeacherConversationMessagesReadModel._({
+    required this.conversationId,
+    required this.hasMore,
+    required this.messages,
+    required this.studentDisplayName,
+    required this.subject,
+  });
+
+  final String conversationId;
+  final String studentDisplayName;
+  final String subject;
+  final List<TeacherConversationMessage> messages;
+  final bool hasMore;
+}
+
+abstract interface class TeacherExtendedReadRepository {
+  Future<TeacherAssessmentListReadModel> loadAssessments(
+    SchoolSession session, {
+    String correlationId = 'teacher-assessments',
+  });
+
+  Future<TeacherConversationListReadModel> loadConversations(
+    SchoolSession session, {
+    String correlationId = 'teacher-conversations',
+  });
+
+  Future<TeacherConversationMessagesReadModel> loadConversationMessages({
+    required String conversationId,
+    required SchoolSession session,
+    String correlationId = 'teacher-conversation-messages',
+  });
 }
 
 abstract interface class TeacherJourneyRepository {

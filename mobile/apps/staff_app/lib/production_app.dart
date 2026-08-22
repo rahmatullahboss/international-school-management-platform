@@ -165,6 +165,7 @@ class _AuthorizedStaffApp extends StatefulWidget {
 
 class _AuthorizedStaffAppState extends State<_AuthorizedStaffApp> {
   late StaffJourneyController _journey;
+  StaffExtendedReadController? _extendedReads;
   final MobileNotificationOpenTracker _notificationTracker =
       MobileNotificationOpenTracker();
   StreamSubscription<MobileNotificationEnvelope>? _notificationSubscription;
@@ -183,11 +184,26 @@ class _AuthorizedStaffAppState extends State<_AuthorizedStaffApp> {
       runtimeLoader: widget.syncRuntimeLoader,
       session: widget.session,
     );
+    final extendedRepository = _extendedRepository(widget.repository);
+    if (extendedRepository != null) {
+      _extendedReads = StaffExtendedReadController(
+        repository: extendedRepository,
+        session: widget.session,
+      );
+    }
     _router = _createRouter();
     _bindNotifications();
     unawaited(_journey.initialize());
     unawaited(_sync.initialize());
+    final extendedReads = _extendedReads;
+    if (extendedReads != null) unawaited(extendedReads.initialize());
   }
+
+  TeacherExtendedReadRepository? _extendedRepository(
+    TeacherJourneyRepository repository,
+  ) => repository is TeacherExtendedReadRepository
+      ? repository as TeacherExtendedReadRepository
+      : null;
 
   @override
   void didUpdateWidget(covariant _AuthorizedStaffApp oldWidget) {
@@ -217,6 +233,28 @@ class _AuthorizedStaffAppState extends State<_AuthorizedStaffApp> {
           session: widget.session,
         ),
       );
+      final extendedRepository = _extendedRepository(widget.repository);
+      if (repositoryChanged) {
+        _extendedReads?.dispose();
+        _extendedReads = extendedRepository == null
+            ? null
+            : StaffExtendedReadController(
+                repository: extendedRepository,
+                session: widget.session,
+              );
+        final extendedReads = _extendedReads;
+        if (extendedReads != null) unawaited(extendedReads.initialize());
+      } else if (scopeChanged && extendedRepository != null) {
+        final extendedReads = _extendedReads;
+        if (extendedReads != null) {
+          unawaited(
+            extendedReads.updateScope(
+              repository: extendedRepository,
+              session: widget.session,
+            ),
+          );
+        }
+      }
       _router.dispose();
       _router = _createRouter();
     }
@@ -288,13 +326,26 @@ class _AuthorizedStaffAppState extends State<_AuthorizedStaffApp> {
             if (session.can(SchoolCapability.gradesWrite))
               GoRoute(
                 path: '/gradebook',
-                builder: (context, state) => const StaffGradebookScreen(),
+                builder: (context, state) {
+                  final extendedReads = _extendedReads;
+                  return extendedReads == null
+                      ? const StaffGradebookScreen()
+                      : StaffAuthoritativeGradebookScreen(
+                          controller: extendedReads,
+                        );
+                },
               ),
-            if (session.can(SchoolCapability.messagesRead) ||
-                session.can(SchoolCapability.messagesSend))
+            if (session.can(SchoolCapability.messagesRead))
               GoRoute(
                 path: '/messages',
-                builder: (context, state) => const StaffMessagesScreen(),
+                builder: (context, state) {
+                  final extendedReads = _extendedReads;
+                  return extendedReads == null
+                      ? const StaffMessagesScreen()
+                      : StaffAuthoritativeMessagesScreen(
+                          controller: extendedReads,
+                        );
+                },
               ),
           ],
         ),
@@ -321,6 +372,7 @@ class _AuthorizedStaffAppState extends State<_AuthorizedStaffApp> {
     if (subscription != null) unawaited(subscription.cancel());
     _router.dispose();
     _journey.dispose();
+    _extendedReads?.dispose();
     _sync.dispose();
     super.dispose();
   }
@@ -378,8 +430,7 @@ class _AuthorizedStaffShell extends StatelessWidget {
           ),
         );
       }
-      if (session.can(SchoolCapability.messagesRead) ||
-          session.can(SchoolCapability.messagesSend)) {
+      if (session.can(SchoolCapability.messagesRead)) {
         paths.add('/messages');
         destinations.add(
           SchoolDestination(

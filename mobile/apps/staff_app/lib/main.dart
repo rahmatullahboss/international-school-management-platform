@@ -13,6 +13,7 @@ import 'package:school_design_system/school_count_strings.dart';
 import 'package:school_design_system/school_design_system.dart';
 import 'package:school_mobile_core/mobile_core.dart';
 import 'package:school_mobile_core/notification_routing.dart';
+import 'package:school_staff_app/staff_extended_read_strings.dart';
 import 'package:school_staff_app/staff_production_dynamic_strings.dart';
 import 'package:school_staff_app/staff_production_strings.dart';
 import 'package:school_staff_app/staff_server_boundary_strings.dart';
@@ -22,6 +23,7 @@ import 'package:school_sync_storage/school_sync_storage.dart';
 import 'package:school_teacher_sync/school_teacher_sync.dart';
 
 part 'production_app.dart';
+part 'staff_extended_reads.dart';
 part 'staff_journey_controller.dart';
 part 'staff_sync_controller.dart';
 part 'teacher_production_journeys.dart';
