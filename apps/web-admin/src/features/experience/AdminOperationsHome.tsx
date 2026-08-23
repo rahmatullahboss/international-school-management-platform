@@ -253,7 +253,7 @@ export function AdminOperationsHome(props: AdminOperationsHomeProps): ReactEleme
             {props.campusName} · Evidence current at <time dateTime={props.asOf}>{props.asOf}</time>
           </span>
         </div>
-        <a href="/admin/reports/readiness">Open governed readiness report</a>
+        <a href="/admin/reports">Open governed readiness report</a>
       </header>
 
       {props.state === 'error' ? (
@@ -292,13 +292,17 @@ export function AdminOperationsHome(props: AdminOperationsHomeProps): ReactEleme
         )}
       </section>
 
-      <section className="admin-queue" aria-labelledby="admin-exceptions-title">
+      <section
+        className="admin-queue"
+        id="admin-priority-exceptions"
+        aria-labelledby="admin-exceptions-title"
+      >
         <header>
           <div>
             <h3 id="admin-exceptions-title">Priority exceptions</h3>
             <p>Sorted by severity and due time after permission filtering.</p>
           </div>
-          <a href="/admin/queues">Open all queues</a>
+          <a href="/admin#admin-priority-exceptions">Open all queues</a>
         </header>
 
         {bulkActions.length === 0 ? null : (
@@ -386,10 +390,14 @@ export function AdminOperationsHome(props: AdminOperationsHomeProps): ReactEleme
       </section>
 
       <div className="admin-ops__split">
-        <section className="admin-approvals" aria-labelledby="admin-approvals-title">
+        <section
+          className="admin-approvals"
+          id="admin-approval-inbox"
+          aria-labelledby="admin-approvals-title"
+        >
           <header>
             <h3 id="admin-approvals-title">Approvals</h3>
-            <a href="/admin/approvals">Open approval inbox</a>
+            <a href="/admin#admin-approval-inbox">Open approval inbox</a>
           </header>
           {approvals.length === 0 ? (
             <p className="admin-empty">No permitted approvals are waiting.</p>

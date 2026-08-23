@@ -249,6 +249,14 @@ describe('EXP-01 admin experience', () => {
 
     expect(markup).toContain('Readiness definitions');
     expect(markup).toContain('Attendance readiness report');
+    expect(markup).toContain('href="/admin/reports"');
+    expect(markup).toContain('id="admin-priority-exceptions"');
+    expect(markup).toContain('href="/admin#admin-priority-exceptions"');
+    expect(markup).toContain('id="admin-approval-inbox"');
+    expect(markup).toContain('href="/admin#admin-approval-inbox"');
+    expect(markup).not.toContain('/admin/reports/readiness');
+    expect(markup).not.toContain('/admin/queues');
+    expect(markup).not.toContain('href="/admin/approvals"');
     expect(markup).toContain('Send reminder');
     expect(markup).toContain('Restricted student support task');
     expect(markup).toContain('Verify identity to continue');
