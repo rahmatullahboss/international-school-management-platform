@@ -1,0 +1,99 @@
+program: international-school-platform-v1
+updated_on: 2026-08-23
+status: staging_not_yet_human_qa_ready
+base_branch: main
+production_activation_authorized: false
+
+repository:
+  starting_head: dd371e7
+  github_sync: blocked_local_main_ahead_66_and_no_writable_local_git_credential
+  owned_changes:
+    - apps/platform-api/wrangler.jsonc
+    - scripts/apply-reviewed-post-integration-migrations.sh
+    - docs/execution/staging-human-qa-readiness-progress-20260823.yml
+
+neon_staging:
+  project_id: lingering-brook-52999532
+  branch_name: staging/human-qa-20260823
+  branch_id: br-super-scene-axc22bdn
+  database: neondb
+  parent_branch_id: br-cool-wildflower-axsot8l1
+  parent_mutated: false
+  migration_count: 75
+  latest_mobile_migration: 202608220003_MOB-10_mobile_staff_conversation_writes
+  runtime_credentials:
+    api_login: app_staging_runtime_login
+    projection_login: app_staging_projection_worker_login
+    owner_credential_bound_to_worker: false
+
+cloudflare_staging:
+  web_worker: international-school-platform-web-staging
+  web_version: fd34cf68-c2c0-40ea-a924-2a49a83013dd
+  api_worker: international-school-platform-api-staging
+  api_version: e3d3dc97-230a-4946-bf56-f3e1f969f083
+  web_url: https://international-school-platform-web-staging.rahmatullahzisan.workers.dev
+  api_url: https://international-school-platform-api-staging.rahmatullahzisan.workers.dev
+  health: green
+  auth_readiness: disabled
+  projection_readiness: disabled
+  mobile_readiness: disabled
+  database_secret_bound: false
+  reviewed_oidc_configuration_present: false
+  cron:
+    school_projection: "*/5 * * * *"
+    removed:
+      order-processor: "0 * * * *"
+      subscription-cron: "0 3 * * *"
+    retained:
+      courier-cron: "*/30 * * * *"
+      dealsrky-bridge: "0 * * * *"
+      mfs-agent-api-dev: "* * * * *"
+    capacity_blocker: closed
+
+verification:
+  npm_run_verify:
+    status: pass
+    test_files_passed: 246
+    test_files_skipped: 1
+    tests_passed: 1373
+    tests_skipped: 1
+  persona_database_e2e:
+    status: pass
+    personas:
+      - admissions
+      - finance
+      - support
+    persisted_receipts: 3
+    operator_domain_receipts: 3
+    audit_events: 3
+  mobile_migration_authority:
+    status: pass
+    latest_verified_stream: MOB-10
+  browser_e2e:
+    status: pass
+    passed: 115
+    failed: 0
+  live_core_route_matrix:
+    status: pass
+    routes: 33
+    profiles: 2
+    passed: 66
+    failed: 0
+    console_or_page_errors: 0
+    page_not_available: 0
+    page_level_horizontal_overflow: 0
+
+remaining_blockers:
+  - secure_cloudflare_staging_database_secret_binding
+  - reviewed_staging_browser_oidc_provider_configuration_and_secret
+  - reviewed_mobile_oidc_issuer_audience_and_jwks_configuration
+  - live_database_backed_api_persona_and_negative_auth_evidence
+  - github_normal_non_force_push_credential
+
+human_qa_gate:
+  formal_qa_uat_can_start: false
+  reason: >-
+    The isolated staging database and local/browser/live Web verification are green, and the Cron capacity
+    blocker is closed. The deployed staging API is still intentionally fail-closed because its least-privilege
+    database credentials and reviewed OIDC provider bindings are not securely bound. Do not treat the live UI
+    alone as DB-backed staging readiness.
