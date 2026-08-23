@@ -1,9 +1,101 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PSQL=(psql -X -v ON_ERROR_STOP=1 -d "${PGDATABASE:-postgres}")
+base_manifest="infra/database/migration-manifest.json"
+post_integration_manifest="infra/database/post-integration-migration-manifest.json"
+container_name="persona-e2e-postgres-${RANDOM}-${BASHPID}"
+use_container=false
 
-"${PSQL[@]}" <<'SQL'
+cleanup() {
+  if [[ "$use_container" == "true" ]]; then
+    docker rm -f "$container_name" >/dev/null 2>&1 || true
+  fi
+}
+trap cleanup EXIT
+
+run_psql() {
+  if [[ "$use_container" == "true" ]]; then
+    docker exec -i "$container_name" psql -X --no-psqlrc -v ON_ERROR_STOP=1 -U postgres -d postgres "$@"
+  else
+    psql -X --no-psqlrc -v ON_ERROR_STOP=1 -d "${PGDATABASE:-postgres}" "$@"
+  fi
+}
+
+apply_manifest() {
+  local manifest="$1"
+  while IFS= read -r migration; do
+    run_psql < "$migration"
+  done < <(
+    node -e 'const fs=require("fs"); const manifest=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); for (const migration of manifest.migrations) console.log(migration.path);' "$manifest"
+  )
+}
+
+if ! command -v psql >/dev/null 2>&1; then
+  command -v docker >/dev/null 2>&1 || {
+    echo "psql or Docker is required for the product persona E2E verifier" >&2
+    exit 1
+  }
+  use_container=true
+  docker run -d --rm --name "$container_name" -e POSTGRES_HOST_AUTH_METHOD=trust postgres:16-alpine >/dev/null
+  readiness_checks=0
+  for _ in $(seq 1 30); do
+    if docker exec "$container_name" pg_isready -U postgres >/dev/null 2>&1; then
+      readiness_checks=$((readiness_checks + 1))
+      if [[ "$readiness_checks" -ge 2 ]]; then
+        break
+      fi
+    else
+      readiness_checks=0
+    fi
+    sleep 1
+  done
+  if [[ "$readiness_checks" -lt 2 ]]; then
+    echo "PostgreSQL persona E2E container did not become stably ready" >&2
+    exit 1
+  fi
+
+  apply_manifest "$base_manifest"
+  apply_manifest "$post_integration_manifest"
+fi
+
+run_psql <<'SQL'
+INSERT INTO platform.tenant (
+  tenant_id, slug, display_name, home_region, deployment_profile,
+  database_binding, provisioning_status
+) VALUES (
+  '30000000-0000-4000-8000-000000000001',
+  'persona-e2e-test',
+  'Persona E2E Test School',
+  'test',
+  'regional-pooled',
+  'test',
+  'active'
+)
+ON CONFLICT (tenant_id) DO NOTHING;
+
+INSERT INTO tenancy.legal_entity (
+  tenant_id, legal_entity_id, legal_name, country_code, default_currency
+) VALUES (
+  '30000000-0000-4000-8000-000000000001',
+  '30000000-0000-4000-8000-000000000002',
+  'Persona E2E Test School',
+  'BD',
+  'BDT'
+)
+ON CONFLICT (tenant_id, legal_entity_id) DO NOTHING;
+
+INSERT INTO tenancy.campus (
+  tenant_id, campus_id, legal_entity_id, code, name, time_zone
+) VALUES (
+  '30000000-0000-4000-8000-000000000001',
+  '30000000-0000-4000-8000-000000000003',
+  '30000000-0000-4000-8000-000000000002',
+  'P13',
+  'Persona E2E Campus',
+  'Asia/Dhaka'
+)
+ON CONFLICT (tenant_id, campus_id) DO NOTHING;
+
 INSERT INTO iam.permission(permission_key, description, required_assurance) VALUES
   ('admissions.application.review', 'Review admissions applications', 'aal1'),
   ('admissions.enrolment.convert', 'Convert an accepted applicant to enrolment', 'aal1'),
