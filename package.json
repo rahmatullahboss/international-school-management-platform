@@ -19,6 +19,7 @@
     "check:boundaries": "node scripts/check-architecture-boundaries.mjs && node scripts/check-platform-web-reachability.mjs",
     "clean": "npm run clean --workspaces --if-present",
     "dev": "npm run dev --workspace=@school/platform-api",
+    "deploy:staging-runtime": "node scripts/deploy-staging-runtime.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "licenses:check": "node scripts/check-licenses.mjs",

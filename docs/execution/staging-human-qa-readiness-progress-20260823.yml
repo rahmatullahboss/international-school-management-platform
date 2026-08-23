@@ -6,11 +6,12 @@ production_activation_authorized: false
 
 repository:
   starting_head: dd371e7
-  github_sync: blocked_local_main_ahead_68_and_no_writable_local_git_credential
+  github_sync: blocked_local_main_ahead_69_and_no_writable_local_git_credential
   owned_changes:
     - apps/platform-api/wrangler.jsonc
     - scripts/apply-reviewed-post-integration-migrations.sh
     - scripts/verify-staging-runtime-readiness.mjs
+    - scripts/deploy-staging-runtime.mjs
     - package.json
     - docs/execution/staging-human-qa-readiness-progress-20260823.yml
 
@@ -91,6 +92,14 @@ verification:
     browser_auth: disabled
     projection_worker: disabled
     mobile_auth: disabled
+  staging_activation_helper:
+    status: pass
+    command: npm run deploy:staging-runtime -- --secrets-file <external-0600-file> --oidc-config <reviewed-json>
+    dry_run_only: true
+    external_secret_file_required: true
+    group_or_other_readable_secret_file_rejected: true
+    exact_browser_callback_required: true
+    apply_requires_live_qa_ready_gate: true
 
 remaining_blockers:
   - secure_cloudflare_staging_database_secret_binding
