@@ -6,10 +6,12 @@ production_activation_authorized: false
 
 repository:
   starting_head: dd371e7
-  github_sync: blocked_local_main_ahead_66_and_no_writable_local_git_credential
+  github_sync: blocked_local_main_ahead_68_and_no_writable_local_git_credential
   owned_changes:
     - apps/platform-api/wrangler.jsonc
     - scripts/apply-reviewed-post-integration-migrations.sh
+    - scripts/verify-staging-runtime-readiness.mjs
+    - package.json
     - docs/execution/staging-human-qa-readiness-progress-20260823.yml
 
 neon_staging:
@@ -82,6 +84,13 @@ verification:
     console_or_page_errors: 0
     page_not_available: 0
     page_level_horizontal_overflow: 0
+  live_runtime_readiness:
+    status: pass
+    classification: fail-closed
+    verifier: npm run verify:staging-readiness -- --expect fail-closed
+    browser_auth: disabled
+    projection_worker: disabled
+    mobile_auth: disabled
 
 remaining_blockers:
   - secure_cloudflare_staging_database_secret_binding
