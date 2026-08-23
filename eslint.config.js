@@ -10,6 +10,7 @@ export default tseslint.config(
       '.tooling/**',
       '.tmp/**',
       '.worktrees/**',
+      '.wrangler/**',
       '.agents/skills/impeccable/**',
       '.github/skills/impeccable/**',
       'codexpro/**',
