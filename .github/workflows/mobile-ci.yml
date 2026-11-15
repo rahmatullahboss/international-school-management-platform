@@ -132,7 +132,7 @@ jobs:
         working-directory: mobile/apps/staff_app
         run: flutter build apk --debug
       - name: Upload Android debug APKs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: mob-01-secure-documents-android-debug-apks
           path: |
