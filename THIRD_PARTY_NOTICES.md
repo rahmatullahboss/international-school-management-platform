@@ -18,7 +18,7 @@ Package source distributions remain the authoritative location for full licence 
 | CC0-1.0 | 1 |
 | ISC | 12 |
 | LGPL-3.0-or-later | 10 |
-| MIT | 251 |
+| MIT | 225 |
 | MIT OR Apache-2.0 | 4 |
 | MPL-2.0 | 12 |
 
@@ -159,31 +159,6 @@ Package source distributions remain the authoritative location for full licence 
 | @rolldown/binding-win32-arm64-msvc | 1.1.5 | MIT | yes | yes |
 | @rolldown/binding-win32-x64-msvc | 1.1.5 | MIT | yes | yes |
 | @rolldown/pluginutils | 1.0.0-rc.3 | MIT | yes | no |
-| @rollup/rollup-android-arm-eabi | 4.62.3 | MIT | yes | yes |
-| @rollup/rollup-android-arm64 | 4.62.3 | MIT | yes | yes |
-| @rollup/rollup-darwin-arm64 | 4.62.3 | MIT | yes | yes |
-| @rollup/rollup-darwin-x64 | 4.62.3 | MIT | yes | yes |
-| @rollup/rollup-freebsd-arm64 | 4.62.3 | MIT | yes | yes |
-| @rollup/rollup-freebsd-x64 | 4.62.3 | MIT | yes | yes |
-| @rollup/rollup-linux-arm-gnueabihf | 4.62.3 | MIT | yes | yes |
-| @rollup/rollup-linux-arm-musleabihf | 4.62.3 | MIT | yes | yes |
-| @rollup/rollup-linux-arm64-gnu | 4.62.3 | MIT | yes | yes |
-| @rollup/rollup-linux-arm64-musl | 4.62.3 | MIT | yes | yes |
-| @rollup/rollup-linux-loong64-gnu | 4.62.3 | MIT | yes | yes |
-| @rollup/rollup-linux-loong64-musl | 4.62.3 | MIT | yes | yes |
-| @rollup/rollup-linux-ppc64-gnu | 4.62.3 | MIT | yes | yes |
-| @rollup/rollup-linux-ppc64-musl | 4.62.3 | MIT | yes | yes |
-| @rollup/rollup-linux-riscv64-gnu | 4.62.3 | MIT | yes | yes |
-| @rollup/rollup-linux-riscv64-musl | 4.62.3 | MIT | yes | yes |
-| @rollup/rollup-linux-s390x-gnu | 4.62.3 | MIT | yes | yes |
-| @rollup/rollup-linux-x64-gnu | 4.62.3 | MIT | yes | yes |
-| @rollup/rollup-linux-x64-musl | 4.62.3 | MIT | yes | yes |
-| @rollup/rollup-openbsd-x64 | 4.62.3 | MIT | yes | yes |
-| @rollup/rollup-openharmony-arm64 | 4.62.3 | MIT | yes | yes |
-| @rollup/rollup-win32-arm64-msvc | 4.62.3 | MIT | yes | yes |
-| @rollup/rollup-win32-ia32-msvc | 4.62.3 | MIT | yes | yes |
-| @rollup/rollup-win32-x64-gnu | 4.62.3 | MIT | yes | yes |
-| @rollup/rollup-win32-x64-msvc | 4.62.3 | MIT | yes | yes |
 | @sindresorhus/is | 7.2.0 | MIT | yes | no |
 | @speed-highlight/core | 1.2.24 | CC0-1.0 | yes | no |
 | @standard-schema/spec | 1.1.0 | MIT | yes | no |
@@ -332,7 +307,6 @@ Package source distributions remain the authoritative location for full licence 
 | react-refresh | 0.18.0 | MIT | yes | no |
 | rolldown | 1.1.5 | MIT | yes | no |
 | rolldown/node_modules/@rolldown/pluginutils | 1.0.1 | MIT | yes | no |
-| rollup | 4.62.3 | MIT | yes | no |
 | scheduler | 0.27.0 | MIT | no | no |
 | semver | 7.8.5 | ISC | yes | no |
 | sharp | 0.35.2 | Apache-2.0 | yes | no |
