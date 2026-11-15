@@ -8,7 +8,7 @@ Package source distributions remain the authoritative location for full licence 
 | Licence expression | Packages |
 |---|---:|
 | 0BSD | 1 |
-| Apache-2.0 | 38 |
+| Apache-2.0 | 58 |
 | Apache-2.0 AND LGPL-3.0-or-later | 3 |
 | Apache-2.0 AND LGPL-3.0-or-later AND MIT | 1 |
 | BlueOak-1.0.0 | 1 |
@@ -200,17 +200,29 @@ Package source distributions remain the authoritative location for full licence 
 | @types/node | 26.1.2 | MIT | yes | no |
 | @types/react | 19.2.17 | MIT | yes | no |
 | @types/react-dom | 19.2.3 | MIT | yes | no |
-| @typescript-eslint/eslint-plugin | 8.65.0 | MIT | yes | no |
-| @typescript-eslint/eslint-plugin/node_modules/ignore | 7.0.6 | MIT | yes | no |
-| @typescript-eslint/parser | 8.65.0 | MIT | yes | no |
-| @typescript-eslint/project-service | 8.65.0 | MIT | yes | no |
 | @typescript-eslint/scope-manager | 8.65.0 | MIT | yes | no |
-| @typescript-eslint/tsconfig-utils | 8.65.0 | MIT | yes | no |
-| @typescript-eslint/type-utils | 8.65.0 | MIT | yes | no |
 | @typescript-eslint/types | 8.65.0 | MIT | yes | no |
-| @typescript-eslint/typescript-estree | 8.65.0 | MIT | yes | no |
-| @typescript-eslint/utils | 8.65.0 | MIT | yes | no |
 | @typescript-eslint/visitor-keys | 8.65.0 | MIT | yes | no |
+| @typescript/typescript-aix-ppc64 | 7.0.2 | Apache-2.0 | yes | yes |
+| @typescript/typescript-darwin-arm64 | 7.0.2 | Apache-2.0 | yes | yes |
+| @typescript/typescript-darwin-x64 | 7.0.2 | Apache-2.0 | yes | yes |
+| @typescript/typescript-freebsd-arm64 | 7.0.2 | Apache-2.0 | yes | yes |
+| @typescript/typescript-freebsd-x64 | 7.0.2 | Apache-2.0 | yes | yes |
+| @typescript/typescript-linux-arm | 7.0.2 | Apache-2.0 | yes | yes |
+| @typescript/typescript-linux-arm64 | 7.0.2 | Apache-2.0 | yes | yes |
+| @typescript/typescript-linux-loong64 | 7.0.2 | Apache-2.0 | yes | yes |
+| @typescript/typescript-linux-mips64el | 7.0.2 | Apache-2.0 | yes | yes |
+| @typescript/typescript-linux-ppc64 | 7.0.2 | Apache-2.0 | yes | yes |
+| @typescript/typescript-linux-riscv64 | 7.0.2 | Apache-2.0 | yes | yes |
+| @typescript/typescript-linux-s390x | 7.0.2 | Apache-2.0 | yes | yes |
+| @typescript/typescript-linux-x64 | 7.0.2 | Apache-2.0 | yes | yes |
+| @typescript/typescript-netbsd-arm64 | 7.0.2 | Apache-2.0 | yes | yes |
+| @typescript/typescript-netbsd-x64 | 7.0.2 | Apache-2.0 | yes | yes |
+| @typescript/typescript-openbsd-arm64 | 7.0.2 | Apache-2.0 | yes | yes |
+| @typescript/typescript-openbsd-x64 | 7.0.2 | Apache-2.0 | yes | yes |
+| @typescript/typescript-sunos-x64 | 7.0.2 | Apache-2.0 | yes | yes |
+| @typescript/typescript-win32-arm64 | 7.0.2 | Apache-2.0 | yes | yes |
+| @typescript/typescript-win32-x64 | 7.0.2 | Apache-2.0 | yes | yes |
 | @vitejs/plugin-react | 5.2.0 | MIT | yes | no |
 | @vitest/coverage-v8 | 4.1.10 | MIT | yes | no |
 | @vitest/expect | 4.1.10 | MIT | yes | no |
@@ -353,8 +365,16 @@ Package source distributions remain the authoritative location for full licence 
 | ts-api-utils | 2.5.0 | MIT | yes | no |
 | tslib | 2.8.1 | 0BSD | yes | yes |
 | type-check | 0.4.0 | MIT | yes | no |
-| typescript | 6.0.3 | Apache-2.0 | yes | no |
+| typescript | 7.0.2 | Apache-2.0 | yes | no |
 | typescript-eslint | 8.65.0 | MIT | yes | no |
+| typescript-eslint/node_modules/@typescript-eslint/eslint-plugin | 8.65.0 | MIT | yes | no |
+| typescript-eslint/node_modules/@typescript-eslint/eslint-plugin/node_modules/@typescript-eslint/type-utils | 8.65.0 | MIT | yes | no |
+| typescript-eslint/node_modules/@typescript-eslint/parser | 8.65.0 | MIT | yes | no |
+| typescript-eslint/node_modules/@typescript-eslint/typescript-estree | 8.65.0 | MIT | yes | no |
+| typescript-eslint/node_modules/@typescript-eslint/typescript-estree/node_modules/@typescript-eslint/project-service | 8.65.0 | MIT | yes | no |
+| typescript-eslint/node_modules/@typescript-eslint/typescript-estree/node_modules/@typescript-eslint/tsconfig-utils | 8.65.0 | MIT | yes | no |
+| typescript-eslint/node_modules/@typescript-eslint/utils | 8.65.0 | MIT | yes | no |
+| typescript-eslint/node_modules/ignore | 7.0.6 | MIT | yes | no |
 | undici | 7.29.0 | MIT | yes | no |
 | undici-types | 8.3.0 | MIT | yes | no |
 | unenv | 2.0.0-rc.24 | MIT | yes | no |
