@@ -341,11 +341,20 @@ jobs:
 
           for file_name in [
               'session-headers.txt', 'authorize-headers.txt', 'snapshot-headers.txt',
-              'mutation-headers.txt', 'logout-headers.txt', 'backchannel-headers.txt',
+              'mutation-headers.txt', 'backchannel-headers.txt',
           ]:
               text = headers(file_name)
               assert 'cache-control: no-store' in text, (file_name, text)
               assert 'set-cookie:' not in text, (file_name, text)
+
+          logout_headers = headers('logout-headers.txt')
+          assert 'cache-control: no-store' in logout_headers, logout_headers
+          logout_cookie_headers = [
+              line for line in logout_headers.splitlines() if line.startswith('set-cookie:')
+          ]
+          assert logout_cookie_headers == [
+              'set-cookie: __host-school_session=; path=/; httponly; secure; samesite=lax; max-age=0',
+          ], logout_cookie_headers
 
           for file_name in ['authorize-headers.txt', 'mutation-headers.txt', 'logout-headers.txt']:
               assert f'access-control-allow-origin: {trusted_staging_origin}' in headers(file_name), file_name
