@@ -241,7 +241,10 @@ jobs:
 
           python3 - <<'PY'
           import json
+          import os
           from pathlib import Path
+
+          trusted_staging_origin = os.environ['WEB_URL']
 
           def load(path: str):
               return json.loads(Path(path).read_text(encoding='utf-8'))
@@ -256,7 +259,7 @@ jobs:
           readiness = load('auth-readiness.json')
           assert readiness.get('schemaVersion') == 1, readiness
           assert readiness.get('mode') == 'oidc-bff', readiness
-          assert readiness.get('state') == 'disabled', readiness
+          assert readiness.get('state') == 'incomplete', readiness
           assert readiness.get('loginEnabled') is False, readiness
 
           required_controls = [
@@ -293,19 +296,15 @@ jobs:
               assert controls.get(control) is True, (control, readiness)
 
           assert readiness.get('missingConfiguration') == [
-              'provider-metadata', 'provider-endpoint-origins', 'provider-cache-source',
-              'backchannel-logout-source', 'provider-client-credential',
-              'transaction-signing-key', 'transaction-replay-source',
-              'session-signing-key', 'session-registry-source',
-              'membership-source', 'permission-source', 'runtime-read-model-source',
-              'runtime-mutation-source', 'runtime-projection-worker-source',
-              'allowed-web-origins',
+              'provider-metadata', 'provider-endpoint-origins',
+              'provider-client-credential', 'transaction-signing-key',
+              'session-signing-key',
           ], readiness
 
           worker_readiness = load('projection-worker-readiness.json')
           assert worker_readiness == {
               'schemaVersion': 1,
-              'state': 'disabled',
+              'state': 'incomplete',
               'controls': {
                   'databaseNativeProcessing': True,
                   'exactEventAllowlist': True,
@@ -316,7 +315,7 @@ jobs:
                   'sourceProjectionIntegrity': True,
               },
               'missingConfiguration': [
-                  'database-url', 'runtime-projection-worker-source',
+                  'database-url',
               ],
           }, worker_readiness
           worker_headers = headers('projection-worker-headers.txt')
@@ -333,7 +332,7 @@ jobs:
               'auth-authorize-error.json': 'permission_configuration_invalid',
               'auth-snapshot-error.json': 'runtime_read_model_configuration_invalid',
               'auth-mutation-error.json': 'runtime_mutation_configuration_invalid',
-              'auth-logout-error.json': 'logout_configuration_invalid',
+              'auth-logout-error.json': 'browser_session_configuration_invalid',
               'auth-backchannel-error.json': 'backchannel_logout_configuration_invalid',
           }
           for file_name, code in expected_errors.items():
@@ -348,9 +347,9 @@ jobs:
               assert 'cache-control: no-store' in text, (file_name, text)
               assert 'set-cookie:' not in text, (file_name, text)
 
-          assert 'access-control-allow-origin:' not in headers('authorize-headers.txt')
+          for file_name in ['authorize-headers.txt', 'mutation-headers.txt', 'logout-headers.txt']:
+              assert f'access-control-allow-origin: {trusted_staging_origin}' in headers(file_name), file_name
           assert 'access-control-allow-origin:' not in headers('snapshot-headers.txt')
-          assert 'access-control-allow-origin:' not in headers('mutation-headers.txt')
           assert 'access-control-allow-origin:' not in headers('backchannel-headers.txt')
 
           session = load('admin-session.json')
